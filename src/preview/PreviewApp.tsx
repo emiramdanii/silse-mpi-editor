@@ -10,14 +10,15 @@
 
 import { useEditorStore } from '../store/editor-store';
 import { usePreviewStore } from './preview-store';
-import { isCardComponent, isImageComponent, isNavigationComponent, isQuestionComponent, isTextComponent } from '../components/component-utils';
+import { isCardComponent, isGameComponent, isImageComponent, isNavigationComponent, isQuestionComponent, isTextComponent } from '../components/component-utils';
 import { TextComponentView } from '../components/TextComponentView';
 import { ImageComponentView } from '../components/ImageComponentView';
 import { CardComponentView } from '../components/CardComponentView';
 import { NavigationComponentView } from '../components/NavigationComponentView';
 import { QuestionComponentView } from '../components/QuestionComponentView';
+import { GameComponentView } from '../components/GameComponentView';
 import { getResolvedComponentStyle } from '../core/style/resolveComponentStyle';
-import type { NavigationComponent, QuestionComponent } from '../core/types';
+import type { GameComponent, NavigationComponent, QuestionComponent } from '../core/types';
 
 const CANVAS_WIDTH = 1280;
 const CANVAS_HEIGHT = 720;
@@ -27,12 +28,16 @@ export function PreviewApp() {
   const isOpen = usePreviewStore((s) => s.isOpen);
   const currentPageId = usePreviewStore((s) => s.currentPageId);
   const questionAnswers = usePreviewStore((s) => s.questionAnswers);
+  const gameStates = usePreviewStore((s) => s.gameStates);
   const totalScore = usePreviewStore((s) => s.totalScore);
   const closePreview = usePreviewStore((s) => s.closePreview);
   const navigateNext = usePreviewStore((s) => s.navigateNext);
   const navigatePrev = usePreviewStore((s) => s.navigatePrev);
   const navigateGoto = usePreviewStore((s) => s.navigateGoto);
   const answerQuestion = usePreviewStore((s) => s.answerQuestion);
+  const answerGameMission = usePreviewStore((s) => s.answerGameMission);
+  const nextGameMission = usePreviewStore((s) => s.nextGameMission);
+  const resetGame = usePreviewStore((s) => s.resetGame);
 
   if (!isOpen) return null;
 
@@ -140,6 +145,26 @@ export function PreviewApp() {
                   onAnswer={(choiceIndex) => answerQuestion(qc.id, choiceIndex, qc.correctChoiceIndex, qc.points)}
                   selectedChoiceIndex={qa.selectedChoiceIndex}
                   isAnswered={qa.isAnswered}
+                />
+              );
+            }
+            if (isGameComponent(component)) {
+              const gc = component as GameComponent;
+              const gs = gameStates[gc.id] ?? { currentMissionIndex: 0, selectedChoiceIndex: null, isAnswered: false, score: 0, completed: false };
+              return (
+                <GameComponentView
+                  key={component.id}
+                  component={gc}
+                  resolvedStyle={resolvedStyle}
+                  onAnswer={(missionIdx, choiceIdx) => {
+                    const mission = gc.missions[missionIdx];
+                    if (mission) {
+                      answerGameMission(gc.id, missionIdx, choiceIdx, mission.correctChoiceIndex, mission.points);
+                    }
+                  }}
+                  onNextMission={() => nextGameMission(gc.id, gc.missions.length)}
+                  onRetry={() => resetGame(gc.id)}
+                  gameState={gs}
                 />
               );
             }
