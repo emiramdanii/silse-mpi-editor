@@ -24,6 +24,7 @@ export function Toolbar() {
   const addCardComponent = useEditorStore((s) => s.addCardComponent);
   const addNavigationComponent = useEditorStore((s) => s.addNavigationComponent);
   const addQuestionComponent = useEditorStore((s) => s.addQuestionComponent);
+  const addGameComponent = useEditorStore((s) => s.addGameComponent);
   const saveCurrent = useEditorStore((s) => s.saveCurrent);
   const loadCurrent = useEditorStore((s) => s.loadCurrent);
   const resetProject = useEditorStore((s) => s.resetProject);
@@ -43,6 +44,7 @@ export function Toolbar() {
   const canCard = role ? canAddComponent(role, 'card') : false;
   const canNavigation = role ? canAddComponent(role, 'navigation') : false;
   const canQuestion = role ? canAddComponent(role, 'question') : false;
+  const canGame = role ? canAddComponent(role, 'game') : false;
 
   const handleAddText = () => { addTextComponent(); };
   const handleAddImage = () => {
@@ -58,6 +60,10 @@ export function Toolbar() {
 
   const handleAddQuestion = () => {
     addQuestionComponent();
+  };
+
+  const handleAddGame = () => {
+    addGameComponent();
   };
 
   const handleExport = () => {
@@ -238,6 +244,15 @@ export function Toolbar() {
         data-milestone="M10"
       >
         + Pertanyaan
+      </button>
+      <button
+        onClick={handleAddGame}
+        disabled={!canGame}
+        title={canGame ? 'Tambah game' : 'Tidak diizinkan di halaman ini'}
+        data-action="add-game"
+        data-milestone="M11A"
+      >
+        + Game
       </button>
       <span className="toolbar__divider" />
       <button

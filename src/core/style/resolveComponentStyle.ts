@@ -73,7 +73,7 @@ export type ResolveStyleInput = {
   /** Project style tokens (from project.style). */
   tokens: ProjectStyle['tokens'];
   /** Component type: text/image/card/navigation. */
-  componentType: 'text' | 'image' | 'card' | 'navigation';
+  componentType: 'text' | 'image' | 'card' | 'navigation' | 'question' | 'game';
   /** Component variant (per type). */
   variant: string;
   /** Page role (context for default style). */
@@ -503,8 +503,8 @@ export function getResolvedComponentStyle(
   return resolveComponentStyleWithInteractions(
     {
       tokens,
-      componentType: component.type as 'text' | 'image' | 'card' | 'navigation',
-      variant: component.variant,
+      componentType: component.type as 'text' | 'image' | 'card' | 'navigation' | 'question' | 'game',
+      variant: (component as { variant?: string }).variant ?? 'default',
       pageRole: page.role,
       layoutId: page.layoutId,
     },

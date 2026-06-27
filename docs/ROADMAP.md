@@ -29,7 +29,8 @@ Implikasi: Style Pack foundation harus ada **sebelum** M3, supaya M3–M8 tidak 
 | M7        | Save / Load + Style Pack Save         | Done        |
 | M8        | AI JSON Import + Style Import MVP     | Done        |
 | M9        | Direct Manipulation + Layout Guard    | Done        |
-| **M10**   | **Question + Scoring Style**          | **Active**  |
+| M10       | Question + Scoring Style              | Done        |
+| **M11A**  | **Game Engine MVP: Mission Quiz**      | **Active**  |
 | M11       | Advanced Interactive Components       | Planned     |
 | M12       | Style Studio + Template Pack          | Planned     |
 | M13       | Production Ready                      | Planned     |
@@ -581,7 +582,7 @@ Lihat [`docs/AI_IMPORT_CONTRACT.md`](AI_IMPORT_CONTRACT.md) untuk kontrak lengka
 
 ## M10 — Question + Scoring Style
 
-**Status:** Active
+**Status:** Done (commit `1c8acbf`)
 
 **Prasyarat:** M9 ACCEPTED.
 
@@ -604,6 +605,33 @@ Lihat [`docs/AI_IMPORT_CONTRACT.md`](AI_IMPORT_CONTRACT.md) untuk kontrak lengka
 **Acceptance:** 22 criteria — see Scope L tests.
 
 **Dilarang:** GameComponent/mission game, page-spam quiz, one question=one page, raw HTML/CSS/JS, AI custom script, full style editor, setPageRole, external quiz library, external drag/drop library.
+
+---
+
+## M11A — Game Engine MVP: Mission Quiz
+
+**Status:** Active
+
+**Prasyarat:** M10 ACCEPTED.
+
+**Catatan:** Game Engine MVP didahulukan sebelum advanced material interactions (tabs/hotspot/accordion). M11A fokus hanya missionQuiz.
+
+**Target:** Menambahkan GameComponent pertama yang aman, reusable, dan exportable: missionQuiz, dengan state internal, scoring, feedback, badge/star style, dan opsi jawaban yang tidak terpotong.
+
+**Fitur:**
+
+- GameComponent: type='game', gameType='missionQuiz', title, instruction, missions[], scoringStyle, geometry.
+- Mission: id, title, prompt, choices[], correctChoiceIndex, feedbackCorrect, feedbackWrong, points.
+- GAME_TYPES = ['missionQuiz'].
+- Capability: quiz/activity/free boleh game. Lainnya tidak.
+- Validation: gameType valid, missions 1-10, setiap mission prompt non-empty, choices 2-6, correctChoiceIndex valid, points >= 0, scoringStyle valid.
+- Store: addGameComponent, updateGameComponent, duplicatePage deep-copy game/mission/choice ids.
+- Preview runtime: currentMissionIndex, selectedChoiceIndex, isAnswered, score, completed. Next mission, retry game, badge/star display.
+- Export HTML: game runtime + answer + score + next + completed + retry. No-clip CSS.
+- UI: Toolbar + Game (quiz/activity/free only), GameComponentView, Inspector editor.
+- AI Import: boleh accept game type, forbidden guard tetap berlaku.
+
+**Dilarang:** Game lain selain missionQuiz, tabs/accordion/hotspot, full game library, one mission=one page, raw HTML/CSS/JS, external game library, style editor, setPageRole, component recipe extraction UI.
 
 ---
 

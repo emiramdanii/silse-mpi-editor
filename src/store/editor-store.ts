@@ -34,6 +34,7 @@ import { create } from 'zustand';
 import type {
   CardComponent,
   CardComponentVariant,
+  GameComponent,
   ImageComponent,
   ImageComponentVariant,
   NavigationAction,
@@ -49,6 +50,7 @@ import type {
 } from '../core/types';
 import {
   CARD_COMPONENT_VARIANTS,
+  GAME_TYPES,
   IMAGE_COMPONENT_VARIANTS,
   NAVIGATION_ACTIONS,
   NAVIGATION_COMPONENT_VARIANTS,
@@ -59,11 +61,13 @@ import {
 import { createEmptyPage, createProject } from '../core/project-factory';
 import {
   createCardComponent,
+  createGameComponent,
   createImageComponent,
   createNavigationComponent,
   createQuestionComponent,
   createTextComponent,
   type CardComponentEditable,
+  type GameComponentEditable,
   type ImageComponentEditable,
   type NavigationComponentEditable,
   type QuestionComponentEditable,
@@ -105,12 +109,14 @@ export type EditorState = {
     overrides?: Partial<NavigationComponentEditable>,
   ) => string | null;
   addQuestionComponent: (overrides?: Partial<QuestionComponentEditable>) => string | null;
+  addGameComponent: (overrides?: Partial<GameComponentEditable>) => string | null;
   selectComponent: (componentId: string | null) => void;
   updateTextComponent: (componentId: string, patch: Partial<TextComponentEditable>) => void;
   updateImageComponent: (componentId: string, patch: Partial<ImageComponentEditable>) => void;
   updateCardComponent: (componentId: string, patch: Partial<CardComponentEditable>) => void;
   updateNavigationComponent: (componentId: string, patch: Partial<NavigationComponentEditable>) => void;
   updateQuestionComponent: (componentId: string, patch: Partial<QuestionComponentEditable>) => void;
+  updateGameComponent: (componentId: string, patch: Partial<GameComponentEditable>) => void;
   updateComponentGeometry: (componentId: string, rect: Rect) => void;
   removeComponent: (componentId: string) => void;
   getSelectedComponent: () => PageComponent | null;
@@ -215,6 +221,23 @@ function sanitizeQuestionPatch(
   return clean;
 }
 
+function sanitizeGamePatch(
+  patch: Partial<GameComponentEditable>,
+): Partial<GameComponentEditable> {
+  const clean: Partial<GameComponentEditable> = { ...patch };
+  if (clean.gameType !== undefined) {
+    if (!GAME_TYPES.includes(clean.gameType as GameComponent['gameType'])) {
+      delete clean.gameType;
+    }
+  }
+  if (clean.scoringStyle !== undefined) {
+    if (!SCORING_STYLES.includes(clean.scoringStyle as GameComponent['scoringStyle'])) {
+      delete clean.scoringStyle;
+    }
+  }
+  return clean;
+}
+
 /**
  * Deep-copy a component with a fresh id.
  * Pertahankan semua field kecuali id (yang baru).
@@ -298,6 +321,26 @@ function deepCopyComponentWithNewId(c: PageComponent): PageComponent {
       width: qc.width,
       height: qc.height,
     } as QuestionComponent;
+  }
+  if (c.type === 'game') {
+    const gc = c as GameComponent;
+    return {
+      id: newId,
+      type: 'game',
+      gameType: gc.gameType,
+      title: gc.title,
+      instruction: gc.instruction,
+      missions: gc.missions.map((m) => ({
+        ...m,
+        id: createComponentId(),
+        choices: m.choices.map((ch) => ({ id: createComponentId(), text: ch.text })),
+      })),
+      scoringStyle: gc.scoringStyle,
+      x: gc.x,
+      y: gc.y,
+      width: gc.width,
+      height: gc.height,
+    } as GameComponent;
   }
   // Unknown type — copy with new id (shouldn't occur).
   return { ...(c as Record<string, unknown>), id: newId } as PageComponent;
@@ -507,6 +550,21 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     return component.id;
   },
 
+  // ----- Component operations (M11A — game) -----
+
+  addGameComponent: (overrides) => {
+    const state = get();
+    const currentPage = state.project.pages.find(
+      (p) => p.id === state.project.currentPageId,
+    );
+    if (!currentPage) return null;
+    if (!canAddComponent(currentPage.role, 'game')) return null;
+
+    const component = createGameComponent(overrides);
+    set((s) => addComponentToCurrentPage(s, component));
+    return component.id;
+  },
+
   // ----- Selection + update -----
 
   selectComponent: (componentId) => {
@@ -620,6 +678,28 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           components: p.components.map((c) => {
             if (c.id !== componentId || c.type !== 'question') return c;
             return { ...c, ...cleanPatch, type: 'question' } as QuestionComponent;
+          }),
+        };
+      });
+      return { project: { ...state.project, pages } };
+    });
+  },
+
+  updateGameComponent: (componentId, patch) => {
+    const cleanPatch = sanitizeGamePatch(patch);
+    set((state) => {
+      const page = state.project.pages.find((p) => p.id === state.project.currentPageId);
+      if (!page) return state;
+      const exists = page.components.some((c) => c.id === componentId && c.type === 'game');
+      if (!exists) return state;
+
+      const pages = state.project.pages.map((p) => {
+        if (p.id !== state.project.currentPageId) return p;
+        return {
+          ...p,
+          components: p.components.map((c) => {
+            if (c.id !== componentId || c.type !== 'game') return c;
+            return { ...c, ...cleanPatch, type: 'game' } as GameComponent;
           }),
         };
       });

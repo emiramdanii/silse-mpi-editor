@@ -123,6 +123,6 @@ describe('M9 PATCH — no double offset in editor', () => {
     // Component views should use fill (relative, 0, 100%)
     // Not absolute with component.x/y again
     const fillCount = (content.match(/positionMode="fill"/g) || []).length;
-    expect(fillCount).toBe(5); // text, image, card, navigation, question
+    expect(fillCount).toBe(6); // text, image, card, navigation, question, game
   });
 });

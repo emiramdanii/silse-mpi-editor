@@ -89,13 +89,13 @@ export const PAGE_ROLE_CAPABILITIES: Record<PageRole, PageRoleCapability> = {
   },
   activity: {
     role: 'activity',
-    allowedComponents: ['text', 'image', 'card', 'navigation'],
+    allowedComponents: ['text', 'image', 'card', 'navigation', 'game'],
     allowAddComponent: true,
     description: 'Aktivitas siswa',
   },
   quiz: {
     role: 'quiz',
-    allowedComponents: ['text', 'question'],
+    allowedComponents: ['text', 'question', 'game'],
     allowAddComponent: true,
     description: 'Evaluasi / kuis',
   },
@@ -113,7 +113,7 @@ export const PAGE_ROLE_CAPABILITIES: Record<PageRole, PageRoleCapability> = {
   },
   free: {
     role: 'free',
-    allowedComponents: ['text', 'image', 'card', 'navigation', 'question'],
+    allowedComponents: ['text', 'image', 'card', 'navigation', 'question', 'game'],
     allowAddComponent: true,
     description: 'Halaman bebas',
   },

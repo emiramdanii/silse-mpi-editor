@@ -253,14 +253,42 @@ export type PageComponent =
   | ImageComponent
   | CardComponent
   | NavigationComponent
-  | QuestionComponent;
+  | QuestionComponent
+  | GameComponent;
 
 // ---------------------------------------------------------------------------
 // Component type literals — exported as constants for runtime guards
 // ---------------------------------------------------------------------------
 
-export const COMPONENT_TYPES = ['text', 'image', 'card', 'navigation', 'question'] as const;
+export const COMPONENT_TYPES = ['text', 'image', 'card', 'navigation', 'question', 'game'] as const;
 export type ComponentType = (typeof COMPONENT_TYPES)[number];
+
+// ---------------------------------------------------------------------------
+// Game Component (M11A)
+// ---------------------------------------------------------------------------
+
+export const GAME_TYPES = ['missionQuiz'] as const;
+export type GameType = (typeof GAME_TYPES)[number];
+
+export type GameMission = {
+  id: string;
+  title: string;
+  prompt: string;
+  choices: QuestionChoice[];
+  correctChoiceIndex: number;
+  feedbackCorrect: string;
+  feedbackWrong: string;
+  points: number;
+};
+
+export type GameComponent = BaseComponent & {
+  type: 'game';
+  gameType: GameType;
+  title: string;
+  instruction: string;
+  missions: GameMission[];
+  scoringStyle: ScoringStyle;
+};
 
 // ---------------------------------------------------------------------------
 // Question Component (M10)

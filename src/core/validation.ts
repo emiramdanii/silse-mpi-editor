@@ -16,6 +16,7 @@
 import {
   CARD_COMPONENT_VARIANTS,
   COMPONENT_TYPES,
+  GAME_TYPES,
   IMAGE_COMPONENT_VARIANTS,
   LAYOUT_IDS,
   NAVIGATION_ACTIONS,
@@ -27,6 +28,7 @@ import {
   TEXT_COMPONENT_VARIANTS,
   type CardComponentVariant,
   type ComponentType,
+  type GameType,
   type ImageComponentVariant,
   type LayoutId,
   type NavigationAction,
@@ -91,6 +93,9 @@ export function validateComponent(component: unknown): ValidationResult {
   }
   if (component.type === 'question') {
     return validateQuestionComponent(component);
+  }
+  if (component.type === 'game') {
+    return validateGameComponent(component);
   }
   return { ok: true };
 }
@@ -263,6 +268,43 @@ function validateQuestionComponent(component: Record<string, unknown>): Validati
   }
   if (!isString(component.scoringStyle) || !SCORING_STYLES.includes(component.scoringStyle as ScoringStyle)) {
     return fail(`question component.scoringStyle must be one of: ${SCORING_STYLES.join(', ')}`);
+  }
+  return { ok: true };
+}
+
+/**
+ * Validate a game component (M11A scope).
+ */
+function validateGameComponent(component: Record<string, unknown>): ValidationResult {
+  if (!isString(component.gameType) || !GAME_TYPES.includes(component.gameType as GameType)) {
+    return fail(`game component.gameType must be one of: ${GAME_TYPES.join(', ')}`);
+  }
+  if (!isString(component.title)) {
+    return fail('game component.title must be a string');
+  }
+  if (!isString(component.instruction)) {
+    return fail('game component.instruction must be a string');
+  }
+  if (!Array.isArray(component.missions) || component.missions.length < 1 || component.missions.length > 10) {
+    return fail('game component.missions must have 1-10 items');
+  }
+  for (let i = 0; i < component.missions.length; i++) {
+    const m = component.missions[i] as Record<string, unknown>;
+    const prefix = `game component.missions[${i}]`;
+    if (!isObject(m)) return fail(`${prefix}: must be an object`);
+    if (!isString(m.prompt) || m.prompt.length === 0) return fail(`${prefix}.prompt must be a non-empty string`);
+    if (!Array.isArray(m.choices) || m.choices.length < 2 || m.choices.length > 6) {
+      return fail(`${prefix}.choices must have 2-6 items`);
+    }
+    if (!isNumber(m.correctChoiceIndex) || m.correctChoiceIndex < 0 || m.correctChoiceIndex >= (m.choices as unknown[]).length) {
+      return fail(`${prefix}.correctChoiceIndex must be a valid index`);
+    }
+    if (!isString(m.feedbackCorrect)) return fail(`${prefix}.feedbackCorrect must be a string`);
+    if (!isString(m.feedbackWrong)) return fail(`${prefix}.feedbackWrong must be a string`);
+    if (!isNumber(m.points) || m.points < 0) return fail(`${prefix}.points must be non-negative`);
+  }
+  if (!isString(component.scoringStyle) || !SCORING_STYLES.includes(component.scoringStyle as ScoringStyle)) {
+    return fail(`game component.scoringStyle must be one of: ${SCORING_STYLES.join(', ')}`);
   }
   return { ok: true };
 }

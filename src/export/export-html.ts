@@ -72,6 +72,11 @@ type ExportRenderComponent = {
   feedbackWrong?: string;
   points?: number;
   scoringStyle?: string;
+  // Game-specific (M11A)
+  gameType?: string;
+  gameTitle?: string;
+  gameInstruction?: string;
+  missions?: { id: string; title: string; prompt: string; choices: { id: string; text: string }[]; correctChoiceIndex: number; feedbackCorrect: string; feedbackWrong: string; points: number }[];
   // Pre-computed resolved style from resolver
   resolvedStyle: {
     inlineStyle: Record<string, string | number>;
@@ -148,6 +153,12 @@ function buildExportRenderComponent(
     base.feedbackCorrect = component.feedbackCorrect;
     base.feedbackWrong = component.feedbackWrong;
     base.points = component.points;
+    base.scoringStyle = component.scoringStyle;
+  } else if (component.type === 'game') {
+    base.gameType = component.gameType;
+    base.gameTitle = component.title;
+    base.gameInstruction = component.instruction;
+    base.missions = component.missions;
     base.scoringStyle = component.scoringStyle;
   }
 
@@ -302,6 +313,32 @@ body {
   font-weight: bold;
   color: #fbbf24;
 }
+
+#silse-canvas .silse-game-choice {
+  padding: 10px 14px;
+  min-height: 44px;
+  height: auto;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+#silse-canvas .silse-game-feedback {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
 `.trim();
 }
 
@@ -317,6 +354,7 @@ function generateJS(renderModelJson: string): string {
   var currentPageIdx = 0;
   var questionAnswers = {};
   var totalScore = 0;
+  var gameStates = {};
 
   var canvas = document.getElementById('silse-canvas');
   var prevBtn = document.getElementById('silse-nav-prev');
@@ -526,6 +564,135 @@ function generateJS(renderModelJson: string): string {
         feedback.style.color = isCorrectAnswer ? '#065f46' : '#991b1b';
         feedback.textContent = isCorrectAnswer ? comp.feedbackCorrect : comp.feedbackWrong;
         el.appendChild(feedback);
+      }
+
+      return el;
+    }
+
+    if (comp.type === 'game') {
+      el = document.createElement('div');
+      el.className = 'silse-game';
+      el.style.cssText = style + 'box-sizing:border-box;display:flex;flex-direction:column;gap:8px;overflow:auto;padding:12px;';
+
+      var gameState = gameStates[comp.id] || { currentMissionIndex: 0, selectedChoiceIndex: null, isAnswered: false, score: 0, completed: false };
+      gameStates[comp.id] = gameState;
+
+      if (gameState.completed) {
+        var doneTitle = document.createElement('strong');
+        doneTitle.style.fontSize = '18px';
+        doneTitle.textContent = 'Game Selesai!';
+        el.appendChild(doneTitle);
+        var doneScore = document.createElement('div');
+        doneScore.style.cssText = 'font-size:16px;margin-top:8px;';
+        doneScore.textContent = 'Skor: ' + gameState.score;
+        el.appendChild(doneScore);
+        var retryBtn = document.createElement('button');
+        retryBtn.style.cssText = 'margin-top:12px;padding:8px 16px;';
+        retryBtn.textContent = 'Ulangi Game';
+        retryBtn.addEventListener('click', function() {
+          gameStates[comp.id] = { currentMissionIndex: 0, selectedChoiceIndex: null, isAnswered: false, score: 0, completed: false };
+          renderPage(currentPageIdx);
+        });
+        el.appendChild(retryBtn);
+        return el;
+      }
+
+      var mission = comp.missions[gameState.currentMissionIndex];
+      if (!mission) return el;
+
+      var gTitle = document.createElement('strong');
+      gTitle.style.fontSize = '16px';
+      gTitle.textContent = comp.gameTitle || 'Game';
+      el.appendChild(gTitle);
+
+      var gInstr = document.createElement('div');
+      gInstr.style.cssText = 'font-size:13px;color:#6b7280;white-space:normal;overflow-wrap:anywhere;';
+      gInstr.textContent = comp.gameInstruction || '';
+      el.appendChild(gInstr);
+
+      var gProgress = document.createElement('div');
+      gProgress.style.cssText = 'font-size:12px;color:#6b7280;';
+      gProgress.textContent = 'Misi ' + (gameState.currentMissionIndex + 1) + ' / ' + comp.missions.length + ' · Skor: ' + gameState.score;
+      el.appendChild(gProgress);
+
+      var gPrompt = document.createElement('div');
+      gPrompt.style.cssText = 'font-size:15px;font-weight:500;margin-top:4px;white-space:normal;overflow-wrap:anywhere;';
+      gPrompt.textContent = mission.prompt || '';
+      el.appendChild(gPrompt);
+
+      var gChoices = document.createElement('div');
+      gChoices.style.cssText = 'display:flex;flex-direction:column;gap:6px;';
+
+      for (var gi = 0; gi < mission.choices.length; gi++) {
+        (function(gChoiceIdx, gChoice, gCompId, gMission, gState) {
+          var gChoiceEl = document.createElement('div');
+          gChoiceEl.className = 'silse-game-choice';
+          var gBg = '#ffffff';
+          if (gState.isAnswered) {
+            if (gChoiceIdx === gMission.correctChoiceIndex) gBg = '#d1fae5';
+            else if (gChoiceIdx === gState.selectedChoiceIndex) gBg = '#fee2e2';
+          }
+          gChoiceEl.style.backgroundColor = gBg;
+
+          var gLetter = document.createElement('span');
+          gLetter.style.fontWeight = 'bold';
+          gLetter.style.minWidth = '20px';
+          gLetter.textContent = String.fromCharCode(65 + gChoiceIdx) + '.';
+          gChoiceEl.appendChild(gLetter);
+
+          var gText = document.createElement('span');
+          gText.style.flex = '1';
+          gText.style.whiteSpace = 'normal';
+          gText.style.overflowWrap = 'anywhere';
+          gText.textContent = gChoice.text;
+          gChoiceEl.appendChild(gText);
+
+          gChoiceEl.addEventListener('click', function() {
+            if (gState.isAnswered) return;
+            gState.selectedChoiceIndex = gChoiceIdx;
+            gState.isAnswered = true;
+            if (gChoiceIdx === gMission.correctChoiceIndex) {
+              gState.score += gMission.points;
+              updateScoreDisplay();
+            }
+            renderPage(currentPageIdx);
+          });
+
+          gChoices.appendChild(gChoiceEl);
+        })(gi, mission.choices[gi], comp.id, mission, gameState);
+      }
+      el.appendChild(gChoices);
+
+      if (gameState.isAnswered) {
+        var gFeedback = document.createElement('div');
+        gFeedback.className = 'silse-game-feedback';
+        var gIsCorrect = gameState.selectedChoiceIndex === mission.correctChoiceIndex;
+        gFeedback.style.backgroundColor = gIsCorrect ? '#d1fae5' : '#fee2e2';
+        gFeedback.style.color = gIsCorrect ? '#065f46' : '#991b1b';
+        gFeedback.textContent = gIsCorrect ? mission.feedbackCorrect : mission.feedbackWrong;
+        el.appendChild(gFeedback);
+
+        if (gameState.currentMissionIndex < comp.missions.length - 1) {
+          var nextBtn = document.createElement('button');
+          nextBtn.style.cssText = 'margin-top:8px;padding:8px 16px;';
+          nextBtn.textContent = 'Misi Berikutnya';
+          nextBtn.addEventListener('click', function() {
+            gameState.currentMissionIndex++;
+            gameState.selectedChoiceIndex = null;
+            gameState.isAnswered = false;
+            renderPage(currentPageIdx);
+          });
+          el.appendChild(nextBtn);
+        } else {
+          gameState.completed = true;
+          var finishBtn = document.createElement('button');
+          finishBtn.style.cssText = 'margin-top:8px;padding:8px 16px;';
+          finishBtn.textContent = 'Lihat Hasil';
+          finishBtn.addEventListener('click', function() {
+            renderPage(currentPageIdx);
+          });
+          el.appendChild(finishBtn);
+        }
       }
 
       return el;

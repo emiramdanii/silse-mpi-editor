@@ -9,6 +9,7 @@
 
 import type {
   CardComponent,
+  GameComponent,
   ImageComponent,
   NavigationComponent,
   PageComponent,
@@ -34,4 +35,8 @@ export function isNavigationComponent(c: PageComponent): c is NavigationComponen
 
 export function isQuestionComponent(c: PageComponent): c is QuestionComponent {
   return c.type === 'question';
+}
+
+export function isGameComponent(c: PageComponent): c is GameComponent {
+  return c.type === 'game';
 }

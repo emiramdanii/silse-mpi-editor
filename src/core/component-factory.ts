@@ -17,6 +17,9 @@
 import type {
   CardComponent,
   CardComponentVariant,
+  GameComponent,
+  GameMission,
+  GameType,
   ImageComponent,
   ImageComponentVariant,
   NavigationAction,
@@ -223,4 +226,52 @@ export function createQuestionComponent(
 
 export function createQuestionChoice(text: string): QuestionChoice {
   return { id: createComponentId(), text };
+}
+
+// ---------------------------------------------------------------------------
+// Game Component (M11A)
+// ---------------------------------------------------------------------------
+
+export type GameComponentEditable = Omit<GameComponent, 'id' | 'type'>;
+
+export const DEFAULT_GAME_TYPE: GameType = 'missionQuiz';
+
+export const DEFAULT_GAME_COMPONENT: Omit<
+  GameComponentEditable,
+  'gameType' | 'title' | 'instruction' | 'missions' | 'scoringStyle'
+> = {
+  x: 100,
+  y: 50,
+  width: 700,
+  height: 550,
+};
+
+export function createGameMission(overrides: Partial<GameMission> = {}): GameMission {
+  return {
+    id: createComponentId(),
+    title: overrides.title ?? 'Misi 1',
+    prompt: overrides.prompt ?? 'Pertanyaan misi...',
+    choices: overrides.choices ?? [
+      { id: createComponentId(), text: 'Pilihan A' },
+      { id: createComponentId(), text: 'Pilihan B' },
+    ],
+    correctChoiceIndex: overrides.correctChoiceIndex ?? 0,
+    feedbackCorrect: overrides.feedbackCorrect ?? 'Benar!',
+    feedbackWrong: overrides.feedbackWrong ?? 'Belum tepat.',
+    points: overrides.points ?? 10,
+  };
+}
+
+export function createGameComponent(overrides: Partial<GameComponentEditable> = {}): GameComponent {
+  return {
+    id: createComponentId(),
+    type: 'game',
+    gameType: DEFAULT_GAME_TYPE,
+    title: overrides.title ?? 'Game Misi',
+    instruction: overrides.instruction ?? 'Jawab semua misi!',
+    missions: overrides.missions ?? [createGameMission()],
+    scoringStyle: overrides.scoringStyle ?? DEFAULT_SCORING_STYLE,
+    ...DEFAULT_GAME_COMPONENT,
+    ...overrides,
+  };
 }
