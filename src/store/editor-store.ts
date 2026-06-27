@@ -66,6 +66,11 @@ import {
 } from '../core/component-factory';
 import { canAddComponent, getCapability } from '../core/capability';
 import { createComponentId, createPageId } from '../core/ids';
+import {
+  saveCurrentProject,
+  loadCurrentProject,
+  clearCurrentProject,
+} from '../storage/project-storage';
 
 export type EditorState = {
   project: SimpleProject;
@@ -548,14 +553,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   // ----- Save / Load (M7) -----
 
   saveCurrent: () => {
-    // Dynamic import to avoid circular dependency
-    const { saveCurrentProject } = require('../storage/project-storage');
     const result = saveCurrentProject(get().project);
     return result.ok;
   },
 
   loadCurrent: () => {
-    const { loadCurrentProject } = require('../storage/project-storage');
     const result = loadCurrentProject();
     if (result.ok && result.data) {
       set({ project: result.data, selectedComponentId: null });
@@ -566,13 +568,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   resetProject: () => {
     set({ project: createProject(), selectedComponentId: null });
-    // Clear autosaved project
-    try {
-      const { clearCurrentProject } = require('../storage/project-storage');
-      clearCurrentProject();
-    } catch {
-      // ignore if storage not available
-    }
+    clearCurrentProject();
   },
 }));
 

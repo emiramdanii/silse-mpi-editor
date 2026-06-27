@@ -17,6 +17,8 @@ import type { NavigationAction } from '../core/types';
 import { exportProjectToHtml } from '../export/export-html';
 import { downloadHtmlFile } from '../export/export-download';
 import { exportProjectJson, importProjectJson, saveProjectToLibrary, listSavedProjects, loadProjectFromLibrary } from '../storage/project-storage';
+import { saveStylePack } from '../storage/style-pack-storage';
+import { getStylePack } from '../core/style-presets';
 
 export function Toolbar() {
   const addTextComponent = useEditorStore((s) => s.addTextComponent);
@@ -138,6 +140,26 @@ export function Toolbar() {
     }
   };
 
+  const handleSaveStylePack = () => {
+    const project = useEditorStore.getState().project;
+    const stylePackId = project.stylePackId;
+    if (!stylePackId) {
+      window.alert('Proyek tidak punya paket gaya.');
+      return;
+    }
+    const pack = getStylePack(stylePackId);
+    if (!pack) {
+      window.alert('Paket gaya tidak ditemukan: ' + stylePackId);
+      return;
+    }
+    const result = saveStylePack(pack);
+    if (result.ok) {
+      window.alert('Paket gaya "' + pack.name + '" disimpan.');
+    } else {
+      window.alert('Gagal menyimpan paket gaya: ' + (!result.ok ? result.error : 'Unknown'));
+    }
+  };
+
   return (
     <div className="toolbar">
       <span className="toolbar__divider" />
@@ -209,6 +231,9 @@ export function Toolbar() {
       </button>
       <button onClick={handleImportJson} title="Impor proyek dari cadangan JSON" data-action="import-json">
         📥 Impor JSON
+      </button>
+      <button onClick={handleSaveStylePack} title="Simpan paket gaya saat ini" data-action="save-style-pack">
+        🎨 Simpan Paket Gaya
       </button>
       <button onClick={handleReset} title="Reset proyek ke kosong" data-action="reset" className="danger">
         ↺ Reset

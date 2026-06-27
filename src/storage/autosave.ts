@@ -4,11 +4,13 @@
  * Layer: storage
  * Allowed imports: ./project-storage, ./storage-types, ../store/editor-store, ../core/validation
  *
- * Kontrak (Batch 7 / M7):
+ * Kontrak (Batch 7 / M7 PATCH):
  *   - Autosave current project ke localStorage (debounced).
  *   - Jangan autosave preview runtime.
  *   - Jangan autosave invalid project.
  *   - Status: tersimpan / menyimpan / gagal menyimpan.
+ *   - M7 PATCH: Tidak ada CommonJS dynamic require. Semua import static ESM.
+ *   - M7 PATCH: Tidak ada auto-load startup. User pakai tombol 📂 Muat.
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -27,10 +29,9 @@ export function useAutosave(): { status: SaveStatus; error: string | null } {
   const isFirstRender = useRef(true);
 
   useEffect(() => {
-    // Skip first render (initial project load)
+    // Skip first render (initial project load — no autosave on mount)
     if (isFirstRender.current) {
       isFirstRender.current = false;
-      // Try to load saved project on first render
       return;
     }
 
@@ -65,18 +66,4 @@ export function useAutosave(): { status: SaveStatus; error: string | null } {
   }, [project]);
 
   return { status, error };
-}
-
-/**
- * Load saved project from localStorage on app startup.
- * Returns null if no saved project or if invalid.
- */
-export function loadSavedProjectOnStartup() {
-  // Lazy import to avoid circular dependency
-  const { loadCurrentProject } = require('./project-storage');
-  const result = loadCurrentProject();
-  if (result.ok && result.data) {
-    return result.data;
-  }
-  return null;
 }
