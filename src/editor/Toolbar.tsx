@@ -16,6 +16,7 @@ import { exportProjectJson, importProjectJson, saveProjectToLibrary, listSavedPr
 import { saveStylePack } from '../storage/style-pack-storage';
 import { getStylePack } from '../core/style-presets';
 import { parseAndNormalizeAiJson } from '../ai-import/normalizer';
+import { createSamplePpknProject } from '../core/sample-project';
 import { useState } from 'react';
 
 export function Toolbar() {
@@ -64,6 +65,12 @@ export function Toolbar() {
 
   const handleAddGame = () => {
     addGameComponent();
+  };
+
+  const handleLoadSample = () => {
+    const sample = createSamplePpknProject();
+    setProject(sample);
+    window.alert('Contoh MPI "Hidup Tertib dengan Norma" dimuat!');
   };
 
   const handleExport = () => {
@@ -292,6 +299,10 @@ export function Toolbar() {
       </button>
       <button onClick={handleReset} title="Reset proyek ke kosong" data-action="reset" className="danger">
         ↺ Reset
+      </button>
+      <span className="toolbar__divider" />
+      <button onClick={handleLoadSample} title="Muat contoh MPI PPKn" data-action="load-sample">
+        📋 Muat Contoh MPI
       </button>
       <span className="toolbar__divider" />
       <button onClick={handleAiImport} title="Impor JSON dari AI" data-action="ai-import" data-milestone="M8">
