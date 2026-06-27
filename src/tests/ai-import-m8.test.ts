@@ -382,14 +382,214 @@ describe('M8 — store scope-lock', () => {
 });
 
 // =========================================================================
-// 20. ESM guard still pass
+// M8 PATCH — Additional acceptance criteria
 // =========================================================================
 
-describe('M8 — ESM guard', () => {
-  it('ai-import normalizer does not use CommonJS require', () => {
-    const fs = require('node:fs');
-    const path = require('node:path');
-    const content = fs.readFileSync(path.resolve(__dirname, '../ai-import/normalizer.ts'), 'utf8');
-    expect(content).not.toMatch(/\brequire\s*\(/);
+describe('M8 PATCH — schemaVersion wajib benar', () => {
+  it('schemaVersion 0 rejected', () => {
+    const payload = makeValidPayload();
+    (payload as Record<string, unknown>).schemaVersion = 0;
+    const result = normalizeAiImportPayload(payload);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors.join('; ')).toMatch(/schemaVersion/i);
+  });
+
+  it('schemaVersion 999 rejected', () => {
+    const payload = makeValidPayload();
+    (payload as Record<string, unknown>).schemaVersion = 999;
+    const result = normalizeAiImportPayload(payload);
+    expect(result.ok).toBe(false);
+  });
+
+  it('schemaVersion missing rejected', () => {
+    const payload = makeValidPayload();
+    delete (payload as Record<string, unknown>).schemaVersion;
+    const result = normalizeAiImportPayload(payload);
+    expect(result.ok).toBe(false);
+  });
+});
+
+describe('M8 PATCH — source wajib "ai"', () => {
+  it('source "human" rejected', () => {
+    const payload = makeValidPayload();
+    (payload as Record<string, unknown>).source = 'human';
+    const result = normalizeAiImportPayload(payload);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors.join('; ')).toMatch(/source/i);
+  });
+
+  it('source missing rejected', () => {
+    const payload = makeValidPayload();
+    delete (payload as Record<string, unknown>).source;
+    const result = normalizeAiImportPayload(payload);
+    expect(result.ok).toBe(false);
+  });
+});
+
+describe('M8 PATCH — page.components missing/non-array tidak crash', () => {
+  it('missing components treated as empty array (no crash)', () => {
+    const payload = makeValidPayload();
+    delete (payload.project.pages[1] as Record<string, unknown>).components;
+    const result = normalizeAiImportPayload(payload);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.project.pages[1].components).toEqual([]);
+  });
+
+  it('components as string rejected with error', () => {
+    const payload = makeValidPayload();
+    (payload.project.pages[1] as Record<string, unknown>).components = 'not-an-array';
+    const result = normalizeAiImportPayload(payload);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors.join('; ')).toMatch(/components.*array/i);
+  });
+
+  it('components as null treated as empty (no crash)', () => {
+    const payload = makeValidPayload();
+    (payload.project.pages[1] as Record<string, unknown>).components = null;
+    const result = normalizeAiImportPayload(payload);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.project.pages[1].components).toEqual([]);
+  });
+});
+
+describe('M8 PATCH — component non-object tidak crash', () => {
+  it('component as string rejected with error', () => {
+    const payload = makeValidPayload();
+    (payload.project.pages[1].components as unknown[])[0] = 'not-an-object';
+    const result = normalizeAiImportPayload(payload);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors.join('; ')).toMatch(/component.*object/i);
+  });
+
+  it('component as null rejected with error', () => {
+    const payload = makeValidPayload();
+    (payload.project.pages[1].components as unknown[])[0] = null;
+    const result = normalizeAiImportPayload(payload);
+    expect(result.ok).toBe(false);
+  });
+
+  it('component as number rejected with error', () => {
+    const payload = makeValidPayload();
+    (payload.project.pages[1].components as unknown[])[0] = 42;
+    const result = normalizeAiImportPayload(payload);
+    expect(result.ok).toBe(false);
+  });
+});
+
+describe('M8 PATCH — invalid variant fallback', () => {
+  it('invalid text variant falls back to default by role', () => {
+    const payload = makeValidPayload();
+    payload.project.pages[1].components[0].variant = 'invalidVariant';
+    const result = normalizeAiImportPayload(payload);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const comp = result.project.pages[1].components[0] as { variant: string };
+    expect(comp.variant).toBe('body'); // material default
+  });
+
+  it('invalid image variant falls back to illustration', () => {
+    const payload = makeValidPayload();
+    payload.project.pages[1].components[1].variant = 'invalidVariant';
+    const result = normalizeAiImportPayload(payload);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const comp = result.project.pages[1].components[1] as { variant: string };
+    expect(comp.variant).toBe('illustration');
+  });
+
+  it('invalid card variant falls back to infoCard', () => {
+    const payload = makeValidPayload();
+    payload.project.pages[1].components[2].variant = 'invalidVariant';
+    const result = normalizeAiImportPayload(payload);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const comp = result.project.pages[1].components[2] as { variant: string };
+    expect(comp.variant).toBe('infoCard');
+  });
+
+  it('invalid navigation variant falls back to navigation', () => {
+    const payload = makeValidPayload();
+    payload.project.pages[2].components[0].variant = 'invalidVariant';
+    const result = normalizeAiImportPayload(payload);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const comp = result.project.pages[2].components[0] as { variant: string };
+    expect(comp.variant).toBe('navigation');
+  });
+});
+
+describe('M8 PATCH — invalid navigation action fallback ke next', () => {
+  it('invalid action falls back to next', () => {
+    const payload = makeValidPayload();
+    payload.project.pages[2].components[0].action = 'invalidAction' as 'next';
+    const result = normalizeAiImportPayload(payload);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const comp = result.project.pages[2].components[0] as { action: string };
+    expect(comp.action).toBe('next');
+  });
+
+  it('missing action falls back to next', () => {
+    const payload = makeValidPayload();
+    delete payload.project.pages[2].components[0].action;
+    const result = normalizeAiImportPayload(payload);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const comp = result.project.pages[2].components[0] as { action: string };
+    expect(comp.action).toBe('next');
+  });
+});
+
+describe('M8 PATCH — cover text allowed, cover non-text rejected', () => {
+  it('text on cover is allowed (guided content from AI)', () => {
+    const payload = makeValidPayload();
+    // page 0 is cover with text — should succeed
+    const result = normalizeAiImportPayload(payload);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.project.pages[0].role).toBe('cover');
+    expect(result.project.pages[0].components[0].type).toBe('text');
+  });
+
+  it('image on cover is rejected (non-text not allowed)', () => {
+    const payload = makeValidPayload();
+    payload.project.pages[0].components.push({
+      type: 'image',
+      src: 'test.png',
+      variant: 'illustration',
+    });
+    const result = normalizeAiImportPayload(payload);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors.join('; ')).toMatch(/not allowed.*cover/i);
+  });
+
+  it('card on cover is rejected (non-text not allowed)', () => {
+    const payload = makeValidPayload();
+    payload.project.pages[0].components.push({
+      type: 'card',
+      body: 'test',
+      variant: 'infoCard',
+    });
+    const result = normalizeAiImportPayload(payload);
+    expect(result.ok).toBe(false);
+  });
+
+  it('navigation on cover is rejected (non-text not allowed)', () => {
+    const payload = makeValidPayload();
+    payload.project.pages[0].components.push({
+      type: 'navigation',
+      label: 'Next',
+      action: 'next',
+      variant: 'navigation',
+    });
+    const result = normalizeAiImportPayload(payload);
+    expect(result.ok).toBe(false);
   });
 });

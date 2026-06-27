@@ -6,16 +6,21 @@
  *                  ./ai-import-types, ./forbidden-field-guard
  *                  ../storage/style-pack-storage
  *
- * Kontrak (Batch 8 / M8):
+ * Kontrak (Batch 8 / M8 + patch):
  *   normalizeAiImportPayload(payload) → SimpleProject valid.
  *   1. checkForbiddenFields (reject html/css/script/className/cdn/iframe).
- *   2. Generate fresh ids untuk project/page/component.
- *   3. Role heuristic by title.
- *   4. layoutId default by role.
- *   5. Variant fallback by role.
- *   6. Capability check (reject if component not allowed for role).
- *   7. validateProject after normalize.
- *   8. Style import: validateStylePack → saveStylePack → set project.style.
+ *   2. schemaVersion wajib benar.
+ *   3. source wajib 'ai'.
+ *   4. page.components missing/non-array tidak crash, return error jelas.
+ *   5. component missing/non-object tidak crash.
+ *   6. invalid variant fallback ke default by role/type.
+ *   7. invalid navigation action fallback ke 'next'.
+ *   8. Generate fresh ids untuk project/page/component.
+ *   9. Role heuristic by title.
+ *   10. layoutId default by role.
+ *   11. Capability check (reject non-text if not allowed for role).
+ *   12. validateProject after normalize.
+ *   13. Style import: validateStylePack → saveStylePack → set project.style.
  */
 
 import type {
@@ -29,7 +34,15 @@ import type {
   SimpleProject,
   TextComponent,
 } from '../core/types';
-import { LAYOUT_IDS, PAGE_ROLES } from '../core/types';
+import {
+  CARD_COMPONENT_VARIANTS,
+  IMAGE_COMPONENT_VARIANTS,
+  LAYOUT_IDS,
+  NAVIGATION_ACTIONS,
+  NAVIGATION_COMPONENT_VARIANTS,
+  PAGE_ROLES,
+  TEXT_COMPONENT_VARIANTS,
+} from '../core/types';
 import { createProjectId, createPageId } from '../core/ids';
 import { getDefaultLayoutIdForRole } from '../core/layout-defaults';
 import { getDefaultTextVariantForRole, canAddComponent } from '../core/capability';
@@ -37,12 +50,50 @@ import { validateProject, validateStylePack } from '../core/validation';
 import { DEFAULT_STYLE_PACK, stylePackToProjectStyle } from '../core/style-presets';
 import { saveStylePack } from '../storage/style-pack-storage';
 import { createTextComponent, createImageComponent, createCardComponent, createNavigationComponent } from '../core/component-factory';
-import type { SilseAiImportPayload, AiImportComponent, AiImportPage } from './ai-import-types';
 import { checkForbiddenFields } from './forbidden-field-guard';
 
 export type NormalizeResult =
   | { ok: true; project: SimpleProject }
   | { ok: false; errors: string[] };
+
+// ---------------------------------------------------------------------------
+// Helpers: safe variant/action fallback
+// ---------------------------------------------------------------------------
+
+function safeTextVariant(raw: unknown, role: PageRole): TextComponent['variant'] {
+  if (typeof raw === 'string' && TEXT_COMPONENT_VARIANTS.includes(raw as TextComponent['variant'])) {
+    return raw as TextComponent['variant'];
+  }
+  return getDefaultTextVariantForRole(role);
+}
+
+function safeImageVariant(raw: unknown): ImageComponent['variant'] {
+  if (typeof raw === 'string' && IMAGE_COMPONENT_VARIANTS.includes(raw as ImageComponent['variant'])) {
+    return raw as ImageComponent['variant'];
+  }
+  return 'illustration';
+}
+
+function safeCardVariant(raw: unknown): CardComponent['variant'] {
+  if (typeof raw === 'string' && CARD_COMPONENT_VARIANTS.includes(raw as CardComponent['variant'])) {
+    return raw as CardComponent['variant'];
+  }
+  return 'infoCard';
+}
+
+function safeNavigationVariant(raw: unknown): NavigationComponent['variant'] {
+  if (typeof raw === 'string' && NAVIGATION_COMPONENT_VARIANTS.includes(raw as NavigationComponent['variant'])) {
+    return raw as NavigationComponent['variant'];
+  }
+  return 'navigation';
+}
+
+function safeNavigationAction(raw: unknown): 'next' | 'prev' | 'goto' {
+  if (typeof raw === 'string' && NAVIGATION_ACTIONS.includes(raw as 'next' | 'prev' | 'goto')) {
+    return raw as 'next' | 'prev' | 'goto';
+  }
+  return 'next';
+}
 
 // ---------------------------------------------------------------------------
 // Role heuristic by title
@@ -62,69 +113,85 @@ function heuristicRole(title: string, index: number): PageRole {
 }
 
 // ---------------------------------------------------------------------------
-// Normalize a single component
+// Normalize a single component (with non-object guard)
 // ---------------------------------------------------------------------------
 
 function normalizeComponent(
-  raw: AiImportComponent,
+  raw: unknown,
   role: PageRole,
   errors: string[],
   pageIndex: number,
   compIndex: number,
 ): PageComponent | null {
-  const type = raw.type;
   const prefix = `project.pages[${pageIndex}].components[${compIndex}]`;
 
-  // Check capability — but allow cover to have text (guided content from AI)
-  // AI import provides the full structure, including cover title/subtitle.
-  // The capability matrix is for manual editor add operations, not AI import.
-  if (type !== 'text' && !canAddComponent(role, type)) {
+  // Guard: component must be a non-null object
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+    errors.push(`${prefix}: component must be an object, got ${typeof raw}`);
+    return null;
+  }
+
+  const comp = raw as Record<string, unknown>;
+  const type = comp.type;
+
+  // Guard: type must be a valid string
+  if (typeof type !== 'string') {
+    errors.push(`${prefix}: component.type must be a string, got ${typeof type}`);
+    return null;
+  }
+
+  // Capability check — allow text on all roles (guided content from AI)
+  if (type !== 'text' && !canAddComponent(role, type as 'image' | 'card' | 'navigation')) {
     errors.push(`${prefix}: component type "${type}" not allowed for role "${role}"`);
     return null;
   }
 
   // Geometry defaults
-  const x = typeof raw.x === 'number' ? raw.x : 100;
-  const y = typeof raw.y === 'number' ? raw.y : 100;
-  const width = typeof raw.width === 'number' && raw.width > 0 ? raw.width : 400;
-  const height = typeof raw.height === 'number' && raw.height > 0 ? raw.height : 80;
+  const x = typeof comp.x === 'number' ? comp.x : 100;
+  const y = typeof comp.y === 'number' ? comp.y : 100;
+  const width = typeof comp.width === 'number' && comp.width > 0 ? comp.width : 400;
+  const height = typeof comp.height === 'number' && comp.height > 0 ? comp.height : 80;
 
   if (type === 'text') {
     return createTextComponent(role, {
-      text: raw.text ?? 'Teks',
-      variant: raw.variant as TextComponent['variant'] ?? getDefaultTextVariantForRole(role),
+      text: typeof comp.text === 'string' ? comp.text : 'Teks',
+      variant: safeTextVariant(comp.variant, role),
       x, y, width, height,
     });
   }
 
   if (type === 'image') {
-    if (!raw.src || raw.src.length === 0) {
+    const src = typeof comp.src === 'string' ? comp.src : '';
+    if (src.length === 0) {
       errors.push(`${prefix}: image component requires "src"`);
       return null;
     }
-    return createImageComponent(raw.src, {
-      variant: raw.variant as ImageComponent['variant'] ?? 'illustration',
-      alt: raw.alt ?? '',
-      objectFit: raw.objectFit ?? 'cover',
+    return createImageComponent(src, {
+      variant: safeImageVariant(comp.variant),
+      alt: typeof comp.alt === 'string' ? comp.alt : '',
+      objectFit: comp.objectFit === 'contain' ? 'contain' : 'cover',
       x, y, width, height,
     });
   }
 
   if (type === 'card') {
-    return createCardComponent(raw.body ?? 'Isi card', {
-      variant: raw.variant as CardComponent['variant'] ?? 'infoCard',
-      title: raw.title ?? '',
-      x, y, width, height,
-    });
+    return createCardComponent(
+      typeof comp.body === 'string' ? comp.body : 'Isi card',
+      {
+        variant: safeCardVariant(comp.variant),
+        title: typeof comp.title === 'string' ? comp.title : '',
+        x, y, width, height,
+      },
+    );
   }
 
   if (type === 'navigation') {
     return createNavigationComponent(
-      raw.label ?? 'Berikutnya',
-      raw.action ?? 'next',
+      typeof comp.label === 'string' ? comp.label : 'Berikutnya',
+      safeNavigationAction(comp.action),
       {
-        variant: raw.variant as NavigationComponent['variant'] ?? 'navigation',
-        targetPageId: raw.targetPageId,
+        variant: safeNavigationVariant(comp.variant),
+        targetPageId: typeof comp.targetPageId === 'string' ? comp.targetPageId : undefined,
         x, y, width, height,
       },
     );
@@ -135,22 +202,61 @@ function normalizeComponent(
 }
 
 // ---------------------------------------------------------------------------
-// Normalize a page
+// Normalize a page (with missing components guard)
 // ---------------------------------------------------------------------------
 
-function normalizePage(raw: AiImportPage, index: number, errors: string[]): SimplePage | null {
-  const title = raw.title ?? `Halaman ${index + 1}`;
-  const role: PageRole = raw.role && PAGE_ROLES.includes(raw.role)
-    ? raw.role
-    : heuristicRole(title, index);
-  const layoutId: LayoutId = raw.layoutId && LAYOUT_IDS.includes(raw.layoutId)
-    ? raw.layoutId
-    : getDefaultLayoutIdForRole(role);
-  const background = raw.background ?? { type: 'color' as const, color: '#ffffff' };
+function normalizePage(raw: unknown, index: number, errors: string[]): SimplePage | null {
+  const prefix = `project.pages[${index}]`;
+
+  // Guard: page must be a non-null object
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+    errors.push(`${prefix}: page must be an object, got ${typeof raw}`);
+    return null;
+  }
+
+  const page = raw as Record<string, unknown>;
+  const title = typeof page.title === 'string' ? page.title : `Halaman ${index + 1}`;
+
+  // Role: use payload if valid, otherwise heuristic
+  const role: PageRole =
+    typeof page.role === 'string' && PAGE_ROLES.includes(page.role as PageRole)
+      ? (page.role as PageRole)
+      : heuristicRole(title, index);
+
+  // LayoutId: use payload if valid, otherwise default by role
+  const layoutId: LayoutId =
+    typeof page.layoutId === 'string' && LAYOUT_IDS.includes(page.layoutId as LayoutId)
+      ? (page.layoutId as LayoutId)
+      : getDefaultLayoutIdForRole(role);
+
+  // Background: use payload if present, otherwise default
+  const background =
+    typeof page.background === 'object' && page.background !== null
+      ? (page.background as SimplePage['background'])
+      : { type: 'color' as const, color: '#ffffff' };
+
+  // Components: guard for missing/non-array
+  const rawComponents = page.components;
+  if (rawComponents === undefined || rawComponents === null) {
+    // Missing components — treat as empty array, no error
+    return {
+      id: createPageId(),
+      title,
+      role,
+      layoutId,
+      background,
+      components: [],
+    };
+  }
+
+  if (!Array.isArray(rawComponents)) {
+    errors.push(`${prefix}.components: must be an array, got ${typeof rawComponents}`);
+    return null;
+  }
 
   const components: PageComponent[] = [];
-  for (let i = 0; i < raw.components.length; i++) {
-    const comp = normalizeComponent(raw.components[i], role, errors, index, i);
+  for (let i = 0; i < rawComponents.length; i++) {
+    const comp = normalizeComponent(rawComponents[i], role, errors, index, i);
     if (comp) components.push(comp);
   }
 
@@ -168,24 +274,46 @@ function normalizePage(raw: AiImportPage, index: number, errors: string[]): Simp
 // Main normalizer
 // ---------------------------------------------------------------------------
 
-export function normalizeAiImportPayload(payload: SilseAiImportPayload): NormalizeResult {
+export function normalizeAiImportPayload(payload: unknown): NormalizeResult {
   const errors: string[] = [];
 
+  // Guard: payload must be a non-null object
+  if (typeof payload !== 'object' || payload === null || Array.isArray(payload)) {
+    return { ok: false, errors: ['Payload must be an object'] };
+  }
+
+  const p = payload as Record<string, unknown>;
+
   // 1. Forbidden field guard
-  const guardResult = checkForbiddenFields(payload);
+  const guardResult = checkForbiddenFields(p);
   if (!guardResult.ok) {
     return { ok: false, errors: guardResult.errors };
   }
 
-  // 2. Validate payload structure
-  if (!payload.project || !Array.isArray(payload.project.pages) || payload.project.pages.length === 0) {
+  // 2. schemaVersion must be correct
+  if (p.schemaVersion !== 1) {
+    return { ok: false, errors: [`schemaVersion must be 1, got ${String(p.schemaVersion)}`] };
+  }
+
+  // 3. source must be 'ai'
+  if (p.source !== 'ai') {
+    return { ok: false, errors: [`source must be "ai", got "${String(p.source)}"`] };
+  }
+
+  // 4. Validate project structure
+  if (typeof p.project !== 'object' || p.project === null || Array.isArray(p.project)) {
+    return { ok: false, errors: ['Payload must have a project object'] };
+  }
+
+  const proj = p.project as Record<string, unknown>;
+  if (!Array.isArray(proj.pages) || proj.pages.length === 0) {
     return { ok: false, errors: ['Payload must have project.pages with at least 1 page'] };
   }
 
-  // 3. Normalize pages
+  // 5. Normalize pages
   const pages: SimplePage[] = [];
-  for (let i = 0; i < payload.project.pages.length; i++) {
-    const page = normalizePage(payload.project.pages[i], i, errors);
+  for (let i = 0; i < proj.pages.length; i++) {
+    const page = normalizePage(proj.pages[i], i, errors);
     if (page) pages.push(page);
   }
 
@@ -197,34 +325,28 @@ export function normalizeAiImportPayload(payload: SilseAiImportPayload): Normali
     return { ok: false, errors };
   }
 
-  // 4. Style import
-  let stylePackId: string | undefined;
+  // 6. Style import
+  let stylePackId: string;
   let style: SimpleProject['style'];
 
-  if (payload.stylePack) {
-    const styleValidation = validateStylePack(payload.stylePack);
+  if (p.stylePack && typeof p.stylePack === 'object') {
+    const styleValidation = validateStylePack(p.stylePack);
     if (!styleValidation.ok) {
       return { ok: false, errors: [`Invalid stylePack: ${styleValidation.errors.join('; ')}`] };
     }
-    // Save style pack to library
-    const saveResult = saveStylePack(payload.stylePack);
-    if (saveResult.ok) {
-      stylePackId = payload.stylePack.id;
-      style = stylePackToProjectStyle(payload.stylePack);
-    } else {
-      // If save fails, still use the style pack inline
-      stylePackId = payload.stylePack.id;
-      style = stylePackToProjectStyle(payload.stylePack);
-    }
+    const saveResult = saveStylePack(p.stylePack as Parameters<typeof saveStylePack>[0]);
+    stylePackId = (p.stylePack as { id: string }).id;
+    style = stylePackToProjectStyle(p.stylePack as Parameters<typeof stylePackToProjectStyle>[0]);
+    void saveResult; // save result doesn't block import
   } else {
     stylePackId = DEFAULT_STYLE_PACK.id;
     style = stylePackToProjectStyle(DEFAULT_STYLE_PACK);
   }
 
-  // 5. Build project
+  // 7. Build project
   const project: SimpleProject = {
     id: createProjectId(),
-    title: payload.project.title ?? 'MPI dari AI',
+    title: typeof proj.title === 'string' ? proj.title : 'MPI dari AI',
     version: 1,
     pages,
     currentPageId: pages[0].id,
@@ -232,7 +354,7 @@ export function normalizeAiImportPayload(payload: SilseAiImportPayload): Normali
     style,
   };
 
-  // 6. Validate final project
+  // 8. Validate final project
   const projectValidation = validateProject(project);
   if (!projectValidation.ok) {
     return { ok: false, errors: [`Normalized project is invalid: ${projectValidation.errors.join('; ')}`] };
@@ -253,10 +375,5 @@ export function parseAndNormalizeAiJson(jsonString: string): NormalizeResult {
     return { ok: false, errors: [`Invalid JSON: ${e instanceof Error ? e.message : 'parse error'}`] };
   }
 
-  if (typeof parsed !== 'object' || parsed === null) {
-    return { ok: false, errors: ['Expected an object'] };
-  }
-
-  const payload = parsed as SilseAiImportPayload;
-  return normalizeAiImportPayload(payload);
+  return normalizeAiImportPayload(parsed);
 }
