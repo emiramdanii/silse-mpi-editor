@@ -1,0 +1,259 @@
+# Roadmap — silse-mpi-editor
+
+Setiap milestone = satu batch. Tidak lompat, tidak sekalian, tidak tambah fitur di luar scope milestone aktif.
+
+## Milestone Overview
+
+| Milestone | Nama                  | Status      |
+| --------- | --------------------- | ----------- |
+| M0        | Repo Skeleton         | In Progress |
+| M1        | Editor Kosong         | In Progress |
+| M2        | Text Block            | Planned     |
+| M3        | Page Flow Lengkap     | Planned     |
+| M4        | Image Block           | Planned     |
+| M5        | Button + Preview      | Planned     |
+| M6        | Export HTML           | Planned     |
+| M7        | Save / Load           | Planned     |
+| M8        | Drag / Resize         | Planned     |
+| M9        | Import AI / Canva     | Planned     |
+| M10       | Kuis Sederhana        | Planned     |
+| M11       | Template Ringan       | Planned     |
+| M12       | Paket MPI Siap Pakai  | Planned     |
+
+---
+
+## M0 — Repo Skeleton
+
+**Target:** Repo bisa install, run, test, build.
+
+**Isi:**
+- Vite React TS setup.
+- Folder structure sesuai `docs/CLEAN_ARCHITECTURE.md`.
+- README, PRODUCT_CONTRACT, CLEAN_ARCHITECTURE, EXPORT_HTML_CONTRACT, ROADMAP.
+- Test awal (boundary test anti-V5).
+
+**Acceptance:**
+- `npm install` sukses.
+- `npm run dev` jalan.
+- `npm run test` lulus.
+- `npm run build` lulus.
+
+---
+
+## M1 — Editor Kosong
+
+**Target:** Editor bisa buka project kosong.
+
+**Fitur:**
+- Create project.
+- 1 halaman default.
+- Canvas 1280×720.
+- Page panel.
+- Inspector placeholder (kosong).
+- Tambah halaman.
+- Pilih halaman.
+
+**Acceptance:**
+- Buka app → canvas muncul.
+- Halaman pertama tampil di page panel.
+- Tambah halaman → jumlah halaman bertambah.
+- Pilih halaman lain → `currentPageId` berubah.
+
+---
+
+## M2 — Text Block
+
+**Target:** Bisa tambah dan edit teks.
+
+**Fitur:**
+- Add text block.
+- Select block.
+- Edit text dari inspector.
+- Edit x/y/width/height/fontSize/color/fontWeight/align.
+
+**Acceptance:**
+- Tambah teks → teks muncul di canvas.
+- Edit teks → canvas berubah real-time.
+- Edit posisi/ukuran via inspector → block bergerak/berubah.
+
+---
+
+## M3 — Page Flow Lengkap
+
+**Target:** Bisa membuat banyak halaman dengan operasi lengkap.
+
+**Fitur:**
+- Add page.
+- Delete page.
+- Rename page.
+- Select page.
+- Duplicate page.
+
+**Acceptance:**
+- Tambah 3 halaman → pindah halaman → isi tiap halaman tidak bercampur.
+- Delete halaman → halaman hilang, halaman lain tetap utuh.
+- Duplicate halaman → halaman baru dengan isi sama tapi ID beda.
+
+---
+
+## M4 — Image Block
+
+**Target:** Bisa tambah gambar.
+
+**Fitur:**
+- Upload image (file → base64 atau object URL).
+- Render image di canvas.
+- Edit posisi/ukuran.
+- Object-fit: cover / contain.
+
+**Acceptance:**
+- Upload gambar → tampil di canvas.
+- Resize lewat inspector → gambar menyesuaikan.
+- Ganti object-fit → perilaku render berubah.
+
+---
+
+## M5 — Button + Preview
+
+**Target:** MPI bisa dipreview seperti media pembelajaran.
+
+**Fitur:**
+- Button block dengan action: next, prev, goto.
+- Preview fullscreen (mode terpisah dari editor).
+- Navigasi antar halaman di preview.
+
+**Acceptance:**
+- Tambah button next → klik di preview → halaman berpindah.
+- Tambah button prev → klik di preview → halaman mundur.
+- Tambah button goto → klik di preview → halaman target tampil.
+
+---
+
+## M6 — Export HTML
+
+**Target:** Export HTML standalone.
+
+**Output:**
+- 1 file HTML.
+- CSS inline.
+- JS inline.
+- Data project embedded.
+- Tidak butuh internet.
+- Tidak butuh React.
+
+**Acceptance:**
+- Export → file `.html` terdownload.
+- Buka di browser → halaman tampil.
+- Tombol next/prev/goto jalan.
+- Network tab: 0 request eksternal.
+
+---
+
+## M7 — Save / Load
+
+**Target:** Project tidak hilang saat browser ditutup.
+
+**Fitur:**
+- Autosave ke localStorage.
+- Manual save.
+- Load project.
+- Reset project.
+- Export/import JSON.
+
+**Acceptance:**
+- Edit project → reload browser → project masih ada.
+- Reset project → kembali ke project kosong.
+- Export JSON → file terdownload.
+- Import JSON → project termuat.
+
+---
+
+## M8 — Drag / Resize
+
+**Target:** Editor enak dipakai tanpa inspector untuk operasi umum.
+
+**Fitur:**
+- Drag block di canvas.
+- Resize block di canvas (handle pojok).
+- Snap sederhana (grid 8px).
+- Keyboard delete (tombol Delete/Backspace).
+
+**Acceptance:**
+- Block bisa digeser langsung di canvas.
+- Block bisa di-resize via handle.
+- Snap aktif saat drag dekat grid.
+- Pilih block → tekan Delete → block hilang.
+
+---
+
+## M9 — Import AI / Canva
+
+**Target:** Mulai mendekati kebutuhan workflow nyata.
+
+**Fitur awal:**
+- Paste JSON sederhana dari AI (format SimpleProject mini).
+- Import HTML ringan (parse body menjadi blocks sederhana).
+- Import gambar hasil Canva sebagai background halaman.
+- Tambah text overlay di atas gambar background.
+
+**Acceptance:**
+- Gambar Canva masuk sebagai background halaman.
+- Teks bisa diedit di atas gambar.
+- Export HTML → background dan teks tampil.
+
+---
+
+## M10 — Kuis Sederhana
+
+**Target:** MPI mendukung pertanyaan pilihan ganda sederhana.
+
+**Fitur:**
+- Question block (pertanyaan + pilihan + jawaban benar).
+- Feedback benar/salah.
+- Skor akhir.
+
+**Acceptance:**
+- Tambah kuis → di-preview bisa dijawab.
+- Jawaban benar → feedback positif.
+- Jawaban salah → feedback negatif.
+- Skor terakumulasi.
+
+---
+
+## M11 — Template Ringan
+
+**Target:** Beberapa template sederhana untuk start cepat.
+
+**Fitur:**
+- 3–5 template sederhana (cover, materi, latihan).
+- Template = preset project JSON, bukan engine.
+- Pilih template → project baru terisi template.
+
+**Acceptance:**
+- Pilih template cover → project baru muncul dengan halaman cover.
+- Edit template → tetap jadi project biasa (tidak terikat template).
+
+---
+
+## M12 — Paket MPI Siap Pakai
+
+**Target:** Bisa dikirim ke guru lain sebagai paket.
+
+**Fitur:**
+- Kompres project + asset menjadi satu file `.mpi.zip`.
+- Buka paket → langsung jalan di editor.
+- Atau: export HTML + paket source JSON.
+
+**Acceptance:**
+- Save project sebagai paket → file terdownload.
+- Buka paket di mesin lain → project termuat utuh.
+
+---
+
+## Aturan Per Milestone
+
+1. **Satu batch = satu milestone.** Tidak menggabung.
+2. **Tidak lompat.** M2 baru mulai setelah M1 acceptance terpenuhi.
+3. **Tidak tambah fitur di luar scope.** Jika tergoda tambah sesuatu, tulis di backlog, jangan masukkan commit.
+4. **Boundary test wajib lulus** di setiap milestone.
+5. **Test, typecheck, build wajib lulus** sebelum milestone ditutup.
