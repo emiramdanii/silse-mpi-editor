@@ -23,8 +23,8 @@ Alur produk: AI generate MPI JSON → app import → style/layout/interaksi bisa
 | M2 (v1) | Text Block + Text Role Dasar | Superseded |
 | M2 (v2) | Text Block + Variant | Superseded |
 | M2 | Page Role + Capability Matrix + Text Component | Done |
-| **B2S** | **Style Pack Foundation + AI Remix Roadmap Lock** | **Active** |
-| M3 | Page Flow + LayoutId Dasar | Planned |
+| B2S | Style Pack Foundation + AI Remix Roadmap Lock | Done |
+| **M3** | **Page Flow + LayoutId Dasar** | **Active** |
 | M4 | Image + Card + Layout Recipes | Planned |
 | M5 | Navigation + Preview + Interaction Style Dasar | Planned |
 | M6 | Export HTML + Style Resolver Solid | Planned |
@@ -152,7 +152,7 @@ Batch 1B dianggap selesai jika:
 
 ## Batch 2S — Style Pack Foundation + AI Remix Roadmap Lock
 
-**Status:** Active
+**Status:** Done (commit `b539cb4`)
 
 **Prasyarat:** Batch 2R ACCEPTED.
 
@@ -187,23 +187,35 @@ Batch 1B dianggap selesai jika:
 
 ## M3 — Page Flow + LayoutId Dasar
 
-**Target:** Bisa membuat banyak halaman dengan operasi lengkap + perkenalkan `layoutId` ringan.
+**Status:** Active
+
+**Prasyarat:** Batch 2S ACCEPTED.
+
+**Target:** Membuat manajemen halaman lengkap tanpa merusak PageRole, Capability Matrix, dan StylePack foundation.
 
 **Fitur:**
 
-- Add page (dengan role default `free`).
-- Delete page.
+- Add page (dengan role default `free` jika tidak diberikan).
+- Delete page (dengan safety: tidak boleh hapus halaman terakhir, current page harus pilih fallback).
 - Rename page.
 - Select page.
-- Duplicate page.
+- Duplicate page (deep copy, generate page id + semua component id baru, pertahankan role + layoutId).
 - `layoutId` ringan di SimplePage (placeholder string, belum full layout engine — itu M4/M9).
+- Default `layoutId` by PageRole:
+  - `cover` → `coverCentered`
+  - `material` → `singleColumn`
+  - `free` dan role lain → `blank`
 
 **Acceptance:**
 
 - Tambah 3 halaman → pindah halaman → isi tiap halaman tidak bercampur.
 - Delete halaman → halaman hilang, halaman lain tetap utuh.
-- Duplicate halaman → halaman baru dengan isi sama tapi ID beda.
-- Page punya field `layoutId` (default `'blank'`).
+- Delete halaman terakhir → dilarang (no-op).
+- Delete current page → current page pindah ke fallback.
+- Duplicate halaman → halaman baru dengan isi sama tapi page id beda + semua component id beda.
+- Duplicate mempertahankan role + layoutId.
+- StylePack project tidak berubah karena page operation.
+- Page punya field `layoutId` (string non-empty, default by role).
 
 > Catatan: `setPageRole` (ganti role halaman yang sudah ada) **bukan scope M3** — itu M11. M3 hanya operasi teknis halaman + layoutId placeholder.
 

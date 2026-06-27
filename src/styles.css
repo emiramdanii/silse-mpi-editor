@@ -172,6 +172,45 @@ input[type='text'] {
   color: white;
 }
 
+/* M3 layout: page-item with meta + actions */
+.page-item__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.page-item__meta {
+  font-size: 10px;
+  color: var(--color-muted);
+  text-transform: capitalize;
+}
+
+.page-item__actions {
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+
+.page-item:hover .page-item__actions,
+.page-item.is-active .page-item__actions {
+  opacity: 1;
+}
+
+.page-panel__footer {
+  padding: 8px 12px;
+  border-top: 1px solid var(--color-border);
+  font-size: 11px;
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+.page-panel__footer p {
+  margin: 0;
+}
+
 /* Canvas stage (center) */
 .canvas-stage {
   background: var(--color-bg);

@@ -34,7 +34,7 @@ function queryByAction(container: HTMLElement, action: string): HTMLElement | nu
   return container.querySelector(`[data-action="${action}"]`);
 }
 
-describe('scope-lock M2R — Toolbar: + Teks ENABLED, others DISABLED', () => {
+describe('scope-lock M3 — Toolbar: + Teks ENABLED, others DISABLED', () => {
   beforeEach(() => {
     useEditorStore.getState().newProject();
   });
@@ -107,17 +107,31 @@ describe('scope-lock M2R — Toolbar: + Teks ENABLED, others DISABLED', () => {
   });
 });
 
-describe('scope-lock M2R — PagePanel: still no M3 controls', () => {
+describe('scope-lock M3 — PagePanel: HAS M3 controls (rename/duplicate/delete)', () => {
   beforeEach(() => {
     useEditorStore.getState().newProject();
+    // Add a second page so delete button is visible (delete disabled on last page)
+    useEditorStore.getState().addPage();
+    useEditorStore.getState().selectPage(useEditorStore.getState().project.pages[0].id);
   });
 
-  it('PagePanel does NOT render a duplicate button', () => {
+  it('PagePanel renders a rename button (M3 active)', () => {
     const { container } = render(<PagePanel />);
-    expect(container.querySelectorAll('[title="Duplikat halaman"]').length).toBe(0);
+    expect(container.querySelectorAll('[title="Ganti nama halaman"]').length).toBeGreaterThan(0);
   });
 
-  it('PagePanel does NOT render a delete button', () => {
+  it('PagePanel renders a duplicate button (M3 active)', () => {
+    const { container } = render(<PagePanel />);
+    expect(container.querySelectorAll('[title="Duplikat halaman"]').length).toBeGreaterThan(0);
+  });
+
+  it('PagePanel renders a delete button when more than 1 page (M3 active)', () => {
+    const { container } = render(<PagePanel />);
+    expect(container.querySelectorAll('[title="Hapus halaman"]').length).toBeGreaterThan(0);
+  });
+
+  it('PagePanel hides delete button on last page (safety)', () => {
+    useEditorStore.getState().newProject(); // back to single page
     const { container } = render(<PagePanel />);
     expect(container.querySelectorAll('[title="Hapus halaman"]').length).toBe(0);
   });
@@ -128,7 +142,7 @@ describe('scope-lock M2R — PagePanel: still no M3 controls', () => {
   });
 });
 
-describe('scope-lock M2R — Inspector: variant + text + geometry ONLY', () => {
+describe('scope-lock M3 — Inspector: variant + text + geometry ONLY', () => {
   beforeEach(() => {
     useEditorStore.getState().newProject();
   });
@@ -224,7 +238,7 @@ describe('scope-lock M2R — Inspector: variant + text + geometry ONLY', () => {
   });
 });
 
-describe('scope-lock M2R — UI language: NO "block" in user-facing text', () => {
+describe('scope-lock M3 — UI language: NO "block" in user-facing text', () => {
   beforeEach(() => {
     useEditorStore.getState().newProject();
   });

@@ -15,10 +15,12 @@
 
 import {
   COMPONENT_TYPES,
+  LAYOUT_IDS,
   PAGE_ROLES,
   PROJECT_VERSION,
   TEXT_COMPONENT_VARIANTS,
   type ComponentType,
+  type LayoutId,
   type PageComponent,
   type PageRole,
   type SimplePage,
@@ -98,6 +100,10 @@ export function validatePageRole(role: unknown): role is PageRole {
   return isString(role) && PAGE_ROLES.includes(role as PageRole);
 }
 
+export function validateLayoutId(layoutId: unknown): layoutId is LayoutId {
+  return isString(layoutId) && LAYOUT_IDS.includes(layoutId as LayoutId);
+}
+
 export function validatePage(page: unknown): ValidationResult {
   if (!isObject(page)) return fail('page must be an object');
   if (!isString(page.id) || page.id.length === 0)
@@ -108,6 +114,13 @@ export function validatePage(page: unknown): ValidationResult {
   if (!validatePageRole(page.role)) {
     return fail(
       `page.role is required and must be one of: ${PAGE_ROLES.join(', ')}${isString(page.role) ? ` (got "${page.role}")` : ''}`,
+    );
+  }
+
+  // Kontrak Batch 3 (M3): page wajib punya layoutId valid (string non-empty, salah satu LAYOUT_IDS)
+  if (!validateLayoutId(page.layoutId)) {
+    return fail(
+      `page.layoutId is required and must be one of: ${LAYOUT_IDS.join(', ')}${isString(page.layoutId) ? ` (got "${page.layoutId}")` : ''}`,
     );
   }
 

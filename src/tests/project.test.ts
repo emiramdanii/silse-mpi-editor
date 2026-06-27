@@ -64,6 +64,7 @@ describe('createEmptyPage', () => {
     const page = createEmptyPage();
     expect(page.components).toEqual([]);
     expect(page.role).toBe('free');
+    expect(page.layoutId).toBe('blank');
   });
 
   it('creates a page with specified role', () => {
@@ -94,6 +95,30 @@ describe('createEmptyPage', () => {
   it('defaults to white color background', () => {
     const page = createEmptyPage();
     expect(page.background).toEqual({ type: 'color', color: '#ffffff' });
+  });
+
+  // M3 — layoutId default by role
+  it('cover page gets layoutId=coverCentered by default', () => {
+    const page = createEmptyPage({ role: 'cover' });
+    expect(page.layoutId).toBe('coverCentered');
+  });
+
+  it('material page gets layoutId=singleColumn by default', () => {
+    const page = createEmptyPage({ role: 'material' });
+    expect(page.layoutId).toBe('singleColumn');
+  });
+
+  it('free page gets layoutId=blank by default', () => {
+    const page = createEmptyPage({ role: 'free' });
+    expect(page.layoutId).toBe('blank');
+  });
+
+  it('all non-cover/non-material roles get layoutId=blank', () => {
+    const roles = ['learningObjectives', 'starter', 'activity', 'quiz', 'reflection', 'closing'] as const;
+    for (const role of roles) {
+      const page = createEmptyPage({ role });
+      expect(page.layoutId).toBe('blank');
+    }
   });
 });
 
@@ -190,6 +215,47 @@ describe('validatePage — role required (Batch 2R)', () => {
       const r = validatePage(page);
       expect(r.ok).toBe(true);
     }
+  });
+});
+
+describe('validatePage — layoutId required (Batch 3 / M3)', () => {
+  it('rejects page without layoutId field', () => {
+    const page = createEmptyPage({ role: 'free' });
+    const broken = { ...page } as Record<string, unknown>;
+    delete broken.layoutId;
+    const r = validatePage(broken);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.join('; ')).toMatch(/layoutId/i);
+  });
+
+  it('rejects page with invalid layoutId value', () => {
+    const page = createEmptyPage({ role: 'free' });
+    const broken = { ...page, layoutId: 'invalidLayout' };
+    const r = validatePage(broken);
+    expect(r.ok).toBe(false);
+  });
+
+  it('rejects page with layoutId of wrong type (number)', () => {
+    const page = createEmptyPage({ role: 'free' });
+    const broken = { ...page, layoutId: 123 };
+    const r = validatePage(broken);
+    expect(r.ok).toBe(false);
+  });
+
+  it('accepts page with each valid LayoutId', () => {
+    const layouts = ['blank', 'coverCentered', 'singleColumn'] as const;
+    for (const layoutId of layouts) {
+      const page = createEmptyPage({ role: 'free' });
+      const broken = { ...page, layoutId };
+      const r = validatePage(broken);
+      expect(r.ok).toBe(true);
+    }
+  });
+
+  it('accepts freshly created cover page (layoutId=coverCentered)', () => {
+    const p = createProject();
+    const r = validatePage(p.pages[0]);
+    expect(r.ok).toBe(true);
   });
 });
 

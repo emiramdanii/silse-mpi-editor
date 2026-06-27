@@ -2,22 +2,28 @@
  * Project factory for silse-mpi-editor.
  *
  * Layer: core
- * Allowed imports: ./types, ./ids, ./component-factory
+ * Allowed imports: ./types, ./ids, ./component-factory, ./style-presets, ./layout-defaults
  *
  * Creates valid empty projects and pages.
  *
  * Kontrak Batch 2R:
  *   - Page pertama default: title="Cover", role="cover", pre-fill 1 TextComponent variant 'title'.
  *   - Page baru manual default: role="free".
+ *
+ * Kontrak Batch 3 (M3):
+ *   - Setiap SimplePage punya field `layoutId` wajib, default by PageRole.
+ *   - cover → 'coverCentered', material → 'singleColumn', lainnya → 'blank'.
  */
 
 import type { PageRole, SimplePage, SimpleProject } from './types';
 import { createTextComponent } from './component-factory';
 import { createPageId, createProjectId } from './ids';
 import { DEFAULT_STYLE_PACK, stylePackToProjectStyle } from './style-presets';
+import { getDefaultLayoutIdForRole } from './layout-defaults';
 
 /**
  * Create a fresh empty page with a default white background.
+ * layoutId di-set otomatis berdasarkan role.
  */
 export function createEmptyPage(opts: { title?: string; role?: PageRole } = {}): SimplePage {
   const role: PageRole = opts.role ?? 'free';
@@ -26,6 +32,7 @@ export function createEmptyPage(opts: { title?: string; role?: PageRole } = {}):
     id: createPageId(),
     title,
     role,
+    layoutId: getDefaultLayoutIdForRole(role),
     background: { type: 'color', color: '#ffffff' },
     components: [],
   };

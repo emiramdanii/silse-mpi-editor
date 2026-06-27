@@ -57,6 +57,24 @@ export const PAGE_ROLES = [
 export type PageRole = (typeof PAGE_ROLES)[number];
 
 // ---------------------------------------------------------------------------
+// LayoutId — placeholder for layout recipe (M3 scope)
+// (lihat docs/ROADMAP.md M3 "Page Flow + LayoutId Dasar")
+//
+// LayoutId adalah string ringan yang menandai layout recipe halaman.
+// BUKAN full layout engine — engine konkret datang di M4 (recipes) dan
+// M9 (layout guard). Untuk M3, layoutId hanya metadata yang divalidasi
+// string non-empty dan salah satu dari LAYOUT_IDS.
+// ---------------------------------------------------------------------------
+
+export const LAYOUT_IDS = [
+  'blank',
+  'coverCentered',
+  'singleColumn',
+] as const;
+
+export type LayoutId = (typeof LAYOUT_IDS)[number];
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
@@ -70,6 +88,12 @@ export type SimplePage = {
   title: string;
   /** Peran pedagogis halaman. Wajib. Menentukan capability (komponen apa yang boleh ditambah). */
   role: PageRole;
+  /**
+   * Layout recipe placeholder (M3). String ringan, bukan full layout engine.
+   * Default by PageRole (lihat core/layout-defaults.ts).
+   * Engine konkret datang di M4 (recipes) dan M9 (layout guard).
+   */
+  layoutId: LayoutId;
   background: PageBackground;
   /** Elemen pembelajaran di halaman. Naming internal "components"; UI memakai "elemen". */
   components: PageComponent[];

@@ -44,6 +44,12 @@ const ROLE_LABELS: Record<string, string> = {
   free: 'Bebas',
 };
 
+const LAYOUT_LABELS: Record<string, string> = {
+  blank: 'Bebas (manual)',
+  coverCentered: 'Cover terpusat',
+  singleColumn: 'Satu kolom',
+};
+
 export function Inspector() {
   const currentPage = useEditorStore(
     (s) => s.project.pages.find((p) => p.id === s.project.currentPageId) ?? null,
@@ -89,6 +95,9 @@ function PageInfo({ currentPage }: { currentPage: SimplePage }) {
       </p>
       <p>
         <strong>Peran (role):</strong> {ROLE_LABELS[currentPage.role] ?? currentPage.role}
+      </p>
+      <p>
+        <strong>Layout:</strong> {LAYOUT_LABELS[currentPage.layoutId] ?? currentPage.layoutId}
       </p>
       <p>
         <strong>ID:</strong> {currentPage.id}

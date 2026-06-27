@@ -38,7 +38,7 @@ export function CanvasStage() {
       >
         <div className="canvas-frame__label">
           {CANVAS_WIDTH} × {CANVAS_HEIGHT} · {currentPage?.title ?? '—'} ·{' '}
-          {currentPage ? `role: ${currentPage.role}` : ''}
+          {currentPage ? `role: ${currentPage.role}, layout: ${currentPage.layoutId}` : ''}
         </div>
 
         {currentPage && currentPage.components.length === 0 && (

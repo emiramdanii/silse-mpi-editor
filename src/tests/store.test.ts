@@ -57,7 +57,7 @@ describe('editor store — M1 scope (project & pages)', () => {
 
   it('addPage with explicit title', () => {
     const store = useEditorStore.getState();
-    const id = store.addPage('Materi 1');
+    const id = store.addPage({ title: 'Materi 1' });
     const { project } = useEditorStore.getState();
     const page = project.pages.find((p) => p.id === id);
     expect(page?.title).toBe('Materi 1');
@@ -377,24 +377,261 @@ describe('editor store — M2R scope (text component + capability)', () => {
 });
 
 // =========================================================================
+// M3 — Page Flow operations (rename / delete / duplicate + layoutId)
+// =========================================================================
+describe('editor store — M3 scope (page flow + layoutId)', () => {
+  beforeEach(() => {
+    useEditorStore.getState().newProject();
+  });
+
+  // ---- layoutId default ----
+  it('cover page has layoutId=coverCentered by default', () => {
+    const { project } = useEditorStore.getState();
+    expect(project.pages[0].role).toBe('cover');
+    expect(project.pages[0].layoutId).toBe('coverCentered');
+  });
+
+  it('addPage creates free page with layoutId=blank', () => {
+    const store = useEditorStore.getState();
+    const id = store.addPage();
+    const { project } = useEditorStore.getState();
+    const newPage = project.pages.find((p) => p.id === id);
+    expect(newPage?.role).toBe('free');
+    expect(newPage?.layoutId).toBe('blank');
+  });
+
+  it('addPage with explicit role=material sets layoutId=singleColumn', () => {
+    const store = useEditorStore.getState();
+    const id = store.addPage({ role: 'material', title: 'Materi 1' });
+    const { project } = useEditorStore.getState();
+    const newPage = project.pages.find((p) => p.id === id);
+    expect(newPage?.role).toBe('material');
+    expect(newPage?.layoutId).toBe('singleColumn');
+  });
+
+  // ---- renamePage ----
+  it('renamePage updates the page title', () => {
+    const store = useEditorStore.getState();
+    const pageId = store.project.pages[0].id;
+    store.renamePage(pageId, 'Judul Baru');
+    const { project } = useEditorStore.getState();
+    expect(project.pages[0].title).toBe('Judul Baru');
+  });
+
+  it('renamePage does not touch other pages', () => {
+    const store = useEditorStore.getState();
+    const coverId = store.project.pages[0].id;
+    const originalTitle = store.project.pages[0].title;
+    store.addPage();
+    store.renamePage(coverId, 'Changed');
+    const { project } = useEditorStore.getState();
+    expect(project.pages[0].title).toBe('Changed');
+    // page 2 title unchanged (default 'Halaman Baru')
+    expect(project.pages[1].title).not.toBe('Changed');
+    void originalTitle;
+  });
+
+  it('renamePage on unknown id is a no-op', () => {
+    const store = useEditorStore.getState();
+    const before = useEditorStore.getState().project;
+    store.renamePage('nope', 'X');
+    expect(useEditorStore.getState().project).toBe(before);
+  });
+
+  // ---- deletePage safety ----
+  it('deletePage removes a page when more than 1 exist', () => {
+    const store = useEditorStore.getState();
+    store.addPage();
+    store.addPage();
+    expect(useEditorStore.getState().project.pages).toHaveLength(3);
+
+    const firstPage = useEditorStore.getState().project.pages[0];
+    store.deletePage(firstPage.id);
+    expect(useEditorStore.getState().project.pages).toHaveLength(2);
+    expect(
+      useEditorStore.getState().project.pages.find((p) => p.id === firstPage.id),
+    ).toBeUndefined();
+  });
+
+  it('deletePage on last page is a no-op (safety)', () => {
+    const store = useEditorStore.getState();
+    expect(useEditorStore.getState().project.pages).toHaveLength(1);
+    const onlyPage = store.project.pages[0];
+    store.deletePage(onlyPage.id);
+    expect(useEditorStore.getState().project.pages).toHaveLength(1);
+  });
+
+  it('deletePage on unknown id is a no-op', () => {
+    const store = useEditorStore.getState();
+    store.addPage();
+    const before = useEditorStore.getState().project;
+    store.deletePage('nope');
+    expect(useEditorStore.getState().project).toBe(before);
+  });
+
+  it('deletePage on current page picks a fallback current page', () => {
+    const store = useEditorStore.getState();
+    const coverId = store.project.pages[0].id;
+    const newPageId = store.addPage(); // current = newPageId
+    expect(useEditorStore.getState().project.currentPageId).toBe(newPageId);
+
+    store.deletePage(newPageId);
+    // Current page should fall back to cover
+    const { project } = useEditorStore.getState();
+    expect(project.pages).toHaveLength(1);
+    expect(project.currentPageId).toBe(coverId);
+  });
+
+  it('deletePage clears component selection if selected was on deleted page', () => {
+    const store = useEditorStore.getState();
+    store.addPage(); // free page
+    const compId = store.addTextComponent()!;
+    store.selectComponent(compId);
+    expect(useEditorStore.getState().selectedComponentId).toBe(compId);
+
+    const freePageId = useEditorStore.getState().project.currentPageId;
+    store.deletePage(freePageId);
+    expect(useEditorStore.getState().selectedComponentId).toBeNull();
+  });
+
+  // ---- duplicatePage ----
+  it('duplicatePage creates a new page with different id', () => {
+    const store = useEditorStore.getState();
+    const sourceId = store.project.pages[0].id;
+    const copyId = store.duplicatePage(sourceId);
+
+    expect(copyId).not.toBeNull();
+    expect(copyId).not.toBe(sourceId);
+    const { project } = useEditorStore.getState();
+    expect(project.pages).toHaveLength(2);
+    expect(project.pages.find((p) => p.id === copyId)).toBeDefined();
+  });
+
+  it('duplicatePage switches current page to the new copy', () => {
+    const store = useEditorStore.getState();
+    const sourceId = store.project.pages[0].id;
+    const copyId = store.duplicatePage(sourceId);
+    expect(useEditorStore.getState().project.currentPageId).toBe(copyId);
+  });
+
+  it('duplicatePage appends "(salinan)" to title', () => {
+    const store = useEditorStore.getState();
+    const sourceId = store.project.pages[0].id;
+    const copyId = store.duplicatePage(sourceId);
+    const { project } = useEditorStore.getState();
+    const copy = project.pages.find((p) => p.id === copyId);
+    expect(copy?.title).toBe('Cover (salinan)');
+  });
+
+  it('duplicatePage preserves role + layoutId', () => {
+    const store = useEditorStore.getState();
+    const sourceId = store.project.pages[0].id;
+    const copyId = store.duplicatePage(sourceId);
+    const { project } = useEditorStore.getState();
+    const source = project.pages.find((p) => p.id === sourceId)!;
+    const copy = project.pages.find((p) => p.id === copyId)!;
+    expect(copy.role).toBe(source.role);
+    expect(copy.layoutId).toBe(source.layoutId);
+  });
+
+  it('duplicatePage generates new component ids (no shared reference)', () => {
+    const store = useEditorStore.getState();
+    // Cover has 1 pre-filled title component
+    const sourceId = store.project.pages[0].id;
+    const sourceCompId = useEditorStore.getState().project.pages[0].components[0].id;
+
+    const copyId = store.duplicatePage(sourceId);
+    const { project } = useEditorStore.getState();
+    const copy = project.pages.find((p) => p.id === copyId)!;
+    const copyCompId = copy.components[0].id;
+
+    expect(copyCompId).not.toBe(sourceCompId);
+    expect(copy.components).toHaveLength(1);
+    expect(copy.components[0].type).toBe('text');
+  });
+
+  it('duplicatePage does deep copy — mutating copy does not affect source', () => {
+    const store = useEditorStore.getState();
+    const sourceId = store.project.pages[0].id;
+    const copyId = store.duplicatePage(sourceId);
+    const { project } = useEditorStore.getState();
+    const source = project.pages.find((p) => p.id === sourceId)!;
+    const copy = project.pages.find((p) => p.id === copyId)!;
+    const sourceTextBefore = (source.components[0] as { text: string }).text;
+    const copyTextBefore = (copy.components[0] as { text: string }).text;
+    expect(copyTextBefore).toBe(sourceTextBefore);
+
+    // Mutate copy via store
+    store.updateTextComponent(copy.components[0].id, { text: 'Changed copy' });
+    const after = useEditorStore.getState().project;
+    const sourceAfter = after.pages.find((p) => p.id === sourceId)!;
+    const copyAfter = after.pages.find((p) => p.id === copyId)!;
+    expect((sourceAfter.components[0] as { text: string }).text).toBe(sourceTextBefore);
+    expect((copyAfter.components[0] as { text: string }).text).toBe('Changed copy');
+  });
+
+  it('duplicatePage on unknown id returns null', () => {
+    const store = useEditorStore.getState();
+    expect(store.duplicatePage('nope')).toBeNull();
+    expect(useEditorStore.getState().project.pages).toHaveLength(1);
+  });
+
+  it('duplicatePage of a free page with components — preserves text + variant + geometry', () => {
+    const store = useEditorStore.getState();
+    store.addPage(); // free
+    const compId = store.addTextComponent({ text: 'Hello', variant: 'instruction' })!;
+    const freePageId = useEditorStore.getState().project.currentPageId;
+
+    const copyId = store.duplicatePage(freePageId)!;
+    const { project } = useEditorStore.getState();
+    const copy = project.pages.find((p) => p.id === copyId)!;
+    const copyComp = copy.components[0] as { id: string; text: string; variant: string };
+
+    expect(copyComp.text).toBe('Hello');
+    expect(copyComp.variant).toBe('instruction');
+    expect(copyComp.id).not.toBe(compId);
+    expect(copy.role).toBe('free');
+    expect(copy.layoutId).toBe('blank');
+  });
+
+  // ---- style invariance ----
+  it('StylePack project does NOT change after page operations', () => {
+    const store = useEditorStore.getState();
+    const styleBefore = useEditorStore.getState().project.style;
+    const stylePackIdBefore = useEditorStore.getState().project.stylePackId;
+
+    store.addPage({ role: 'material' });
+    store.renamePage(useEditorStore.getState().project.pages[1].id, 'Materi');
+    store.duplicatePage(useEditorStore.getState().project.pages[1].id);
+    store.deletePage(useEditorStore.getState().project.pages[1].id);
+
+    const { project } = useEditorStore.getState();
+    expect(project.style).toBe(styleBefore);
+    expect(project.stylePackId).toBe(stylePackIdBefore);
+  });
+});
+
+// =========================================================================
 // Scope-lock assertions
 // =========================================================================
-describe('editor store — scope-lock (M2R)', () => {
-  it('store does NOT expose renamePage (M3 feature)', () => {
+describe('editor store — scope-lock (M3)', () => {
+  // M3 page operations now EXIST in store
+  it('store EXPOSES renamePage (M3 active)', () => {
     const store = useEditorStore.getState();
-    expect((store as unknown as Record<string, unknown>).renamePage).toBeUndefined();
+    expect(typeof store.renamePage).toBe('function');
   });
 
-  it('store does NOT expose deletePage (M3 feature)', () => {
+  it('store EXPOSES deletePage (M3 active)', () => {
     const store = useEditorStore.getState();
-    expect((store as unknown as Record<string, unknown>).deletePage).toBeUndefined();
+    expect(typeof store.deletePage).toBe('function');
   });
 
-  it('store does NOT expose duplicatePage (M3 feature)', () => {
+  it('store EXPOSES duplicatePage (M3 active)', () => {
     const store = useEditorStore.getState();
-    expect((store as unknown as Record<string, unknown>).duplicatePage).toBeUndefined();
+    expect(typeof store.duplicatePage).toBe('function');
   });
 
+  // Still NOT exposed
   it('store does NOT expose setPageRole (M11 feature)', () => {
     const store = useEditorStore.getState();
     expect((store as unknown as Record<string, unknown>).setPageRole).toBeUndefined();
@@ -420,7 +657,7 @@ describe('editor store — scope-lock (M2R)', () => {
     expect((store as unknown as Record<string, unknown>).addQuestionComponent).toBeUndefined();
   });
 
-  it('store does NOT expose removeComponent (deferred — not in M2 scope)', () => {
+  it('store does NOT expose removeComponent (deferred — not in M3 scope, lands in M9)', () => {
     const store = useEditorStore.getState();
     expect((store as unknown as Record<string, unknown>).removeComponent).toBeUndefined();
   });
