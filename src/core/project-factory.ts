@@ -14,6 +14,7 @@
 import type { PageRole, SimplePage, SimpleProject } from './types';
 import { createTextComponent } from './component-factory';
 import { createPageId, createProjectId } from './ids';
+import { DEFAULT_STYLE_PACK, stylePackToProjectStyle } from './style-presets';
 
 /**
  * Create a fresh empty page with a default white background.
@@ -76,6 +77,10 @@ export function createProject(title: string = 'MPI Baru'): SimpleProject {
     version: 1,
     pages: [coverPage],
     currentPageId: coverPage.id,
+    // Batch 2S: embed default style pack (cleanClassroom) into project.
+    // Tokens disnapshot inline supaya project self-contained.
+    stylePackId: DEFAULT_STYLE_PACK.id,
+    style: stylePackToProjectStyle(DEFAULT_STYLE_PACK),
   };
 }
 

@@ -35,6 +35,28 @@ describe('createProject', () => {
     expect(a.id).not.toBe(b.id);
     expect(a.pages[0].id).not.toBe(b.pages[0].id);
   });
+
+  // Batch 2S: project default punya style field
+  it('has stylePackId set to cleanClassroom (Batch 2S)', () => {
+    const p = createProject();
+    expect(p.stylePackId).toBe('cleanClassroom');
+  });
+
+  it('has style field with ProjectStyle (Batch 2S)', () => {
+    const p = createProject();
+    expect(p.style).toBeDefined();
+    expect(p.style?.stylePackId).toBe('cleanClassroom');
+    expect(p.style?.tokens.colors).toBeDefined();
+    expect(p.style?.tokens.typography).toBeDefined();
+  });
+
+  it('project style is JSON-serializable (Batch 2S)', () => {
+    const p = createProject();
+    const json = JSON.stringify(p);
+    const parsed = JSON.parse(json);
+    expect(parsed.style.stylePackId).toBe('cleanClassroom');
+    expect(parsed.style.tokens.colors.primary).toBeDefined();
+  });
 });
 
 describe('createEmptyPage', () => {

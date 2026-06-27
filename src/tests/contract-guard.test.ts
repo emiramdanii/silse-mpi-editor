@@ -1,17 +1,16 @@
 /**
- * Contract guard test — Batch 1B.
+ * Contract guard test — Batch 1B + Batch 2S.
  *
- * Memastikan bahwa kontrak yang dikunci di Batch 1B hadir sebagai dokumen
+ * Memastikan bahwa kontrak yang dikunci hadir sebagai dokumen
  * dan tidak dilanggar di kode src/.
  *
  * Test ini TIDAK menguji isi dokumen secara mendalam (itu tugas review manusia).
  * Test ini hanya memastikan:
- *   1. 5 dokumen kontrak wajib ada di docs/.
- *   2. Tidak ada identifier "engine besar" yang bocor ke src/ (selain yang
- *      sudah diizinkan di kontrak).
- *   3. Tidak ada 3-renderer terpisah (editor/preview/export menulis style
- *      sendiri) — ini akan aktif penuh setelah M6; untuk B1B hanya cek
- *      bahwa tidak ada file duplikat bernama `*-style.ts` di 3 layer.
+ *   1. Dokumen kontrak wajib ada di docs/ (incl. AI_IMPORT_CONTRACT.md — Batch 2S).
+ *   2. Tidak ada identifier "engine besar" yang bocor ke src/.
+ *   3. Tidak ada 3-renderer terpisah.
+ *   4. (Batch 2S) ROADMAP tidak menyebut "Import HTML ringan".
+ *   5. (Batch 2S) User-facing roadmap memakai component/elemen, bukan "block".
  */
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
@@ -27,6 +26,7 @@ const REQUIRED_DOCS = [
   'STYLE_SCHEMA_CONTRACT.md',
   'CLEAN_ARCHITECTURE.md',
   'EXPORT_HTML_CONTRACT.md',
+  'AI_IMPORT_CONTRACT.md',
   'ROADMAP.md',
   'PRODUCTION_ROADMAP.md',
 ];
@@ -123,4 +123,91 @@ describe('contract guard — tidak ada style logic duplikat di editor/preview/ex
     // style bercabang — pelanggaran kontrak editor=preview=export.
     expect(layersWithStyleFile.length).toBeLessThan(2);
   });
+});
+
+// =========================================================================
+// Batch 2S — AI Remix Roadmap Lock
+// =========================================================================
+
+describe('contract guard Batch 2S — AI import must be JSON SILSE, not HTML', () => {
+  const ROADMAP_FILES = ['ROADMAP.md', 'PRODUCTION_ROADMAP.md'];
+
+  for (const file of ROADMAP_FILES) {
+    it(`${file} M8 section does NOT mention "Import HTML ringan" as a feature`, () => {
+      const path = join(DOCS_DIR, file);
+      const content = readFileSync(path, 'utf8');
+
+      // Extract M8 section (from "## M8" to next "## " heading)
+      const m8Match = content.match(/^## M8\b.*?(?=^## )/ms);
+      expect(m8Match).not.toBeNull();
+      const m8Section = m8Match![0];
+
+      // M8 section must NOT mention "Import HTML ringan" as a feature
+      expect(m8Section).not.toMatch(/Import HTML ringan/i);
+      // M8 section must NOT list "Import HTML" + positive descriptor as feature
+      expect(m8Section).not.toMatch(/Import HTML\s+(ringan|sederhana|bebas|parse)/i);
+    });
+
+    it(`${file} M8 section explicitly forbids raw HTML/CSS/script`, () => {
+      const path = join(DOCS_DIR, file);
+      const content = readFileSync(path, 'utf8');
+      const m8Match = content.match(/^## M8\b.*?(?=^## )/ms);
+      expect(m8Match).not.toBeNull();
+      const m8Section = m8Match![0];
+
+      // M8 should mention forbidding raw HTML / CSS / script
+      expect(m8Section).toMatch(/Raw HTML parsing/i);
+      expect(m8Section).toMatch(/Raw CSS parsing/i);
+    });
+  }
+
+  it('AI_IMPORT_CONTRACT.md exists and mentions JSON SILSE', () => {
+    const path = join(DOCS_DIR, 'AI_IMPORT_CONTRACT.md');
+    expect(existsSync(path)).toBe(true);
+    const content = readFileSync(path, 'utf8');
+    expect(content).toMatch(/JSON SILSE/i);
+    expect(content).toMatch(/Dilarang/i);
+    expect(content).toMatch(/raw HTML/i);
+  });
+});
+
+describe('contract guard Batch 2S — user-facing roadmap uses component/elemen, not block', () => {
+  const ROADMAP_FILES = ['ROADMAP.md', 'PRODUCTION_ROADMAP.md'];
+
+  for (const file of ROADMAP_FILES) {
+    it(`${file} does NOT use "block" as user-facing feature name in M3+ sections`, () => {
+      const path = join(DOCS_DIR, file);
+      const content = readFileSync(path, 'utf8');
+
+      // Find sections M3 onward (skip M0-M2 history which mentions "block" legitimately).
+      const m3Index = content.search(/^## M3\b/m);
+      expect(m3Index).toBeGreaterThan(0);
+      const futureSection = content.slice(m3Index);
+
+      // Forbidden user-facing phrases (positive feature descriptions using "block")
+      const forbiddenPhrases = [
+        /Drag block/i,
+        /Resize block/i,
+        /Pilih block/i,
+        /Tambah block/i,
+        /block variant/i,
+        /Image block/i,
+        /Button block/i,
+        /Question block/i,
+      ];
+
+      for (const re of forbiddenPhrases) {
+        expect(futureSection).not.toMatch(re);
+      }
+    });
+
+    it(`${file} uses "komponen" or "elemen" in feature descriptions`, () => {
+      const path = join(DOCS_DIR, file);
+      const content = readFileSync(path, 'utf8');
+      const m3Index = content.search(/^## M3\b/m);
+      const futureSection = content.slice(m3Index);
+      // Should mention "komponen" or "elemen" at least once
+      expect(futureSection).toMatch(/komponen|elemen/i);
+    });
+  }
 });

@@ -25,6 +25,10 @@ import {
   type SimpleProject,
   type TextComponentVariant,
 } from './types';
+import type {
+  ProjectStyle,
+  StylePack,
+} from './style-types';
 
 export type ValidationResult = { ok: true } | { ok: false; errors: string[] };
 
@@ -132,6 +136,17 @@ export function validateProject(project: unknown): ValidationResult {
     return fail('project.currentPageId must be a string');
   }
 
+  // Batch 2S: validate style field kalau ada (optional, backward-compat).
+  if (project.style !== undefined) {
+    const styleResult = validateProjectStyle(project.style);
+    if (!styleResult.ok) {
+      return fail(`project.style: ${styleResult.errors.join('; ')}`);
+    }
+  }
+  if (project.stylePackId !== undefined && !isString(project.stylePackId)) {
+    return fail('project.stylePackId must be a string if present');
+  }
+
   const pageIds = new Set<string>();
   for (let i = 0; i < project.pages.length; i++) {
     const r = validatePage(project.pages[i]);
@@ -145,6 +160,155 @@ export function validateProject(project: unknown): ValidationResult {
     return fail(`project.currentPageId (${project.currentPageId}) not found in pages`);
   }
   return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Style validation (Batch 2S)
+// ---------------------------------------------------------------------------
+
+function isStringRecord(v: unknown): v is Record<string, unknown> {
+  return isObject(v);
+}
+
+function validateStyleColors(colors: unknown): ValidationResult {
+  if (!isStringRecord(colors)) return fail('colors must be an object');
+  const required = [
+    'background',
+    'surface',
+    'primary',
+    'secondary',
+    'text',
+    'mutedText',
+    'border',
+    'success',
+    'warning',
+    'danger',
+  ] as const;
+  for (const key of required) {
+    if (!isString(colors[key])) return fail(`colors.${key} must be a string`);
+  }
+  return { ok: true };
+}
+
+function validateStyleTypography(t: unknown): ValidationResult {
+  if (!isStringRecord(t)) return fail('typography must be an object');
+  if (!isString(t.fontFamily)) return fail('typography.fontFamily must be a string');
+  const numeric = ['titleSize', 'subtitleSize', 'bodySize', 'smallSize', 'lineHeight'] as const;
+  for (const key of numeric) {
+    if (!isNumber(t[key]) || (t[key] as number) <= 0) {
+      return fail(`typography.${key} must be a positive number`);
+    }
+  }
+  return { ok: true };
+}
+
+function validateStyleSpacing(s: unknown): ValidationResult {
+  if (!isStringRecord(s)) return fail('spacing must be an object');
+  const required = ['pagePadding', 'componentGap', 'cardPadding'] as const;
+  for (const key of required) {
+    if (!isNumber(s[key]) || (s[key] as number) < 0) {
+      return fail(`spacing.${key} must be a non-negative number`);
+    }
+  }
+  return { ok: true };
+}
+
+function validateStyleRadius(r: unknown): ValidationResult {
+  if (!isStringRecord(r)) return fail('radius must be an object');
+  const required = ['small', 'medium', 'large'] as const;
+  for (const key of required) {
+    if (!isNumber(r[key]) || (r[key] as number) < 0) {
+      return fail(`radius.${key} must be a non-negative number`);
+    }
+  }
+  return { ok: true };
+}
+
+function validateStyleShadow(s: unknown): ValidationResult {
+  if (!isStringRecord(s)) return fail('shadow must be an object');
+  const required = ['none', 'soft', 'medium'] as const;
+  for (const key of required) {
+    if (!isString(s[key])) return fail(`shadow.${key} must be a string`);
+  }
+  return { ok: true };
+}
+
+/**
+ * Validate a StylePack (reusable collection).
+ * Kontrak Batch 2S: tokens harus serializable (string/number only).
+ * Recipe placeholders boleh kosong.
+ */
+export function validateStylePack(pack: unknown): ValidationResult {
+  if (!isObject(pack)) return fail('stylePack must be an object');
+  if (!isString(pack.id) || pack.id.length === 0)
+    return fail('stylePack.id must be a non-empty string');
+  if (!isString(pack.name)) return fail('stylePack.name must be a string');
+  if (!isString(pack.description)) return fail('stylePack.description must be a string');
+
+  const colorsR = validateStyleColors(pack.colors);
+  if (!colorsR.ok) return fail(`stylePack.colors: ${colorsR.errors.join('; ')}`);
+
+  const typoR = validateStyleTypography(pack.typography);
+  if (!typoR.ok) return fail(`stylePack.typography: ${typoR.errors.join('; ')}`);
+
+  const spacingR = validateStyleSpacing(pack.spacing);
+  if (!spacingR.ok) return fail(`stylePack.spacing: ${spacingR.errors.join('; ')}`);
+
+  const radiusR = validateStyleRadius(pack.radius);
+  if (!radiusR.ok) return fail(`stylePack.radius: ${radiusR.errors.join('; ')}`);
+
+  const shadowR = validateStyleShadow(pack.shadow);
+  if (!shadowR.ok) return fail(`stylePack.shadow: ${shadowR.errors.join('; ')}`);
+
+  // Recipe placeholders: must be objects (may be empty)
+  if (!isObject(pack.componentRecipes)) return fail('stylePack.componentRecipes must be an object');
+  if (!isObject(pack.interactionRecipes)) return fail('stylePack.interactionRecipes must be an object');
+  if (!isObject(pack.scoringRecipes)) return fail('stylePack.scoringRecipes must be an object');
+
+  return { ok: true };
+}
+
+/**
+ * Validate ProjectStyle (instance attached to a project).
+ * Kontrak Batch 2S: stylePackId wajib, tokens wajib lengkap (snapshot).
+ */
+export function validateProjectStyle(style: unknown): ValidationResult {
+  if (!isObject(style)) return fail('projectStyle must be an object');
+  if (!isString(style.stylePackId) || style.stylePackId.length === 0) {
+    return fail('projectStyle.stylePackId must be a non-empty string');
+  }
+  if (!isObject(style.tokens)) return fail('projectStyle.tokens must be an object');
+
+  const colorsR = validateStyleColors((style.tokens as { colors: unknown }).colors);
+  if (!colorsR.ok) return fail(`projectStyle.tokens.colors: ${colorsR.errors.join('; ')}`);
+
+  const typoR = validateStyleTypography((style.tokens as { typography: unknown }).typography);
+  if (!typoR.ok) return fail(`projectStyle.tokens.typography: ${typoR.errors.join('; ')}`);
+
+  const spacingR = validateStyleSpacing((style.tokens as { spacing: unknown }).spacing);
+  if (!spacingR.ok) return fail(`projectStyle.tokens.spacing: ${spacingR.errors.join('; ')}`);
+
+  const radiusR = validateStyleRadius((style.tokens as { radius: unknown }).radius);
+  if (!radiusR.ok) return fail(`projectStyle.tokens.radius: ${radiusR.errors.join('; ')}`);
+
+  const shadowR = validateStyleShadow((style.tokens as { shadow: unknown }).shadow);
+  if (!shadowR.ok) return fail(`projectStyle.tokens.shadow: ${shadowR.errors.join('; ')}`);
+
+  return { ok: true };
+}
+
+/**
+ * Type guard: narrows unknown to StylePack when valid.
+ */
+export function isValidStylePack(pack: unknown): pack is StylePack {
+  return validateStylePack(pack).ok;
+}
+
+/**
+ * Type guard: narrows unknown to ProjectStyle when valid.
+ */
+export function isValidProjectStyle(style: unknown): style is ProjectStyle {
+  return validateProjectStyle(style).ok;
 }
 
 /**

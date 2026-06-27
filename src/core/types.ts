@@ -27,6 +27,14 @@ export type SimpleProject = {
   version: typeof PROJECT_VERSION;
   pages: SimplePage[];
   currentPageId: string;
+  /**
+   * Style pack reference + inline tokens (Batch 2S).
+   * Optional untuk backward-compat dengan project lama — kalau undefined,
+   * editor memakai DEFAULT_STYLE_PACK. M7 akan memperkenalkan save/load
+   * style pack sebagai reusable asset.
+   */
+  stylePackId?: string;
+  style?: import('./style-types').ProjectStyle;
 };
 
 // ---------------------------------------------------------------------------

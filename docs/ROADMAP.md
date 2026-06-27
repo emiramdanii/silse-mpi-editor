@@ -2,6 +2,14 @@
 
 Setiap milestone = satu batch. Tidak lompat, tidak sekalian, tidak tambah fitur di luar scope milestone aktif.
 
+## Identitas Produk (terkunci Batch 2S)
+
+**SILSE = Role-Based Guided MPI Editor with Reusable Style Packs.**
+
+Alur produk: AI generate MPI JSON → app import → style/layout/interaksi bisa dimodifikasi → export HTML standalone.
+
+Implikasi: Style Pack foundation harus ada **sebelum** M3, supaya M3–M8 tidak tumbuh dengan style kecil-kecil sendiri. AI import wajib JSON SILSE — **bukan** HTML/CSS/JS bebas.
+
 ## Milestone Overview
 
 | Milestone | Nama                                  | Status      |
@@ -11,22 +19,24 @@ Setiap milestone = satu batch. Tidak lompat, tidak sekalian, tidak tambah fitur 
 | B1A       | Scope-Lock Patch                      | Done        |
 | B1B       | Core Contract, Schema, Style Lock     | Done        |
 | M2 (v1)   | Text Block + Text Role Dasar          | Superseded  |
-| **M2**    | **Page Role + Capability Matrix + Text Component** | **Active** |
-| M3        | Page Flow Management                  | Planned     |
-| M4        | Image + Card Component                | Planned     |
-| M5        | Navigation + Preview                  | Planned     |
-| M6        | Export HTML + Style Consistency       | Planned     |
-| M7        | Save / Load + Schema Validation       | Planned     |
-| M8        | Drag / Resize + Layout Guide          | Planned     |
-| M9        | AI JSON Import + Style Import         | Planned     |
-| M10       | Kuis Sederhana                        | Planned     |
-| M11       | Advanced Learning Components          | Planned     |
-| M12       | Template Pedagogis                    | Planned     |
-| M13       | Paket MPI Production-Ready            | Planned     |
+| M2 (v2)   | Text Block + Variant                  | Superseded  |
+| **M2**    | **Page Role + Capability Matrix + Text Component** | **Done** |
+| **B2S**   | **Style Pack Foundation + AI Remix Roadmap Lock** | **Active** |
+| M3        | Page Flow + LayoutId Dasar            | Planned     |
+| M4        | Image + Card + Layout Recipes         | Planned     |
+| M5        | Navigation + Preview + Interaction Style Dasar | Planned |
+| M6        | Export HTML + Style Resolver Solid    | Planned     |
+| M7        | Save / Load + Style Pack Save         | Planned     |
+| M8        | AI JSON Import + Style Import MVP     | Planned     |
+| M9        | Direct Manipulation + Layout Guard    | Planned     |
+| M10       | Question + Scoring Style              | Planned     |
+| M11       | Advanced Interactive Components       | Planned     |
+| M12       | Style Studio + Template Pack          | Planned     |
+| M13       | Production Ready                      | Planned     |
 | P1–P4     | Hardening & Release                   | Planned     |
 | F1+       | Future Development                    | Future      |
 
-> **Catatan historis:** M2 v1 (`a1f352f`) membangun "free text block" tanpa variant — di-revert (`1cfadb0`). M2 v2 (`9833ea4`) menambahkan variant tetapi masih model "block editor bebas" — superseded oleh M2R (Batch 2R) yang memperkenalkan Page Role + Capability Matrix + Component Model. M2 final = M2R.
+> **Catatan historis:** M2 v1 (`a1f352f`) "free text block" — di-revert (`1cfadb0`). M2 v2 (`9833ea4`) "text block + variant" — superseded oleh M2R (`8e10944`) yang memperkenalkan Page Role + Capability Matrix + Component Model. Batch 2S (`<this commit>`) mengunci Style Pack Foundation + AI Remix direction sebelum M3.
 
 Urutan lengkap milestone sampai production ada di [`docs/PRODUCTION_ROADMAP.md`](PRODUCTION_ROADMAP.md).
 
@@ -119,6 +129,8 @@ Lihat [`docs/CORE_PRODUCT_CONTRACT.md`](CORE_PRODUCT_CONTRACT.md) dan [`docs/STY
 
 ## M2 — Page Role + Capability Matrix + Text Component
 
+**Status:** Done (Batch 2R, commit `8e10944`)
+
 **Prasyarat:** Batch 1B ACCEPTED.
 
 **Target:** Memperkenalkan model **role-based guided component editor**, bukan block editor bebas. Halaman punya peran pedagogis (PageRole), dan peran menentukan komponen apa yang boleh ditambahkan (Capability Matrix).
@@ -175,217 +187,294 @@ Lihat [`docs/CORE_PRODUCT_CONTRACT.md`](CORE_PRODUCT_CONTRACT.md) dan [`docs/STY
 
 ---
 
-## M3 — Page Flow Management
+## Batch 2S — Style Pack Foundation + AI Remix Roadmap Lock
 
-**Target:** Bisa membuat banyak halaman dengan operasi lengkap.
+**Status:** Active
+
+**Prasyarat:** Batch 2R ACCEPTED.
+
+**Target:** Mengunci arah SILSE sebagai **editor remix MPI hasil AI**: AI generate MPI JSON → app import → style/layout/interaksi bisa dimodifikasi → export HTML. Batch ini dilakukan sebelum M3 agar style tidak menjadi tempelan terlambat.
+
+**Scope:**
+
+- **A — Roadmap Sync:** Revisi milestone M3–M13 nama baru. Hapus "Import HTML ringan" dari M8 (AI import wajib JSON SILSE). Bersihkan sisa istilah "block" di roadmap future section. Tambahkan identitas produk "Role-Based Guided MPI Editor with Reusable Style Packs".
+- **B — Style Pack Foundation Schema:** Type `ProjectStyle` / `StylePack` minimal di `core/style-types.ts`. Project punya field `stylePackId?` + `style?`. StylePack memuat: colors, typography, spacing, radius, componentRecipes placeholder, interactionRecipes placeholder, scoringRecipes placeholder. **Tidak** buat style editor UI. **Tidak** buat full style adapter. **Tidak** raw CSS.
+- **C — AI Import Contract Placeholder:** `docs/AI_IMPORT_CONTRACT.md`. AI output wajib JSON SILSE. Dilarang: raw HTML, raw CSS, script, external CDN, className bebas. Import UI belum dibuat.
+- **D — Tests:** Project default punya style field minimal. StylePack tokens serializable. Validation menerima style minimal. Docs guard ROADMAP tidak menyebut "Import HTML ringan". Docs guard user-facing roadmap pakai component/elemen, bukan block.
+
+**Dilarang:**
+
+- M3 page operations.
+- image/card/navigation/question component.
+- preview/export.
+- AI import UI.
+- full style editor.
+- full style adapter.
+- raw CSS/HTML parser.
+
+**Acceptance:**
+
+- ROADMAP sync selesai (nama milestone final, identitas produk terkunci).
+- StylePack schema ada di core.
+- Project default punya style field minimal.
+- AI_IMPORT_CONTRACT.md ada.
+- typecheck PASS, test PASS, build PASS.
+
+---
+
+## M3 — Page Flow + LayoutId Dasar
+
+**Target:** Bisa membuat banyak halaman dengan operasi lengkap + perkenalkan `layoutId` ringan.
 
 **Fitur:**
+
 - Add page (dengan role default `free`).
 - Delete page.
 - Rename page.
 - Select page.
 - Duplicate page.
+- `layoutId` ringan di SimplePage (placeholder string, belum full layout engine — itu M4/M9).
 
 **Acceptance:**
+
 - Tambah 3 halaman → pindah halaman → isi tiap halaman tidak bercampur.
 - Delete halaman → halaman hilang, halaman lain tetap utuh.
 - Duplicate halaman → halaman baru dengan isi sama tapi ID beda.
+- Page punya field `layoutId` (default `'blank'`).
 
-> Catatan: `setPageRole` (ganti role halaman yang sudah ada) **bukan scope M3** — itu M11. M3 hanya operasi teknis halaman (add/delete/rename/select/duplicate). Role ditentukan saat create page.
+> Catatan: `setPageRole` (ganti role halaman yang sudah ada) **bukan scope M3** — itu M11. M3 hanya operasi teknis halaman + layoutId placeholder. Role ditentukan saat create page.
 
 ---
 
-## M4 — Image + Card Component
+## M4 — Image + Card + Layout Recipes
 
-**Target:** Bisa tambah gambar dan card sebagai elemen pembelajaran.
+**Target:** Bisa tambah gambar dan card sebagai elemen pembelajaran + perkenalkan layout recipes sederhana.
 
 **Fitur:**
+
 - Image component (variant: `illustration`/`background`/`imageCard`).
 - Card component (container ringan untuk grouping elemen).
 - Upload image, render di canvas, edit posisi/ukuran.
+- Layout recipes sederhana (1-column, 2-column, header+body) — pakai `layoutId` dari M3.
 - Capability Matrix diperluas: role tertentu mengizinkan image/card.
 
 **Acceptance:**
+
 - Upload gambar → tampil di canvas.
 - Resize lewat inspector → gambar menyesuaikan.
+- Pilih layout recipe → komponen menempel ke slot layout.
 - Capability Matrix menolak image di role yang tidak mengizinkan.
 
 ---
 
-## M5 — Navigation + Preview
+## M5 — Navigation + Preview + Interaction Style Dasar
 
-**Target:** MPI bisa dipreview dengan navigasi antar halaman.
+**Target:** MPI bisa dipreview dengan navigasi antar halaman + interaction style dasar.
 
 **Fitur:**
+
 - Navigation component (variant: `navigation`/`primaryAction`/`secondaryAction`/`choice`).
 - Action: next, prev, goto page.
 - Preview fullscreen (mode terpisah dari editor).
 - Navigasi antar halaman di preview.
+- Interaction style dasar (hover, active state) via style pack `interactionRecipes`.
 
 **Acceptance:**
-- Tambah button next → klik di preview → halaman berpindah.
-- Tambah button prev → klik di preview → halaman mundur.
-- Tambah button goto → klik di preview → halaman target tampil.
+
+- Tambah navigation next → klik di preview → halaman berpindah.
+- Tambah navigation prev → klik di preview → halaman mundur.
+- Tambah navigation goto → klik di preview → halaman target tampil.
+- Interaction style konsisten editor vs preview (anchor untuk M6).
 
 ---
 
-## M6 — Export HTML
+## M6 — Export HTML + Style Resolver Solid
 
-**Target:** Export HTML standalone.
-
-**Output:**
-- 1 file HTML.
-- CSS inline.
-- JS inline.
-- Data project embedded.
-- Tidak butuh internet.
-- Tidak butuh React.
-
-**Acceptance:**
-- Export → file `.html` terdownload.
-- Buka di browser → halaman tampil.
-- Tombol next/prev/goto jalan.
-- Network tab: 0 request eksternal.
-
----
-
-## M7 — Save / Load
-
-**Target:** Project tidak hilang saat browser ditutup.
+**Target:** Export HTML standalone dengan style resolver yang solid (bukan tempelan).
 
 **Fitur:**
-- Autosave ke localStorage.
+
+- Export HTML standalone (1 file, CSS inline, JS inline, data embedded).
+- `resolveComponentStyle` pertama di `src/core/style/` — pure function resolver.
+- Editor, Preview, Export semua memakai `resolveComponentStyle`.
+- StylePack tokens di-bawa ke output HTML sebagai CSS variables.
+
+**Acceptance:**
+
+- Export → file HTML terdownload.
+- Buka di browser → halaman tampil, navigation jalan.
+- Network tab: 0 request eksternal.
+- Snapshot: editor, preview, export menghasilkan style yang sama.
+
+**Ini milestone kritis.** Sebelum M6, style boleh inline hard-coded via variant lookup. Setelah M6, semua render wajib via `resolveComponentStyle`.
+
+---
+
+## M7 — Save / Load + Style Pack Save
+
+**Target:** Project tidak hilang + StylePack bisa disimpan dan dipakai ulang.
+
+**Fitur:**
+
+- Autosave localStorage.
 - Manual save.
 - Load project.
 - Reset project.
-- Export/import JSON.
+- Export/import JSON (termasuk StylePack).
+- Save StylePack sebagai reusable asset (terpisah dari project).
 
 **Acceptance:**
+
 - Edit project → reload browser → project masih ada.
 - Reset project → kembali ke project kosong.
-- Export JSON → file terdownload.
-- Import JSON → project termuat.
+- Export JSON → file terdownload (termasuk style).
+- Import JSON → project + style termuat.
+- Save StylePack → bisa dipakai di project lain.
 
 ---
 
-## M8 — Drag / Resize
+## M8 — AI JSON Import + Style Import MVP
 
-**Target:** Editor enak dipakai tanpa inspector untuk operasi umum.
+**Target:** Import MPI JSON dari AI + import style pack dari AI. **Wajib JSON SILSE — bukan HTML/CSS bebas.**
 
 **Fitur:**
-- Drag block di canvas.
-- Resize block di canvas (handle pojok).
+
+- Paste AI JSON → validasi terhadap schema SILSE → muat ke editor.
+- AI JSON boleh membawa: project content, pages, components, layoutId, stylePack, interaction config, scoring config.
+- Import style pack dari AI JSON (token-level, masuk ke `ProjectStyle`).
+- Mapping otomatis: kalau AI tidak sertakan `variant`, isi default by PageRole.
+- Mapping otomatis: kalau AI tidak sertakan `role`, isi default by heuristic (page pertama=cover, lainnya=free).
+
+**Dilarang di M8:**
+
+- Raw HTML parsing.
+- Raw CSS parsing.
+- Script injection.
+- External CDN.
+- className bebas (semua style via StylePack tokens).
+
+**Acceptance:**
+
+- Paste AI JSON valid → project termuat, semua page punya role, semua component punya variant.
+- AI JSON dengan stylePack → stylePack masuk ke `ProjectStyle`.
+- AI JSON invalid → error jelas, tidak crash.
+- Tidak ada HTML/CSS/script yang lolos ke project.
+
+Lihat [`docs/AI_IMPORT_CONTRACT.md`](AI_IMPORT_CONTRACT.md) untuk kontrak lengkap.
+
+---
+
+## M9 — Direct Manipulation + Layout Guard
+
+**Target:** Editor enak dipakai tanpa inspector untuk operasi umum + layout guard mencegah komponen keluar dari layout recipe.
+
+**Fitur:**
+
+- Drag komponen di canvas.
+- Resize komponen di canvas (handle pojok).
 - Snap sederhana (grid 8px).
 - Keyboard delete (tombol Delete/Backspace).
+- Layout guard: kalau page pakai layout recipe, komponen menempel ke slot; drag dibatasi ke slot.
+- `removeComponent` akhirnya tersedia di store (sebelumnya ditunda).
 
 **Acceptance:**
-- Block bisa digeser langsung di canvas.
-- Block bisa di-resize via handle.
+
+- Komponen bisa digeser langsung di canvas.
+- Komponen bisa di-resize via handle.
 - Snap aktif saat drag dekat grid.
-- Pilih block → tekan Delete → block hilang.
+- Pilih komponen → tekan Delete → komponen hilang.
+- Layout recipe aktif → komponen tidak keluar dari slot.
 
 ---
 
-## M9 — AI JSON Import + Style Import
+## M10 — Question + Scoring Style
 
-**Target:** Import ringan dari AI/Canva yang menghormati schema SILSE.
-
-**Fitur awal:**
-
-- Paste JSON sederhana dari AI → otomatis dikonversi ke schema SILSE (tambah `role` page + `variant` component default).
-- Import HTML ringan → parse body jadi components sederhana.
-- Import gambar hasil Canva sebagai background halaman.
-- Import style preset ringan (token-level, bukan full style engine).
-- Tambah text overlay di atas gambar background.
-
-**Acceptance:**
-- Gambar Canva masuk sebagai background halaman.
-- Teks bisa diedit di atas gambar.
-- Export HTML → background dan teks tampil.
-
----
-
-## M10 — Kuis Sederhana
-
-**Target:** MPI mendukung pertanyaan pilihan ganda sederhana.
-
-**Catatan:** Setelah Batch 2R, Question component dipindahkan ke M11 (Advanced Learning Components) karena memerlukan PageRole `quiz` + Capability Matrix + interaction pattern `choiceFeedback` yang lebih solid. M10 sekarang fokus pada **feedback dasar dan skor** untuk komponen question yang sudah ada di M11.
+**Target:** MPI mendukung pertanyaan pilihan ganda + scoring style dari StylePack.
 
 **Fitur:**
-- Feedback benar/salah untuk Question component (dari M11).
+
+- Question component (pertanyaan + pilihan + jawaban benar).
+- Interaction pattern: `choiceFeedback`.
+- Scoring style dari StylePack `scoringRecipes` (warna benar/salah, animasi ringan).
+- Feedback benar/salah.
 - Skor akhir.
 - Halaman ringkasan skor.
 
 **Acceptance:**
-- Tambah kuis (dari M11) → di-preview bisa dijawab.
-- Jawaban benar → feedback positif.
+
+- Tambah question → di-preview bisa dijawab.
+- Jawaban benar → feedback positif (style dari scoringRecipes).
 - Jawaban salah → feedback negatif.
 - Skor terakumulasi.
 - Halaman skor tampil di akhir.
 
 ---
 
-## M11 — Advanced Learning Components
+## M11 — Advanced Interactive Components
 
-**Target:** Komponen pembelajaran lanjutan + Guided Learning Style System lengkap.
+**Target:** Komponen interaktif lanjutan + setPageRole UI + Guided Learning Style System lengkap.
 
 **Fitur:**
 
-- Question component (pertanyaan + pilihan + jawaban benar) — pindah dari M10.
-- Interaction pattern: `choiceFeedback`/`reveal`/`hotspot`/`tabs`/`accordion`.
 - `setPageRole` UI (ganti role halaman yang sudah ada).
-- `ProjectStyle` (presetId + tokens).
-- 5 visual preset (cleanClassroom, civicWarm, brightKids, projectorHighContrast, minimalWorksheet).
-- `resolveBlockStyle` full implementation di `src/core/style/`.
+- Interaction pattern lanjutan: `reveal`/`hotspot`/`tabs`/`accordion`.
+- `resolveComponentStyle` full implementation (local override + variant + role + preset).
+- 5 visual preset lengkap (cleanClassroom, civicWarm, brightKids, projectorHighContrast, minimalWorksheet).
 - Page Role mulai dipakai untuk default style ringan.
 - Editor/preview/export konsisten via adapter.
 
 **Acceptance:**
 
-- Tambah kuis → di-preview bisa dijawab.
+- Ganti role halaman → capability berubah → komponen yang tidak diizinkan ditandai.
 - Pilih preset → tokens berubah → editor/preview/export ikut.
 - Variant menghasilkan style default benar.
+- Local override mengalahkan default.
 - Snapshot editor/preview/export konsisten.
 
 ---
 
-## M12 — Template Pedagogis
+## M12 — Style Studio + Template Pack
 
-**Target:** Template sederhana yang membantu guru start cepat.
+**Target:** Style studio untuk bikin style pack sendiri + template pack pedagogis.
 
 **Fitur:**
 
+- Style Studio: UI untuk edit StylePack tokens (colors/typography/spacing/radius).
+- Save StylePack sebagai reusable asset.
 - 3–5 template pedagogis (cover+materi+latihan, full MPI, LKPD ringan).
-- Template = preset project JSON dengan page role + block variant sudah terisi.
-- Pilih template → project baru terisi template.
+- Template = preset project JSON dengan page role + component variant + stylePack sudah terisi.
+- Pilih template → project baru terisi template + stylePack.
 - Template tidak mengikat; setelah dipilih, project jadi project biasa.
 
 **Acceptance:**
 
-- Pilih template → project baru muncul dengan halaman + block + variant.
+- Edit stylePack di Style Studio → editor/preview/export ikut.
+- Save stylePack → bisa dipakai di project lain.
+- Pilih template → project baru muncul dengan halaman + komponen + variant + stylePack.
 - Edit template → tetap jadi project biasa.
-- Tidak ada binding permanen ke template.
 
 **Bukan template engine.** Template hanya JSON preset, bukan registry rumit.
 
 ---
 
-## M13 — Paket MPI Production-Ready
+## M13 — Production Ready
 
-**Target:** Bisa dikirim ke guru lain sebagai paket siap pakai.
+**Target:** Bisa dikirim ke guru lain sebagai paket siap pakai + reliablity pass.
 
 **Fitur:**
 
-- Kompres project + asset menjadi satu file `.mpi.zip`.
+- Kompres project + asset + stylePack menjadi satu file `.mpi.zip`.
 - Buka paket → langsung jalan di editor.
 - Atau: export HTML + paket source JSON.
 - Validasi paket sebelum distribusi.
+- Error boundary + recovery corrupt data.
 
 **Acceptance:**
 
 - Save project sebagai paket → file terdownload.
-- Buka paket di mesin lain → project termuat utuh.
-- Paket berisi manifest + project.json + assets + (opsional) export HTML.
+- Buka paket di mesin lain → project + stylePack termuat utuh.
+- Paket berisi manifest + project.json + stylePack.json + assets + (opsional) export HTML.
+- Error boundary menangani data corrupt tanpa crash.
 
 ---
 
