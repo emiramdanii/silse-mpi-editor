@@ -1,28 +1,17 @@
 /**
  * Toolbar for block-level actions.
  *
- * M2 scope:
- *   - "+ Teks" ENABLED (calls addTextBlock)
- *   - "+ Gambar", "+ Tombol", "Export HTML", "Preview" remain DISABLED.
+ * For M0–M1, this is a placeholder. The "Add Text" button will be
+ * enabled in M2 when block operations land in the store.
  *
- * Each button has a UNIQUE data-action attribute so the scope-lock
- * test can identify them individually.
+ * Scope-lock note: each button has a UNIQUE title attribute so the
+ * scope-lock test can identify them individually. Do not reuse titles.
  */
-
-import { useEditorStore } from '../store/editor-store';
-
 export function Toolbar() {
-  const addTextBlock = useEditorStore((s) => s.addTextBlock);
-
   return (
     <div className="toolbar">
       <span className="toolbar__divider" />
-      <button
-        onClick={() => addTextBlock()}
-        title="Tambah teks"
-        data-action="add-text"
-        data-milestone="M2"
-      >
+      <button disabled title="Tambah teks — aktif di M2" data-action="add-text">
         + Teks
       </button>
       <button disabled title="Tambah gambar — aktif di M4" data-action="add-image">
