@@ -4,21 +4,30 @@ Setiap milestone = satu batch. Tidak lompat, tidak sekalian, tidak tambah fitur 
 
 ## Milestone Overview
 
-| Milestone | Nama                  | Status      |
-| --------- | --------------------- | ----------- |
-| M0        | Repo Skeleton         | Done        |
-| M1        | Editor Kosong         | Done        |
-| M2        | Text Block            | Next        |
-| M3        | Page Flow Lengkap     | Planned     |
-| M4        | Image Block           | Planned     |
-| M5        | Button + Preview      | Planned     |
-| M6        | Export HTML           | Planned     |
-| M7        | Save / Load           | Planned     |
-| M8        | Drag / Resize         | Planned     |
-| M9        | Import AI / Canva     | Planned     |
-| M10       | Kuis Sederhana        | Planned     |
-| M11       | Template Ringan       | Planned     |
-| M12       | Paket MPI Siap Pakai  | Planned     |
+| Milestone | Nama                                  | Status      |
+| --------- | ------------------------------------- | ----------- |
+| M0        | Repo Skeleton                         | Done        |
+| M1        | Editor Kosong                         | Done        |
+| B1A       | Scope-Lock Patch                      | Done        |
+| **B1B**   | **Core Contract, Schema, Style Lock** | **Next**    |
+| M2        | Text Block + Text Role Dasar          | Planned     |
+| M3        | Page Flow Lengkap                     | Planned     |
+| M4        | Image Block + Image Variant           | Planned     |
+| M5        | Button + Preview + Interaction        | Planned     |
+| M6        | Export HTML + Style Consistency       | Planned     |
+| M7        | Save / Load + Schema Validation       | Planned     |
+| M8        | Drag / Resize + Layout Guide          | Planned     |
+| M9        | Import AI / Canva ke Schema           | Planned     |
+| M10       | Kuis Sederhana                        | Planned     |
+| M11       | Guided Learning Style System          | Planned     |
+| M12       | Template Pedagogis                    | Planned     |
+| M13       | Paket MPI Production-Ready            | Planned     |
+| P1–P4     | Hardening & Release                   | Planned     |
+| F1+       | Future Development                    | Future      |
+
+> **Catatan:** M2 sebelumnya sudah pernah diimplementasi sebagai "free text block" tanpa variant (commit `a1f352f`) lalu **di-revert** (commit `1cfadb0`) karena tidak mengikuti kontrak Batch 1B. M2 yang baru wajib memakai field `variant` di text block. Lihat section M2 di bawah.
+
+Urutan lengkap milestone sampai production ada di [`docs/PRODUCTION_ROADMAP.md`](PRODUCTION_ROADMAP.md).
 
 ---
 
@@ -64,20 +73,88 @@ Operasi `renamePage`, `deletePage`, dan `duplicatePage` **TIDAK boleh ada** di s
 
 ---
 
-## M2 — Text Block
+## Batch 1B — Core Contract, Schema, Style Adapter Lock
 
-**Target:** Bisa tambah dan edit teks.
+**Status:** Next / Required Before M2
 
-**Fitur:**
-- Add text block.
-- Select block.
-- Edit text dari inspector.
-- Edit x/y/width/height/fontSize/color/fontWeight/align.
+**Target:** Mengunci arah produk, kontrak data, schema authoring, dan style adapter sebelum fitur block dimulai.
+
+Batch ini wajib dilakukan sebelum M2 agar repo tidak berubah menjadi PowerPoint clone, Canva clone, editor slide kosong, template engine besar, atau campuran renderer/schema/style seperti project sebelumnya.
+
+**Prinsip Utama:** SILSE MPI Editor adalah guided MPI authoring tool untuk guru. UI boleh terasa familiar seperti PowerPoint, tetapi produk bukan PowerPoint clone. **Style bukan dekorasi. Style adalah bagian dari struktur pembelajaran.**
+
+**Scope:**
+
+1. Buat `docs/CORE_PRODUCT_CONTRACT.md` (identitas produk, arah, Page Role, Block Variant, Interaction Pattern, production rule).
+2. Buat `docs/STYLE_SCHEMA_CONTRACT.md` (style tokens, visual preset, style adapter, page-role defaults, anti-campur rules).
+3. Buat `docs/PRODUCTION_ROADMAP.md` (roadmap lengkap M0–M13 + P1–P4 + F1+).
+4. Update `docs/CLEAN_ARCHITECTURE.md` (Style Adapter Rule + Schema Rule, editor=preview=export consistency).
+5. Update `docs/ROADMAP.md` (dokumen ini) agar memasukkan B1B sebagai prerequisite M2.
+6. Tidak mengubah kode app.
+7. Tidak menambah fitur UI.
+8. Tidak lanjut M2 sebelum Batch 1B accepted.
+
+**Dilarang:**
+
+- Menambah text block, image block, button block.
+- Membuat template engine, contract engine besar, style engine besar, legacy adapter.
+- Membawa schema/renderer lama.
+- Mengubah store atau UI editor.
 
 **Acceptance:**
-- Tambah teks → teks muncul di canvas.
-- Edit teks → canvas berubah real-time.
-- Edit posisi/ukuran via inspector → block bergerak/berubah.
+
+1. Dokumen menjelaskan SILSE sebagai guided MPI authoring tool, bukan PowerPoint clone.
+2. Dokumen membedakan jelas: Product Contract, Authoring Schema, Style Schema, Style Adapter, Template Pedagogis.
+3. Style diposisikan sebagai sistem visual-pedagogis, bukan kosmetik.
+4. Style Adapter didefinisikan sebagai resolver dari semantic style ke concrete render style.
+5. Editor, Preview, dan Export wajib konsisten memakai style resolve yang sama.
+6. Roadmap produksi memasukkan milestone style (M11) dan template pedagogis (M12).
+7. Tidak ada perubahan kode app.
+8. Tidak ada scope leak.
+
+Lihat [`docs/CORE_PRODUCT_CONTRACT.md`](CORE_PRODUCT_CONTRACT.md) dan [`docs/STYLE_SCHEMA_CONTRACT.md`](STYLE_SCHEMA_CONTRACT.md) untuk detail kontrak.
+
+---
+
+## M2 — Text Block + Text Role Dasar
+
+**Prasyarat:** Batch 1B ACCEPTED.
+
+**Target:** Text block pertama, tetapi dengan role/variant — bukan "free text".
+
+**Fitur:**
+
+- Add text block.
+- Select block.
+- Render text di canvas.
+- Edit text dari inspector.
+- Edit x/y/width/height.
+- **Field `variant` wajib ada** di setiap text block (default `'body'`).
+- Variant bisa dipilih dari inspector (`title`/`subtitle`/`body`/`instruction`/`importantNote`/`questionPrompt`/`reflectionBox`).
+
+**Acceptance:**
+
+- Tambah text block → block punya `variant: 'body'` secara default.
+- Ganti variant → field `variant` berubah di data.
+- Edit text → canvas berubah real-time.
+- Variant tersimpan di JSON project.
+
+**Scope lock:**
+
+- **Belum ada style adapter.** Style masih inline hard-coded minimal, tetapi data block sudah punya field `variant`. Ini anchor untuk M6 (Export HTML + Style Consistency) dan M11 (Guided Learning Style System).
+- `removeBlock` sengaja **ditunda** — bukan scope M2.
+- Operasi `addImageBlock`/`addButtonBlock` **tidak boleh ada** di store/UI sampai M4/M5.
+- Operasi `renamePage`/`deletePage`/`duplicatePage` **tidak boleh ada** sampai M3.
+- Scope-lock test di-bump ke **M2-lock**: tombol `+ Teks` ENABLED, tombol lain DISABLED, inspector menampilkan field text-block + variant selector (tidak ada field image/button).
+- **Text block tanpa field `variant` = scope leak.** Validation test akan menolak.
+
+**Dilarang di M2:**
+
+- Image block (M4), button block (M5), preview (M5), export HTML (M6), drag/resize (M8), template (M12), page flow lengkap (M3).
+- Style adapter (baru di M6).
+- Style tokens / visual preset (baru di M11).
+
+> **Pelajaran dari revert M2 sebelumnya:** M2 versi lama (`a1f352f`) membangun text block sebagai "free text" tanpa `variant`. Itu melanggar kontrak Batch 1B dan akan menyulitkan style adapter di M6. M2 yang baru wajib memakai `variant` sejak block pertama dibuat.
 
 ---
 
