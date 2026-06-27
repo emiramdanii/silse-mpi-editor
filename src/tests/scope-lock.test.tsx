@@ -118,12 +118,12 @@ describe('scope-lock M4 — Toolbar: + Teks/+ Gambar/+ Kartu by capability', () 
     expect((btn as HTMLButtonElement).disabled).toBe(false);
   });
 
-  // ---- Export HTML still disabled (M6) ----
-  it('"Export HTML" button is disabled (M6 not started)', () => {
+  // ---- Export HTML ENABLED (M6 active) ----
+  it('"Export HTML" button is ENABLED (M6 active)', () => {
     const { container } = render(<Toolbar />);
     const btn = queryByAction(container, 'export-html');
     expect(btn).not.toBeNull();
-    expect((btn as HTMLButtonElement).disabled).toBe(true);
+    expect((btn as HTMLButtonElement).disabled).toBe(false);
   });
 });
 

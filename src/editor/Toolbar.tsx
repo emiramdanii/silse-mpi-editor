@@ -14,6 +14,8 @@ import { useEditorStore } from '../store/editor-store';
 import { usePreviewStore } from '../preview/preview-store';
 import { canAddComponent } from '../core/capability';
 import type { NavigationAction } from '../core/types';
+import { exportProjectToHtml } from '../export/export-html';
+import { downloadHtmlFile } from '../export/export-download';
 
 export function Toolbar() {
   const addTextComponent = useEditorStore((s) => s.addTextComponent);
@@ -46,9 +48,14 @@ export function Toolbar() {
   };
 
   const handleAddNavigation = () => {
-    // M5 simple: default to 'next' action with label "Berikutnya"
     const action: NavigationAction = 'next';
     addNavigationComponent('Berikutnya', action);
+  };
+
+  const handleExport = () => {
+    const project = useEditorStore.getState().project;
+    const html = exportProjectToHtml(project);
+    downloadHtmlFile(project.title, html);
   };
 
   return (
@@ -99,8 +106,13 @@ export function Toolbar() {
       >
         ▶ Pratinjau
       </button>
-      <button disabled title="Export HTML — aktif di M6" data-action="export-html">
-        Export HTML
+      <button
+        onClick={handleExport}
+        title="Export HTML standalone"
+        data-action="export-html"
+        data-milestone="M6"
+      >
+        ⬇ Export HTML
       </button>
     </div>
   );

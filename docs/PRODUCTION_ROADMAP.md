@@ -26,8 +26,8 @@ Alur produk: AI generate MPI JSON → app import → style/layout/interaksi bisa
 | B2S | Style Pack Foundation + AI Remix Roadmap Lock | Done |
 | M3 | Page Flow + LayoutId Dasar | Done |
 | M4 | Image + Card + Layout Recipes | Done |
-| **M5** | **Navigation + Preview + Interaction Style Dasar** | **Active** |
-| M6 | Export HTML + Style Resolver Solid | Planned |
+| M5 | Navigation + Preview + Interaction Style Dasar | Done |
+| **M6** | **Export HTML + Style Resolver Solid** | **Active** |
 | M7 | Save / Load + Style Pack Save | Planned |
 | M8 | AI JSON Import + Style Import MVP | Planned |
 | M9 | Direct Manipulation + Layout Guard | Planned |
@@ -255,7 +255,7 @@ Batch 1B dianggap selesai jika:
 
 ## M5 — Navigation + Preview + Interaction Style Dasar
 
-**Status:** Active
+**Status:** Done (commit `32f9b8d`)
 
 **Prasyarat:** M4 ACCEPTED.
 
@@ -287,23 +287,38 @@ Batch 1B dianggap selesai jika:
 
 ## M6 — Export HTML + Style Resolver Solid
 
-**Target:** Export HTML standalone dengan style resolver yang solid (bukan tempelan).
+**Status:** Active
+
+**Prasyarat:** M5 ACCEPTED.
+
+**Target:** Export HTML standalone dan style resolver pertama yang dipakai konsisten oleh Editor, Preview, dan Export.
 
 **Fitur:**
 
-- Export HTML standalone (1 file, CSS inline, JS inline, data embedded).
-- `resolveComponentStyle` pertama di `src/core/style/` — pure function resolver.
-- Editor, Preview, Export semua memakai `resolveComponentStyle`.
-- StylePack tokens di-bawa ke output HTML sebagai CSS variables.
+- `src/core/style/resolveComponentStyle.ts` — pure function resolver (no React/DOM/window/store).
+  Input: project.style tokens, component.type, component.variant, page.role, page.layoutId.
+  Output: ResolvedComponentStyle plain object. Support text/image/card/navigation + interaction recipes.
+- Editor/Preview/Export semua memakai resolver yang sama.
+- `src/export/export-html.ts` — satu file HTML standalone. CSS inline, JS inline, data embedded. No CDN/external/React.
+- Export render 1280×720, navigate next/prev/goto, StylePack tokens as CSS variables.
+- Tombol Export HTML di toolbar → download .html.
+- Security: escape `</script>`, no CDN/external script/stylesheet/React/Vite.
 
 **Acceptance:**
 
-- Export → file HTML terdownload.
-- Buka di browser → halaman tampil, navigation jalan.
-- Network tab: 0 request eksternal.
-- Snapshot: editor, preview, export menghasilkan style yang sama.
+- resolveComponentStyle pure.
+- Resolve text/image/card/navigation by variant.
+- Navigation includes interaction recipe.
+- Editor/preview/export use same resolver.
+- Export HTML includes project data + CSS variables + inline JS navigation.
+- Export HTML supports next/prev/goto.
+- Export HTML has no CDN/external script/stylesheet.
+- Export escapes `</script>`.
+- Export includes no React/Vite runtime.
+- Store does not expose quiz/game/AI import/style editor/setPageRole.
+- UI no "block".
 
-**Ini milestone kritis.** Sebelum M6, style boleh inline hard-coded via variant lookup. Setelah M6, semua render wajib via `resolveComponentStyle`.
+**Ini milestone kritis.** Setelah M6, semua render wajib via `resolveComponentStyle`.
 
 ---
 
