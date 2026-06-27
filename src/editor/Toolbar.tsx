@@ -1,13 +1,9 @@
 /**
- * Toolbar for component-level actions.
+ * Toolbar for component-level + project actions.
  *
- * M5 scope:
- *   - "+ Teks" ENABLED jika canAddComponent(role, 'text')
- *   - "+ Gambar" ENABLED jika canAddComponent(role, 'image')
- *   - "+ Kartu" ENABLED jika canAddComponent(role, 'card')
- *   - "+ Navigasi" ENABLED jika canAddComponent(role, 'navigation')
- *   - "Preview" ENABLED (opens preview mode)
- *   - "Export HTML" still DISABLED (M6).
+ * M2-M6: + Teks/+ Gambar/+ Kartu/+ Navigasi by capability, Preview, Export HTML.
+ * M7: Simpan, Muat, Perpustakaan, Cadangan JSON, Impor JSON, Simpan Paket Gaya, Reset.
+ * M8: 🤖 Impor AI JSON.
  */
 
 import { useEditorStore } from '../store/editor-store';
@@ -19,6 +15,8 @@ import { downloadHtmlFile } from '../export/export-download';
 import { exportProjectJson, importProjectJson, saveProjectToLibrary, listSavedProjects, loadProjectFromLibrary } from '../storage/project-storage';
 import { saveStylePack } from '../storage/style-pack-storage';
 import { getStylePack } from '../core/style-presets';
+import { parseAndNormalizeAiJson } from '../ai-import/normalizer';
+import { useState } from 'react';
 
 export function Toolbar() {
   const addTextComponent = useEditorStore((s) => s.addTextComponent);
@@ -33,6 +31,10 @@ export function Toolbar() {
     (s) => s.project.pages.find((p) => p.id === s.project.currentPageId) ?? null,
   );
   const openPreview = usePreviewStore((s) => s.openPreview);
+
+  const [showAiDialog, setShowAiDialog] = useState(false);
+  const [aiJsonText, setAiJsonText] = useState('');
+  const [aiError, setAiError] = useState<string | null>(null);
 
   const role = currentPage?.role;
   const canText = role ? canAddComponent(role, 'text') : false;
@@ -160,6 +162,29 @@ export function Toolbar() {
     }
   };
 
+  const handleAiImport = () => {
+    setShowAiDialog(true);
+    setAiJsonText('');
+    setAiError(null);
+  };
+
+  const handleAiValidateAndImport = () => {
+    if (!aiJsonText.trim()) {
+      setAiError('Tempel JSON AI terlebih dahulu.');
+      return;
+    }
+    const result = parseAndNormalizeAiJson(aiJsonText);
+    if (result.ok) {
+      setProject(result.project);
+      setShowAiDialog(false);
+      setAiJsonText('');
+      setAiError(null);
+      window.alert('Struktur aman! Proyek berhasil dimuat dari AI JSON.');
+    } else {
+      setAiError(result.errors.join('\n'));
+    }
+  };
+
   return (
     <div className="toolbar">
       <span className="toolbar__divider" />
@@ -238,6 +263,36 @@ export function Toolbar() {
       <button onClick={handleReset} title="Reset proyek ke kosong" data-action="reset" className="danger">
         ↺ Reset
       </button>
+      <span className="toolbar__divider" />
+      <button onClick={handleAiImport} title="Impor JSON dari AI" data-action="ai-import" data-milestone="M8">
+        🤖 Impor AI JSON
+      </button>
+      {showAiDialog && (
+        <div className="ai-import-dialog" onClick={(e) => e.stopPropagation()}>
+          <div className="ai-import-dialog__head">
+            <strong>Impor AI JSON</strong>
+            <button onClick={() => setShowAiDialog(false)} title="Tutup">✕</button>
+          </div>
+          <p className="ai-import-dialog__hint">Tempel JSON dari AI. Struktur akan divalidasi — field terlarang (html, css, script, className, cdn) akan ditolak.</p>
+          <textarea
+            className="ai-import-dialog__textarea"
+            value={aiJsonText}
+            onChange={(e) => setAiJsonText(e.target.value)}
+            placeholder='{"schemaVersion":1,"source":"ai","project":{"title":"MPI Baru","pages":[...]}}'
+            rows={12}
+          />
+          {aiError && (
+            <div className="ai-import-dialog__error">
+              <strong>Field terlarang / kesalahan:</strong>
+              <pre>{aiError}</pre>
+            </div>
+          )}
+          <div className="ai-import-dialog__actions">
+            <button onClick={handleAiValidateAndImport} className="primary">Validasi & Impor</button>
+            <button onClick={() => setShowAiDialog(false)}>Batal</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

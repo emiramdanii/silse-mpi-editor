@@ -26,8 +26,8 @@ Implikasi: Style Pack foundation harus ada **sebelum** M3, supaya M3–M8 tidak 
 | M4        | Image + Card + Layout Recipes         | Done        |
 | M5        | Navigation + Preview + Interaction Style Dasar | Done |
 | M6        | Export HTML + Style Resolver Solid    | Done        |
-| **M7**    | **Save / Load + Style Pack Save**     | **Active**  |
-| M8        | AI JSON Import + Style Import MVP     | Planned     |
+| M7        | Save / Load + Style Pack Save         | Done        |
+| **M8**    | **AI JSON Import + Style Import MVP** | **Active**  |
 | M9        | Direct Manipulation + Layout Guard    | Planned     |
 | M10       | Question + Scoring Style              | Planned     |
 | M11       | Advanced Interactive Components       | Planned     |
@@ -456,7 +456,7 @@ Nanti di M10/M11 diperluas: currentQuestionIndex, selectedAnswer, score, feedbac
 
 ## M7 — Save / Load + Style Pack Save
 
-**Status:** Active
+**Status:** Done (commit `06fa4da`)
 
 **Prasyarat:** M6 ACCEPTED.
 
@@ -504,30 +504,23 @@ Nanti di M10/M11 diperluas: currentQuestionIndex, selectedAnswer, score, feedbac
 
 ## M8 — AI JSON Import + Style Import MVP
 
+**Status:** Active
+
+**Prasyarat:** M7 ACCEPTED.
+
 **Target:** Import MPI JSON dari AI + import style pack dari AI. **Wajib JSON SILSE — bukan HTML/CSS bebas.**
 
 **Fitur:**
 
-- Paste AI JSON → validasi terhadap schema SILSE → muat ke editor.
-- AI JSON boleh membawa: project content, pages, components, layoutId, stylePack, interaction config, scoring config.
-- Import style pack dari AI JSON (token-level, masuk ke `ProjectStyle`).
-- Mapping otomatis: kalau AI tidak sertakan `variant`, isi default by PageRole.
-- Mapping otomatis: kalau AI tidak sertakan `role`, isi default by heuristic (page pertama=cover, lainnya=free).
+- `src/ai-import/ai-import-types.ts`: `SilseAiImportPayload` type.
+- `src/ai-import/forbidden-field-guard.ts`: recursive guard reject html/css/script/className/cdn/iframe.
+- `src/ai-import/normalizer.ts`: `normalizeAiImportPayload(payload)` → SimpleProject. Fresh ids, role heuristic, layoutId default, variant fallback, capability check, validateProject.
+- Style import: validateStylePack → saveStylePack → set project.style.
+- UI: 🤖 Impor AI JSON + dialog textarea.
 
-**Dilarang di M8:**
+**Dilarang:** raw HTML/CSS/JS, className, CDN, iframe, React component import, quiz/game/scoring, drag/resize, setPageRole, full Style Studio. Raw HTML parsing, Raw CSS parsing, Script injection, External CDN, className bebas.
 
-- Raw HTML parsing.
-- Raw CSS parsing.
-- Script injection.
-- External CDN.
-- className bebas (semua style via StylePack tokens).
-
-**Acceptance:**
-
-- Paste AI JSON valid → project termuat, semua page punya role, semua component punya variant.
-- AI JSON dengan stylePack → stylePack masuk ke `ProjectStyle`.
-- AI JSON invalid → error jelas, tidak crash.
-- Tidak ada HTML/CSS/script yang lolos ke project.
+**Acceptance:** 23 criteria — see Scope G tests.
 
 Lihat [`docs/AI_IMPORT_CONTRACT.md`](AI_IMPORT_CONTRACT.md) untuk kontrak lengkap.
 

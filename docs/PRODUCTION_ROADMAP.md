@@ -28,8 +28,8 @@ Alur produk: AI generate MPI JSON → app import → style/layout/interaksi bisa
 | M4 | Image + Card + Layout Recipes | Done |
 | M5 | Navigation + Preview + Interaction Style Dasar | Done |
 | M6 | Export HTML + Style Resolver Solid | Done |
-| **M7** | **Save / Load + Style Pack Save** | **Active** |
-| M8 | AI JSON Import + Style Import MVP | Planned |
+| M7 | Save / Load + Style Pack Save | Done |
+| **M8** | **AI JSON Import + Style Import MVP** | **Active** |
 | M9 | Direct Manipulation + Layout Guard | Planned |
 | M10 | Question + Scoring Style | Planned |
 | M11 | Advanced Interactive Components | Planned |
@@ -324,6 +324,8 @@ Batch 1B dianggap selesai jika:
 
 ## M7 — Save / Load + Style Pack Save
 
+**Status:** Done (commit `06fa4da`)
+
 **Target:** Project tidak hilang + StylePack bisa disimpan dan dipakai ulang.
 
 **Fitur:**
@@ -345,6 +347,8 @@ Batch 1B dianggap selesai jika:
 ---
 
 ## M8 — AI JSON Import + Style Import MVP
+
+**Status:** Active
 
 **Target:** Import MPI JSON dari AI + import style pack dari AI. **Wajib JSON SILSE — bukan HTML/CSS bebas.**
 
