@@ -27,8 +27,8 @@ Alur produk: AI generate MPI JSON → app import → style/layout/interaksi bisa
 | M3 | Page Flow + LayoutId Dasar | Done |
 | M4 | Image + Card + Layout Recipes | Done |
 | M5 | Navigation + Preview + Interaction Style Dasar | Done |
-| **M6** | **Export HTML + Style Resolver Solid** | **Active** |
-| M7 | Save / Load + Style Pack Save | Planned |
+| M6 | Export HTML + Style Resolver Solid | Done |
+| **M7** | **Save / Load + Style Pack Save** | **Active** |
 | M8 | AI JSON Import + Style Import MVP | Planned |
 | M9 | Direct Manipulation + Layout Guard | Planned |
 | M10 | Question + Scoring Style | Planned |
@@ -287,7 +287,7 @@ Batch 1B dianggap selesai jika:
 
 ## M6 — Export HTML + Style Resolver Solid
 
-**Status:** Active
+**Status:** Done (commit `c0db213`)
 
 **Prasyarat:** M5 ACCEPTED.
 

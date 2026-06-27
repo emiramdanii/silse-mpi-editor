@@ -98,6 +98,11 @@ export type EditorState = {
   updateCardComponent: (componentId: string, patch: Partial<CardComponentEditable>) => void;
   updateNavigationComponent: (componentId: string, patch: Partial<NavigationComponentEditable>) => void;
   getSelectedComponent: () => PageComponent | null;
+
+  // Save / Load (M7)
+  saveCurrent: () => boolean;
+  loadCurrent: () => boolean;
+  resetProject: () => void;
 };
 
 // ---------------------------------------------------------------------------
@@ -538,6 +543,36 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const { project, selectedComponentId } = get();
     if (!selectedComponentId) return null;
     return findComponentInProject(project, selectedComponentId);
+  },
+
+  // ----- Save / Load (M7) -----
+
+  saveCurrent: () => {
+    // Dynamic import to avoid circular dependency
+    const { saveCurrentProject } = require('../storage/project-storage');
+    const result = saveCurrentProject(get().project);
+    return result.ok;
+  },
+
+  loadCurrent: () => {
+    const { loadCurrentProject } = require('../storage/project-storage');
+    const result = loadCurrentProject();
+    if (result.ok && result.data) {
+      set({ project: result.data, selectedComponentId: null });
+      return true;
+    }
+    return false;
+  },
+
+  resetProject: () => {
+    set({ project: createProject(), selectedComponentId: null });
+    // Clear autosaved project
+    try {
+      const { clearCurrentProject } = require('../storage/project-storage');
+      clearCurrentProject();
+    } catch {
+      // ignore if storage not available
+    }
   },
 }));
 

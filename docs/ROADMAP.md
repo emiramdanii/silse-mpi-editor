@@ -25,8 +25,8 @@ Implikasi: Style Pack foundation harus ada **sebelum** M3, supaya M3–M8 tidak 
 | M3        | Page Flow + LayoutId Dasar            | Done        |
 | M4        | Image + Card + Layout Recipes         | Done        |
 | M5        | Navigation + Preview + Interaction Style Dasar | Done |
-| **M6**    | **Export HTML + Style Resolver Solid** | **Active**  |
-| M7        | Save / Load + Style Pack Save         | Planned     |
+| M6        | Export HTML + Style Resolver Solid    | Done        |
+| **M7**    | **Save / Load + Style Pack Save**     | **Active**  |
 | M8        | AI JSON Import + Style Import MVP     | Planned     |
 | M9        | Direct Manipulation + Layout Guard    | Planned     |
 | M10       | Question + Scoring Style              | Planned     |
@@ -416,7 +416,7 @@ Nanti di M10/M11 diperluas: currentQuestionIndex, selectedAnswer, score, feedbac
 
 ## M6 — Export HTML + Style Resolver Solid
 
-**Status:** Active
+**Status:** Done (commit `c0db213`)
 
 **Prasyarat:** M5 ACCEPTED.
 
@@ -456,24 +456,49 @@ Nanti di M10/M11 diperluas: currentQuestionIndex, selectedAnswer, score, feedbac
 
 ## M7 — Save / Load + Style Pack Save
 
-**Target:** Project tidak hilang + StylePack bisa disimpan dan dipakai ulang.
+**Status:** Active
+
+**Prasyarat:** M6 ACCEPTED.
+
+**Target:** Project bisa tersimpan, dimuat ulang, diekspor/impor JSON internal, dan StylePack bisa disimpan sebagai reusable asset tanpa membuka AI import bebas.
 
 **Fitur:**
 
-- Autosave localStorage.
-- Manual save.
-- Load project.
-- Reset project.
-- Export/import JSON (termasuk StylePack).
-- Save StylePack sebagai reusable asset (terpisah dari project).
+- Storage contract: `StoredProjectEnvelope` + `StoredStylePackEnvelope` dengan `schemaVersion`.
+- LocalStorage adapter: safe read/write, handles unavailable localStorage, JSON parse error fallback.
+- Project save/load: current project autosave + manual save, project library (list/load/delete), validateProject on load/import.
+- JSON export/import: `.silse.json` with envelope, validateProject on import, no raw HTML/CSS/script.
+- Style pack save: save/list/load/delete, validateStylePack on load.
+- Autosave: debounced, skip preview runtime, skip invalid, status indicator.
+- UI: Simpan, Muat, Export JSON, Import JSON, Reset Project.
 
 **Acceptance:**
 
-- Edit project → reload browser → project masih ada.
-- Reset project → kembali ke project kosong.
-- Export JSON → file terdownload (termasuk style).
-- Import JSON → project + style termuat.
-- Save StylePack → bisa dipakai di project lain.
+- save/load current project roundtrip.
+- saved projects library list/load/delete.
+- invalid project rejected on load/import.
+- corrupt JSON localStorage fallback safe.
+- no localStorage access in core.
+- JSON export includes envelope + schemaVersion.
+- JSON import validates project.
+- style pack save/list/load/delete.
+- validateStylePack used on load.
+- autosave does not save preview runtime.
+- storage adapter handles unavailable localStorage.
+- store does not expose AI import / quiz / game / style editor / setPageRole.
+- UI no "block".
+- typecheck PASS, test PASS, build PASS.
+
+**Scope lock:**
+
+- Tidak ada AI JSON import mapping (M8).
+- Tidak ada raw HTML/CSS/JS import.
+- Tidak ada cloud sync / database / authentication.
+- Tidak ada full style editor (M12).
+- Tidak ada component recipe extraction UI.
+- Tidak ada quiz/game/scoring (M10/M11).
+- Tidak ada drag/resize guard (M9).
+- Tidak ada setPageRole (M11).
 
 ---
 
