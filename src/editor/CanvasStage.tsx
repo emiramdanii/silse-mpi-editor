@@ -1,14 +1,17 @@
 import { useEditorStore } from '../store/editor-store';
-import { isTextBlock } from '../blocks/block-utils';
-import { TextBlockView } from '../blocks/TextBlockView';
+import { isTextComponent } from '../components/component-utils';
+import { TextComponentView } from '../components/TextComponentView';
+import { getCapability } from '../core/capability';
 
 const CANVAS_WIDTH = 1280;
 const CANVAS_HEIGHT = 720;
 
 export function CanvasStage() {
-  const currentPage = useEditorStore((s) => s.project.pages.find((p) => p.id === s.project.currentPageId) ?? null);
-  const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
-  const selectBlock = useEditorStore((s) => s.selectBlock);
+  const currentPage = useEditorStore(
+    (s) => s.project.pages.find((p) => p.id === s.project.currentPageId) ?? null,
+  );
+  const selectedComponentId = useEditorStore((s) => s.selectedComponentId);
+  const selectComponent = useEditorStore((s) => s.selectComponent);
 
   const bg =
     currentPage?.background.type === 'color'
@@ -19,6 +22,9 @@ export function CanvasStage() {
           ? `url(${currentPage.background.imageSrc}) center/cover no-repeat`
           : '#ffffff';
 
+  const capability = currentPage ? getCapability(currentPage.role) : null;
+  const canAdd = capability?.allowAddComponent ?? false;
+
   return (
     <main className="canvas-stage">
       <div
@@ -28,31 +34,38 @@ export function CanvasStage() {
           height: CANVAS_HEIGHT,
           background: bg,
         }}
-        onClick={() => selectBlock(null)}
+        onClick={() => selectComponent(null)}
       >
         <div className="canvas-frame__label">
-          {CANVAS_WIDTH} × {CANVAS_HEIGHT} · {currentPage?.title ?? '—'}
+          {CANVAS_WIDTH} × {CANVAS_HEIGHT} · {currentPage?.title ?? '—'} ·{' '}
+          {currentPage ? `role: ${currentPage.role}` : ''}
         </div>
 
-        {currentPage && currentPage.blocks.length === 0 && (
+        {currentPage && currentPage.components.length === 0 && (
           <div className="canvas-empty">
-            <div className="canvas-empty__title">Halaman kosong</div>
-            <div>Klik tombol + Teks di toolbar untuk menambah block.</div>
+            <div className="canvas-empty__title">
+              {canAdd ? 'Halaman kosong' : `Halaman ${currentPage.role} (terpandu)`}
+            </div>
+            <div>
+              {canAdd
+                ? 'Klik tombol + Teks di toolbar untuk menambah elemen pembelajaran.'
+                : 'Halaman ini terpandu. Elemen akan diisi via template pedagogis (M11/M12).'}
+            </div>
           </div>
         )}
 
-        {currentPage?.blocks.map((block) => {
-          if (isTextBlock(block)) {
+        {currentPage?.components.map((component) => {
+          if (isTextComponent(component)) {
             return (
-              <TextBlockView
-                key={block.id}
-                block={block}
-                selected={block.id === selectedBlockId}
-                onSelect={selectBlock}
+              <TextComponentView
+                key={component.id}
+                component={component}
+                selected={component.id === selectedComponentId}
+                onSelect={selectComponent}
               />
             );
           }
-          // Image and button blocks render in M4/M5.
+          // Image and navigation components render in M4/M5.
           return null;
         })}
       </div>

@@ -1,29 +1,29 @@
 /**
- * TextBlockView — read-only renderer for a TextBlock on the canvas.
+ * TextComponentView — read-only renderer for a TextComponent on the canvas.
  *
- * Layer: blocks
+ * Layer: components
  * Allowed imports: ../core
  *
- * M2 scope: render text block dengan inline style dari variant lookup.
+ * M2 scope: render text component dengan inline style dari variant lookup.
  *
  * NOTE — Style placeholder (sesuai docs/STYLE_SCHEMA_CONTRACT.md section 11):
  *   Sebelum M6, render memakai lookup hard-coded minimal berdasarkan variant.
  *   Ini BUKAN style adapter (itu baru di M6, di src/core/style/).
- *   Ini hanya placeholder agar canvas bisa menampilkan block dengan
+ *   Ini hanya placeholder agar canvas bisa menampilkan komponen dengan
  *   tampilan yang masuk akal. M6 akan mengganti ini dengan resolveBlockStyle.
  *
  *   Aturan: jangan tumbuh menjadi style engine. Tambah variant baru = update
- *   lookup table di sini. Tidak boleh ada field style manual di data block
+ *   lookup table di sini. Tidak boleh ada field style manual di data komponen
  *   (field override lokal baru di M6/M11).
  */
 
 import type { CSSProperties } from 'react';
-import type { TextBlock, TextBlockVariant } from '../core/types';
+import type { TextComponent, TextComponentVariant } from '../core/types';
 
-export type TextBlockViewProps = {
-  block: TextBlock;
+export type TextComponentViewProps = {
+  component: TextComponent;
   selected?: boolean;
-  onSelect?: (blockId: string) => void;
+  onSelect?: (componentId: string) => void;
 };
 
 /**
@@ -33,7 +33,7 @@ export type TextBlockViewProps = {
  * backgroundColor (optional), padding, borderRadius.
  */
 const VARIANT_STYLE: Record<
-  TextBlockVariant,
+  TextComponentVariant,
   {
     fontSize: number;
     color: string;
@@ -102,15 +102,15 @@ const VARIANT_STYLE: Record<
   },
 };
 
-export function TextBlockView({ block, selected, onSelect }: TextBlockViewProps) {
-  const vs = VARIANT_STYLE[block.variant] ?? VARIANT_STYLE.body;
+export function TextComponentView({ component, selected, onSelect }: TextComponentViewProps) {
+  const vs = VARIANT_STYLE[component.variant] ?? VARIANT_STYLE.body;
 
   const style: CSSProperties = {
     position: 'absolute',
-    left: block.x,
-    top: block.y,
-    width: block.width,
-    height: block.height,
+    left: component.x,
+    top: component.y,
+    width: component.width,
+    height: component.height,
     fontSize: vs.fontSize,
     color: vs.color,
     fontWeight: vs.fontWeight,
@@ -144,16 +144,16 @@ export function TextBlockView({ block, selected, onSelect }: TextBlockViewProps)
 
   return (
     <div
-      data-block-id={block.id}
-      data-block-type="text"
-      data-variant={block.variant}
+      data-component-id={component.id}
+      data-component-type="text"
+      data-variant={component.variant}
       onClick={(e) => {
         e.stopPropagation();
-        onSelect?.(block.id);
+        onSelect?.(component.id);
       }}
       style={style}
     >
-      {block.text}
+      {component.text}
     </div>
   );
 }

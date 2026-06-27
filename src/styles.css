@@ -256,7 +256,7 @@ input[type='text'] {
   margin: 0 0 8px 0;
 }
 
-/* Toolbar (inside topbar, for block actions to come in M2) */
+/* Toolbar (topbar, for component actions) */
 .toolbar {
   display: flex;
   align-items: center;
@@ -270,14 +270,14 @@ input[type='text'] {
   margin: 0 4px;
 }
 
-/* Block editor (Inspector — M2) */
-.block-editor {
+/* Component editor (Inspector — M2R) */
+.component-editor {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.block-editor__head {
+.component-editor__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -286,19 +286,19 @@ input[type='text'] {
   margin-bottom: 4px;
 }
 
-.block-editor__type {
+.component-editor__type {
   font-weight: 600;
   font-size: 13px;
   color: var(--color-accent);
 }
 
-.block-editor__id {
+.component-editor__id {
   font-size: 10px;
   color: var(--color-muted);
   font-family: monospace;
 }
 
-.block-editor__hint {
+.component-editor__hint {
   margin-top: 8px;
   padding: 10px;
   background: #f9fafb;
@@ -307,11 +307,11 @@ input[type='text'] {
   font-size: 12px;
 }
 
-.block-editor__hint p {
+.component-editor__hint p {
   margin: 0 0 4px 0;
 }
 
-.block-editor__hint code {
+.component-editor__hint code {
   background: #e5e7eb;
   padding: 1px 4px;
   border-radius: 3px;

@@ -4,28 +4,40 @@
  * Layer: store
  * Allowed imports: ../core
  *
- * SCOPE:
+ * SCOPE (Batch 2R):
  *   M1 — project lifecycle + page add/select.
- *   M2 — text block: addTextBlock, selectBlock, updateTextBlock.
+ *   M2 — text component: addTextComponent, selectComponent, updateTextComponent.
+ *        Dengan PageRole + Capability Matrix.
  *
- * Kontrak M2 (docs/CORE_PRODUCT_CONTRACT.md section 5):
- *   Setiap text block WAJIB punya variant. Default = 'body'.
- *   updateTextBlock tidak boleh menghapus field variant.
+ * Kontrak M2R (docs/CORE_PRODUCT_CONTRACT.md section 4 + Batch 2R):
+ *   - addTextComponent CEK capability current page.
+ *     Jika allowAddComponent=false (cover), return null (silent reject).
+ *   - Default variant text component mengikuti PageRole current page.
+ *   - Setiap text component WAJIB variant. updateTextComponent tidak boleh
+ *     menghapus field variant.
  *
  * Operasi rename/delete/duplicate page (M3) belum ada.
- * Operasi image/button block (M4/M5) belum ada.
- * Operasi removeBlock sengaja ditunda — bukan scope M2.
+ * Operasi setPageRole (M11) belum ada.
+ * Operasi image/card/navigation/question component (M4/M5/M11) belum ada.
+ * Operasi removeComponent sengaja ditunda — bukan scope M2.
  */
 
 import { create } from 'zustand';
-import type { SimplePage, SimpleProject, TextBlock } from '../core/types';
+import type { SimplePage, SimpleProject, TextComponent } from '../core/types';
 import { createEmptyPage, createProject } from '../core/project-factory';
-import { createTextBlock, type TextBlockEditable } from '../core/block-factory';
-import { TEXT_BLOCK_VARIANTS, type TextBlockVariant } from '../core/types';
+import {
+  createTextComponent,
+  type TextComponentEditable,
+} from '../core/component-factory';
+import {
+  TEXT_COMPONENT_VARIANTS,
+  type TextComponentVariant,
+} from '../core/types';
+import { canAddComponent, getCapability } from '../core/capability';
 
 export type EditorState = {
   project: SimpleProject;
-  selectedBlockId: string | null;
+  selectedComponentId: string | null;
 
   // Project lifecycle (M1)
   newProject: () => void;
@@ -36,39 +48,44 @@ export type EditorState = {
   selectPage: (pageId: string) => void;
   getCurrentPage: () => SimplePage | null;
 
-  // Block operations (M2 — text only)
-  addTextBlock: (overrides?: Partial<TextBlockEditable>) => string;
-  selectBlock: (blockId: string | null) => void;
-  updateTextBlock: (blockId: string, patch: Partial<TextBlockEditable>) => void;
-  getSelectedBlock: () => TextBlock | null;
+  // Component operations (M2 — text only, capability-checked)
+  /**
+   * Add a text component to the current page.
+   * Returns the new component id, or null if capability denied
+   * (e.g. on a 'cover' page where allowAddComponent=false).
+   */
+  addTextComponent: (overrides?: Partial<TextComponentEditable>) => string | null;
+  selectComponent: (componentId: string | null) => void;
+  updateTextComponent: (componentId: string, patch: Partial<TextComponentEditable>) => void;
+  getSelectedComponent: () => TextComponent | null;
 };
 
-function findBlock(project: SimpleProject, blockId: string): TextBlock | null {
+function findComponent(project: SimpleProject, componentId: string): TextComponent | null {
   for (const page of project.pages) {
-    for (const block of page.blocks) {
-      if (block.id === blockId && block.type === 'text') {
-        return block as TextBlock;
+    for (const component of page.components) {
+      if (component.id === componentId && component.type === 'text') {
+        return component as TextComponent;
       }
     }
   }
   return null;
 }
 
-function blockExistsInCurrentPage(project: SimpleProject, blockId: string): boolean {
+function componentExistsInCurrentPage(project: SimpleProject, componentId: string): boolean {
   const page = project.pages.find((p) => p.id === project.currentPageId);
   if (!page) return false;
-  return page.blocks.some((b) => b.id === blockId);
+  return page.components.some((c) => c.id === componentId);
 }
 
 /**
  * Sanitize patch — pastikan kalau `variant` di-patch, nilainya valid.
- * Kontrak: variant tidak boleh di-set ke nilai di luar TEXT_BLOCK_VARIANTS.
+ * Kontrak: variant tidak boleh di-set ke nilai di luar TEXT_COMPONENT_VARIANTS.
  */
-function sanitizePatch(patch: Partial<TextBlockEditable>): Partial<TextBlockEditable> {
-  const clean: Partial<TextBlockEditable> = { ...patch };
+function sanitizePatch(patch: Partial<TextComponentEditable>): Partial<TextComponentEditable> {
+  const clean: Partial<TextComponentEditable> = { ...patch };
   if (clean.variant !== undefined) {
-    if (!TEXT_BLOCK_VARIANTS.includes(clean.variant as TextBlockVariant)) {
-      // Buang variant invalid — block tetap punya variant lama.
+    if (!TEXT_COMPONENT_VARIANTS.includes(clean.variant as TextComponentVariant)) {
+      // Buang variant invalid — component tetap punya variant lama.
       delete clean.variant;
     }
   }
@@ -77,25 +94,26 @@ function sanitizePatch(patch: Partial<TextBlockEditable>): Partial<TextBlockEdit
 
 export const useEditorStore = create<EditorState>((set, get) => ({
   project: createProject(),
-  selectedBlockId: null,
+  selectedComponentId: null,
 
   newProject: () => {
-    set({ project: createProject(), selectedBlockId: null });
+    set({ project: createProject(), selectedComponentId: null });
   },
 
   setProject: (project) => {
-    set({ project, selectedBlockId: null });
+    set({ project, selectedComponentId: null });
   },
 
   addPage: (title) => {
-    const page = createEmptyPage(title ?? `Halaman ${get().project.pages.length + 1}`);
+    // Page baru manual default role='free'
+    const page = createEmptyPage({ role: 'free', title });
     set((state) => ({
       project: {
         ...state.project,
         pages: [...state.project.pages, page],
         currentPageId: page.id,
       },
-      selectedBlockId: null,
+      selectedComponentId: null,
     }));
     return page.id;
   },
@@ -105,7 +123,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       if (!state.project.pages.some((p) => p.id === pageId)) return state;
       return {
         project: { ...state.project, currentPageId: pageId },
-        selectedBlockId: null,
+        selectedComponentId: null,
       };
     });
   },
@@ -115,46 +133,59 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     return project.pages.find((p) => p.id === project.currentPageId) ?? null;
   },
 
-  // ----- Block operations (M2) -----
+  // ----- Component operations (M2) -----
 
-  addTextBlock: (overrides) => {
-    const block = createTextBlock(overrides);
-    set((state) => {
-      const pages = state.project.pages.map((p) => {
-        if (p.id !== state.project.currentPageId) return p;
-        return { ...p, blocks: [...p.blocks, block] };
+  addTextComponent: (overrides) => {
+    const state = get();
+    const currentPage = state.project.pages.find(
+      (p) => p.id === state.project.currentPageId,
+    );
+    if (!currentPage) return null;
+
+    // Cek capability current page
+    if (!canAddComponent(currentPage.role, 'text')) {
+      return null; // capability denied (e.g. cover page)
+    }
+
+    const component = createTextComponent(currentPage.role, overrides);
+    set((s) => {
+      const pages = s.project.pages.map((p) => {
+        if (p.id !== s.project.currentPageId) return p;
+        return { ...p, components: [...p.components, component] };
       });
       return {
-        project: { ...state.project, pages },
-        selectedBlockId: block.id,
+        project: { ...s.project, pages },
+        selectedComponentId: component.id,
       };
     });
-    return block.id;
+    return component.id;
   },
 
-  selectBlock: (blockId) => {
+  selectComponent: (componentId) => {
     set((state) => {
-      if (blockId === null) return { selectedBlockId: null };
-      if (!blockExistsInCurrentPage(state.project, blockId)) return state;
-      return { selectedBlockId: blockId };
+      if (componentId === null) return { selectedComponentId: null };
+      if (!componentExistsInCurrentPage(state.project, componentId)) return state;
+      return { selectedComponentId: componentId };
     });
   },
 
-  updateTextBlock: (blockId, patch) => {
+  updateTextComponent: (componentId, patch) => {
     const cleanPatch = sanitizePatch(patch);
     set((state) => {
       const page = state.project.pages.find((p) => p.id === state.project.currentPageId);
       if (!page) return state;
-      const blockExists = page.blocks.some((b) => b.id === blockId && b.type === 'text');
-      if (!blockExists) return state;
+      const componentExists = page.components.some(
+        (c) => c.id === componentId && c.type === 'text',
+      );
+      if (!componentExists) return state;
 
       const pages = state.project.pages.map((p) => {
         if (p.id !== state.project.currentPageId) return p;
         return {
           ...p,
-          blocks: p.blocks.map((b) => {
-            if (b.id !== blockId || b.type !== 'text') return b;
-            return { ...b, ...cleanPatch, type: 'text' } as TextBlock;
+          components: p.components.map((c) => {
+            if (c.id !== componentId || c.type !== 'text') return c;
+            return { ...c, ...cleanPatch, type: 'text' } as TextComponent;
           }),
         };
       });
@@ -162,9 +193,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     });
   },
 
-  getSelectedBlock: () => {
-    const { project, selectedBlockId } = get();
-    if (!selectedBlockId) return null;
-    return findBlock(project, selectedBlockId);
+  getSelectedComponent: () => {
+    const { project, selectedComponentId } = get();
+    if (!selectedComponentId) return null;
+    return findComponent(project, selectedComponentId);
   },
 }));
+
+// Re-export capability helpers for UI consumers (Topbar hint about page role)
+export { getCapability, canAddComponent };

@@ -5,7 +5,14 @@
  * Allowed imports: none (only TypeScript built-ins)
  *
  * These types are the single source of truth for project data.
- * Do not import from store/editor/blocks/preview/export.
+ * Do not import from store/editor/components/preview/export.
+ *
+ * NAMING CONVENTION (Batch 2R):
+ *   - Internal type names use "Component" (TextComponent, PageComponent).
+ *   - UI product-facing text MUST use "elemen" / "komponen", NOT "block".
+ *   - "Block" is a legacy term from M2 v1/v2 and is forbidden in user-facing
+ *     strings. Internal code may still reference it in comments for historical
+ *     context, but type names and field names use "component".
  */
 
 // ---------------------------------------------------------------------------
@@ -23,6 +30,25 @@ export type SimpleProject = {
 };
 
 // ---------------------------------------------------------------------------
+// Page Role — peran pedagogis halaman
+// (lihat docs/CORE_PRODUCT_CONTRACT.md section 4 "Kontrak Struktur Pembelajaran")
+// ---------------------------------------------------------------------------
+
+export const PAGE_ROLES = [
+  'cover',
+  'learningObjectives',
+  'starter',
+  'material',
+  'activity',
+  'quiz',
+  'reflection',
+  'closing',
+  'free',
+] as const;
+
+export type PageRole = (typeof PAGE_ROLES)[number];
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
@@ -34,24 +60,27 @@ export type PageBackground =
 export type SimplePage = {
   id: string;
   title: string;
+  /** Peran pedagogis halaman. Wajib. Menentukan capability (komponen apa yang boleh ditambah). */
+  role: PageRole;
   background: PageBackground;
-  blocks: SimpleBlock[];
+  /** Elemen pembelajaran di halaman. Naming internal "components"; UI memakai "elemen". */
+  components: PageComponent[];
 };
 
 // ---------------------------------------------------------------------------
-// Block Variant — peran visual-pedagogis block
+// Component Variant — peran visual-pedagogis komponen
 // (lihat docs/CORE_PRODUCT_CONTRACT.md section 5 "Kontrak Block Variant")
 // ---------------------------------------------------------------------------
 
 /**
- * Variant untuk text block.
+ * Variant untuk text component.
  * Variant adalah anchor untuk style adapter (M6) — sebelum M6, render
  * memakai lookup hard-coded minimal berdasarkan variant.
  *
  * Variant BUKAN field style manual. Field style manual (fontSize/color/dll)
  * sebagai override lokal baru datang di M6/M11 via style adapter.
  */
-export const TEXT_BLOCK_VARIANTS = [
+export const TEXT_COMPONENT_VARIANTS = [
   'title',
   'subtitle',
   'body',
@@ -61,13 +90,13 @@ export const TEXT_BLOCK_VARIANTS = [
   'reflectionBox',
 ] as const;
 
-export type TextBlockVariant = (typeof TEXT_BLOCK_VARIANTS)[number];
+export type TextComponentVariant = (typeof TEXT_COMPONENT_VARIANTS)[number];
 
 // ---------------------------------------------------------------------------
-// Block — discriminated union on `type`
+// Component — discriminated union on `type`
 // ---------------------------------------------------------------------------
 
-export type BaseBlock = {
+export type BaseComponent = {
   id: string;
   x: number;
   y: number;
@@ -76,40 +105,44 @@ export type BaseBlock = {
 };
 
 /**
- * Text block (M2 scope).
+ * Text component (M2 scope).
  *
- * Data block sengaja minimal: text content + geometry + variant.
+ * Data component sengaja minimal: text content + geometry + variant.
  * Field style manual (fontSize/color/fontWeight/align) TIDAK ada di M2 —
  * style datang dari variant via style adapter (M6) atau lookup minimal
- * hard-coded (sebelum M6). Ini konsisten dengan kontrak Batch 1B.
+ * hard-coded (sebelum M6). Ini konsisten dengan kontrak Batch 1B + 2R.
  */
-export type TextBlock = BaseBlock & {
+export type TextComponent = BaseComponent & {
   type: 'text';
   text: string;
-  variant: TextBlockVariant;
+  variant: TextComponentVariant;
 };
 
-export type ImageBlock = BaseBlock & {
+export type ImageComponent = BaseComponent & {
   type: 'image';
   src: string;
   alt?: string;
   objectFit: 'cover' | 'contain';
-  // variant: ImageBlockVariant — ditambahkan di M4
+  // variant: ImageComponentVariant — ditambahkan di M4
 };
 
-export type ButtonBlock = BaseBlock & {
-  type: 'button';
+export type NavigationComponent = BaseComponent & {
+  type: 'navigation';
   label: string;
   action: 'next' | 'prev' | 'goto';
   targetPageId?: string;
-  // variant: ButtonBlockVariant — ditambahkan di M5
+  // variant: NavigationComponentVariant — ditambahkan di M5
 };
 
-export type SimpleBlock = TextBlock | ImageBlock | ButtonBlock;
+/**
+ * Union of all component types. M2 only has TextComponent.
+ * ImageComponent lands in M4, NavigationComponent in M5, Question in M11.
+ */
+export type PageComponent = TextComponent | ImageComponent | NavigationComponent;
 
 // ---------------------------------------------------------------------------
-// Block type literals — exported as constants for runtime guards
+// Component type literals — exported as constants for runtime guards
 // ---------------------------------------------------------------------------
 
-export const BLOCK_TYPES = ['text', 'image', 'button'] as const;
-export type BlockType = (typeof BLOCK_TYPES)[number];
+export const COMPONENT_TYPES = ['text', 'image', 'navigation'] as const;
+export type ComponentType = (typeof COMPONENT_TYPES)[number];

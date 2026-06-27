@@ -1,13 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { createEmptyPage, createProject, createProjectWithPages } from '../core/project-factory';
-import { isValidProject, validateProject } from '../core/validation';
+import { isValidProject, validateProject, validatePage } from '../core/validation';
 import { PROJECT_VERSION } from '../core/types';
 
 describe('createProject', () => {
-  it('creates a project with exactly 1 page', () => {
+  it('creates a project with exactly 1 page (Cover)', () => {
     const p = createProject();
     expect(p.pages).toHaveLength(1);
-    expect(p.pages[0].title).toBe('Halaman 1');
+    expect(p.pages[0].title).toBe('Cover');
+    expect(p.pages[0].role).toBe('cover');
+  });
+
+  it('cover page pre-filled with 1 text component variant=title', () => {
+    const p = createProject();
+    const cover = p.pages[0];
+    expect(cover.components).toHaveLength(1);
+    expect(cover.components[0].type).toBe('text');
+    expect((cover.components[0] as { variant: string }).variant).toBe('title');
   });
 
   it('sets currentPageId to the first page', () => {
@@ -29,9 +38,35 @@ describe('createProject', () => {
 });
 
 describe('createEmptyPage', () => {
-  it('creates a page with no blocks', () => {
+  it('creates a page with no components (default role=free)', () => {
     const page = createEmptyPage();
-    expect(page.blocks).toEqual([]);
+    expect(page.components).toEqual([]);
+    expect(page.role).toBe('free');
+  });
+
+  it('creates a page with specified role', () => {
+    const page = createEmptyPage({ role: 'material' });
+    expect(page.role).toBe('material');
+  });
+
+  it('creates a cover page with default title "Cover"', () => {
+    const page = createEmptyPage({ role: 'cover' });
+    expect(page.title).toBe('Cover');
+  });
+
+  it('creates a material page with default title "Materi"', () => {
+    const page = createEmptyPage({ role: 'material' });
+    expect(page.title).toBe('Materi');
+  });
+
+  it('creates a free page with default title "Halaman Baru"', () => {
+    const page = createEmptyPage({ role: 'free' });
+    expect(page.title).toBe('Halaman Baru');
+  });
+
+  it('accepts explicit title override', () => {
+    const page = createEmptyPage({ role: 'free', title: 'Materi 1' });
+    expect(page.title).toBe('Materi 1');
   });
 
   it('defaults to white color background', () => {
@@ -44,7 +79,10 @@ describe('createProjectWithPages', () => {
   it('creates a project with the requested page count', () => {
     const p = createProjectWithPages(3);
     expect(p.pages).toHaveLength(3);
-    expect(p.pages.map((pg) => pg.title)).toEqual(['Halaman 1', 'Halaman 2', 'Halaman 3']);
+    // First page is cover (from createProject), subsequent pages are free
+    expect(p.pages[0].role).toBe('cover');
+    expect(p.pages[1].role).toBe('free');
+    expect(p.pages[2].role).toBe('free');
   });
 
   it('throws if pageCount < 1', () => {
@@ -86,6 +124,50 @@ describe('validateProject', () => {
     const dup = { ...p, pages: [p.pages[0], { ...p.pages[0] }] };
     const r = validateProject(dup);
     expect(r.ok).toBe(false);
+  });
+});
+
+describe('validatePage — role required (Batch 2R)', () => {
+  it('rejects page without role field', () => {
+    const page = createEmptyPage({ role: 'free' });
+    const broken = { ...page } as Record<string, unknown>;
+    delete broken.role;
+    const r = validatePage(broken);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.join('; ')).toMatch(/role/i);
+  });
+
+  it('rejects page with invalid role value', () => {
+    const page = createEmptyPage({ role: 'free' });
+    const broken = { ...page, role: 'invalidRole' };
+    const r = validatePage(broken);
+    expect(r.ok).toBe(false);
+  });
+
+  it('rejects page with role of wrong type (number)', () => {
+    const page = createEmptyPage({ role: 'free' });
+    const broken = { ...page, role: 123 };
+    const r = validatePage(broken);
+    expect(r.ok).toBe(false);
+  });
+
+  it('accepts page with each valid PageRole', () => {
+    const roles = [
+      'cover',
+      'learningObjectives',
+      'starter',
+      'material',
+      'activity',
+      'quiz',
+      'reflection',
+      'closing',
+      'free',
+    ] as const;
+    for (const role of roles) {
+      const page = createEmptyPage({ role });
+      const r = validatePage(page);
+      expect(r.ok).toBe(true);
+    }
   });
 });
 

@@ -14,16 +14,17 @@
 | M1 | Editor Kosong | Done |
 | B1A | Scope-Lock Patch | Done |
 | B1B | Core Contract, Schema, Style Adapter Lock | Done |
-| **M2** | **Text Block + Text Role Dasar** | **Active** |
-| M3 | Page Flow Lengkap | Planned |
-| M4 | Image Block + Image Variant | Planned |
-| M5 | Button + Preview + Interaction Role | Planned |
+| M2 (v1) | Text Block + Text Role Dasar | Superseded |
+| **M2** | **Page Role + Capability Matrix + Text Component** | **Active** |
+| M3 | Page Flow Management | Planned |
+| M4 | Image + Card Component | Planned |
+| M5 | Navigation + Preview | Planned |
 | M6 | Export HTML + Style Consistency | Planned |
 | M7 | Save / Load + Schema Validation | Planned |
 | M8 | Drag / Resize + Layout Guide | Planned |
-| M9 | Import AI / Canva Ringan ke Schema | Planned |
-| M10 | Kuis Sederhana | Planned |
-| M11 | Guided Learning Style System | Planned |
+| M9 | AI JSON Import + Style Import | Planned |
+| M10 | Kuis Sederhana (feedback + skor) | Planned |
+| M11 | Advanced Learning Components + Guided Style System | Planned |
 | M12 | Template Pedagogis | Planned |
 | M13 | Paket MPI Production-Ready | Planned |
 | P1 | Reliability Hardening | Planned |

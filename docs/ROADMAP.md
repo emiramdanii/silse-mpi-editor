@@ -10,22 +10,23 @@ Setiap milestone = satu batch. Tidak lompat, tidak sekalian, tidak tambah fitur 
 | M1        | Editor Kosong                         | Done        |
 | B1A       | Scope-Lock Patch                      | Done        |
 | B1B       | Core Contract, Schema, Style Lock     | Done        |
-| **M2**    | **Text Block + Text Role Dasar**      | **Active**  |
-| M3        | Page Flow Lengkap                     | Planned     |
-| M4        | Image Block + Image Variant           | Planned     |
-| M5        | Button + Preview + Interaction        | Planned     |
+| M2 (v1)   | Text Block + Text Role Dasar          | Superseded  |
+| **M2**    | **Page Role + Capability Matrix + Text Component** | **Active** |
+| M3        | Page Flow Management                  | Planned     |
+| M4        | Image + Card Component                | Planned     |
+| M5        | Navigation + Preview                  | Planned     |
 | M6        | Export HTML + Style Consistency       | Planned     |
 | M7        | Save / Load + Schema Validation       | Planned     |
 | M8        | Drag / Resize + Layout Guide          | Planned     |
-| M9        | Import AI / Canva ke Schema           | Planned     |
+| M9        | AI JSON Import + Style Import         | Planned     |
 | M10       | Kuis Sederhana                        | Planned     |
-| M11       | Guided Learning Style System          | Planned     |
+| M11       | Advanced Learning Components          | Planned     |
 | M12       | Template Pedagogis                    | Planned     |
 | M13       | Paket MPI Production-Ready            | Planned     |
 | P1–P4     | Hardening & Release                   | Planned     |
 | F1+       | Future Development                    | Future      |
 
-> **Catatan:** M2 sebelumnya sudah pernah diimplementasi sebagai "free text block" tanpa variant (commit `a1f352f`) lalu **di-revert** (commit `1cfadb0`) karena tidak mengikuti kontrak Batch 1B. M2 yang baru wajib memakai field `variant` di text block. Lihat section M2 di bawah.
+> **Catatan historis:** M2 v1 (`a1f352f`) membangun "free text block" tanpa variant — di-revert (`1cfadb0`). M2 v2 (`9833ea4`) menambahkan variant tetapi masih model "block editor bebas" — superseded oleh M2R (Batch 2R) yang memperkenalkan Page Role + Capability Matrix + Component Model. M2 final = M2R.
 
 Urutan lengkap milestone sampai production ada di [`docs/PRODUCTION_ROADMAP.md`](PRODUCTION_ROADMAP.md).
 
@@ -116,54 +117,70 @@ Lihat [`docs/CORE_PRODUCT_CONTRACT.md`](CORE_PRODUCT_CONTRACT.md) dan [`docs/STY
 
 ---
 
-## M2 — Text Block + Text Role Dasar
+## M2 — Page Role + Capability Matrix + Text Component
 
 **Prasyarat:** Batch 1B ACCEPTED.
 
-**Target:** Text block pertama, tetapi dengan role/variant — bukan "free text".
+**Target:** Memperkenalkan model **role-based guided component editor**, bukan block editor bebas. Halaman punya peran pedagogis (PageRole), dan peran menentukan komponen apa yang boleh ditambahkan (Capability Matrix).
 
 **Fitur:**
 
-- Add text block.
-- Select block.
-- Render text di canvas.
-- Edit text dari inspector.
-- Edit x/y/width/height.
-- **Field `variant` wajib ada** di setiap text block (default `'body'`).
-- Variant bisa dipilih dari inspector (`title`/`subtitle`/`body`/`instruction`/`importantNote`/`questionPrompt`/`reflectionBox`).
+- PageRole di schema: `cover`/`learningObjectives`/`starter`/`material`/`activity`/`quiz`/`reflection`/`closing`/`free`.
+- Field `role` wajib di setiap `SimplePage`.
+- Page pertama default: `title: "Cover"`, `role: "cover"`, pre-fill 1 TextComponent variant `title`.
+- Page baru manual default: `role: "free"`.
+- PageRoleCapability matrix: setiap role punya `allowedComponents` + `allowAddComponent`.
+- `cover`: `allowAddComponent: false` (guided, fixed slots di M11/M12).
+- `material`/`free`/lainnya: `allowAddComponent: true`, `allowedComponents: ['text']`.
+- Add text component → cek capability current page; tolak jika tidak diizinkan.
+- Default variant text component mengikuti PageRole:
+  - `cover` → `title`
+  - `starter` → `questionPrompt`
+  - `activity` → `instruction`
+  - `quiz` → `questionPrompt`
+  - `reflection` → `reflectionBox`
+  - lainnya → `body`
+- Text component data minimal: `{ id, type:'text', variant, text, x, y, width, height }`.
+- Field style manual (fontSize/color/fontWeight/align) **tidak ada** di M2 — style datang dari variant.
+- UI berbahasa **"elemen"**/**"komponen"**, bukan "block".
 
 **Acceptance:**
 
-- Tambah text block → block punya `variant: 'body'` secara default.
-- Ganti variant → field `variant` berubah di data.
-- Edit text → canvas berubah real-time.
-- Variant tersimpan di JSON project.
+- Project default punya page role `cover`.
+- Page baru punya role `free`.
+- Capability Matrix ada di `core/capability.ts` dan dipakai store.
+- `addTextComponent` di cover ditolak (capability denied).
+- `addTextComponent` di page free/material diizinkan, default variant sesuai role.
+- Text component tanpa variant → validation menolak.
+- Page tanpa role → validation menolak.
+- UI tidak menampilkan kata "block" di user-facing text.
+- Store tidak expose operasi image/card/navigation/question.
 
 **Scope lock:**
 
-- **Belum ada style adapter.** Style masih inline hard-coded minimal, tetapi data block sudah punya field `variant`. Ini anchor untuk M6 (Export HTML + Style Consistency) dan M11 (Guided Learning Style System).
-- `removeBlock` sengaja **ditunda** — bukan scope M2.
-- Operasi `addImageBlock`/`addButtonBlock` **tidak boleh ada** di store/UI sampai M4/M5.
-- Operasi `renamePage`/`deletePage`/`duplicatePage` **tidak boleh ada** sampai M3.
-- Scope-lock test di-bump ke **M2-lock**: tombol `+ Teks` ENABLED, tombol lain DISABLED, inspector menampilkan field text-block + variant selector (tidak ada field image/button).
-- **Text block tanpa field `variant` = scope leak.** Validation test akan menolak.
+- Belum ada style adapter (M6). Style via variant lookup hard-coded.
+- `removeComponent` ditunda — bukan scope M2.
+- `addImageComponent`/`addCardComponent`/`addNavigationComponent`/`addQuestionComponent` tidak boleh ada di store/UI sampai M4/M5/M11.
+- `renamePage`/`deletePage`/`duplicatePage`/`setPageRole` tidak boleh ada sampai M3 (rename/delete/duplicate) / M11 (setPageRole).
+- Scope-lock test di-bump ke **M2R-lock**.
 
 **Dilarang di M2:**
 
-- Image block (M4), button block (M5), preview (M5), export HTML (M6), drag/resize (M8), template (M12), page flow lengkap (M3).
-- Style adapter (baru di M6).
-- Style tokens / visual preset (baru di M11).
+- Image/card/navigation/question component (M4/M5/M11).
+- Preview (M5), export HTML (M6), drag/resize (M8), template (M12), page flow management (M3).
+- Style adapter (M6), style tokens / visual preset (M11).
+- setPageRole UI (M11 — role ditentukan saat create page, tidak bisa diganti manual sampai M11).
 
-> **Pelajaran dari revert M2 sebelumnya:** M2 versi lama (`a1f352f`) membangun text block sebagai "free text" tanpa `variant`. Itu melanggar kontrak Batch 1B dan akan menyulitkan style adapter di M6. M2 yang baru wajib memakai `variant` sejak block pertama dibuat.
+> **Pelajaran dari Batch 2R:** M2 v2 (`9833ea4`) technically hijau tapi arah produknya masih "block editor bebas + variant". Tanpa PageRole + Capability Matrix, app tidak bisa menjadi guided MPI authoring tool — bisa kembali jadi PowerPoint clone. Batch 2R memperbaiki arah: Page Role → Capability Matrix → Elemen yang diizinkan → Style/Export konsisten.
 
 ---
 
-## M3 — Page Flow Lengkap
+## M3 — Page Flow Management
 
 **Target:** Bisa membuat banyak halaman dengan operasi lengkap.
 
 **Fitur:**
-- Add page.
+- Add page (dengan role default `free`).
 - Delete page.
 - Rename page.
 - Select page.
@@ -174,31 +191,34 @@ Lihat [`docs/CORE_PRODUCT_CONTRACT.md`](CORE_PRODUCT_CONTRACT.md) dan [`docs/STY
 - Delete halaman → halaman hilang, halaman lain tetap utuh.
 - Duplicate halaman → halaman baru dengan isi sama tapi ID beda.
 
+> Catatan: `setPageRole` (ganti role halaman yang sudah ada) **bukan scope M3** — itu M11. M3 hanya operasi teknis halaman (add/delete/rename/select/duplicate). Role ditentukan saat create page.
+
 ---
 
-## M4 — Image Block
+## M4 — Image + Card Component
 
-**Target:** Bisa tambah gambar.
+**Target:** Bisa tambah gambar dan card sebagai elemen pembelajaran.
 
 **Fitur:**
-- Upload image (file → base64 atau object URL).
-- Render image di canvas.
-- Edit posisi/ukuran.
-- Object-fit: cover / contain.
+- Image component (variant: `illustration`/`background`/`imageCard`).
+- Card component (container ringan untuk grouping elemen).
+- Upload image, render di canvas, edit posisi/ukuran.
+- Capability Matrix diperluas: role tertentu mengizinkan image/card.
 
 **Acceptance:**
 - Upload gambar → tampil di canvas.
 - Resize lewat inspector → gambar menyesuaikan.
-- Ganti object-fit → perilaku render berubah.
+- Capability Matrix menolak image di role yang tidak mengizinkan.
 
 ---
 
-## M5 — Button + Preview
+## M5 — Navigation + Preview
 
-**Target:** MPI bisa dipreview seperti media pembelajaran.
+**Target:** MPI bisa dipreview dengan navigasi antar halaman.
 
 **Fitur:**
-- Button block dengan action: next, prev, goto.
+- Navigation component (variant: `navigation`/`primaryAction`/`secondaryAction`/`choice`).
+- Action: next, prev, goto page.
 - Preview fullscreen (mode terpisah dari editor).
 - Navigasi antar halaman di preview.
 
@@ -266,14 +286,16 @@ Lihat [`docs/CORE_PRODUCT_CONTRACT.md`](CORE_PRODUCT_CONTRACT.md) dan [`docs/STY
 
 ---
 
-## M9 — Import AI / Canva
+## M9 — AI JSON Import + Style Import
 
-**Target:** Mulai mendekati kebutuhan workflow nyata.
+**Target:** Import ringan dari AI/Canva yang menghormati schema SILSE.
 
 **Fitur awal:**
-- Paste JSON sederhana dari AI (format SimpleProject mini).
-- Import HTML ringan (parse body menjadi blocks sederhana).
+
+- Paste JSON sederhana dari AI → otomatis dikonversi ke schema SILSE (tambah `role` page + `variant` component default).
+- Import HTML ringan → parse body jadi components sederhana.
 - Import gambar hasil Canva sebagai background halaman.
+- Import style preset ringan (token-level, bukan full style engine).
 - Tambah text overlay di atas gambar background.
 
 **Acceptance:**
@@ -287,25 +309,31 @@ Lihat [`docs/CORE_PRODUCT_CONTRACT.md`](CORE_PRODUCT_CONTRACT.md) dan [`docs/STY
 
 **Target:** MPI mendukung pertanyaan pilihan ganda sederhana.
 
+**Catatan:** Setelah Batch 2R, Question component dipindahkan ke M11 (Advanced Learning Components) karena memerlukan PageRole `quiz` + Capability Matrix + interaction pattern `choiceFeedback` yang lebih solid. M10 sekarang fokus pada **feedback dasar dan skor** untuk komponen question yang sudah ada di M11.
+
 **Fitur:**
-- Question block (pertanyaan + pilihan + jawaban benar).
-- Feedback benar/salah.
+- Feedback benar/salah untuk Question component (dari M11).
 - Skor akhir.
+- Halaman ringkasan skor.
 
 **Acceptance:**
-- Tambah kuis → di-preview bisa dijawab.
+- Tambah kuis (dari M11) → di-preview bisa dijawab.
 - Jawaban benar → feedback positif.
 - Jawaban salah → feedback negatif.
 - Skor terakumulasi.
+- Halaman skor tampil di akhir.
 
 ---
 
-## M11 — Guided Learning Style System
+## M11 — Advanced Learning Components
 
-**Target:** Style system lengkap sesuai `docs/STYLE_SCHEMA_CONTRACT.md`.
+**Target:** Komponen pembelajaran lanjutan + Guided Learning Style System lengkap.
 
 **Fitur:**
 
+- Question component (pertanyaan + pilihan + jawaban benar) — pindah dari M10.
+- Interaction pattern: `choiceFeedback`/`reveal`/`hotspot`/`tabs`/`accordion`.
+- `setPageRole` UI (ganti role halaman yang sudah ada).
 - `ProjectStyle` (presetId + tokens).
 - 5 visual preset (cleanClassroom, civicWarm, brightKids, projectorHighContrast, minimalWorksheet).
 - `resolveBlockStyle` full implementation di `src/core/style/`.
@@ -314,9 +342,9 @@ Lihat [`docs/CORE_PRODUCT_CONTRACT.md`](CORE_PRODUCT_CONTRACT.md) dan [`docs/STY
 
 **Acceptance:**
 
+- Tambah kuis → di-preview bisa dijawab.
 - Pilih preset → tokens berubah → editor/preview/export ikut.
 - Variant menghasilkan style default benar.
-- Local override menghasilkan default.
 - Snapshot editor/preview/export konsisten.
 
 ---

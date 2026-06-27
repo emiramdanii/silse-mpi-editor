@@ -5,17 +5,25 @@
  * Allowed imports: ./types
  *
  * Pure functions — no I/O, no side effects.
+ *
+ * Kontrak Batch 2R:
+ *   - Page wajib punya field `role` yang valid (salah satu PAGE_ROLES).
+ *   - Text component wajib punya field `variant` yang valid.
+ *   - Page tanpa role → validation menolak.
+ *   - Component tanpa variant → validation menolak.
  */
 
 import {
-  BLOCK_TYPES,
+  COMPONENT_TYPES,
+  PAGE_ROLES,
   PROJECT_VERSION,
-  TEXT_BLOCK_VARIANTS,
-  type BlockType,
-  type SimpleBlock,
+  TEXT_COMPONENT_VARIANTS,
+  type ComponentType,
+  type PageComponent,
+  type PageRole,
   type SimplePage,
   type SimpleProject,
-  type TextBlockVariant,
+  type TextComponentVariant,
 } from './types';
 
 export type ValidationResult = { ok: true } | { ok: false; errors: string[] };
@@ -36,66 +44,83 @@ function isObject(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
-export function validateBlock(block: unknown): ValidationResult {
-  if (!isObject(block)) return fail('block must be an object');
-  if (!isString(block.id) || block.id.length === 0) return fail('block.id must be a non-empty string');
-  if (!isNumber(block.x)) return fail('block.x must be a number');
-  if (!isNumber(block.y)) return fail('block.y must be a number');
-  if (!isNumber(block.width) || block.width <= 0) return fail('block.width must be a positive number');
-  if (!isNumber(block.height) || block.height <= 0) return fail('block.height must be a positive number');
-  if (!isString(block.type) || !BLOCK_TYPES.includes(block.type as BlockType)) {
-    return fail(`block.type must be one of: ${BLOCK_TYPES.join(', ')}`);
+export function validateComponent(component: unknown): ValidationResult {
+  if (!isObject(component)) return fail('component must be an object');
+  if (!isString(component.id) || component.id.length === 0)
+    return fail('component.id must be a non-empty string');
+  if (!isNumber(component.x)) return fail('component.x must be a number');
+  if (!isNumber(component.y)) return fail('component.y must be a number');
+  if (!isNumber(component.width) || component.width <= 0)
+    return fail('component.width must be a positive number');
+  if (!isNumber(component.height) || component.height <= 0)
+    return fail('component.height must be a positive number');
+  if (!isString(component.type) || !COMPONENT_TYPES.includes(component.type as ComponentType)) {
+    return fail(`component.type must be one of: ${COMPONENT_TYPES.join(', ')}`);
   }
 
   // Type-specific validation
-  if (block.type === 'text') {
-    return validateTextBlock(block);
+  if (component.type === 'text') {
+    return validateTextComponent(component);
   }
-  // image/button validation lands in M4/M5
+  // image/navigation validation lands in M4/M5
   return { ok: true };
 }
 
 /**
- * Validate a text block (M2 scope).
+ * Validate a text component (M2 scope).
  *
- * Kontrak (docs/CORE_PRODUCT_CONTRACT.md section 5):
+ * Kontrak (docs/CORE_PRODUCT_CONTRACT.md section 5 + Batch 2R Scope D):
  *   - field `text` wajib, string (boleh kosong tapi harus ada)
- *   - field `variant` wajib, harus salah satu dari TEXT_BLOCK_VARIANTS
+ *   - field `variant` wajib, harus salah satu dari TEXT_COMPONENT_VARIANTS
  *
- * Block text tanpa variant = scope leak, validation menolak.
+ * Text component tanpa variant = scope leak, validation menolak.
  */
-function validateTextBlock(block: Record<string, unknown>): ValidationResult {
-  if (!isString(block.text)) {
-    return fail('text block.text must be a string');
+function validateTextComponent(component: Record<string, unknown>): ValidationResult {
+  if (!isString(component.text)) {
+    return fail('text component.text must be a string');
   }
-  if (!isString(block.variant)) {
-    return fail('text block.variant is required (must be a string)');
+  if (!isString(component.variant)) {
+    return fail('text component.variant is required (must be a string)');
   }
-  if (!TEXT_BLOCK_VARIANTS.includes(block.variant as TextBlockVariant)) {
+  if (!TEXT_COMPONENT_VARIANTS.includes(component.variant as TextComponentVariant)) {
     return fail(
-      `text block.variant must be one of: ${TEXT_BLOCK_VARIANTS.join(', ')} (got "${block.variant}")`,
+      `text component.variant must be one of: ${TEXT_COMPONENT_VARIANTS.join(', ')} (got "${component.variant}")`,
     );
   }
   return { ok: true };
 }
 
+export function validatePageRole(role: unknown): role is PageRole {
+  return isString(role) && PAGE_ROLES.includes(role as PageRole);
+}
+
 export function validatePage(page: unknown): ValidationResult {
   if (!isObject(page)) return fail('page must be an object');
-  if (!isString(page.id) || page.id.length === 0) return fail('page.id must be a non-empty string');
+  if (!isString(page.id) || page.id.length === 0)
+    return fail('page.id must be a non-empty string');
   if (!isString(page.title)) return fail('page.title must be a string');
-  if (!isObject(page.background)) return fail('page.background must be an object');
-  if (!Array.isArray(page.blocks)) return fail('page.blocks must be an array');
 
-  for (let i = 0; i < page.blocks.length; i++) {
-    const r = validateBlock(page.blocks[i]);
-    if (!r.ok) return fail(`page.blocks[${i}]: ${r.errors.join('; ')}`);
+  // Kontrak Batch 2R Scope B: page wajib punya role valid
+  if (!validatePageRole(page.role)) {
+    return fail(
+      `page.role is required and must be one of: ${PAGE_ROLES.join(', ')}${isString(page.role) ? ` (got "${page.role}")` : ''}`,
+    );
+  }
+
+  if (!isObject(page.background)) return fail('page.background must be an object');
+  if (!Array.isArray(page.components)) return fail('page.components must be an array');
+
+  for (let i = 0; i < page.components.length; i++) {
+    const r = validateComponent(page.components[i]);
+    if (!r.ok) return fail(`page.components[${i}]: ${r.errors.join('; ')}`);
   }
   return { ok: true };
 }
 
 export function validateProject(project: unknown): ValidationResult {
   if (!isObject(project)) return fail('project must be an object');
-  if (!isString(project.id) || project.id.length === 0) return fail('project.id must be a non-empty string');
+  if (!isString(project.id) || project.id.length === 0)
+    return fail('project.id must be a non-empty string');
   if (!isString(project.title)) return fail('project.title must be a string');
   if (project.version !== PROJECT_VERSION) {
     return fail(`project.version must be ${PROJECT_VERSION}`);
@@ -130,8 +155,8 @@ export function isValidProject(project: unknown): project is SimpleProject {
 }
 
 /**
- * Type guard for SimpleBlock.
+ * Type guard for PageComponent.
  */
-export function isValidBlock(block: unknown): block is SimpleBlock {
-  return validateBlock(block).ok;
+export function isValidComponent(component: unknown): component is PageComponent {
+  return validateComponent(component).ok;
 }

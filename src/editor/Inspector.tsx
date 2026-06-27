@@ -1,47 +1,65 @@
 import { useEditorStore } from '../store/editor-store';
-import type { TextBlock } from '../core/types';
-import type { TextBlockEditable } from '../core/block-factory';
-import { TEXT_BLOCK_VARIANTS, type TextBlockVariant } from '../core/types';
+import type { SimplePage, TextComponent } from '../core/types';
+import type { TextComponentEditable } from '../core/component-factory';
+import { TEXT_COMPONENT_VARIANTS, type TextComponentVariant } from '../core/types';
+import { getCapability } from '../core/capability';
 
 /**
- * Inspector — M2 scope.
+ * Inspector — M2R scope.
  *
- * Jika ada text block terpilih → tampilkan form editor:
- *   - text (textarea)
- *   - variant (selector, 7 pilihan)
- *   - x, y, width, height (geometry)
+ * Jika ada text component terpilih → tampilkan form editor:
+ *   - Jenis teks (variant selector, 7 pilihan dengan label Indonesia)
+ *   - Teks (textarea)
+ *   - X, Y, Lebar, Tinggi (geometry)
  *
- * Jika tidak ada block terpilih → tampilkan placeholder info halaman.
+ * Jika tidak ada component terpilih → tampilkan placeholder info halaman
+ * (termasuk role + status capability).
+ *
+ * Naming: UI uses "elemen", NOT "block".
  *
  * TIDAK ada field fontSize/color/fontWeight/align manual — style datang
- * dari variant (lihat TextBlockView). Field override lokal baru di M6/M11.
- * Field untuk image/button block akan ditambahkan di M4/M5.
+ * dari variant (lihat TextComponentView). Field override lokal baru di M6/M11.
+ * Field untuk image/navigation component akan ditambahkan di M4/M5.
  */
 
-const VARIANT_LABELS: Record<TextBlockVariant, string> = {
-  title: 'Title (Judul)',
-  subtitle: 'Subtitle (Sub-judul)',
-  body: 'Body (Teks isi)',
-  instruction: 'Instruction (Instruksi)',
-  importantNote: 'Important Note (Catatan penting)',
-  questionPrompt: 'Question Prompt (Pertanyaan)',
-  reflectionBox: 'Reflection Box (Refleksi)',
+const VARIANT_LABELS: Record<TextComponentVariant, string> = {
+  title: 'Judul',
+  subtitle: 'Sub-judul',
+  body: 'Isi materi',
+  instruction: 'Instruksi',
+  importantNote: 'Catatan penting',
+  questionPrompt: 'Pertanyaan',
+  reflectionBox: 'Refleksi',
+};
+
+const ROLE_LABELS: Record<string, string> = {
+  cover: 'Cover (pembuka)',
+  learningObjectives: 'Tujuan Pembelajaran',
+  starter: 'Pemantik',
+  material: 'Materi',
+  activity: 'Aktivitas',
+  quiz: 'Kuis',
+  reflection: 'Refleksi',
+  closing: 'Penutup',
+  free: 'Bebas',
 };
 
 export function Inspector() {
-  const currentPage = useEditorStore((s) => s.project.pages.find((p) => p.id === s.project.currentPageId) ?? null);
-  const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
-  const selectedBlock = useEditorStore((s) => {
-    if (!s.selectedBlockId) return null;
+  const currentPage = useEditorStore(
+    (s) => s.project.pages.find((p) => p.id === s.project.currentPageId) ?? null,
+  );
+  const selectedComponentId = useEditorStore((s) => s.selectedComponentId);
+  const selectedComponent = useEditorStore((s) => {
+    if (!s.selectedComponentId) return null;
     const page = s.project.pages.find((p) => p.id === s.project.currentPageId);
     if (!page) return null;
-    const b = page.blocks.find((blk) => blk.id === s.selectedBlockId);
-    return b && b.type === 'text' ? (b as TextBlock) : null;
+    const c = page.components.find((comp) => comp.id === s.selectedComponentId);
+    return c && c.type === 'text' ? (c as TextComponent) : null;
   });
-  const updateTextBlock = useEditorStore((s) => s.updateTextBlock);
+  const updateTextComponent = useEditorStore((s) => s.updateTextComponent);
 
-  const update = (patch: Partial<TextBlockEditable>) => {
-    if (selectedBlockId) updateTextBlock(selectedBlockId, patch);
+  const update = (patch: Partial<TextComponentEditable>) => {
+    if (selectedComponentId) updateTextComponent(selectedComponentId, patch);
   };
 
   return (
@@ -52,51 +70,69 @@ export function Inspector() {
           <div className="inspector-placeholder">
             <p>Tidak ada halaman terpilih.</p>
           </div>
-        ) : !selectedBlock ? (
-          <div className="inspector-placeholder">
-            <p>
-              <strong>Halaman:</strong> {currentPage.title}
-            </p>
-            <p>
-              <strong>ID:</strong> {currentPage.id}
-            </p>
-            <p>
-              <strong>Jumlah block:</strong> {currentPage.blocks.length}
-            </p>
-            <p style={{ marginTop: 16, fontStyle: 'italic' }}>
-              Klik block di canvas untuk mengedit. Klik + Teks di toolbar untuk menambah.
-            </p>
-          </div>
+        ) : !selectedComponent ? (
+          <PageInfo currentPage={currentPage} />
         ) : (
-          <TextBlockEditor block={selectedBlock} onChange={update} />
+          <TextComponentEditor component={selectedComponent} onChange={update} />
         )}
       </div>
     </aside>
   );
 }
 
-function TextBlockEditor({
-  block,
+function PageInfo({ currentPage }: { currentPage: SimplePage }) {
+  const capability = getCapability(currentPage.role);
+  return (
+    <div className="inspector-placeholder">
+      <p>
+        <strong>Halaman:</strong> {currentPage.title}
+      </p>
+      <p>
+        <strong>Peran (role):</strong> {ROLE_LABELS[currentPage.role] ?? currentPage.role}
+      </p>
+      <p>
+        <strong>ID:</strong> {currentPage.id}
+      </p>
+      <p>
+        <strong>Jumlah elemen:</strong> {currentPage.components.length}
+      </p>
+      <p style={{ marginTop: 12 }}>
+        <strong>Capability:</strong>{' '}
+        {capability.allowAddComponent
+          ? `boleh tambah elemen (${capability.allowedComponents.join(', ')})`
+          : 'halaman terpandu (tidak boleh tambah elemen manual)'}
+      </p>
+      <p style={{ marginTop: 16, fontStyle: 'italic' }}>
+        {capability.allowAddComponent
+          ? 'Klik elemen di canvas untuk mengedit, atau klik + Teks di toolbar untuk menambah.'
+          : 'Elemen halaman terpandu akan diisi via template pedagogis (M11/M12).'}
+      </p>
+    </div>
+  );
+}
+
+function TextComponentEditor({
+  component,
   onChange,
 }: {
-  block: TextBlock;
-  onChange: (patch: Partial<TextBlockEditable>) => void;
+  component: TextComponent;
+  onChange: (patch: Partial<TextComponentEditable>) => void;
 }) {
   return (
-    <div className="block-editor">
-      <div className="block-editor__head">
-        <span className="block-editor__type">Text Block</span>
-        <span className="block-editor__id">{block.id.slice(0, 12)}…</span>
+    <div className="component-editor">
+      <div className="component-editor__head">
+        <span className="component-editor__type">Elemen Teks</span>
+        <span className="component-editor__id">{component.id.slice(0, 12)}…</span>
       </div>
 
-      <Field label="Variant">
+      <Field label="Jenis teks">
         <select
           data-field="variant"
-          value={block.variant}
-          onChange={(e) => onChange({ variant: e.target.value as TextBlockVariant })}
+          value={component.variant}
+          onChange={(e) => onChange({ variant: e.target.value as TextComponentVariant })}
           style={{ width: '100%' }}
         >
-          {TEXT_BLOCK_VARIANTS.map((v) => (
+          {TEXT_COMPONENT_VARIANTS.map((v) => (
             <option key={v} value={v}>
               {VARIANT_LABELS[v]}
             </option>
@@ -107,7 +143,7 @@ function TextBlockEditor({
       <Field label="Teks">
         <textarea
           data-field="text"
-          value={block.text}
+          value={component.text}
           onChange={(e) => onChange({ text: e.target.value })}
           rows={4}
           style={{ width: '100%', resize: 'vertical' }}
@@ -119,7 +155,7 @@ function TextBlockEditor({
           <input
             type="number"
             data-field="x"
-            value={block.x}
+            value={component.x}
             onChange={(e) => onChange({ x: Number(e.target.value) })}
           />
         </Field>
@@ -127,7 +163,7 @@ function TextBlockEditor({
           <input
             type="number"
             data-field="y"
-            value={block.y}
+            value={component.y}
             onChange={(e) => onChange({ y: Number(e.target.value) })}
           />
         </Field>
@@ -138,7 +174,7 @@ function TextBlockEditor({
           <input
             type="number"
             data-field="width"
-            value={block.width}
+            value={component.width}
             onChange={(e) => onChange({ width: Number(e.target.value) })}
           />
         </Field>
@@ -146,18 +182,19 @@ function TextBlockEditor({
           <input
             type="number"
             data-field="height"
-            value={block.height}
+            value={component.height}
             onChange={(e) => onChange({ height: Number(e.target.value) })}
           />
         </Field>
       </div>
 
-      <div className="block-editor__hint">
+      <div className="component-editor__hint">
         <p>
-          <strong>Style:</strong> otomatis dari variant <code>{block.variant}</code>.
+          <strong>Tampilan:</strong> otomatis dari jenis teks <code>{component.variant}</code>.
         </p>
         <p style={{ fontSize: 11, color: 'var(--color-muted)' }}>
-          Field style manual (fontSize, color, dll) akan tersedia di M6/M11 via style adapter.
+          Pengaturan tampilan manual (ukuran font, warna, dll) akan tersedia di M6/M11 via style
+          adapter.
         </p>
       </div>
     </div>

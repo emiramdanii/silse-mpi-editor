@@ -28,6 +28,11 @@ export function createPageId(): string {
   return `page_${uuid()}`;
 }
 
-export function createBlockId(): string {
-  return `block_${uuid()}`;
+/**
+ * Generate ID for a component (elemen pembelajaran).
+ * Naming: createComponentId (Batch 2R). Was createBlockId in M2 v1/v2.
+ * Prefix "comp_" chosen (not "block_") to align with component model.
+ */
+export function createComponentId(): string {
+  return `comp_${uuid()}`;
 }
