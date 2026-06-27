@@ -22,8 +22,8 @@ Implikasi: Style Pack foundation harus ada **sebelum** M3, supaya M3–M8 tidak 
 | M2 (v2)   | Text Block + Variant                  | Superseded  |
 | M2        | Page Role + Capability Matrix + Text Component | Done   |
 | B2S       | Style Pack Foundation + AI Remix Roadmap Lock | Done |
-| **M3**    | **Page Flow + LayoutId Dasar**        | **Active**  |
-| M4        | Image + Card + Layout Recipes         | Planned     |
+| M3        | Page Flow + LayoutId Dasar            | Done        |
+| **M4**    | **Image + Card + Layout Recipes**     | **Active**  |
 | M5        | Navigation + Preview + Interaction Style Dasar | Planned |
 | M6        | Export HTML + Style Resolver Solid    | Planned     |
 | M7        | Save / Load + Style Pack Save         | Planned     |
@@ -224,7 +224,7 @@ Lihat [`docs/CORE_PRODUCT_CONTRACT.md`](CORE_PRODUCT_CONTRACT.md) dan [`docs/STY
 
 ## M3 — Page Flow + LayoutId Dasar
 
-**Status:** Active
+**Status:** Done (commit `fc963c2`)
 
 **Prasyarat:** Batch 2S ACCEPTED.
 
@@ -280,22 +280,73 @@ Lihat [`docs/CORE_PRODUCT_CONTRACT.md`](CORE_PRODUCT_CONTRACT.md) dan [`docs/STY
 
 ## M4 — Image + Card + Layout Recipes
 
-**Target:** Bisa tambah gambar dan card sebagai elemen pembelajaran + perkenalkan layout recipes sederhana.
+**Status:** Active
+
+**Prasyarat:** M3 ACCEPTED.
+
+**Target:** Menambahkan image component, card component, dan layout recipes konkret awal tanpa membuat full layout engine, tanpa preview/export, dan tanpa style editor.
+
+**Konsep penting (catatan dari senior):**
+Card di M4 = **elemen pembelajaran sederhana** (title + body + variant + geometry).
+BUKAN nested container yang berisi elemen lain.
+Nested container / component pattern baru di M11/M12.
 
 **Fitur:**
 
-- Image component (variant: `illustration`/`background`/`imageCard`).
-- Card component (container ringan untuk grouping elemen).
-- Upload image, render di canvas, edit posisi/ukuran.
-- Layout recipes sederhana (1-column, 2-column, header+body) — pakai `layoutId` dari M3.
-- Capability Matrix diperluas: role tertentu mengizinkan image/card.
+- Image component resmi: `{ type:'image', variant, src, alt?, objectFit, x, y, width, height }`.
+  Variant: `illustration`/`background`/`imageCard`.
+- Card component resmi: `{ type:'card', variant, title?, body, x, y, width, height }`.
+  Variant: `infoCard`/`importantNote`/`exampleCard`.
+- Layout recipes awal di `core/layout-recipes.ts`: `blank`, `coverCentered`, `singleColumn`.
+  Recipe = metadata (id, name, description, safeArea, slots). Bukan auto-layout engine.
+- Capability Matrix diperluas:
+  - `material`/`activity`/`starter`/`free`: `['text', 'image', 'card']`
+  - `reflection`: `['text', 'card']` (tanpa image)
+  - `cover`: tetap controlled (`['text']`, `allowAddComponent: false`)
+  - `learningObjectives`/`quiz`/`closing`: tetap `['text']` saja
+- `addImageComponent`/`addCardComponent` cek capability current page.
+- `updateImageComponent`/`updateCardComponent` untuk edit field.
+- `duplicatePage` deep-copy image/card component dengan id baru.
+- Upload image via data URL/base64 (tanpa server).
 
 **Acceptance:**
 
-- Upload gambar → tampil di canvas.
-- Resize lewat inspector → gambar menyesuaikan.
-- Pilih layout recipe → komponen menempel ke slot layout.
-- Capability Matrix menolak image di role yang tidak mengizinkan.
+- ImageComponent validation (variant wajib, src wajib, objectFit valid).
+- CardComponent validation (variant wajib, body wajib).
+- Capability menolak image/card di role yang tidak boleh.
+- addImageComponent/addCardComponent allowed di material/free.
+- addImageComponent/addCardComponent denied di cover.
+- Duplicate page regenerates image/card component ids.
+- Layout recipes ada dan serializable.
+- Store tidak expose navigation/question/game/preview/export/style editor/AI import.
+- UI tidak memakai kata block.
+- typecheck PASS, test PASS, build PASS.
+
+**Scope lock:**
+
+- Tidak ada navigation component (M5).
+- Tidak ada question/quiz/game (M10/M11).
+- Tidak ada preview/export (M5/M6).
+- Tidak ada AI import UI (M8).
+- Tidak ada style editor (M12).
+- Tidak ada full style resolver (M6).
+- Tidak ada full layout engine / drag-resize guard (M9).
+- Tidak ada setPageRole (M11).
+- Card BUKAN nested container — hanya title + body + variant + geometry.
+
+**Dilarang di M4:**
+
+- navigation component.
+- question/quiz/game.
+- preview/export.
+- AI import UI.
+- style editor.
+- full style resolver.
+- full layout engine.
+- drag/resize guard.
+- setPageRole.
+- raw HTML/CSS/JS import.
+- nested container (card berisi elemen lain).
 
 ---
 

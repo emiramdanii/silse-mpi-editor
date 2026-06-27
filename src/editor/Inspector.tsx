@@ -1,28 +1,40 @@
 import { useEditorStore } from '../store/editor-store';
-import type { SimplePage, TextComponent } from '../core/types';
-import type { TextComponentEditable } from '../core/component-factory';
-import { TEXT_COMPONENT_VARIANTS, type TextComponentVariant } from '../core/types';
+import type {
+  CardComponent,
+  ImageComponent,
+  PageComponent,
+  SimplePage,
+  TextComponent,
+} from '../core/types';
+import type {
+  CardComponentEditable,
+  ImageComponentEditable,
+  TextComponentEditable,
+} from '../core/component-factory';
+import {
+  CARD_COMPONENT_VARIANTS,
+  IMAGE_COMPONENT_VARIANTS,
+  TEXT_COMPONENT_VARIANTS,
+  type CardComponentVariant,
+  type ImageComponentVariant,
+  type TextComponentVariant,
+} from '../core/types';
 import { getCapability } from '../core/capability';
 
 /**
- * Inspector — M2R scope.
+ * Inspector — M4 scope.
  *
- * Jika ada text component terpilih → tampilkan form editor:
- *   - Jenis teks (variant selector, 7 pilihan dengan label Indonesia)
- *   - Teks (textarea)
- *   - X, Y, Lebar, Tinggi (geometry)
+ * Jika ada component terpilih → tampilkan form editor sesuai type:
+ *   - TextComponent → TextComponentEditor (variant, text, geometry)
+ *   - ImageComponent → ImageComponentEditor (variant, src, alt, objectFit, geometry)
+ *   - CardComponent → CardComponentEditor (variant, title, body, geometry)
  *
- * Jika tidak ada component terpilih → tampilkan placeholder info halaman
- * (termasuk role + status capability).
+ * Jika tidak ada component terpilih → tampilkan placeholder info halaman.
  *
- * Naming: UI uses "elemen", NOT "block".
- *
- * TIDAK ada field fontSize/color/fontWeight/align manual — style datang
- * dari variant (lihat TextComponentView). Field override lokal baru di M6/M11.
- * Field untuk image/navigation component akan ditambahkan di M4/M5.
+ * Naming: UI uses "elemen"/"gambar"/"kartu", NOT "block".
  */
 
-const VARIANT_LABELS: Record<TextComponentVariant, string> = {
+const TEXT_VARIANT_LABELS: Record<TextComponentVariant, string> = {
   title: 'Judul',
   subtitle: 'Sub-judul',
   body: 'Isi materi',
@@ -30,6 +42,18 @@ const VARIANT_LABELS: Record<TextComponentVariant, string> = {
   importantNote: 'Catatan penting',
   questionPrompt: 'Pertanyaan',
   reflectionBox: 'Refleksi',
+};
+
+const IMAGE_VARIANT_LABELS: Record<ImageComponentVariant, string> = {
+  illustration: 'Ilustrasi',
+  background: 'Background',
+  imageCard: 'Kartu gambar',
+};
+
+const CARD_VARIANT_LABELS: Record<CardComponentVariant, string> = {
+  infoCard: 'Kartu info',
+  importantNote: 'Catatan penting',
+  exampleCard: 'Kartu contoh',
 };
 
 const ROLE_LABELS: Record<string, string> = {
@@ -54,19 +78,15 @@ export function Inspector() {
   const currentPage = useEditorStore(
     (s) => s.project.pages.find((p) => p.id === s.project.currentPageId) ?? null,
   );
-  const selectedComponentId = useEditorStore((s) => s.selectedComponentId);
   const selectedComponent = useEditorStore((s) => {
     if (!s.selectedComponentId) return null;
     const page = s.project.pages.find((p) => p.id === s.project.currentPageId);
     if (!page) return null;
-    const c = page.components.find((comp) => comp.id === s.selectedComponentId);
-    return c && c.type === 'text' ? (c as TextComponent) : null;
+    return page.components.find((c) => c.id === s.selectedComponentId) ?? null;
   });
   const updateTextComponent = useEditorStore((s) => s.updateTextComponent);
-
-  const update = (patch: Partial<TextComponentEditable>) => {
-    if (selectedComponentId) updateTextComponent(selectedComponentId, patch);
-  };
+  const updateImageComponent = useEditorStore((s) => s.updateImageComponent);
+  const updateCardComponent = useEditorStore((s) => s.updateCardComponent);
 
   return (
     <aside className="inspector">
@@ -79,7 +99,12 @@ export function Inspector() {
         ) : !selectedComponent ? (
           <PageInfo currentPage={currentPage} />
         ) : (
-          <TextComponentEditor component={selectedComponent} onChange={update} />
+          <ComponentEditor
+            component={selectedComponent}
+            onUpdateText={updateTextComponent}
+            onUpdateImage={updateImageComponent}
+            onUpdateCard={updateCardComponent}
+          />
         )}
       </div>
     </aside>
@@ -113,12 +138,44 @@ function PageInfo({ currentPage }: { currentPage: SimplePage }) {
       </p>
       <p style={{ marginTop: 16, fontStyle: 'italic' }}>
         {capability.allowAddComponent
-          ? 'Klik elemen di canvas untuk mengedit, atau klik + Teks di toolbar untuk menambah.'
+          ? 'Klik elemen di canvas untuk mengedit, atau klik tombol + di toolbar untuk menambah.'
           : 'Elemen halaman terpandu akan diisi via template pedagogis (M11/M12).'}
       </p>
     </div>
   );
 }
+
+function ComponentEditor({
+  component,
+  onUpdateText,
+  onUpdateImage,
+  onUpdateCard,
+}: {
+  component: PageComponent;
+  onUpdateText: (id: string, patch: Partial<TextComponentEditable>) => void;
+  onUpdateImage: (id: string, patch: Partial<ImageComponentEditable>) => void;
+  onUpdateCard: (id: string, patch: Partial<CardComponentEditable>) => void;
+}) {
+  if (component.type === 'text') {
+    return <TextComponentEditor component={component} onChange={(p) => onUpdateText(component.id, p)} />;
+  }
+  if (component.type === 'image') {
+    return <ImageComponentEditor component={component} onChange={(p) => onUpdateImage(component.id, p)} />;
+  }
+  if (component.type === 'card') {
+    return <CardComponentEditor component={component} onChange={(p) => onUpdateCard(component.id, p)} />;
+  }
+  // Navigation editor lands in M5
+  return (
+    <div className="inspector-placeholder">
+      <p>Editor untuk tipe elemen ini belum tersedia.</p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Text Component Editor (M2)
+// ---------------------------------------------------------------------------
 
 function TextComponentEditor({
   component,
@@ -143,7 +200,7 @@ function TextComponentEditor({
         >
           {TEXT_COMPONENT_VARIANTS.map((v) => (
             <option key={v} value={v}>
-              {VARIANT_LABELS[v]}
+              {TEXT_VARIANT_LABELS[v]}
             </option>
           ))}
         </select>
@@ -159,6 +216,152 @@ function TextComponentEditor({
         />
       </Field>
 
+      <GeometryFields component={component} onChange={onChange} />
+
+      <StyleHint variant={component.variant} />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Image Component Editor (M4)
+// ---------------------------------------------------------------------------
+
+function ImageComponentEditor({
+  component,
+  onChange,
+}: {
+  component: ImageComponent;
+  onChange: (patch: Partial<ImageComponentEditable>) => void;
+}) {
+  return (
+    <div className="component-editor">
+      <div className="component-editor__head">
+        <span className="component-editor__type">Elemen Gambar</span>
+        <span className="component-editor__id">{component.id.slice(0, 12)}…</span>
+      </div>
+
+      <Field label="Jenis gambar">
+        <select
+          data-field="variant"
+          value={component.variant}
+          onChange={(e) => onChange({ variant: e.target.value as ImageComponentVariant })}
+          style={{ width: '100%' }}
+        >
+          {IMAGE_COMPONENT_VARIANTS.map((v) => (
+            <option key={v} value={v}>
+              {IMAGE_VARIANT_LABELS[v]}
+            </option>
+          ))}
+        </select>
+      </Field>
+
+      <Field label="Sumber gambar (URL / data URL)">
+        <textarea
+          data-field="src"
+          value={component.src}
+          onChange={(e) => onChange({ src: e.target.value })}
+          rows={3}
+          style={{ width: '100%', resize: 'vertical', fontSize: 11 }}
+        />
+      </Field>
+
+      <Field label="Alt text (deskripsi)">
+        <input
+          type="text"
+          data-field="alt"
+          value={component.alt ?? ''}
+          onChange={(e) => onChange({ alt: e.target.value })}
+        />
+      </Field>
+
+      <Field label="Object fit">
+        <select
+          data-field="objectFit"
+          value={component.objectFit}
+          onChange={(e) => onChange({ objectFit: e.target.value as 'cover' | 'contain' })}
+          style={{ width: '100%' }}
+        >
+          <option value="cover">Cover (potong)</option>
+          <option value="contain">Contain (pas)</option>
+        </select>
+      </Field>
+
+      <GeometryFields component={component} onChange={onChange} />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Card Component Editor (M4)
+// ---------------------------------------------------------------------------
+
+function CardComponentEditor({
+  component,
+  onChange,
+}: {
+  component: CardComponent;
+  onChange: (patch: Partial<CardComponentEditable>) => void;
+}) {
+  return (
+    <div className="component-editor">
+      <div className="component-editor__head">
+        <span className="component-editor__type">Elemen Kartu</span>
+        <span className="component-editor__id">{component.id.slice(0, 12)}…</span>
+      </div>
+
+      <Field label="Jenis kartu">
+        <select
+          data-field="variant"
+          value={component.variant}
+          onChange={(e) => onChange({ variant: e.target.value as CardComponentVariant })}
+          style={{ width: '100%' }}
+        >
+          {CARD_COMPONENT_VARIANTS.map((v) => (
+            <option key={v} value={v}>
+              {CARD_VARIANT_LABELS[v]}
+            </option>
+          ))}
+        </select>
+      </Field>
+
+      <Field label="Judul (opsional)">
+        <input
+          type="text"
+          data-field="title"
+          value={component.title ?? ''}
+          onChange={(e) => onChange({ title: e.target.value })}
+        />
+      </Field>
+
+      <Field label="Isi kartu">
+        <textarea
+          data-field="body"
+          value={component.body}
+          onChange={(e) => onChange({ body: e.target.value })}
+          rows={5}
+          style={{ width: '100%', resize: 'vertical' }}
+        />
+      </Field>
+
+      <GeometryFields component={component} onChange={onChange} />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Shared geometry fields
+// ---------------------------------------------------------------------------
+
+function GeometryFields({
+  component,
+  onChange,
+}: {
+  component: { x: number; y: number; width: number; height: number };
+  onChange: (patch: { x?: number; y?: number; width?: number; height?: number }) => void;
+}) {
+  return (
+    <>
       <div className="field-row">
         <Field label="X">
           <input
@@ -177,7 +380,6 @@ function TextComponentEditor({
           />
         </Field>
       </div>
-
       <div className="field-row">
         <Field label="Lebar">
           <input
@@ -196,16 +398,19 @@ function TextComponentEditor({
           />
         </Field>
       </div>
+    </>
+  );
+}
 
-      <div className="component-editor__hint">
-        <p>
-          <strong>Tampilan:</strong> otomatis dari jenis teks <code>{component.variant}</code>.
-        </p>
-        <p style={{ fontSize: 11, color: 'var(--color-muted)' }}>
-          Pengaturan tampilan manual (ukuran font, warna, dll) akan tersedia di M6/M11 via style
-          adapter.
-        </p>
-      </div>
+function StyleHint({ variant }: { variant: string }) {
+  return (
+    <div className="component-editor__hint">
+      <p>
+        <strong>Tampilan:</strong> otomatis dari jenis teks <code>{variant}</code>.
+      </p>
+      <p style={{ fontSize: 11, color: 'var(--color-muted)' }}>
+        Pengaturan tampilan manual akan tersedia di M6/M11 via style adapter.
+      </p>
     </div>
   );
 }

@@ -326,7 +326,7 @@ describe('editor store — M2R scope (text component + capability)', () => {
     const id = store.addTextComponent({ text: 'Pick me' })!;
     const sel = store.getSelectedComponent();
     expect(sel?.id).toBe(id);
-    expect(sel?.text).toBe('Pick me');
+    expect((sel as { text?: string })?.text).toBe('Pick me');
   });
 
   it('getSelectedComponent returns null when nothing selected', () => {
@@ -342,7 +342,7 @@ describe('editor store — M2R scope (text component + capability)', () => {
     store.selectComponent(titleComponentId);
     expect(useEditorStore.getState().selectedComponentId).toBe(titleComponentId);
     const sel = store.getSelectedComponent();
-    expect(sel?.variant).toBe('title');
+    expect((sel as { variant?: string })?.variant).toBe('title');
   });
 
   it('can update pre-filled title component text on cover', () => {
@@ -354,7 +354,7 @@ describe('editor store — M2R scope (text component + capability)', () => {
     // Note: we didn't select first; getSelectedComponent uses selectedComponentId
     store.selectComponent(titleComponentId);
     const sel2 = store.getSelectedComponent();
-    expect(sel2?.text).toBe('MPI Pertamaku');
+    expect((sel2 as { text?: string })?.text).toBe('MPI Pertamaku');
     void sel;
   });
 
@@ -612,10 +612,257 @@ describe('editor store — M3 scope (page flow + layoutId)', () => {
 });
 
 // =========================================================================
+// M4 — Image + Card Component operations
+// =========================================================================
+describe('editor store — M4 scope (image + card component)', () => {
+  beforeEach(() => {
+    useEditorStore.getState().newProject();
+  });
+
+  // ---- addImageComponent ----
+  it('addImageComponent on cover returns null (capability denied)', () => {
+    const store = useEditorStore.getState();
+    const result = store.addImageComponent('data:image/png;base64,abc');
+    expect(result).toBeNull();
+  });
+
+  it('addImageComponent on free page succeeds and selects it', () => {
+    const store = useEditorStore.getState();
+    store.addPage(); // free
+    const result = store.addImageComponent('data:image/png;base64,abc');
+
+    expect(result).not.toBeNull();
+    const { project, selectedComponentId } = useEditorStore.getState();
+    const page = project.pages.find((p) => p.id === project.currentPageId)!;
+    expect(page.components).toHaveLength(1);
+    expect(page.components[0].type).toBe('image');
+    expect(selectedComponentId).toBe(result);
+  });
+
+  it('addImageComponent creates variant=illustration by default', () => {
+    const store = useEditorStore.getState();
+    store.addPage();
+    store.addImageComponent('src');
+    const { project } = useEditorStore.getState();
+    const c = project.pages[1].components[0] as { variant: string };
+    expect(c.variant).toBe('illustration');
+  });
+
+  it('addImageComponent on reflection returns null (image not allowed)', () => {
+    const store = useEditorStore.getState();
+    store.addPage({ role: 'reflection' });
+    const result = store.addImageComponent('src');
+    expect(result).toBeNull();
+  });
+
+  it('addImageComponent applies overrides', () => {
+    const store = useEditorStore.getState();
+    store.addPage();
+    store.addImageComponent('src', { variant: 'imageCard', objectFit: 'contain', alt: 'Test' });
+    const { project } = useEditorStore.getState();
+    const c = project.pages[1].components[0] as {
+      variant: string; src: string; objectFit: string; alt: string;
+    };
+    expect(c.variant).toBe('imageCard');
+    expect(c.src).toBe('src');
+    expect(c.objectFit).toBe('contain');
+    expect(c.alt).toBe('Test');
+  });
+
+  // ---- addCardComponent ----
+  it('addCardComponent on cover returns null (capability denied)', () => {
+    const store = useEditorStore.getState();
+    const result = store.addCardComponent('body');
+    expect(result).toBeNull();
+  });
+
+  it('addCardComponent on free page succeeds and selects it', () => {
+    const store = useEditorStore.getState();
+    store.addPage();
+    const result = store.addCardComponent('Isi card');
+
+    expect(result).not.toBeNull();
+    const { project, selectedComponentId } = useEditorStore.getState();
+    const page = project.pages.find((p) => p.id === project.currentPageId)!;
+    expect(page.components).toHaveLength(1);
+    expect(page.components[0].type).toBe('card');
+    expect(selectedComponentId).toBe(result);
+  });
+
+  it('addCardComponent on reflection succeeds (card allowed, image not)', () => {
+    const store = useEditorStore.getState();
+    store.addPage({ role: 'reflection' });
+    const result = store.addCardComponent('Refleksi saya...');
+    expect(result).not.toBeNull();
+    const { project } = useEditorStore.getState();
+    const page = project.pages.find((p) => p.id === project.currentPageId)!;
+    expect(page.components[0].type).toBe('card');
+  });
+
+  it('addCardComponent creates variant=infoCard by default', () => {
+    const store = useEditorStore.getState();
+    store.addPage();
+    store.addCardComponent('body');
+    const { project } = useEditorStore.getState();
+    const c = project.pages[1].components[0] as { variant: string };
+    expect(c.variant).toBe('infoCard');
+  });
+
+  // ---- updateImageComponent ----
+  it('updateImageComponent modifies fields', () => {
+    const store = useEditorStore.getState();
+    store.addPage();
+    const id = store.addImageComponent('src')!;
+    store.updateImageComponent(id, { alt: 'New alt', objectFit: 'contain' });
+    const { project } = useEditorStore.getState();
+    const c = project.pages[1].components[0] as { alt: string; objectFit: string };
+    expect(c.alt).toBe('New alt');
+    expect(c.objectFit).toBe('contain');
+  });
+
+  it('updateImageComponent REJECTS invalid variant', () => {
+    const store = useEditorStore.getState();
+    store.addPage();
+    const id = store.addImageComponent('src', { variant: 'illustration' })!;
+    store.updateImageComponent(id, { variant: 'invalidVariant' as never });
+    const { project } = useEditorStore.getState();
+    const c = project.pages[1].components[0] as { variant: string };
+    expect(c.variant).toBe('illustration'); // unchanged
+  });
+
+  it('updateImageComponent on unknown id is no-op', () => {
+    const store = useEditorStore.getState();
+    store.addPage();
+    store.addImageComponent('src');
+    const before = useEditorStore.getState().project;
+    store.updateImageComponent('nope', { alt: 'X' });
+    expect(useEditorStore.getState().project).toBe(before);
+  });
+
+  // ---- updateCardComponent ----
+  it('updateCardComponent modifies body + title', () => {
+    const store = useEditorStore.getState();
+    store.addPage();
+    const id = store.addCardComponent('body')!;
+    store.updateCardComponent(id, { body: 'New body', title: 'New title' });
+    const { project } = useEditorStore.getState();
+    const c = project.pages[1].components[0] as { body: string; title: string };
+    expect(c.body).toBe('New body');
+    expect(c.title).toBe('New title');
+  });
+
+  it('updateCardComponent REJECTS invalid variant', () => {
+    const store = useEditorStore.getState();
+    store.addPage();
+    const id = store.addCardComponent('body', { variant: 'infoCard' })!;
+    store.updateCardComponent(id, { variant: 'invalidVariant' as never });
+    const { project } = useEditorStore.getState();
+    const c = project.pages[1].components[0] as { variant: string };
+    expect(c.variant).toBe('infoCard'); // unchanged
+  });
+
+  // ---- duplicatePage with image/card ----
+  it('duplicatePage regenerates image component id', () => {
+    const store = useEditorStore.getState();
+    store.addPage(); // free
+    const imgId = store.addImageComponent('src')!;
+    const freePageId = useEditorStore.getState().project.currentPageId;
+
+    const copyId = store.duplicatePage(freePageId)!;
+    const { project } = useEditorStore.getState();
+    const copy = project.pages.find((p) => p.id === copyId)!;
+    const copyImg = copy.components[0] as { id: string; type: string; src: string };
+
+    expect(copyImg.id).not.toBe(imgId);
+    expect(copyImg.type).toBe('image');
+    expect(copyImg.src).toBe('src');
+  });
+
+  it('duplicatePage regenerates card component id', () => {
+    const store = useEditorStore.getState();
+    store.addPage();
+    const cardId = store.addCardComponent('body')!;
+    const freePageId = useEditorStore.getState().project.currentPageId;
+
+    const copyId = store.duplicatePage(freePageId)!;
+    const { project } = useEditorStore.getState();
+    const copy = project.pages.find((p) => p.id === copyId)!;
+    const copyCard = copy.components[0] as { id: string; type: string; body: string };
+
+    expect(copyCard.id).not.toBe(cardId);
+    expect(copyCard.type).toBe('card');
+    expect(copyCard.body).toBe('body');
+  });
+
+  it('duplicatePage with mixed text+image+card — all get new ids', () => {
+    const store = useEditorStore.getState();
+    store.addPage();
+    const textId = store.addTextComponent({ text: 'T' })!;
+    const imgId = store.addImageComponent('src')!;
+    const cardId = store.addCardComponent('body')!;
+    const pageId = useEditorStore.getState().project.currentPageId;
+
+    const copyId = store.duplicatePage(pageId)!;
+    const { project } = useEditorStore.getState();
+    const copy = project.pages.find((p) => p.id === copyId)!;
+
+    expect(copy.components).toHaveLength(3);
+    const copyIds = copy.components.map((c) => c.id);
+    expect(copyIds).not.toContain(textId);
+    expect(copyIds).not.toContain(imgId);
+    expect(copyIds).not.toContain(cardId);
+  });
+
+  it('duplicatePage deep-copy image — mutating copy does not affect source', () => {
+    const store = useEditorStore.getState();
+    store.addPage();
+    const imgId = store.addImageComponent('original-src')!;
+    const pageId = useEditorStore.getState().project.currentPageId;
+
+    const copyId = store.duplicatePage(pageId)!;
+    const { project } = useEditorStore.getState();
+    const copyImgId = project.pages.find((p) => p.id === copyId)!.components.find(
+      (c) => c.type === 'image',
+    )!.id;
+
+    store.updateImageComponent(copyImgId, { src: 'changed-src' });
+    const after = useEditorStore.getState().project;
+    const sourceImg = after.pages
+      .find((p) => p.id === pageId)!
+      .components.find((c) => c.id === imgId) as { src: string };
+    const copyImg = after.pages
+      .find((p) => p.id === copyId)!
+      .components.find((c) => c.id === copyImgId) as { src: string };
+
+    expect(sourceImg.src).toBe('original-src');
+    expect(copyImg.src).toBe('changed-src');
+  });
+
+  // ---- getSelectedComponent returns any type ----
+  it('getSelectedComponent returns image component when image selected', () => {
+    const store = useEditorStore.getState();
+    store.addPage();
+    const id = store.addImageComponent('src')!;
+    const sel = store.getSelectedComponent();
+    expect(sel?.type).toBe('image');
+    expect(sel?.id).toBe(id);
+  });
+
+  it('getSelectedComponent returns card component when card selected', () => {
+    const store = useEditorStore.getState();
+    store.addPage();
+    const id = store.addCardComponent('body')!;
+    const sel = store.getSelectedComponent();
+    expect(sel?.type).toBe('card');
+    expect(sel?.id).toBe(id);
+  });
+});
+
+// =========================================================================
 // Scope-lock assertions
 // =========================================================================
-describe('editor store — scope-lock (M3)', () => {
-  // M3 page operations now EXIST in store
+describe('editor store — scope-lock (M4)', () => {
+  // M3 page operations EXIST
   it('store EXPOSES renamePage (M3 active)', () => {
     const store = useEditorStore.getState();
     expect(typeof store.renamePage).toBe('function');
@@ -631,15 +878,31 @@ describe('editor store — scope-lock (M3)', () => {
     expect(typeof store.duplicatePage).toBe('function');
   });
 
+  // M4 image/card operations now EXIST
+  it('store EXPOSES addImageComponent (M4 active)', () => {
+    const store = useEditorStore.getState();
+    expect(typeof store.addImageComponent).toBe('function');
+  });
+
+  it('store EXPOSES addCardComponent (M4 active)', () => {
+    const store = useEditorStore.getState();
+    expect(typeof store.addCardComponent).toBe('function');
+  });
+
+  it('store EXPOSES updateImageComponent (M4 active)', () => {
+    const store = useEditorStore.getState();
+    expect(typeof store.updateImageComponent).toBe('function');
+  });
+
+  it('store EXPOSES updateCardComponent (M4 active)', () => {
+    const store = useEditorStore.getState();
+    expect(typeof store.updateCardComponent).toBe('function');
+  });
+
   // Still NOT exposed
   it('store does NOT expose setPageRole (M11 feature)', () => {
     const store = useEditorStore.getState();
     expect((store as unknown as Record<string, unknown>).setPageRole).toBeUndefined();
-  });
-
-  it('store does NOT expose addImageComponent (M4 feature)', () => {
-    const store = useEditorStore.getState();
-    expect((store as unknown as Record<string, unknown>).addImageComponent).toBeUndefined();
   });
 
   it('store does NOT expose addNavigationComponent (M5 feature)', () => {
@@ -647,17 +910,12 @@ describe('editor store — scope-lock (M3)', () => {
     expect((store as unknown as Record<string, unknown>).addNavigationComponent).toBeUndefined();
   });
 
-  it('store does NOT expose addCardComponent (M4 feature)', () => {
-    const store = useEditorStore.getState();
-    expect((store as unknown as Record<string, unknown>).addCardComponent).toBeUndefined();
-  });
-
   it('store does NOT expose addQuestionComponent (M11 feature)', () => {
     const store = useEditorStore.getState();
     expect((store as unknown as Record<string, unknown>).addQuestionComponent).toBeUndefined();
   });
 
-  it('store does NOT expose removeComponent (deferred — not in M3 scope, lands in M9)', () => {
+  it('store does NOT expose removeComponent (deferred — lands in M9)', () => {
     const store = useEditorStore.getState();
     expect((store as unknown as Record<string, unknown>).removeComponent).toBeUndefined();
   });

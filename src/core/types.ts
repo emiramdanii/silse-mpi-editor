@@ -125,6 +125,35 @@ export const TEXT_COMPONENT_VARIANTS = [
 export type TextComponentVariant = (typeof TEXT_COMPONENT_VARIANTS)[number];
 
 // ---------------------------------------------------------------------------
+// Image Component Variant (M4)
+// ---------------------------------------------------------------------------
+
+export const IMAGE_COMPONENT_VARIANTS = [
+  'illustration',
+  'background',
+  'imageCard',
+] as const;
+
+export type ImageComponentVariant = (typeof IMAGE_COMPONENT_VARIANTS)[number];
+
+// ---------------------------------------------------------------------------
+// Card Component Variant (M4)
+//
+// Catatan konsep (Batch 4 dari senior):
+//   Card di M4 = elemen pembelajaran sederhana (title + body + variant + geometry).
+//   BUKAN nested container yang berisi elemen lain.
+//   Nested container / component pattern baru di M11/M12.
+// ---------------------------------------------------------------------------
+
+export const CARD_COMPONENT_VARIANTS = [
+  'infoCard',
+  'importantNote',
+  'exampleCard',
+] as const;
+
+export type CardComponentVariant = (typeof CARD_COMPONENT_VARIANTS)[number];
+
+// ---------------------------------------------------------------------------
 // Component — discriminated union on `type`
 // ---------------------------------------------------------------------------
 
@@ -150,12 +179,33 @@ export type TextComponent = BaseComponent & {
   variant: TextComponentVariant;
 };
 
+/**
+ * Image component (M4 scope).
+ *
+ * Data: variant + src + alt + objectFit + geometry.
+ * Variant wajib (anchor untuk style adapter M6).
+ * src wajib (data URL/base64 untuk local-first, atau URL absolut).
+ */
 export type ImageComponent = BaseComponent & {
   type: 'image';
+  variant: ImageComponentVariant;
   src: string;
   alt?: string;
   objectFit: 'cover' | 'contain';
-  // variant: ImageComponentVariant — ditambahkan di M4
+};
+
+/**
+ * Card component (M4 scope).
+ *
+ * Elemen pembelajaran sederhana: title (opsional) + body + variant + geometry.
+ * BUKAN nested container — tidak berisi komponen lain.
+ * Style datang dari variant via style adapter (M6).
+ */
+export type CardComponent = BaseComponent & {
+  type: 'card';
+  variant: CardComponentVariant;
+  title?: string;
+  body: string;
 };
 
 export type NavigationComponent = BaseComponent & {
@@ -167,14 +217,18 @@ export type NavigationComponent = BaseComponent & {
 };
 
 /**
- * Union of all component types. M2 only has TextComponent.
- * ImageComponent lands in M4, NavigationComponent in M5, Question in M11.
+ * Union of all component types.
+ * M2: TextComponent. M4: ImageComponent + CardComponent. M5: NavigationComponent. M11: Question.
  */
-export type PageComponent = TextComponent | ImageComponent | NavigationComponent;
+export type PageComponent =
+  | TextComponent
+  | ImageComponent
+  | CardComponent
+  | NavigationComponent;
 
 // ---------------------------------------------------------------------------
 // Component type literals — exported as constants for runtime guards
 // ---------------------------------------------------------------------------
 
-export const COMPONENT_TYPES = ['text', 'image', 'navigation'] as const;
+export const COMPONENT_TYPES = ['text', 'image', 'card', 'navigation'] as const;
 export type ComponentType = (typeof COMPONENT_TYPES)[number];

@@ -34,58 +34,62 @@ function queryByAction(container: HTMLElement, action: string): HTMLElement | nu
   return container.querySelector(`[data-action="${action}"]`);
 }
 
-describe('scope-lock M3 — Toolbar: + Teks ENABLED, others DISABLED', () => {
+describe('scope-lock M4 — Toolbar: + Teks/+ Gambar/+ Kartu by capability', () => {
   beforeEach(() => {
     useEditorStore.getState().newProject();
   });
 
-  it('"+ Teks" button is ENABLED (M2R active)', () => {
+  // ---- Cover page (all add disabled) ----
+  it('on cover: + Teks, + Gambar, + Kartu all DISABLED', () => {
     const { container } = render(<Toolbar />);
-    const btn = queryByAction(container, 'add-text');
-    expect(btn).not.toBeNull();
-    expect((btn as HTMLButtonElement).disabled).toBe(false);
+    expect((queryByAction(container, 'add-text') as HTMLButtonElement).disabled).toBe(true);
+    expect((queryByAction(container, 'add-image') as HTMLButtonElement).disabled).toBe(true);
+    expect((queryByAction(container, 'add-card') as HTMLButtonElement).disabled).toBe(true);
   });
 
-  it('"+ Teks" on cover page returns null (capability denied, silent)', () => {
+  // ---- Free page (all add enabled) ----
+  it('on free: + Teks, + Gambar, + Kartu all ENABLED', () => {
+    useEditorStore.getState().addPage(); // free
     const { container } = render(<Toolbar />);
-    const btn = queryByAction(container, 'add-text') as HTMLButtonElement;
-    btn.click();
-    // Cover page denies add — components unchanged (still 1 pre-filled title)
-    const { project } = useEditorStore.getState();
-    expect(project.pages[0].components).toHaveLength(1);
-    expect(useEditorStore.getState().selectedComponentId).toBeNull();
+    expect((queryByAction(container, 'add-text') as HTMLButtonElement).disabled).toBe(false);
+    expect((queryByAction(container, 'add-image') as HTMLButtonElement).disabled).toBe(false);
+    expect((queryByAction(container, 'add-card') as HTMLButtonElement).disabled).toBe(false);
   });
 
-  it('"+ Teks" on free page succeeds', () => {
-    useEditorStore.getState().addPage(); // free page
+  // ---- Material page (all add enabled) ----
+  it('on material: + Teks, + Gambar, + Kartu all ENABLED', () => {
+    useEditorStore.getState().addPage({ role: 'material' });
     const { container } = render(<Toolbar />);
-    const btn = queryByAction(container, 'add-text') as HTMLButtonElement;
+    expect((queryByAction(container, 'add-text') as HTMLButtonElement).disabled).toBe(false);
+    expect((queryByAction(container, 'add-image') as HTMLButtonElement).disabled).toBe(false);
+    expect((queryByAction(container, 'add-card') as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  // ---- Reflection page (text + card enabled, image disabled) ----
+  it('on reflection: + Teks ENABLED, + Gambar DISABLED, + Kartu ENABLED', () => {
+    useEditorStore.getState().addPage({ role: 'reflection' });
+    const { container } = render(<Toolbar />);
+    expect((queryByAction(container, 'add-text') as HTMLButtonElement).disabled).toBe(false);
+    expect((queryByAction(container, 'add-image') as HTMLButtonElement).disabled).toBe(true);
+    expect((queryByAction(container, 'add-card') as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  // ---- + Tambah Kartu click works on free ----
+  it('"+ Kartu" click on free page adds card component', () => {
+    useEditorStore.getState().addPage();
+    const { container } = render(<Toolbar />);
+    const btn = queryByAction(container, 'add-card') as HTMLButtonElement;
     btn.click();
     const { project, selectedComponentId } = useEditorStore.getState();
     const page = project.pages.find((p) => p.id === project.currentPageId)!;
     expect(page.components).toHaveLength(1);
-    expect(page.components[0].type).toBe('text');
+    expect(page.components[0].type).toBe('card');
     expect(selectedComponentId).toBe(page.components[0].id);
   });
 
-  it('"+ Teks" on free page creates variant=body', () => {
-    useEditorStore.getState().addPage();
-    const { container } = render(<Toolbar />);
-    const btn = queryByAction(container, 'add-text') as HTMLButtonElement;
-    btn.click();
-    const { project } = useEditorStore.getState();
-    const c = project.pages[1].components[0] as { variant: string };
-    expect(c.variant).toBe('body');
-  });
-
-  it('"+ Gambar" button is disabled (M4 not started)', () => {
-    const { container } = render(<Toolbar />);
-    const btn = queryByAction(container, 'add-image');
-    expect(btn).not.toBeNull();
-    expect((btn as HTMLButtonElement).disabled).toBe(true);
-  });
-
+  // ---- Still disabled: + Navigasi, Export, Preview ----
   it('"+ Navigasi" button is disabled (M5 not started)', () => {
+    useEditorStore.getState().addPage();
     const { container } = render(<Toolbar />);
     const btn = queryByAction(container, 'add-navigation');
     expect(btn).not.toBeNull();
@@ -93,6 +97,7 @@ describe('scope-lock M3 — Toolbar: + Teks ENABLED, others DISABLED', () => {
   });
 
   it('"Export HTML" button is disabled (M6 not started)', () => {
+    useEditorStore.getState().addPage();
     const { container } = render(<Toolbar />);
     const btn = queryByAction(container, 'export-html');
     expect(btn).not.toBeNull();
@@ -100,6 +105,7 @@ describe('scope-lock M3 — Toolbar: + Teks ENABLED, others DISABLED', () => {
   });
 
   it('"Preview" button is disabled (M5 not started)', () => {
+    useEditorStore.getState().addPage();
     const { container } = render(<Toolbar />);
     const btn = queryByAction(container, 'preview');
     expect(btn).not.toBeNull();
@@ -107,7 +113,7 @@ describe('scope-lock M3 — Toolbar: + Teks ENABLED, others DISABLED', () => {
   });
 });
 
-describe('scope-lock M3 — PagePanel: HAS M3 controls (rename/duplicate/delete)', () => {
+describe('scope-lock M4 — PagePanel: HAS M3 controls (rename/duplicate/delete)', () => {
   beforeEach(() => {
     useEditorStore.getState().newProject();
     // Add a second page so delete button is visible (delete disabled on last page)
@@ -142,7 +148,7 @@ describe('scope-lock M3 — PagePanel: HAS M3 controls (rename/duplicate/delete)
   });
 });
 
-describe('scope-lock M3 — Inspector: variant + text + geometry ONLY', () => {
+describe('scope-lock M4 — Inspector: variant + text + geometry ONLY', () => {
   beforeEach(() => {
     useEditorStore.getState().newProject();
   });
@@ -205,12 +211,39 @@ describe('scope-lock M3 — Inspector: variant + text + geometry ONLY', () => {
     expect(container.querySelector('[data-field="align"]')).toBeNull();
   });
 
-  it('Inspector does NOT render image-specific fields (M4)', () => {
+  it('Inspector does NOT render image-specific fields when TEXT selected', () => {
     const store = useEditorStore.getState();
     store.selectComponent(store.project.pages[0].components[0].id);
     const { container } = render(<Inspector />);
     expect(container.querySelector('[data-field="src"]')).toBeNull();
     expect(container.querySelector('[data-field="objectFit"]')).toBeNull();
+  });
+
+  it('Inspector DOES render image fields when IMAGE component selected', () => {
+    const store = useEditorStore.getState();
+    store.addPage(); // free
+    store.addImageComponent('data:image/png;base64,abc');
+    const imgId = useEditorStore.getState().selectedComponentId!;
+    store.selectComponent(imgId);
+
+    const { container } = render(<Inspector />);
+    expect(container.querySelector('[data-field="src"]')).not.toBeNull();
+    expect(container.querySelector('[data-field="objectFit"]')).not.toBeNull();
+    expect(container.querySelector('[data-field="alt"]')).not.toBeNull();
+    expect(container.querySelector('[data-field="variant"]')).not.toBeNull();
+  });
+
+  it('Inspector DOES render card fields when CARD component selected', () => {
+    const store = useEditorStore.getState();
+    store.addPage();
+    store.addCardComponent('Isi card');
+    const cardId = useEditorStore.getState().selectedComponentId!;
+    store.selectComponent(cardId);
+
+    const { container } = render(<Inspector />);
+    expect(container.querySelector('[data-field="body"]')).not.toBeNull();
+    expect(container.querySelector('[data-field="title"]')).not.toBeNull();
+    expect(container.querySelector('[data-field="variant"]')).not.toBeNull();
   });
 
   it('Inspector does NOT render navigation-specific fields (M5)', () => {
@@ -238,7 +271,7 @@ describe('scope-lock M3 — Inspector: variant + text + geometry ONLY', () => {
   });
 });
 
-describe('scope-lock M3 — UI language: NO "block" in user-facing text', () => {
+describe('scope-lock M4 — UI language: NO "block" in user-facing text', () => {
   beforeEach(() => {
     useEditorStore.getState().newProject();
   });

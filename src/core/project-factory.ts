@@ -104,8 +104,11 @@ export function createProjectWithPages(
   }
   const project = createProject(opts.title);
   if (opts.firstRole) {
-    // Override first page role (test convenience)
+    // Override first page role (test convenience).
+    // Batch 4 preflight fix: layoutId harus ikut role baru (invariant:
+    // role berubah → default layoutId ikut benar).
     project.pages[0].role = opts.firstRole;
+    project.pages[0].layoutId = getDefaultLayoutIdForRole(opts.firstRole);
   }
   for (let i = 1; i < pageCount; i++) {
     const page = createEmptyPage({ role: 'free' });

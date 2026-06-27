@@ -54,8 +54,10 @@ export const DEFAULT_TEXT_VARIANT_BY_ROLE: Record<
 /**
  * Capability matrix — satu entry per PageRole.
  *
- * M2: semua role mengizinkan hanya 'text'. M4 akan menambah 'image'/'card'
- * untuk role tertentu. M5 menambah 'navigation'. M11 menambah 'question'.
+ * M2: semua role mengizinkan hanya 'text'.
+ * M4: material/activity/starter/free menambah 'image'+'card'.
+ *     reflection menambah 'card' (tanpa image).
+ * M5: menambah 'navigation'. M11: menambah 'question'.
  */
 export const PAGE_ROLE_CAPABILITIES: Record<PageRole, PageRoleCapability> = {
   cover: {
@@ -73,19 +75,19 @@ export const PAGE_ROLE_CAPABILITIES: Record<PageRole, PageRoleCapability> = {
   },
   starter: {
     role: 'starter',
-    allowedComponents: ['text'],
+    allowedComponents: ['text', 'image', 'card'],
     allowAddComponent: true,
     description: 'Pemantik / apersepsi',
   },
   material: {
     role: 'material',
-    allowedComponents: ['text'],
+    allowedComponents: ['text', 'image', 'card'],
     allowAddComponent: true,
     description: 'Materi utama',
   },
   activity: {
     role: 'activity',
-    allowedComponents: ['text'],
+    allowedComponents: ['text', 'image', 'card'],
     allowAddComponent: true,
     description: 'Aktivitas siswa',
   },
@@ -97,7 +99,7 @@ export const PAGE_ROLE_CAPABILITIES: Record<PageRole, PageRoleCapability> = {
   },
   reflection: {
     role: 'reflection',
-    allowedComponents: ['text'],
+    allowedComponents: ['text', 'card'],
     allowAddComponent: true,
     description: 'Refleksi pembelajaran',
   },
@@ -109,7 +111,7 @@ export const PAGE_ROLE_CAPABILITIES: Record<PageRole, PageRoleCapability> = {
   },
   free: {
     role: 'free',
-    allowedComponents: ['text'],
+    allowedComponents: ['text', 'image', 'card'],
     allowAddComponent: true,
     description: 'Halaman bebas',
   },

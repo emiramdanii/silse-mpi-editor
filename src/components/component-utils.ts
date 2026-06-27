@@ -5,13 +5,12 @@
  * Allowed imports: ../core
  *
  * Type guards and helpers for the PageComponent union.
- * Component view components (TextComponentView, ImageComponentView, NavigationComponentView)
- * will be added in M2/M4/M5 respectively.
  */
 
 import type {
-  NavigationComponent,
+  CardComponent,
   ImageComponent,
+  NavigationComponent,
   PageComponent,
   TextComponent,
 } from '../core/types';
@@ -22,6 +21,10 @@ export function isTextComponent(c: PageComponent): c is TextComponent {
 
 export function isImageComponent(c: PageComponent): c is ImageComponent {
   return c.type === 'image';
+}
+
+export function isCardComponent(c: PageComponent): c is CardComponent {
+  return c.type === 'card';
 }
 
 export function isNavigationComponent(c: PageComponent): c is NavigationComponent {

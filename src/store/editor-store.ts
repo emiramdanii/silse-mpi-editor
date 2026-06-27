@@ -7,45 +7,56 @@
  * SCOPE:
  *   M1 — project lifecycle + page add/select.
  *   M2 — text component: addTextComponent, selectComponent, updateTextComponent.
- *        Dengan PageRole + Capability Matrix.
  *   M3 — page flow: renamePage, deletePage, duplicatePage + layoutId.
+ *   M4 — image/card component: addImageComponent, addCardComponent,
+ *        updateImageComponent, updateCardComponent.
  *
- * Kontrak M2R (docs/CORE_PRODUCT_CONTRACT.md section 4 + Batch 2R):
+ * Kontrak M2R:
  *   - addTextComponent CEK capability current page.
- *     Jika allowAddComponent=false (cover), return null (silent reject).
- *   - Default variant text component mengikuti PageRole current page.
- *   - Setiap text component WAJIB variant. updateTextComponent tidak boleh
- *     menghapus field variant.
+ *   - Default variant text mengikuti PageRole.
  *
- * Kontrak M3 (Batch 3):
+ * Kontrak M3:
  *   - addPage menerima role opsional (default 'free').
  *   - deletePage: dilarang hapus halaman terakhir, current page pilih fallback.
- *   - duplicatePage: deep copy, generate page id + semua component id baru,
- *     pertahankan role + layoutId. Tidak boleh share object reference.
- *   - StylePack project tidak boleh berubah karena page operation.
+ *   - duplicatePage: deep copy, generate page id + semua component id baru.
+ *
+ * Kontrak M4 (Batch 4):
+ *   - addImageComponent/addCardComponent CEK capability current page.
+ *   - Variant wajib untuk image/card.
+ *   - duplicatePage deep-copy image/card dengan id baru.
  *
  * Operasi setPageRole (M11) belum ada.
- * Operasi image/card/navigation/question component (M4/M5/M11) belum ada.
- * Operasi removeComponent sengaja ditunda — bukan scope M3.
+ * Operasi navigation/question component (M5/M11) belum ada.
+ * Operasi removeComponent sengaja ditunda — bukan scope M4 (lands in M9).
  */
 
 import { create } from 'zustand';
 import type {
+  CardComponent,
+  CardComponentVariant,
+  ImageComponent,
+  ImageComponentVariant,
   PageComponent,
   PageRole,
   SimplePage,
   SimpleProject,
   TextComponent,
+  TextComponentVariant,
+} from '../core/types';
+import {
+  CARD_COMPONENT_VARIANTS,
+  IMAGE_COMPONENT_VARIANTS,
+  TEXT_COMPONENT_VARIANTS,
 } from '../core/types';
 import { createEmptyPage, createProject } from '../core/project-factory';
 import {
+  createCardComponent,
+  createImageComponent,
   createTextComponent,
+  type CardComponentEditable,
+  type ImageComponentEditable,
   type TextComponentEditable,
 } from '../core/component-factory';
-import {
-  TEXT_COMPONENT_VARIANTS,
-  type TextComponentVariant,
-} from '../core/types';
 import { canAddComponent, getCapability } from '../core/capability';
 import { createComponentId, createPageId } from '../core/ids';
 
@@ -65,23 +76,29 @@ export type EditorState = {
   duplicatePage: (pageId: string) => string | null;
   getCurrentPage: () => SimplePage | null;
 
-  // Component operations (M2 — text only, capability-checked)
-  /**
-   * Add a text component to the current page.
-   * Returns the new component id, or null if capability denied
-   * (e.g. on a 'cover' page where allowAddComponent=false).
-   */
+  // Component operations (M2 — text, M4 — image/card)
   addTextComponent: (overrides?: Partial<TextComponentEditable>) => string | null;
+  addImageComponent: (src: string, overrides?: Partial<ImageComponentEditable>) => string | null;
+  addCardComponent: (body: string, overrides?: Partial<CardComponentEditable>) => string | null;
   selectComponent: (componentId: string | null) => void;
   updateTextComponent: (componentId: string, patch: Partial<TextComponentEditable>) => void;
-  getSelectedComponent: () => TextComponent | null;
+  updateImageComponent: (componentId: string, patch: Partial<ImageComponentEditable>) => void;
+  updateCardComponent: (componentId: string, patch: Partial<CardComponentEditable>) => void;
+  getSelectedComponent: () => PageComponent | null;
 };
 
-function findComponent(project: SimpleProject, componentId: string): TextComponent | null {
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function findComponentInProject(
+  project: SimpleProject,
+  componentId: string,
+): PageComponent | null {
   for (const page of project.pages) {
     for (const component of page.components) {
-      if (component.id === componentId && component.type === 'text') {
-        return component as TextComponent;
+      if (component.id === componentId) {
+        return component;
       }
     }
   }
@@ -94,15 +111,33 @@ function componentExistsInCurrentPage(project: SimpleProject, componentId: strin
   return page.components.some((c) => c.id === componentId);
 }
 
-/**
- * Sanitize patch — pastikan kalau `variant` di-patch, nilainya valid.
- * Kontrak: variant tidak boleh di-set ke nilai di luar TEXT_COMPONENT_VARIANTS.
- */
-function sanitizePatch(patch: Partial<TextComponentEditable>): Partial<TextComponentEditable> {
+function sanitizeTextPatch(patch: Partial<TextComponentEditable>): Partial<TextComponentEditable> {
   const clean: Partial<TextComponentEditable> = { ...patch };
   if (clean.variant !== undefined) {
     if (!TEXT_COMPONENT_VARIANTS.includes(clean.variant as TextComponentVariant)) {
-      // Buang variant invalid — component tetap punya variant lama.
+      delete clean.variant;
+    }
+  }
+  return clean;
+}
+
+function sanitizeImagePatch(patch: Partial<ImageComponentEditable>): Partial<ImageComponentEditable> {
+  const clean: Partial<ImageComponentEditable> = { ...patch };
+  if (clean.variant !== undefined) {
+    if (!IMAGE_COMPONENT_VARIANTS.includes(clean.variant as ImageComponentVariant)) {
+      delete clean.variant;
+    }
+  }
+  if (clean.objectFit !== undefined && !['cover', 'contain'].includes(clean.objectFit)) {
+    delete clean.objectFit;
+  }
+  return clean;
+}
+
+function sanitizeCardPatch(patch: Partial<CardComponentEditable>): Partial<CardComponentEditable> {
+  const clean: Partial<CardComponentEditable> = { ...patch };
+  if (clean.variant !== undefined) {
+    if (!CARD_COMPONENT_VARIANTS.includes(clean.variant as CardComponentVariant)) {
       delete clean.variant;
     }
   }
@@ -110,36 +145,64 @@ function sanitizePatch(patch: Partial<TextComponentEditable>): Partial<TextCompo
 }
 
 /**
+ * Deep-copy a component with a fresh id.
+ * Pertahankan semua field kecuali id (yang baru).
+ * Explicit copy primitive fields to avoid shared reference.
+ */
+function deepCopyComponentWithNewId(c: PageComponent): PageComponent {
+  const newId = createComponentId();
+  if (c.type === 'text') {
+    const tc = c as TextComponent;
+    return {
+      id: newId,
+      type: 'text',
+      text: tc.text,
+      variant: tc.variant,
+      x: tc.x,
+      y: tc.y,
+      width: tc.width,
+      height: tc.height,
+    } as TextComponent;
+  }
+  if (c.type === 'image') {
+    const ic = c as ImageComponent;
+    return {
+      id: newId,
+      type: 'image',
+      variant: ic.variant,
+      src: ic.src,
+      alt: ic.alt,
+      objectFit: ic.objectFit,
+      x: ic.x,
+      y: ic.y,
+      width: ic.width,
+      height: ic.height,
+    } as ImageComponent;
+  }
+  if (c.type === 'card') {
+    const cc = c as CardComponent;
+    return {
+      id: newId,
+      type: 'card',
+      variant: cc.variant,
+      title: cc.title,
+      body: cc.body,
+      x: cc.x,
+      y: cc.y,
+      width: cc.width,
+      height: cc.height,
+    } as CardComponent;
+  }
+  // Navigation/other — M5+ will handle. For now copy with new id.
+  return { ...c, id: newId } as PageComponent;
+}
+
+/**
  * Deep-copy a page with fresh ids for page + semua component.
- * Kontrak M3 Scope D:
- *   - Generate page id baru.
- *   - Generate component id baru untuk setiap component.
- *   - Pertahankan role + layoutId + background + title + text/variant/geometry.
- *   - Tidak boleh share object reference.
- *
- * Catatan: M3 hanya punya TextComponent. M4/M5 akan menambah ImageComponent/
- * NavigationComponent — saat itu copyComponent perlu diperluas.
+ * Kontrak M3 Scope D + M4: deep-copy text/image/card.
  */
 function deepCopyPageWithNewIds(source: SimplePage, newTitle?: string): SimplePage {
-  const newComponents: PageComponent[] = source.components.map((c) => {
-    if (c.type === 'text') {
-      const tc = c as TextComponent;
-      return {
-        ...tc,
-        id: createComponentId(),
-        // Explicit copy primitive fields to avoid shared reference
-        text: tc.text,
-        variant: tc.variant,
-        x: tc.x,
-        y: tc.y,
-        width: tc.width,
-        height: tc.height,
-      } as TextComponent;
-    }
-    // Image/Navigation components — M4/M5 will handle these.
-    // For M3, just copy with new id (shouldn't occur in M3 scope).
-    return { ...c, id: createComponentId() } as PageComponent;
-  });
+  const newComponents: PageComponent[] = source.components.map(deepCopyComponentWithNewId);
 
   return {
     id: createPageId(),
@@ -150,6 +213,26 @@ function deepCopyPageWithNewIds(source: SimplePage, newTitle?: string): SimplePa
     components: newComponents,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Generic component add helper (capability-checked)
+// ---------------------------------------------------------------------------
+
+function addComponentToCurrentPage(
+  state: EditorState,
+  component: PageComponent,
+): Partial<EditorState> {
+  const pages = state.project.pages.map((p) => {
+    if (p.id !== state.project.currentPageId) return p;
+    return { ...p, components: [...p.components, component] };
+  });
+  return {
+    project: { ...state.project, pages },
+    selectedComponentId: component.id,
+  };
+}
+
+// =========================================================================
 
 export const useEditorStore = create<EditorState>((set, get) => ({
   project: createProject(),
@@ -164,7 +247,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   addPage: (opts) => {
-    // Page baru manual default role='free' jika tidak diberikan.
     const role: PageRole = opts?.role ?? 'free';
     const page = createEmptyPage({ role, title: opts?.title });
     set((state) => ({
@@ -190,7 +272,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   renamePage: (pageId, title) => {
     set((state) => {
-      // No-op if page not found (preserve state reference identity)
       if (!state.project.pages.some((p) => p.id === pageId)) return state;
       return {
         project: {
@@ -205,29 +286,17 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   deletePage: (pageId) => {
     set((state) => {
-      // Safety rule #1: dilarang hapus halaman terakhir.
       if (state.project.pages.length <= 1) return state;
-
       const idx = state.project.pages.findIndex((p) => p.id === pageId);
       if (idx === -1) return state;
-
       const pages = state.project.pages.filter((p) => p.id !== pageId);
-
-      // Safety rule #2: kalau yang dihapus adalah current page, pilih fallback.
       let currentPageId = state.project.currentPageId;
       if (currentPageId === pageId) {
-        // Pilih page pertama yang tersisa, atau page pada index yang sama (atau sebelumnya).
         const fallbackIdx = Math.min(idx, pages.length - 1);
         currentPageId = pages[Math.max(0, fallbackIdx)].id;
       }
-
       return {
-        project: {
-          ...state.project,
-          pages,
-          currentPageId,
-        },
-        // Clear component selection (might belong to deleted page)
+        project: { ...state.project, pages, currentPageId },
         selectedComponentId: null,
       };
     });
@@ -238,22 +307,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const source = state.project.pages.find((p) => p.id === pageId);
     if (!source) return null;
 
-    // Deep copy with new ids for page + semua component.
     const copy = deepCopyPageWithNewIds(source, `${source.title} (salinan)`);
 
     set((s) => {
       const idx = s.project.pages.findIndex((p) => p.id === pageId);
       const pages = [...s.project.pages];
-      // Insert copy right after source
       pages.splice(idx + 1, 0, copy);
       return {
-        project: {
-          ...s.project,
-          pages,
-          // Switch to the new duplicated page
-          currentPageId: copy.id,
-        },
-        // Clear component selection (ids are fresh on the copy)
+        project: { ...s.project, pages, currentPageId: copy.id },
         selectedComponentId: null,
       };
     });
@@ -265,7 +326,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     return project.pages.find((p) => p.id === project.currentPageId) ?? null;
   },
 
-  // ----- Component operations (M2) -----
+  // ----- Component operations (M2 — text) -----
 
   addTextComponent: (overrides) => {
     const state = get();
@@ -273,25 +334,44 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       (p) => p.id === state.project.currentPageId,
     );
     if (!currentPage) return null;
-
-    // Cek capability current page
-    if (!canAddComponent(currentPage.role, 'text')) {
-      return null; // capability denied (e.g. cover page)
-    }
+    if (!canAddComponent(currentPage.role, 'text')) return null;
 
     const component = createTextComponent(currentPage.role, overrides);
-    set((s) => {
-      const pages = s.project.pages.map((p) => {
-        if (p.id !== s.project.currentPageId) return p;
-        return { ...p, components: [...p.components, component] };
-      });
-      return {
-        project: { ...s.project, pages },
-        selectedComponentId: component.id,
-      };
-    });
+    set((s) => addComponentToCurrentPage(s, component));
     return component.id;
   },
+
+  // ----- Component operations (M4 — image) -----
+
+  addImageComponent: (src, overrides) => {
+    const state = get();
+    const currentPage = state.project.pages.find(
+      (p) => p.id === state.project.currentPageId,
+    );
+    if (!currentPage) return null;
+    if (!canAddComponent(currentPage.role, 'image')) return null;
+
+    const component = createImageComponent(src, overrides);
+    set((s) => addComponentToCurrentPage(s, component));
+    return component.id;
+  },
+
+  // ----- Component operations (M4 — card) -----
+
+  addCardComponent: (body, overrides) => {
+    const state = get();
+    const currentPage = state.project.pages.find(
+      (p) => p.id === state.project.currentPageId,
+    );
+    if (!currentPage) return null;
+    if (!canAddComponent(currentPage.role, 'card')) return null;
+
+    const component = createCardComponent(body, overrides);
+    set((s) => addComponentToCurrentPage(s, component));
+    return component.id;
+  },
+
+  // ----- Selection + update -----
 
   selectComponent: (componentId) => {
     set((state) => {
@@ -302,14 +382,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   updateTextComponent: (componentId, patch) => {
-    const cleanPatch = sanitizePatch(patch);
+    const cleanPatch = sanitizeTextPatch(patch);
     set((state) => {
       const page = state.project.pages.find((p) => p.id === state.project.currentPageId);
       if (!page) return state;
-      const componentExists = page.components.some(
-        (c) => c.id === componentId && c.type === 'text',
-      );
-      if (!componentExists) return state;
+      const exists = page.components.some((c) => c.id === componentId && c.type === 'text');
+      if (!exists) return state;
 
       const pages = state.project.pages.map((p) => {
         if (p.id !== state.project.currentPageId) return p;
@@ -325,12 +403,56 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     });
   },
 
+  updateImageComponent: (componentId, patch) => {
+    const cleanPatch = sanitizeImagePatch(patch);
+    set((state) => {
+      const page = state.project.pages.find((p) => p.id === state.project.currentPageId);
+      if (!page) return state;
+      const exists = page.components.some((c) => c.id === componentId && c.type === 'image');
+      if (!exists) return state;
+
+      const pages = state.project.pages.map((p) => {
+        if (p.id !== state.project.currentPageId) return p;
+        return {
+          ...p,
+          components: p.components.map((c) => {
+            if (c.id !== componentId || c.type !== 'image') return c;
+            return { ...c, ...cleanPatch, type: 'image' } as ImageComponent;
+          }),
+        };
+      });
+      return { project: { ...state.project, pages } };
+    });
+  },
+
+  updateCardComponent: (componentId, patch) => {
+    const cleanPatch = sanitizeCardPatch(patch);
+    set((state) => {
+      const page = state.project.pages.find((p) => p.id === state.project.currentPageId);
+      if (!page) return state;
+      const exists = page.components.some((c) => c.id === componentId && c.type === 'card');
+      if (!exists) return state;
+
+      const pages = state.project.pages.map((p) => {
+        if (p.id !== state.project.currentPageId) return p;
+        return {
+          ...p,
+          components: p.components.map((c) => {
+            if (c.id !== componentId || c.type !== 'card') return c;
+            return { ...c, ...cleanPatch, type: 'card' } as CardComponent;
+          }),
+        };
+      });
+      return { project: { ...state.project, pages } };
+    });
+  },
+
   getSelectedComponent: () => {
     const { project, selectedComponentId } = get();
     if (!selectedComponentId) return null;
-    return findComponent(project, selectedComponentId);
+    return findComponentInProject(project, selectedComponentId);
   },
 }));
 
-// Re-export capability helpers for UI consumers (Topbar hint about page role)
+// Re-export capability helpers for UI consumers
 export { getCapability, canAddComponent };

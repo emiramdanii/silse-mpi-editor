@@ -1,6 +1,8 @@
 import { useEditorStore } from '../store/editor-store';
-import { isTextComponent } from '../components/component-utils';
+import { isCardComponent, isImageComponent, isTextComponent } from '../components/component-utils';
 import { TextComponentView } from '../components/TextComponentView';
+import { ImageComponentView } from '../components/ImageComponentView';
+import { CardComponentView } from '../components/CardComponentView';
 import { getCapability } from '../core/capability';
 
 const CANVAS_WIDTH = 1280;
@@ -48,8 +50,8 @@ export function CanvasStage() {
             </div>
             <div>
               {canAdd
-                ? 'Klik tombol + Teks di toolbar untuk menambah elemen pembelajaran.'
-                : 'Halaman ini terpandu. Elemen akan diisi via template pedagogis (M11/M12).'}
+                ? 'Klik tombol + Teks / + Gambar / + Kartu di toolbar untuk menambah elemen pembelajaran.'
+                : 'Elemen halaman terpandu akan diisi via template pedagogis (M11/M12).'}
             </div>
           </div>
         )}
@@ -65,7 +67,27 @@ export function CanvasStage() {
               />
             );
           }
-          // Image and navigation components render in M4/M5.
+          if (isImageComponent(component)) {
+            return (
+              <ImageComponentView
+                key={component.id}
+                component={component}
+                selected={component.id === selectedComponentId}
+                onSelect={selectComponent}
+              />
+            );
+          }
+          if (isCardComponent(component)) {
+            return (
+              <CardComponentView
+                key={component.id}
+                component={component}
+                selected={component.id === selectedComponentId}
+                onSelect={selectComponent}
+              />
+            );
+          }
+          // Navigation components render in M5.
           return null;
         })}
       </div>

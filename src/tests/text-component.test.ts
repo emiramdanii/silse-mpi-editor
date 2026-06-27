@@ -189,7 +189,7 @@ describe('Capability Matrix — canAddComponent', () => {
     }
   });
 
-  it('image/navigation not yet allowed for any role (M4/M5)', () => {
+  it('navigation not yet allowed for any role (M5)', () => {
     const roles: PageRole[] = [
       'cover',
       'free',
@@ -197,11 +197,22 @@ describe('Capability Matrix — canAddComponent', () => {
       'activity',
     ];
     for (const r of roles) {
-      // canAddComponent returns false because 'image' is not in allowedComponents
-      // (even though it doesn't exist as ComponentType yet, the check uses includes)
-      expect(canAddComponent(r, 'image' as never)).toBe(false);
       expect(canAddComponent(r, 'navigation' as never)).toBe(false);
     }
+  });
+
+  it('image NOT allowed for cover (M4 — cover is controlled)', () => {
+    expect(canAddComponent('cover', 'image' as never)).toBe(false);
+  });
+
+  it('image allowed for material/activity/free (M4 active)', () => {
+    expect(canAddComponent('material', 'image' as never)).toBe(true);
+    expect(canAddComponent('activity', 'image' as never)).toBe(true);
+    expect(canAddComponent('free', 'image' as never)).toBe(true);
+  });
+
+  it('image NOT allowed for reflection (M4 — reflection is text+card only)', () => {
+    expect(canAddComponent('reflection', 'image' as never)).toBe(false);
   });
 
   it('getCapability returns capability with description', () => {

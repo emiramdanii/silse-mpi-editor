@@ -135,6 +135,25 @@ describe('createProjectWithPages', () => {
   it('throws if pageCount < 1', () => {
     expect(() => createProjectWithPages(0)).toThrow();
   });
+
+  // Batch 4 preflight: firstRole must also update layoutId
+  it('firstRole=material sets layoutId=singleColumn (invariant fix)', () => {
+    const p = createProjectWithPages(2, { firstRole: 'material' });
+    expect(p.pages[0].role).toBe('material');
+    expect(p.pages[0].layoutId).toBe('singleColumn');
+  });
+
+  it('firstRole=free sets layoutId=blank (invariant fix)', () => {
+    const p = createProjectWithPages(2, { firstRole: 'free' });
+    expect(p.pages[0].role).toBe('free');
+    expect(p.pages[0].layoutId).toBe('blank');
+  });
+
+  it('firstRole=cover keeps layoutId=coverCentered (invariant fix)', () => {
+    const p = createProjectWithPages(2, { firstRole: 'cover' });
+    expect(p.pages[0].role).toBe('cover');
+    expect(p.pages[0].layoutId).toBe('coverCentered');
+  });
 });
 
 describe('validateProject', () => {

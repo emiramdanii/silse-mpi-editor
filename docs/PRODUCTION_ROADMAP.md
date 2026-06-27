@@ -24,8 +24,8 @@ Alur produk: AI generate MPI JSON → app import → style/layout/interaksi bisa
 | M2 (v2) | Text Block + Variant | Superseded |
 | M2 | Page Role + Capability Matrix + Text Component | Done |
 | B2S | Style Pack Foundation + AI Remix Roadmap Lock | Done |
-| **M3** | **Page Flow + LayoutId Dasar** | **Active** |
-| M4 | Image + Card + Layout Recipes | Planned |
+| M3 | Page Flow + LayoutId Dasar | Done |
+| **M4** | **Image + Card + Layout Recipes** | **Active** |
 | M5 | Navigation + Preview + Interaction Style Dasar | Planned |
 | M6 | Export HTML + Style Resolver Solid | Planned |
 | M7 | Save / Load + Style Pack Save | Planned |
@@ -187,7 +187,7 @@ Batch 1B dianggap selesai jika:
 
 ## M3 — Page Flow + LayoutId Dasar
 
-**Status:** Active
+**Status:** Done (commit `fc963c2`)
 
 **Prasyarat:** Batch 2S ACCEPTED.
 
@@ -223,22 +223,33 @@ Batch 1B dianggap selesai jika:
 
 ## M4 — Image + Card + Layout Recipes
 
-**Target:** Bisa tambah gambar dan card sebagai elemen pembelajaran + perkenalkan layout recipes sederhana.
+**Status:** Active
+
+**Prasyarat:** M3 ACCEPTED.
+
+**Target:** Menambahkan image component, card component, dan layout recipes konkret awal tanpa membuat full layout engine, tanpa preview/export, dan tanpa style editor.
+
+**Konsep penting:** Card di M4 = elemen pembelajaran sederhana (title + body + variant + geometry). BUKAN nested container. Nested container baru di M11/M12.
 
 **Fitur:**
 
-- Image component (variant: `illustration`/`background`/`imageCard`).
-- Card component (container ringan untuk grouping elemen).
-- Upload image, render di canvas, edit posisi/ukuran.
-- Layout recipes sederhana (1-column, 2-column, header+body) — pakai `layoutId` dari M3.
-- Capability Matrix diperluas: role tertentu mengizinkan image/card.
+- Image component: `{ type:'image', variant, src, alt?, objectFit, x, y, width, height }`. Variant: `illustration`/`background`/`imageCard`.
+- Card component: `{ type:'card', variant, title?, body, x, y, width, height }`. Variant: `infoCard`/`importantNote`/`exampleCard`.
+- Layout recipes: `blank`, `coverCentered`, `singleColumn` di `core/layout-recipes.ts`. Metadata only (id, name, description, safeArea, slots).
+- Capability Matrix: material/activity/starter/free = text+image+card; reflection = text+card; cover = controlled; lainnya = text only.
+- addImageComponent/addCardComponent cek capability.
+- duplicatePage deep-copy image/card dengan id baru.
 
 **Acceptance:**
 
-- Upload gambar → tampil di canvas.
-- Resize lewat inspector → gambar menyesuaikan.
-- Pilih layout recipe → komponen menempel ke slot layout.
-- Capability Matrix menolak image di role yang tidak mengizinkan.
+- ImageComponent validation (variant wajib, src wajib, objectFit valid).
+- CardComponent validation (variant wajib, body wajib).
+- Capability menolak image/card di role yang tidak boleh.
+- addImageComponent/addCardComponent allowed di material/free, denied di cover.
+- Duplicate page regenerates image/card component ids.
+- Layout recipes ada dan serializable.
+- Store tidak expose navigation/question/game/preview/export/style editor/AI import.
+- UI tidak memakai kata block.
 
 ---
 

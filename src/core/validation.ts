@@ -14,12 +14,16 @@
  */
 
 import {
+  CARD_COMPONENT_VARIANTS,
   COMPONENT_TYPES,
+  IMAGE_COMPONENT_VARIANTS,
   LAYOUT_IDS,
   PAGE_ROLES,
   PROJECT_VERSION,
   TEXT_COMPONENT_VARIANTS,
+  type CardComponentVariant,
   type ComponentType,
+  type ImageComponentVariant,
   type LayoutId,
   type PageComponent,
   type PageRole,
@@ -68,7 +72,13 @@ export function validateComponent(component: unknown): ValidationResult {
   if (component.type === 'text') {
     return validateTextComponent(component);
   }
-  // image/navigation validation lands in M4/M5
+  if (component.type === 'image') {
+    return validateImageComponent(component);
+  }
+  if (component.type === 'card') {
+    return validateCardComponent(component);
+  }
+  // navigation validation lands in M5
   return { ok: true };
 }
 
@@ -92,6 +102,68 @@ function validateTextComponent(component: Record<string, unknown>): ValidationRe
     return fail(
       `text component.variant must be one of: ${TEXT_COMPONENT_VARIANTS.join(', ')} (got "${component.variant}")`,
     );
+  }
+  return { ok: true };
+}
+
+/**
+ * Validate an image component (M4 scope).
+ *
+ * Kontrak:
+ *   - field `variant` wajib, harus salah satu dari IMAGE_COMPONENT_VARIANTS
+ *   - field `src` wajib, string non-empty
+ *   - field `objectFit` wajib, 'cover' | 'contain'
+ *   - field `alt` opsional, string
+ */
+function validateImageComponent(component: Record<string, unknown>): ValidationResult {
+  if (!isString(component.variant)) {
+    return fail('image component.variant is required (must be a string)');
+  }
+  if (!IMAGE_COMPONENT_VARIANTS.includes(component.variant as ImageComponentVariant)) {
+    return fail(
+      `image component.variant must be one of: ${IMAGE_COMPONENT_VARIANTS.join(', ')} (got "${component.variant}")`,
+    );
+  }
+  if (!isString(component.src) || component.src.length === 0) {
+    return fail('image component.src must be a non-empty string');
+  }
+  if (!isString(component.objectFit) || !['cover', 'contain'].includes(component.objectFit)) {
+    return fail('image component.objectFit must be "cover" or "contain"');
+  }
+  if (component.alt !== undefined && !isString(component.alt)) {
+    return fail('image component.alt must be a string if present');
+  }
+  return { ok: true };
+}
+
+/**
+ * Validate a card component (M4 scope).
+ *
+ * Kontrak:
+ *   - field `variant` wajib, harus salah satu dari CARD_COMPONENT_VARIANTS
+ *   - field `body` wajib, string (boleh kosong tapi harus ada)
+ *   - field `title` opsional, string
+ *
+ * Card BUKAN nested container — tidak ada field components/children.
+ */
+function validateCardComponent(component: Record<string, unknown>): ValidationResult {
+  if (!isString(component.variant)) {
+    return fail('card component.variant is required (must be a string)');
+  }
+  if (!CARD_COMPONENT_VARIANTS.includes(component.variant as CardComponentVariant)) {
+    return fail(
+      `card component.variant must be one of: ${CARD_COMPONENT_VARIANTS.join(', ')} (got "${component.variant}")`,
+    );
+  }
+  if (!isString(component.body)) {
+    return fail('card component.body must be a string');
+  }
+  if (component.title !== undefined && !isString(component.title)) {
+    return fail('card component.title must be a string if present');
+  }
+  // Anti-pattern guard: card must NOT have nested components/children (M4 scope)
+  if (component.components !== undefined || component.children !== undefined) {
+    return fail('card component must NOT have nested components/children (M4 scope — nested container lands in M11/M12)');
   }
   return { ok: true };
 }
