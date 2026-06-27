@@ -921,9 +921,9 @@ describe('editor store — scope-lock (M4)', () => {
     expect((store as unknown as Record<string, unknown>).addQuestionComponent).toBeUndefined();
   });
 
-  it('store does NOT expose removeComponent (deferred — lands in M9)', () => {
+  it('store EXPOSES removeComponent (M9 active)', () => {
     const store = useEditorStore.getState();
-    expect((store as unknown as Record<string, unknown>).removeComponent).toBeUndefined();
+    expect(typeof store.removeComponent).toBe('function');
   });
 
   it('store does NOT expose legacy addTextBlock (renamed to addTextComponent in 2R)', () => {

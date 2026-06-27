@@ -51,6 +51,7 @@ import { DEFAULT_STYLE_PACK, stylePackToProjectStyle } from '../core/style-prese
 import { saveStylePack } from '../storage/style-pack-storage';
 import { createTextComponent, createImageComponent, createCardComponent, createNavigationComponent } from '../core/component-factory';
 import { checkForbiddenFields } from './forbidden-field-guard';
+import { AI_IMPORT_SCHEMA_VERSION } from './ai-import-types';
 
 export type NormalizeResult =
   | { ok: true; project: SimpleProject }
@@ -291,8 +292,8 @@ export function normalizeAiImportPayload(payload: unknown): NormalizeResult {
   }
 
   // 2. schemaVersion must be correct
-  if (p.schemaVersion !== 1) {
-    return { ok: false, errors: [`schemaVersion must be 1, got ${String(p.schemaVersion)}`] };
+  if (p.schemaVersion !== AI_IMPORT_SCHEMA_VERSION) {
+    return { ok: false, errors: [`schemaVersion must be ${AI_IMPORT_SCHEMA_VERSION}, got ${String(p.schemaVersion)}`] };
   }
 
   // 3. source must be 'ai'

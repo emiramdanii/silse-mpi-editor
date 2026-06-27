@@ -27,8 +27,8 @@ Implikasi: Style Pack foundation harus ada **sebelum** M3, supaya M3–M8 tidak 
 | M5        | Navigation + Preview + Interaction Style Dasar | Done |
 | M6        | Export HTML + Style Resolver Solid    | Done        |
 | M7        | Save / Load + Style Pack Save         | Done        |
-| **M8**    | **AI JSON Import + Style Import MVP** | **Active**  |
-| M9        | Direct Manipulation + Layout Guard    | Planned     |
+| M8        | AI JSON Import + Style Import MVP     | Done        |
+| **M9**    | **Direct Manipulation + Layout Guard** | **Active** |
 | M10       | Question + Scoring Style              | Planned     |
 | M11       | Advanced Interactive Components       | Planned     |
 | M12       | Style Studio + Template Pack          | Planned     |
@@ -504,7 +504,7 @@ Nanti di M10/M11 diperluas: currentQuestionIndex, selectedAnswer, score, feedbac
 
 ## M8 — AI JSON Import + Style Import MVP
 
-**Status:** Active
+**Status:** Done (commit `a7440a5`)
 
 **Prasyarat:** M7 ACCEPTED.
 
@@ -528,24 +528,54 @@ Lihat [`docs/AI_IMPORT_CONTRACT.md`](AI_IMPORT_CONTRACT.md) untuk kontrak lengka
 
 ## M9 — Direct Manipulation + Layout Guard
 
-**Target:** Editor enak dipakai tanpa inspector untuk operasi umum + layout guard mencegah komponen keluar dari layout recipe.
+**Status:** Active
+
+**Prasyarat:** M8 ACCEPTED.
+
+**Target:** Komponen bisa dipindah dan diubah ukuran di canvas secara aman, dengan snap grid dan layout guard, tanpa mengubah SILSE menjadi Canva bebas.
 
 **Fitur:**
 
-- Drag komponen di canvas.
-- Resize komponen di canvas (handle pojok).
-- Snap sederhana (grid 8px).
-- Keyboard delete (tombol Delete/Backspace).
-- Layout guard: kalau page pakai layout recipe, komponen menempel ke slot; drag dibatasi ke slot.
-- `removeComponent` akhirnya tersedia di store (sebelumnya ditunda).
+- `src/core/geometry.ts`: snapToGrid, clampRectToCanvas, normalizeRect, resizeRectWithHandle. Pure functions, no DOM/React/store.
+- `src/core/layout-guard.ts`: guard geometry by role/layoutId. Komponen tidak boleh keluar canvas, ukuran minimal dijaga, snap grid 8px, safe area untuk coverCentered/singleColumn.
+- Store: `updateComponentGeometry(componentId, rect)` lewat geometry utils + layout guard. `removeComponent(componentId)` hapus + clear selection.
+- Canvas drag: pointer down/move/up, snap to grid, clamp to canvas. Southeast resize handle. Selection ring editor-only. Tidak drag di preview. Tidak drag saat dialog AI import terbuka. No external drag library.
+- Keyboard delete: Delete/Backspace hapus selected component. Tidak aktif saat input/textarea/select/dialog. Tidak menghapus page. Tidak bekerja di preview.
+- UI: selected component tampil resize handle. Inspector tetap bisa edit x/y/width/height. Bahasa: geser/ubah ukuran/hapus elemen/posisi/ukuran.
 
 **Acceptance:**
 
-- Komponen bisa digeser langsung di canvas.
-- Komponen bisa di-resize via handle.
-- Snap aktif saat drag dekat grid.
-- Pilih komponen → tekan Delete → komponen hilang.
-- Layout recipe aktif → komponen tidak keluar dari slot.
+- snapToGrid works.
+- clampRectToCanvas works.
+- min size enforced.
+- updateComponentGeometry snaps + clamps.
+- updateComponentGeometry preserves component type/data.
+- layout guard coverCentered safe area.
+- layout guard singleColumn safe area.
+- removeComponent removes selected component.
+- removeComponent clears selectedComponentId.
+- keyboard delete ignored in input/textarea/select.
+- preview does not allow drag/delete.
+- drag updates geometry via store.
+- resize handle updates width/height.
+- no external drag library.
+- store does not expose setPageRole/quiz/game/scoring.
+- UI no "block".
+- ESM guard still pass.
+- typecheck PASS, test PASS, build PASS.
+
+**Scope lock:**
+
+- Tidak ada full layout engine.
+- Tidak ada free Canva-like unconstrained canvas.
+- Tidak ada external drag/drop library.
+- Tidak ada nested containers.
+- Tidak ada layer panel kompleks.
+- Tidak ada setPageRole.
+- Tidak ada quiz/game/scoring.
+- Tidak ada AI import expansion.
+- Tidak ada style editor.
+- Tidak ada component recipe extraction UI.
 
 ---
 

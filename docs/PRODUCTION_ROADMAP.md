@@ -29,8 +29,8 @@ Alur produk: AI generate MPI JSON → app import → style/layout/interaksi bisa
 | M5 | Navigation + Preview + Interaction Style Dasar | Done |
 | M6 | Export HTML + Style Resolver Solid | Done |
 | M7 | Save / Load + Style Pack Save | Done |
-| **M8** | **AI JSON Import + Style Import MVP** | **Active** |
-| M9 | Direct Manipulation + Layout Guard | Planned |
+| M8 | AI JSON Import + Style Import MVP | Done |
+| **M9** | **Direct Manipulation + Layout Guard** | **Active** |
 | M10 | Question + Scoring Style | Planned |
 | M11 | Advanced Interactive Components | Planned |
 | M12 | Style Studio + Template Pack | Planned |
@@ -348,7 +348,7 @@ Batch 1B dianggap selesai jika:
 
 ## M8 — AI JSON Import + Style Import MVP
 
-**Status:** Active
+**Status:** Done (commit `a7440a5`)
 
 **Target:** Import MPI JSON dari AI + import style pack dari AI. **Wajib JSON SILSE — bukan HTML/CSS bebas.**
 
@@ -381,9 +381,17 @@ Lihat [`docs/AI_IMPORT_CONTRACT.md`](AI_IMPORT_CONTRACT.md) untuk kontrak lengka
 
 ## M9 — Direct Manipulation + Layout Guard
 
-**Target:** Editor enak dipakai tanpa inspector untuk operasi umum + layout guard mencegah komponen keluar dari layout recipe.
+**Status:** Active
+
+**Target:** Komponen bisa dipindah dan diubah ukuran di canvas secara aman, dengan snap grid dan layout guard.
 
 **Fitur:**
+
+- `src/core/geometry.ts`: snapToGrid, clampRectToCanvas, normalizeRect, resizeRectWithHandle.
+- `src/core/layout-guard.ts`: guard geometry by role/layoutId.
+- Store: updateComponentGeometry + removeComponent.
+- Canvas drag + southeast resize handle + snap grid 8px + keyboard delete.
+- No external drag library. No full layout engine. No nested containers.
 
 - Drag komponen di canvas.
 - Resize komponen di canvas (handle pojok).

@@ -71,6 +71,8 @@ import {
   loadCurrentProject,
   clearCurrentProject,
 } from '../storage/project-storage';
+import { guardGeometry } from '../core/layout-guard';
+import type { Rect } from '../core/geometry';
 
 export type EditorState = {
   project: SimpleProject;
@@ -102,6 +104,8 @@ export type EditorState = {
   updateImageComponent: (componentId: string, patch: Partial<ImageComponentEditable>) => void;
   updateCardComponent: (componentId: string, patch: Partial<CardComponentEditable>) => void;
   updateNavigationComponent: (componentId: string, patch: Partial<NavigationComponentEditable>) => void;
+  updateComponentGeometry: (componentId: string, rect: Rect) => void;
+  removeComponent: (componentId: string) => void;
   getSelectedComponent: () => PageComponent | null;
 
   // Save / Load (M7)
@@ -541,6 +545,50 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         };
       });
       return { project: { ...state.project, pages } };
+    });
+  },
+
+  // ----- Geometry + Remove (M9) -----
+
+  updateComponentGeometry: (componentId, rect) => {
+    set((state) => {
+      const page = state.project.pages.find((p) => p.id === state.project.currentPageId);
+      if (!page) return state;
+      const comp = page.components.find((c) => c.id === componentId);
+      if (!comp) return state;
+
+      // Guard geometry via layout guard
+      const guardResult = guardGeometry(page.role, page.layoutId, comp.type, rect);
+
+      const pages = state.project.pages.map((p) => {
+        if (p.id !== state.project.currentPageId) return p;
+        return {
+          ...p,
+          components: p.components.map((c) => {
+            if (c.id !== componentId) return c;
+            return { ...c, x: guardResult.rect.x, y: guardResult.rect.y, width: guardResult.rect.width, height: guardResult.rect.height } as PageComponent;
+          }),
+        };
+      });
+      return { project: { ...state.project, pages } };
+    });
+  },
+
+  removeComponent: (componentId) => {
+    set((state) => {
+      const page = state.project.pages.find((p) => p.id === state.project.currentPageId);
+      if (!page) return state;
+      const exists = page.components.some((c) => c.id === componentId);
+      if (!exists) return state;
+
+      const pages = state.project.pages.map((p) => {
+        if (p.id !== state.project.currentPageId) return p;
+        return { ...p, components: p.components.filter((c) => c.id !== componentId) };
+      });
+      return {
+        project: { ...state.project, pages },
+        selectedComponentId: null,
+      };
     });
   },
 
