@@ -194,6 +194,7 @@ export function CanvasStage() {
                   resolvedStyle={resolvedStyle}
                   selected={isSelected}
                   onSelect={selectComponent}
+                  positionMode="fill"
                 />
               )}
               {isImageComponent(component) && (
@@ -202,6 +203,7 @@ export function CanvasStage() {
                   resolvedStyle={resolvedStyle}
                   selected={isSelected}
                   onSelect={selectComponent}
+                  positionMode="fill"
                 />
               )}
               {isCardComponent(component) && (
@@ -210,6 +212,7 @@ export function CanvasStage() {
                   resolvedStyle={resolvedStyle}
                   selected={isSelected}
                   onSelect={selectComponent}
+                  positionMode="fill"
                 />
               )}
               {isNavigationComponent(component) && (
@@ -218,6 +221,7 @@ export function CanvasStage() {
                   resolvedStyle={resolvedStyle}
                   selected={isSelected}
                   onSelect={selectComponent}
+                  positionMode="fill"
                 />
               )}
 

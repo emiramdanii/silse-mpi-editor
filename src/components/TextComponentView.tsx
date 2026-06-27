@@ -1,12 +1,10 @@
 /**
- * TextComponentView — read-only renderer for a TextComponent on the canvas.
+ * TextComponentView — read-only renderer for a TextComponent.
  *
- * Layer: components
- * Allowed imports: ../core
- *
- * M6 PATCH: Style datang dari resolvedStyle (resolveComponentStyle).
- * TIDAK ADA hard-coded style lookup hard-coded lookup.
- * Editor, Preview, dan Export semua memakai resolver yang sama.
+ * M9 PATCH: positionMode prop untuk menghindari double positioning.
+ *   'absolute' (default): position absolute dengan component.x/y/width/height.
+ *   'fill': position relative, width/height 100%, untuk dipasang di dalam
+ *           wrapper CanvasStage yang sudah punya absolute positioning.
  */
 
 import type { CSSProperties } from 'react';
@@ -18,32 +16,56 @@ export type TextComponentViewProps = {
   resolvedStyle: ResolvedComponentStyle;
   selected?: boolean;
   onSelect?: (componentId: string) => void;
+  positionMode?: 'absolute' | 'fill';
 };
 
-export function TextComponentView({ component, resolvedStyle, selected, onSelect }: TextComponentViewProps) {
-  const style: CSSProperties = {
-    position: 'absolute',
-    left: component.x,
-    top: component.y,
-    width: component.width,
-    height: component.height,
-    // Style dari resolver (fontSize, color, fontWeight, textAlign, backgroundColor, etc.)
-    ...resolvedStyle.inlineStyle,
-    // Layout for text content
-    display: 'flex',
-    alignItems: 'center',
-    overflow: 'hidden',
-    whiteSpace: 'pre-wrap',
-    wordBreak: 'break-word',
-    boxSizing: 'border-box',
-    // Selection ring (editor-only affordance)
-    outline: selected ? '2px solid #2563eb' : 'none',
-    outlineOffset: 2,
-    cursor: 'pointer',
-    userSelect: 'none',
-  };
+export function TextComponentView({
+  component,
+  resolvedStyle,
+  selected,
+  onSelect,
+  positionMode = 'absolute',
+}: TextComponentViewProps) {
+  const isFill = positionMode === 'fill';
 
-  // Align text within flex container
+  const style: CSSProperties = isFill
+    ? {
+        position: 'relative',
+        left: 0,
+        top: 0,
+        width: '100%',
+        height: '100%',
+        ...resolvedStyle.inlineStyle,
+        display: 'flex',
+        alignItems: 'center',
+        overflow: 'hidden',
+        whiteSpace: 'pre-wrap',
+        wordBreak: 'break-word',
+        boxSizing: 'border-box',
+        outline: selected ? '2px solid #2563eb' : 'none',
+        outlineOffset: 2,
+        cursor: 'pointer',
+        userSelect: 'none',
+      }
+    : {
+        position: 'absolute',
+        left: component.x,
+        top: component.y,
+        width: component.width,
+        height: component.height,
+        ...resolvedStyle.inlineStyle,
+        display: 'flex',
+        alignItems: 'center',
+        overflow: 'hidden',
+        whiteSpace: 'pre-wrap',
+        wordBreak: 'break-word',
+        boxSizing: 'border-box',
+        outline: selected ? '2px solid #2563eb' : 'none',
+        outlineOffset: 2,
+        cursor: 'pointer',
+        userSelect: 'none',
+      };
+
   const align = resolvedStyle.inlineStyle.textAlign as string | undefined;
   if (align === 'center') {
     style.justifyContent = 'center';

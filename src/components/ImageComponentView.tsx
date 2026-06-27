@@ -1,11 +1,7 @@
 /**
- * ImageComponentView — read-only renderer for an ImageComponent on the canvas.
+ * ImageComponentView — read-only renderer for an ImageComponent.
  *
- * Layer: components
- * Allowed imports: ../core
- *
- * M6 PATCH: Style datang dari resolvedStyle (resolveComponentStyle).
- * TIDAK ADA hard-coded style lookup hard-coded lookup.
+ * M9 PATCH: positionMode prop untuk menghindari double positioning.
  */
 
 import type { CSSProperties } from 'react';
@@ -17,22 +13,43 @@ export type ImageComponentViewProps = {
   resolvedStyle: ResolvedComponentStyle;
   selected?: boolean;
   onSelect?: (componentId: string) => void;
+  positionMode?: 'absolute' | 'fill';
 };
 
-export function ImageComponentView({ component, resolvedStyle, selected, onSelect }: ImageComponentViewProps) {
-  const style: CSSProperties = {
-    position: 'absolute',
-    left: component.x,
-    top: component.y,
-    width: component.width,
-    height: component.height,
-    // Style dari resolver (border, borderRadius, boxShadow, overflow)
-    ...resolvedStyle.inlineStyle,
-    boxSizing: 'border-box',
-    outline: selected ? '2px solid #2563eb' : 'none',
-    outlineOffset: 2,
-    cursor: 'pointer',
-  };
+export function ImageComponentView({
+  component,
+  resolvedStyle,
+  selected,
+  onSelect,
+  positionMode = 'absolute',
+}: ImageComponentViewProps) {
+  const isFill = positionMode === 'fill';
+
+  const style: CSSProperties = isFill
+    ? {
+        position: 'relative',
+        left: 0,
+        top: 0,
+        width: '100%',
+        height: '100%',
+        ...resolvedStyle.inlineStyle,
+        boxSizing: 'border-box',
+        outline: selected ? '2px solid #2563eb' : 'none',
+        outlineOffset: 2,
+        cursor: 'pointer',
+      }
+    : {
+        position: 'absolute',
+        left: component.x,
+        top: component.y,
+        width: component.width,
+        height: component.height,
+        ...resolvedStyle.inlineStyle,
+        boxSizing: 'border-box',
+        outline: selected ? '2px solid #2563eb' : 'none',
+        outlineOffset: 2,
+        cursor: 'pointer',
+      };
 
   return (
     <div

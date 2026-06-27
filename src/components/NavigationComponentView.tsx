@@ -1,15 +1,7 @@
 /**
  * NavigationComponentView — renderer for a NavigationComponent.
  *
- * Layer: components
- * Allowed imports: ../core
- *
- * M6 PATCH: Style datang dari resolvedStyle (resolveComponentStyle).
- * TIDAK ADA hard-coded style lookup hard-coded lookup.
- * Interaction (hover/press/focus) dari resolvedStyle.interactions.
- *
- * Di editor: click → select (via onSelect).
- * Di preview: click → onNavigate (triggers next/prev/goto).
+ * M9 PATCH: positionMode prop untuk menghindari double positioning.
  */
 
 import type { CSSProperties } from 'react';
@@ -22,6 +14,7 @@ export type NavigationComponentViewProps = {
   selected?: boolean;
   onSelect?: (componentId: string) => void;
   onNavigate?: () => void;
+  positionMode?: 'absolute' | 'fill';
 };
 
 export function NavigationComponentView({
@@ -30,25 +23,40 @@ export function NavigationComponentView({
   selected,
   onSelect,
   onNavigate,
+  positionMode = 'absolute',
 }: NavigationComponentViewProps) {
-  // Build base style from resolver + geometry
-  const style: CSSProperties = {
-    position: 'absolute',
-    left: component.x,
-    top: component.y,
-    width: component.width,
-    height: component.height,
-    // Style dari resolver (backgroundColor, color, border, borderRadius, fontSize, fontWeight)
-    ...resolvedStyle.inlineStyle,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: onNavigate ? 'pointer' : 'default',
-    userSelect: 'none',
-    boxShadow: selected ? '0 0 0 2px #2563eb' : undefined,
-  };
+  const isFill = positionMode === 'fill';
 
-  // Apply interaction styles from resolver (hover/press/focus)
+  const style: CSSProperties = isFill
+    ? {
+        position: 'relative',
+        left: 0,
+        top: 0,
+        width: '100%',
+        height: '100%',
+        ...resolvedStyle.inlineStyle,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: onNavigate ? 'pointer' : 'default',
+        userSelect: 'none',
+        boxShadow: selected ? '0 0 0 2px #2563eb' : undefined,
+      }
+    : {
+        position: 'absolute',
+        left: component.x,
+        top: component.y,
+        width: component.width,
+        height: component.height,
+        ...resolvedStyle.inlineStyle,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: onNavigate ? 'pointer' : 'default',
+        userSelect: 'none',
+        boxShadow: selected ? '0 0 0 2px #2563eb' : undefined,
+      };
+
   const interactions = resolvedStyle.interactions;
   if (interactions?.hover?.transition) {
     style.transition = interactions.hover.transition;
