@@ -10,13 +10,14 @@
 
 import { useEditorStore } from '../store/editor-store';
 import { usePreviewStore } from './preview-store';
-import { isCardComponent, isImageComponent, isNavigationComponent, isTextComponent } from '../components/component-utils';
+import { isCardComponent, isImageComponent, isNavigationComponent, isQuestionComponent, isTextComponent } from '../components/component-utils';
 import { TextComponentView } from '../components/TextComponentView';
 import { ImageComponentView } from '../components/ImageComponentView';
 import { CardComponentView } from '../components/CardComponentView';
 import { NavigationComponentView } from '../components/NavigationComponentView';
+import { QuestionComponentView } from '../components/QuestionComponentView';
 import { getResolvedComponentStyle } from '../core/style/resolveComponentStyle';
-import type { NavigationComponent } from '../core/types';
+import type { NavigationComponent, QuestionComponent } from '../core/types';
 
 const CANVAS_WIDTH = 1280;
 const CANVAS_HEIGHT = 720;
@@ -25,10 +26,13 @@ export function PreviewApp() {
   const project = useEditorStore((s) => s.project);
   const isOpen = usePreviewStore((s) => s.isOpen);
   const currentPageId = usePreviewStore((s) => s.currentPageId);
+  const questionAnswers = usePreviewStore((s) => s.questionAnswers);
+  const totalScore = usePreviewStore((s) => s.totalScore);
   const closePreview = usePreviewStore((s) => s.closePreview);
   const navigateNext = usePreviewStore((s) => s.navigateNext);
   const navigatePrev = usePreviewStore((s) => s.navigatePrev);
   const navigateGoto = usePreviewStore((s) => s.navigateGoto);
+  const answerQuestion = usePreviewStore((s) => s.answerQuestion);
 
   if (!isOpen) return null;
 
@@ -79,6 +83,7 @@ export function PreviewApp() {
       <div className="preview-toolbar">
         <span className="preview-toolbar__title">
           Pratinjau MPI · {currentPage.title} ({currentIdx + 1}/{project.pages.length})
+          {totalScore > 0 && ` · Skor: ${totalScore}`}
         </span>
         <div className="preview-toolbar__nav">
           <button onClick={navigatePrev} disabled={isFirst} title="Halaman sebelumnya">
@@ -120,7 +125,21 @@ export function PreviewApp() {
                   key={component.id}
                   component={component}
                   resolvedStyle={resolvedStyle}
-                  onNavigate={() => handleNavigationClick(component)}
+                  onNavigate={() => handleNavigationClick(component as NavigationComponent)}
+                />
+              );
+            }
+            if (isQuestionComponent(component)) {
+              const qa = questionAnswers[component.id] ?? { selectedChoiceIndex: null, isAnswered: false };
+              const qc = component as QuestionComponent;
+              return (
+                <QuestionComponentView
+                  key={component.id}
+                  component={qc}
+                  resolvedStyle={resolvedStyle}
+                  onAnswer={(choiceIndex) => answerQuestion(qc.id, choiceIndex, qc.correctChoiceIndex, qc.points)}
+                  selectedChoiceIndex={qa.selectedChoiceIndex}
+                  isAnswered={qa.isAnswered}
                 />
               );
             }

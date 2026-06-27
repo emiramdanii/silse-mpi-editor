@@ -28,8 +28,8 @@ Implikasi: Style Pack foundation harus ada **sebelum** M3, supaya M3–M8 tidak 
 | M6        | Export HTML + Style Resolver Solid    | Done        |
 | M7        | Save / Load + Style Pack Save         | Done        |
 | M8        | AI JSON Import + Style Import MVP     | Done        |
-| **M9**    | **Direct Manipulation + Layout Guard** | **Active** |
-| M10       | Question + Scoring Style              | Planned     |
+| M9        | Direct Manipulation + Layout Guard    | Done        |
+| **M10**   | **Question + Scoring Style**          | **Active**  |
 | M11       | Advanced Interactive Components       | Planned     |
 | M12       | Style Studio + Template Pack          | Planned     |
 | M13       | Production Ready                      | Planned     |
@@ -528,7 +528,7 @@ Lihat [`docs/AI_IMPORT_CONTRACT.md`](AI_IMPORT_CONTRACT.md) untuk kontrak lengka
 
 ## M9 — Direct Manipulation + Layout Guard
 
-**Status:** Active
+**Status:** Done (commit `c62df51`)
 
 **Prasyarat:** M8 ACCEPTED.
 
@@ -581,24 +581,29 @@ Lihat [`docs/AI_IMPORT_CONTRACT.md`](AI_IMPORT_CONTRACT.md) untuk kontrak lengka
 
 ## M10 — Question + Scoring Style
 
-**Target:** MPI mendukung pertanyaan pilihan ganda + scoring style dari StylePack.
+**Status:** Active
+
+**Prasyarat:** M9 ACCEPTED.
+
+**Target:** Menambahkan Question/Quiz component awal dengan pilihan jawaban, feedback benar/salah, dan scoring style dari StylePack, tanpa membuat game engine M11 dan tanpa page-spam.
+
+**UX Contract:** Quiz/Game answer option text must not be clipped.
 
 **Fitur:**
 
-- Question component (pertanyaan + pilihan + jawaban benar).
-- Interaction pattern: `choiceFeedback`.
-- Scoring style dari StylePack `scoringRecipes` (warna benar/salah, animasi ringan).
-- Feedback benar/salah.
-- Skor akhir.
-- Halaman ringkasan skor.
+- QuestionComponent: type='question', variant='multipleChoice'|'trueFalse', title, prompt, choices[], correctChoiceIndex, feedbackCorrect, feedbackWrong, points, scoringStyle, geometry.
+- Capability: quiz + free boleh question. Lainnya tidak.
+- Validation: variant valid, prompt non-empty, choices 2-6 (multipleChoice) / exactly 2 (trueFalse), correctChoiceIndex valid, points >= 0, scoringStyle valid.
+- Store: addQuestionComponent, updateQuestionComponent, duplicatePage deep-copy.
+- Preview runtime: selectedChoiceIndex, isAnswered, score. Click answer → feedback + score once. Retry reset.
+- ScoringRecipes konkret: points, stars, badge. Resolver reads scoringStyle.
+- Answer option UX: multi-line, no nowrap, no ellipsis, no fixed-height, min-height + padding + overflow-wrap.
+- Export HTML: question runtime + answer selection + score display.
+- UI: Toolbar + Pertanyaan (quiz/free only), QuestionComponentView, Inspector editor.
 
-**Acceptance:**
+**Acceptance:** 22 criteria — see Scope L tests.
 
-- Tambah question → di-preview bisa dijawab.
-- Jawaban benar → feedback positif (style dari scoringRecipes).
-- Jawaban salah → feedback negatif.
-- Skor terakumulasi.
-- Halaman skor tampil di akhir.
+**Dilarang:** GameComponent/mission game, page-spam quiz, one question=one page, raw HTML/CSS/JS, AI custom script, full style editor, setPageRole, external quiz library, external drag/drop library.
 
 ---
 

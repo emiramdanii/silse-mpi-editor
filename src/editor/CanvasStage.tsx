@@ -12,11 +12,12 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useEditorStore } from '../store/editor-store';
-import { isCardComponent, isImageComponent, isNavigationComponent, isTextComponent } from '../components/component-utils';
+import { isCardComponent, isImageComponent, isNavigationComponent, isQuestionComponent, isTextComponent } from '../components/component-utils';
 import { TextComponentView } from '../components/TextComponentView';
 import { ImageComponentView } from '../components/ImageComponentView';
 import { CardComponentView } from '../components/CardComponentView';
 import { NavigationComponentView } from '../components/NavigationComponentView';
+import { QuestionComponentView } from '../components/QuestionComponentView';
 import { getCapability } from '../core/capability';
 import { getResolvedComponentStyle } from '../core/style/resolveComponentStyle';
 import { snapToGrid, clampRectToCanvas, CANVAS_WIDTH, CANVAS_HEIGHT, type Rect } from '../core/geometry';
@@ -217,6 +218,15 @@ export function CanvasStage() {
               )}
               {isNavigationComponent(component) && (
                 <NavigationComponentView
+                  component={component}
+                  resolvedStyle={resolvedStyle}
+                  selected={isSelected}
+                  onSelect={selectComponent}
+                  positionMode="fill"
+                />
+              )}
+              {isQuestionComponent(component) && (
+                <QuestionComponentView
                   component={component}
                   resolvedStyle={resolvedStyle}
                   selected={isSelected}

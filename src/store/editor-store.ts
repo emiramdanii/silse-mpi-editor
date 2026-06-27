@@ -41,6 +41,7 @@ import type {
   NavigationComponentVariant,
   PageComponent,
   PageRole,
+  QuestionComponent,
   SimplePage,
   SimpleProject,
   TextComponent,
@@ -51,6 +52,8 @@ import {
   IMAGE_COMPONENT_VARIANTS,
   NAVIGATION_ACTIONS,
   NAVIGATION_COMPONENT_VARIANTS,
+  QUESTION_COMPONENT_VARIANTS,
+  SCORING_STYLES,
   TEXT_COMPONENT_VARIANTS,
 } from '../core/types';
 import { createEmptyPage, createProject } from '../core/project-factory';
@@ -58,10 +61,12 @@ import {
   createCardComponent,
   createImageComponent,
   createNavigationComponent,
+  createQuestionComponent,
   createTextComponent,
   type CardComponentEditable,
   type ImageComponentEditable,
   type NavigationComponentEditable,
+  type QuestionComponentEditable,
   type TextComponentEditable,
 } from '../core/component-factory';
 import { canAddComponent, getCapability } from '../core/capability';
@@ -99,11 +104,13 @@ export type EditorState = {
     action: NavigationAction,
     overrides?: Partial<NavigationComponentEditable>,
   ) => string | null;
+  addQuestionComponent: (overrides?: Partial<QuestionComponentEditable>) => string | null;
   selectComponent: (componentId: string | null) => void;
   updateTextComponent: (componentId: string, patch: Partial<TextComponentEditable>) => void;
   updateImageComponent: (componentId: string, patch: Partial<ImageComponentEditable>) => void;
   updateCardComponent: (componentId: string, patch: Partial<CardComponentEditable>) => void;
   updateNavigationComponent: (componentId: string, patch: Partial<NavigationComponentEditable>) => void;
+  updateQuestionComponent: (componentId: string, patch: Partial<QuestionComponentEditable>) => void;
   updateComponentGeometry: (componentId: string, rect: Rect) => void;
   removeComponent: (componentId: string) => void;
   getSelectedComponent: () => PageComponent | null;
@@ -185,10 +192,25 @@ function sanitizeNavigationPatch(
       delete clean.action;
     }
   }
-  // If action changed to non-goto, clear targetPageId (set to undefined explicitly
-  // so the merge { ...c, ...cleanPatch } applies it to the component).
   if (clean.action !== undefined && clean.action !== 'goto') {
     clean.targetPageId = undefined;
+  }
+  return clean;
+}
+
+function sanitizeQuestionPatch(
+  patch: Partial<QuestionComponentEditable>,
+): Partial<QuestionComponentEditable> {
+  const clean: Partial<QuestionComponentEditable> = { ...patch };
+  if (clean.variant !== undefined) {
+    if (!QUESTION_COMPONENT_VARIANTS.includes(clean.variant as QuestionComponent['variant'])) {
+      delete clean.variant;
+    }
+  }
+  if (clean.scoringStyle !== undefined) {
+    if (!SCORING_STYLES.includes(clean.scoringStyle as QuestionComponent['scoringStyle'])) {
+      delete clean.scoringStyle;
+    }
   }
   return clean;
 }
@@ -256,6 +278,26 @@ function deepCopyComponentWithNewId(c: PageComponent): PageComponent {
       width: nc.width,
       height: nc.height,
     } as NavigationComponent;
+  }
+  if (c.type === 'question') {
+    const qc = c as QuestionComponent;
+    return {
+      id: newId,
+      type: 'question',
+      variant: qc.variant,
+      title: qc.title,
+      prompt: qc.prompt,
+      choices: qc.choices.map((ch) => ({ id: createComponentId(), text: ch.text })),
+      correctChoiceIndex: qc.correctChoiceIndex,
+      feedbackCorrect: qc.feedbackCorrect,
+      feedbackWrong: qc.feedbackWrong,
+      points: qc.points,
+      scoringStyle: qc.scoringStyle,
+      x: qc.x,
+      y: qc.y,
+      width: qc.width,
+      height: qc.height,
+    } as QuestionComponent;
   }
   // Unknown type — copy with new id (shouldn't occur).
   return { ...(c as Record<string, unknown>), id: newId } as PageComponent;
@@ -450,6 +492,21 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     return component.id;
   },
 
+  // ----- Component operations (M10 — question) -----
+
+  addQuestionComponent: (overrides) => {
+    const state = get();
+    const currentPage = state.project.pages.find(
+      (p) => p.id === state.project.currentPageId,
+    );
+    if (!currentPage) return null;
+    if (!canAddComponent(currentPage.role, 'question')) return null;
+
+    const component = createQuestionComponent(overrides);
+    set((s) => addComponentToCurrentPage(s, component));
+    return component.id;
+  },
+
   // ----- Selection + update -----
 
   selectComponent: (componentId) => {
@@ -541,6 +598,28 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           components: p.components.map((c) => {
             if (c.id !== componentId || c.type !== 'navigation') return c;
             return { ...c, ...cleanPatch, type: 'navigation' } as NavigationComponent;
+          }),
+        };
+      });
+      return { project: { ...state.project, pages } };
+    });
+  },
+
+  updateQuestionComponent: (componentId, patch) => {
+    const cleanPatch = sanitizeQuestionPatch(patch);
+    set((state) => {
+      const page = state.project.pages.find((p) => p.id === state.project.currentPageId);
+      if (!page) return state;
+      const exists = page.components.some((c) => c.id === componentId && c.type === 'question');
+      if (!exists) return state;
+
+      const pages = state.project.pages.map((p) => {
+        if (p.id !== state.project.currentPageId) return p;
+        return {
+          ...p,
+          components: p.components.map((c) => {
+            if (c.id !== componentId || c.type !== 'question') return c;
+            return { ...c, ...cleanPatch, type: 'question' } as QuestionComponent;
           }),
         };
       });

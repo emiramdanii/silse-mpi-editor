@@ -30,8 +30,8 @@ Alur produk: AI generate MPI JSON → app import → style/layout/interaksi bisa
 | M6 | Export HTML + Style Resolver Solid | Done |
 | M7 | Save / Load + Style Pack Save | Done |
 | M8 | AI JSON Import + Style Import MVP | Done |
-| **M9** | **Direct Manipulation + Layout Guard** | **Active** |
-| M10 | Question + Scoring Style | Planned |
+| M9 | Direct Manipulation + Layout Guard | Done |
+| **M10** | **Question + Scoring Style** | **Active** |
 | M11 | Advanced Interactive Components | Planned |
 | M12 | Style Studio + Template Pack | Planned |
 | M13 | Production Ready | Planned |

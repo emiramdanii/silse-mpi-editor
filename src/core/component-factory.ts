@@ -23,6 +23,10 @@ import type {
   NavigationComponent,
   NavigationComponentVariant,
   PageRole,
+  QuestionChoice,
+  QuestionComponent,
+  QuestionComponentVariant,
+  ScoringStyle,
   TextComponent,
   TextComponentVariant,
 } from './types';
@@ -169,4 +173,54 @@ export function createNavigationComponent(
     ...DEFAULT_NAVIGATION_COMPONENT,
     ...overrides,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Question Component (M10)
+// ---------------------------------------------------------------------------
+
+export type QuestionComponentEditable = Omit<QuestionComponent, 'id' | 'type'>;
+
+export const DEFAULT_QUESTION_VARIANT: QuestionComponentVariant = 'multipleChoice';
+export const DEFAULT_SCORING_STYLE: ScoringStyle = 'points';
+
+export const DEFAULT_QUESTION_COMPONENT: Omit<
+  QuestionComponentEditable,
+  'variant' | 'title' | 'prompt' | 'choices' | 'correctChoiceIndex' | 'feedbackCorrect' | 'feedbackWrong' | 'points' | 'scoringStyle'
+> = {
+  x: 100,
+  y: 100,
+  width: 600,
+  height: 400,
+};
+
+function defaultChoices(): QuestionChoice[] {
+  return [
+    { id: createComponentId(), text: 'Pilihan A' },
+    { id: createComponentId(), text: 'Pilihan B' },
+  ];
+}
+
+export function createQuestionComponent(
+  overrides: Partial<QuestionComponentEditable> = {},
+): QuestionComponent {
+  return {
+    id: createComponentId(),
+    type: 'question',
+    variant: DEFAULT_QUESTION_VARIANT,
+    title: overrides.title ?? 'Pertanyaan',
+    prompt: overrides.prompt ?? 'Pertanyaan...',
+    choices: overrides.choices ?? defaultChoices(),
+    correctChoiceIndex: overrides.correctChoiceIndex ?? 0,
+    feedbackCorrect: overrides.feedbackCorrect ?? 'Benar!',
+    feedbackWrong: overrides.feedbackWrong ?? 'Belum tepat. Coba lagi.',
+    points: overrides.points ?? 10,
+    scoringStyle: overrides.scoringStyle ?? DEFAULT_SCORING_STYLE,
+    ...DEFAULT_QUESTION_COMPONENT,
+    ...overrides,
+  };
+}
+
+export function createQuestionChoice(text: string): QuestionChoice {
+  return { id: createComponentId(), text };
 }

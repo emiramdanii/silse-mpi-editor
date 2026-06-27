@@ -916,9 +916,9 @@ describe('editor store — scope-lock (M4)', () => {
     expect((store as unknown as Record<string, unknown>).setPageRole).toBeUndefined();
   });
 
-  it('store does NOT expose addQuestionComponent (M11 feature)', () => {
+  it('store EXPOSES addQuestionComponent (M10 active)', () => {
     const store = useEditorStore.getState();
-    expect((store as unknown as Record<string, unknown>).addQuestionComponent).toBeUndefined();
+    expect(typeof store.addQuestionComponent).toBe('function');
   });
 
   it('store EXPOSES removeComponent (M9 active)', () => {

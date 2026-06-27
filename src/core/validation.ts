@@ -22,6 +22,8 @@ import {
   NAVIGATION_COMPONENT_VARIANTS,
   PAGE_ROLES,
   PROJECT_VERSION,
+  QUESTION_COMPONENT_VARIANTS,
+  SCORING_STYLES,
   TEXT_COMPONENT_VARIANTS,
   type CardComponentVariant,
   type ComponentType,
@@ -31,6 +33,8 @@ import {
   type NavigationComponentVariant,
   type PageComponent,
   type PageRole,
+  type QuestionComponentVariant,
+  type ScoringStyle,
   type SimplePage,
   type SimpleProject,
   type TextComponentVariant,
@@ -84,6 +88,9 @@ export function validateComponent(component: unknown): ValidationResult {
   }
   if (component.type === 'navigation') {
     return validateNavigationComponent(component);
+  }
+  if (component.type === 'question') {
+    return validateQuestionComponent(component);
   }
   return { ok: true };
 }
@@ -211,6 +218,51 @@ function validateNavigationComponent(component: Record<string, unknown>): Valida
   // targetPageId untuk next/prev boleh undefined; kalau ada harus string
   if (component.targetPageId !== undefined && !isString(component.targetPageId)) {
     return fail('navigation component.targetPageId must be a string if present');
+  }
+  return { ok: true };
+}
+
+/**
+ * Validate a question component (M10 scope).
+ */
+function validateQuestionComponent(component: Record<string, unknown>): ValidationResult {
+  if (!isString(component.variant)) {
+    return fail('question component.variant is required');
+  }
+  if (!QUESTION_COMPONENT_VARIANTS.includes(component.variant as QuestionComponentVariant)) {
+    return fail(`question component.variant must be one of: ${QUESTION_COMPONENT_VARIANTS.join(', ')}`);
+  }
+  if (!isString(component.prompt) || component.prompt.length === 0) {
+    return fail('question component.prompt must be a non-empty string');
+  }
+  if (!Array.isArray(component.choices)) {
+    return fail('question component.choices must be an array');
+  }
+  const choices = component.choices as unknown[];
+  const variant = component.variant as QuestionComponentVariant;
+  if (variant === 'multipleChoice') {
+    if (choices.length < 2 || choices.length > 6) {
+      return fail('question component.choices must have 2-6 items for multipleChoice');
+    }
+  } else if (variant === 'trueFalse') {
+    if (choices.length !== 2) {
+      return fail('question component.choices must have exactly 2 items for trueFalse');
+    }
+  }
+  if (!isNumber(component.correctChoiceIndex) || component.correctChoiceIndex < 0 || component.correctChoiceIndex >= choices.length) {
+    return fail('question component.correctChoiceIndex must be a valid index within choices');
+  }
+  if (!isString(component.feedbackCorrect)) {
+    return fail('question component.feedbackCorrect must be a string');
+  }
+  if (!isString(component.feedbackWrong)) {
+    return fail('question component.feedbackWrong must be a string');
+  }
+  if (!isNumber(component.points) || component.points < 0) {
+    return fail('question component.points must be a non-negative number');
+  }
+  if (!isString(component.scoringStyle) || !SCORING_STYLES.includes(component.scoringStyle as ScoringStyle)) {
+    return fail(`question component.scoringStyle must be one of: ${SCORING_STYLES.join(', ')}`);
   }
   return { ok: true };
 }

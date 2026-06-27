@@ -23,6 +23,7 @@ export function Toolbar() {
   const addImageComponent = useEditorStore((s) => s.addImageComponent);
   const addCardComponent = useEditorStore((s) => s.addCardComponent);
   const addNavigationComponent = useEditorStore((s) => s.addNavigationComponent);
+  const addQuestionComponent = useEditorStore((s) => s.addQuestionComponent);
   const saveCurrent = useEditorStore((s) => s.saveCurrent);
   const loadCurrent = useEditorStore((s) => s.loadCurrent);
   const resetProject = useEditorStore((s) => s.resetProject);
@@ -41,6 +42,7 @@ export function Toolbar() {
   const canImage = role ? canAddComponent(role, 'image') : false;
   const canCard = role ? canAddComponent(role, 'card') : false;
   const canNavigation = role ? canAddComponent(role, 'navigation') : false;
+  const canQuestion = role ? canAddComponent(role, 'question') : false;
 
   const handleAddText = () => { addTextComponent(); };
   const handleAddImage = () => {
@@ -52,6 +54,10 @@ export function Toolbar() {
   const handleAddNavigation = () => {
     const action: NavigationAction = 'next';
     addNavigationComponent('Berikutnya', action);
+  };
+
+  const handleAddQuestion = () => {
+    addQuestionComponent();
   };
 
   const handleExport = () => {
@@ -223,6 +229,15 @@ export function Toolbar() {
         data-milestone="M5"
       >
         + Navigasi
+      </button>
+      <button
+        onClick={handleAddQuestion}
+        disabled={!canQuestion}
+        title={canQuestion ? 'Tambah pertanyaan' : 'Tidak diizinkan di halaman ini'}
+        data-action="add-question"
+        data-milestone="M10"
+      >
+        + Pertanyaan
       </button>
       <span className="toolbar__divider" />
       <button

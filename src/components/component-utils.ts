@@ -12,6 +12,7 @@ import type {
   ImageComponent,
   NavigationComponent,
   PageComponent,
+  QuestionComponent,
   TextComponent,
 } from '../core/types';
 
@@ -29,4 +30,8 @@ export function isCardComponent(c: PageComponent): c is CardComponent {
 
 export function isNavigationComponent(c: PageComponent): c is NavigationComponent {
   return c.type === 'navigation';
+}
+
+export function isQuestionComponent(c: PageComponent): c is QuestionComponent {
+  return c.type === 'question';
 }

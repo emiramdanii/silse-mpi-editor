@@ -252,11 +252,49 @@ export type PageComponent =
   | TextComponent
   | ImageComponent
   | CardComponent
-  | NavigationComponent;
+  | NavigationComponent
+  | QuestionComponent;
 
 // ---------------------------------------------------------------------------
 // Component type literals — exported as constants for runtime guards
 // ---------------------------------------------------------------------------
 
-export const COMPONENT_TYPES = ['text', 'image', 'card', 'navigation'] as const;
+export const COMPONENT_TYPES = ['text', 'image', 'card', 'navigation', 'question'] as const;
 export type ComponentType = (typeof COMPONENT_TYPES)[number];
+
+// ---------------------------------------------------------------------------
+// Question Component (M10)
+// ---------------------------------------------------------------------------
+
+export const QUESTION_COMPONENT_VARIANTS = [
+  'multipleChoice',
+  'trueFalse',
+] as const;
+
+export type QuestionComponentVariant = (typeof QUESTION_COMPONENT_VARIANTS)[number];
+
+export const SCORING_STYLES = [
+  'points',
+  'stars',
+  'badge',
+] as const;
+
+export type ScoringStyle = (typeof SCORING_STYLES)[number];
+
+export type QuestionChoice = {
+  id: string;
+  text: string;
+};
+
+export type QuestionComponent = BaseComponent & {
+  type: 'question';
+  variant: QuestionComponentVariant;
+  title: string;
+  prompt: string;
+  choices: QuestionChoice[];
+  correctChoiceIndex: number;
+  feedbackCorrect: string;
+  feedbackWrong: string;
+  points: number;
+  scoringStyle: ScoringStyle;
+};
