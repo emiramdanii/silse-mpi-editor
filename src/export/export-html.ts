@@ -63,6 +63,15 @@ type ExportRenderComponent = {
   label?: string;
   action?: string;
   targetPageId?: string;
+  // Question-specific (M10)
+  questionTitle?: string;
+  prompt?: string;
+  choices?: { id: string; text: string }[];
+  correctChoiceIndex?: number;
+  feedbackCorrect?: string;
+  feedbackWrong?: string;
+  points?: number;
+  scoringStyle?: string;
   // Pre-computed resolved style from resolver
   resolvedStyle: {
     inlineStyle: Record<string, string | number>;
@@ -131,6 +140,15 @@ function buildExportRenderComponent(
     base.label = component.label;
     base.action = component.action;
     base.targetPageId = component.targetPageId ?? '';
+  } else if (component.type === 'question') {
+    base.questionTitle = component.title;
+    base.prompt = component.prompt;
+    base.choices = component.choices;
+    base.correctChoiceIndex = component.correctChoiceIndex;
+    base.feedbackCorrect = component.feedbackCorrect;
+    base.feedbackWrong = component.feedbackWrong;
+    base.points = component.points;
+    base.scoringStyle = component.scoringStyle;
   }
 
   return base;
@@ -251,6 +269,39 @@ body {
   align-items: center;
   justify-content: center;
 }
+
+#silse-canvas .silse-question-choice {
+  padding: 10px 14px;
+  min-height: 44px;
+  height: auto;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  transition: background-color 0.15s ease-out;
+}
+
+#silse-canvas .silse-question-feedback {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+#silse-toolbar .silse-score {
+  margin-left: 12px;
+  font-weight: bold;
+  color: #fbbf24;
+}
 `.trim();
 }
 
@@ -264,11 +315,18 @@ function generateJS(renderModelJson: string): string {
   var MODEL = ${renderModelJson};
   var pages = MODEL.pages;
   var currentPageIdx = 0;
+  var questionAnswers = {};
+  var totalScore = 0;
 
   var canvas = document.getElementById('silse-canvas');
   var prevBtn = document.getElementById('silse-nav-prev');
   var nextBtn = document.getElementById('silse-nav-next');
   var pageInfo = document.getElementById('silse-page-info');
+  var scoreDisplay = document.getElementById('silse-score');
+
+  function updateScoreDisplay() {
+    if (scoreDisplay) scoreDisplay.textContent = 'Skor: ' + totalScore;
+  }
 
   function renderPage(idx) {
     if (idx < 0 || idx >= pages.length) return;
@@ -390,6 +448,89 @@ function generateJS(renderModelJson: string): string {
       return el;
     }
 
+    if (comp.type === 'question') {
+      el = document.createElement('div');
+      el.className = 'silse-question';
+      el.style.cssText = style + 'box-sizing:border-box;display:flex;flex-direction:column;gap:8px;overflow:auto;padding:12px;';
+
+      if (comp.questionTitle) {
+        var qTitle = document.createElement('strong');
+        qTitle.style.fontSize = '16px';
+        qTitle.textContent = comp.questionTitle;
+        el.appendChild(qTitle);
+      }
+
+      var qPrompt = document.createElement('div');
+      qPrompt.style.cssText = 'font-size:15px;font-weight:500;margin-bottom:8px;white-space:normal;overflow-wrap:anywhere;';
+      qPrompt.textContent = comp.prompt || '';
+      el.appendChild(qPrompt);
+
+      var choicesContainer = document.createElement('div');
+      choicesContainer.style.cssText = 'display:flex;flex-direction:column;gap:6px;';
+
+      var existingAnswer = questionAnswers[comp.id];
+
+      for (var ci = 0; ci < comp.choices.length; ci++) {
+        (function(choiceIdx, choice, compId, correctIdx, pts, fbCorrect, fbWrong) {
+          var choiceEl = document.createElement('div');
+          choiceEl.className = 'silse-question-choice';
+          choiceEl.dataset.choiceIndex = String(choiceIdx);
+
+          var bg = '#ffffff';
+          if (existingAnswer && existingAnswer.isAnswered) {
+            if (choiceIdx === correctIdx) bg = '#d1fae5';
+            else if (choiceIdx === existingAnswer.selectedChoiceIndex) bg = '#fee2e2';
+          }
+          choiceEl.style.backgroundColor = bg;
+
+          var letter = document.createElement('span');
+          letter.style.fontWeight = 'bold';
+          letter.style.minWidth = '20px';
+          letter.textContent = String.fromCharCode(65 + choiceIdx) + '.';
+          choiceEl.appendChild(letter);
+
+          var choiceText = document.createElement('span');
+          choiceText.style.flex = '1';
+          choiceText.style.whiteSpace = 'normal';
+          choiceText.style.overflowWrap = 'anywhere';
+          choiceText.textContent = choice.text;
+          choiceEl.appendChild(choiceText);
+
+          choiceEl.addEventListener('click', function() {
+            var ans = questionAnswers[compId];
+            if (ans && ans.isAnswered) return; // already answered, no re-score
+
+            var isCorrect = choiceIdx === correctIdx;
+            questionAnswers[compId] = { selectedChoiceIndex: choiceIdx, isAnswered: true };
+
+            if (isCorrect) {
+              totalScore += pts;
+              updateScoreDisplay();
+            }
+
+            // Re-render this question to show feedback
+            renderPage(currentPageIdx);
+          });
+
+          choicesContainer.appendChild(choiceEl);
+        })(ci, comp.choices[ci], comp.id, comp.correctChoiceIndex, comp.points, comp.feedbackCorrect, comp.feedbackWrong);
+      }
+      el.appendChild(choicesContainer);
+
+      // Show feedback if answered
+      if (existingAnswer && existingAnswer.isAnswered) {
+        var feedback = document.createElement('div');
+        feedback.className = 'silse-question-feedback';
+        var isCorrectAnswer = existingAnswer.selectedChoiceIndex === comp.correctChoiceIndex;
+        feedback.style.backgroundColor = isCorrectAnswer ? '#d1fae5' : '#fee2e2';
+        feedback.style.color = isCorrectAnswer ? '#065f46' : '#991b1b';
+        feedback.textContent = isCorrectAnswer ? comp.feedbackCorrect : comp.feedbackWrong;
+        el.appendChild(feedback);
+      }
+
+      return el;
+    }
+
     return null;
   }
 
@@ -461,6 +602,7 @@ ${css}
     <button id="silse-nav-prev">← Sebelumnya</button>
     <span id="silse-page-info">1 / 1</span>
     <button id="silse-nav-next">Berikutnya →</button>
+    <span id="silse-score" class="silse-score">Skor: 0</span>
   </div>
   <div id="silse-canvas"></div>
   <script>
