@@ -6,9 +6,9 @@ Setiap milestone = satu batch. Tidak lompat, tidak sekalian, tidak tambah fitur 
 
 | Milestone | Nama                  | Status      |
 | --------- | --------------------- | ----------- |
-| M0        | Repo Skeleton         | In Progress |
-| M1        | Editor Kosong         | In Progress |
-| M2        | Text Block            | Planned     |
+| M0        | Repo Skeleton         | Done        |
+| M1        | Editor Kosong         | Done        |
+| M2        | Text Block            | Next        |
 | M3        | Page Flow Lengkap     | Planned     |
 | M4        | Image Block           | Planned     |
 | M5        | Button + Preview      | Planned     |
@@ -58,6 +58,9 @@ Setiap milestone = satu batch. Tidak lompat, tidak sekalian, tidak tambah fitur 
 - Halaman pertama tampil di page panel.
 - Tambah halaman → jumlah halaman bertambah.
 - Pilih halaman lain → `currentPageId` berubah.
+
+**Scope lock (diperketat setelah Batch 1A):**
+Operasi `renamePage`, `deletePage`, dan `duplicatePage` **TIDAK boleh ada** di store atau UI M1. Fitur tersebut milik M3 dan harus ditunda sampai M3 dimulai. Boundary test scope-lock memastikan hal ini.
 
 ---
 
@@ -257,3 +260,21 @@ Setiap milestone = satu batch. Tidak lompat, tidak sekalian, tidak tambah fitur 
 3. **Tidak tambah fitur di luar scope.** Jika tergoda tambah sesuatu, tulis di backlog, jangan masukkan commit.
 4. **Boundary test wajib lulus** di setiap milestone.
 5. **Test, typecheck, build wajib lulus** sebelum milestone ditutup.
+
+## Aturan Scope-Lock (ditambahkan Batch 1A)
+
+Setiap milestone punya daftar fitur eksplisit di section "Fitur:". Yang **TIDAK** ada di daftar itu **TIDAK boleh diimplementasikan**, bahkan jika:
+
+- Kelihatannya sepele (1 baris kode).
+- Akan dipakai di milestone berikutnya.
+- Implementasinya sudah setengah jadi.
+- Mempermudah testing atau demo.
+
+**Pencegahan scope leak:**
+
+1. Sebelum mulai milestone, baca section "Fitur:" dan "Scope lock:" (jika ada) untuk milestone itu.
+2. Jika ragu apakah sesuatu masuk scope, asumsikan **tidak** masuk. Tunda ke milestone berikutnya.
+3. Setiap commit harus bisa dipetakan ke satu poin di section "Fitur:" milestone aktif.
+4. Boundary test scope-lock (di `src/tests/scope-lock.test.ts`) memastikan fitur milestone lain belum aktif di UI/store sampai milestone itu resmi dimulai.
+
+**Pelanggaran scope-lock = milestone dikembalikan ke status "In Progress" dan harus di-patch ulang sebelum lanjut.**

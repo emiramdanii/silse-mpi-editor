@@ -1,11 +1,16 @@
 import { useEditorStore } from '../store/editor-store';
 
+/**
+ * PagePanel — daftar halaman di sisi kiri editor.
+ *
+ * SCOPE: M1 — Editor Kosong.
+ * Hanya: tampilkan list halaman, tombol tambah, klik untuk pilih.
+ * Operasi rename/delete/duplicate ditunda ke M3.
+ */
 export function PagePanel() {
   const project = useEditorStore((s) => s.project);
   const addPage = useEditorStore((s) => s.addPage);
   const selectPage = useEditorStore((s) => s.selectPage);
-  const deletePage = useEditorStore((s) => s.deletePage);
-  const duplicatePage = useEditorStore((s) => s.duplicatePage);
 
   return (
     <aside className="page-panel">
@@ -30,29 +35,6 @@ export function PagePanel() {
             >
               <span className="page-item__num">{idx + 1}</span>
               <span className="page-item__title">{page.title}</span>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  duplicatePage(page.id);
-                }}
-                style={{ padding: '2px 6px', fontSize: 11 }}
-                title="Duplikat halaman"
-              >
-                ⧉
-              </button>
-              {project.pages.length > 1 && (
-                <button
-                  className="danger"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deletePage(page.id);
-                  }}
-                  style={{ padding: '2px 6px', fontSize: 11 }}
-                  title="Hapus halaman"
-                >
-                  ×
-                </button>
-              )}
             </div>
           );
         })}

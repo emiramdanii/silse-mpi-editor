@@ -66,7 +66,14 @@ Boundary test ada di `src/tests/boundary.test.ts`.
 3. **Tidak ada style engine besar.** Styling langsung di komponen, inline style atau CSS module minimal.
 4. **Tidak ada legacy adapter.** Tidak ada kode yang menerima format lama dan menerjemahkannya.
 5. **Tidak ada fallback V5.** Jika data tidak valid, tampilkan error. Jangan coba fallback ke format lama.
+6. **Scope-lock per milestone (ditambahkan Batch 1A).** Setiap milestone punya daftar fitur eksplisit di `docs/ROADMAP.md`. Yang tidak ada di daftar tidak boleh diimplementasikan, bahkan jika kelihatannya sepele atau akan dipakai nanti. Boundary test scope-lock ada di `src/tests/scope-lock.test.tsx` dan assertion scope-lock di `src/tests/store.test.ts`. Pelanggaran scope-lock = milestone dikembalikan ke "In Progress" dan harus di-patch ulang.
 
 ## Boundary Test
 
-File `src/tests/boundary.test.ts` wajib lulus sebelum setiap commit. Test ini membaca semua file di `src/` dan memastikan tidak ada identifier terlarang di atas. Jika ada, build gagal.
+File-file berikut wajib lulus sebelum setiap commit:
+
+| File                                  | Tujuan                                                     |
+| ------------------------------------- | --------------------------------------------------------- |
+| `src/tests/boundary.test.ts`          | Memastikan tidak ada identifier V5 terlarang di `src/`.   |
+| `src/tests/scope-lock.test.tsx`       | Memastikan fitur milestone lain belum aktif di UI.        |
+| `src/tests/store.test.ts` (scope-lock)| Memastikan store tidak expose operasi milestone lain.      |
