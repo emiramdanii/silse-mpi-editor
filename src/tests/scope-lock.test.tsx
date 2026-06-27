@@ -1,14 +1,21 @@
 /**
  * Scope-lock test — UI level.
  *
- * Memastikan bahwa fitur milestone mendatang TIDAK aktif di UI M1:
- *   - Toolbar: tombol "+ Teks" (M2), "+ Gambar" (M4), "+ Tombol" (M5),
- *             "Export HTML" (M6), "Preview" (M5) semua harus disabled.
- *   - PagePanel: tidak ada tombol duplicate/delete/rename (M3).
- *   - Inspector: tidak ada editor block (M2+), hanya placeholder info.
+ * M2 LOCK (bumped from M1 lock in Batch 2):
  *
- * Test ini mencegah scope leak di arah UI. Jika seseorang
- * meng-enable salah satu tombol di atas sebelum milestone-nya tiba,
+ *   ALLOWED in M2:
+ *     - Toolbar: "+ Teks" ENABLED
+ *     - Inspector: text block editor fields (text/x/y/width/height/fontSize/color/fontWeight/align)
+ *       visible WHEN a text block is selected
+ *
+ *   STILL LOCKED in M2:
+ *     - Toolbar: "+ Gambar" (M4), "+ Tombol" (M5), "Export HTML" (M6), "Preview" (M5) DISABLED
+ *     - PagePanel: NO duplicate/delete/rename buttons (M3)
+ *     - Inspector: NO image-specific fields (src/objectFit) — M4
+ *     - Inspector: NO button-specific fields (action/targetPageId) — M5
+ *
+ * Test ini mencegah scope leak. Jika seseorang meng-enable tombol M4+,
+ * atau menambah field image/button di inspector sebelum milestone-nya,
  * test ini akan gagal.
  */
 
@@ -23,40 +30,51 @@ function queryByAction(container: HTMLElement, action: string): HTMLElement | nu
   return container.querySelector(`[data-action="${action}"]`);
 }
 
-describe('scope-lock — Toolbar M2+ buttons must be disabled in M1', () => {
+describe('scope-lock M2 — Toolbar: + Teks ENABLED, others DISABLED', () => {
   beforeEach(() => {
     useEditorStore.getState().newProject();
   });
 
-  it('"+ Teks" button is disabled (M2 not started)', () => {
+  it('"+ Teks" button is ENABLED (M2 active)', () => {
     const { container } = render(<Toolbar />);
     const btn = queryByAction(container, 'add-text');
     expect(btn).not.toBeNull();
-    expect((btn as HTMLButtonElement).disabled).toBe(true);
+    expect((btn as HTMLButtonElement).disabled).toBe(false);
   });
 
-  it('"+ Gambar" button is disabled (M4 not started)', () => {
+  it('"+ Teks" button calls addTextBlock when clicked', () => {
+    const { container } = render(<Toolbar />);
+    const btn = queryByAction(container, 'add-text') as HTMLButtonElement;
+    btn.click();
+    const { project, selectedBlockId } = useEditorStore.getState();
+    const page = project.pages.find((p) => p.id === project.currentPageId)!;
+    expect(page.blocks).toHaveLength(1);
+    expect(page.blocks[0].type).toBe('text');
+    expect(selectedBlockId).toBe(page.blocks[0].id);
+  });
+
+  it('"+ Gambar" button is still disabled (M4 not started)', () => {
     const { container } = render(<Toolbar />);
     const btn = queryByAction(container, 'add-image');
     expect(btn).not.toBeNull();
     expect((btn as HTMLButtonElement).disabled).toBe(true);
   });
 
-  it('"+ Tombol" button is disabled (M5 not started)', () => {
+  it('"+ Tombol" button is still disabled (M5 not started)', () => {
     const { container } = render(<Toolbar />);
     const btn = queryByAction(container, 'add-button');
     expect(btn).not.toBeNull();
     expect((btn as HTMLButtonElement).disabled).toBe(true);
   });
 
-  it('"Export HTML" button is disabled (M6 not started)', () => {
+  it('"Export HTML" button is still disabled (M6 not started)', () => {
     const { container } = render(<Toolbar />);
     const btn = queryByAction(container, 'export-html');
     expect(btn).not.toBeNull();
     expect((btn as HTMLButtonElement).disabled).toBe(true);
   });
 
-  it('"Preview" button is disabled (M5 not started)', () => {
+  it('"Preview" button is still disabled (M5 not started)', () => {
     const { container } = render(<Toolbar />);
     const btn = queryByAction(container, 'preview');
     expect(btn).not.toBeNull();
@@ -64,7 +82,7 @@ describe('scope-lock — Toolbar M2+ buttons must be disabled in M1', () => {
   });
 });
 
-describe('scope-lock — PagePanel M3 controls must not exist in M1', () => {
+describe('scope-lock M2 — PagePanel: still no M3 controls', () => {
   beforeEach(() => {
     useEditorStore.getState().newProject();
   });
@@ -88,24 +106,45 @@ describe('scope-lock — PagePanel M3 controls must not exist in M1', () => {
   });
 });
 
-describe('scope-lock — Inspector must be placeholder-only in M1', () => {
+describe('scope-lock M2 — Inspector: text fields ONLY (no image/button fields)', () => {
   beforeEach(() => {
     useEditorStore.getState().newProject();
   });
 
-  it('Inspector renders placeholder text mentioning M2', () => {
+  it('Inspector shows placeholder when no block is selected', () => {
     const { container } = render(<Inspector />);
-    expect(container.textContent).toMatch(/M2/);
+    // M2 placeholder mentions "Klik block" or "+ Teks"
+    expect(container.textContent).toMatch(/Klik|Teks/);
   });
 
-  it('Inspector does NOT render block editor inputs (no fontSize/color/align)', () => {
+  it('Inspector shows text block fields when a text block is selected', () => {
+    useEditorStore.getState().addTextBlock();
     const { container } = render(<Inspector />);
-    // M2 will add these. For M1, they must not exist.
-    const fontSizeInputs = container.querySelectorAll('[data-field="fontSize"]');
-    const colorInputs = container.querySelectorAll('[data-field="color"]');
-    const alignInputs = container.querySelectorAll('[data-field="align"]');
-    expect(fontSizeInputs.length).toBe(0);
-    expect(colorInputs.length).toBe(0);
-    expect(alignInputs.length).toBe(0);
+
+    // M2 in-scope fields
+    expect(container.querySelector('[data-field="text"]')).not.toBeNull();
+    expect(container.querySelector('[data-field="x"]')).not.toBeNull();
+    expect(container.querySelector('[data-field="y"]')).not.toBeNull();
+    expect(container.querySelector('[data-field="width"]')).not.toBeNull();
+    expect(container.querySelector('[data-field="height"]')).not.toBeNull();
+    expect(container.querySelector('[data-field="fontSize"]')).not.toBeNull();
+    expect(container.querySelector('[data-field="color"]')).not.toBeNull();
+    expect(container.querySelector('[data-field="fontWeight"]')).not.toBeNull();
+    expect(container.querySelector('[data-field="align"]')).not.toBeNull();
+  });
+
+  it('Inspector does NOT render image-specific fields (M4)', () => {
+    useEditorStore.getState().addTextBlock();
+    const { container } = render(<Inspector />);
+    expect(container.querySelector('[data-field="src"]')).toBeNull();
+    expect(container.querySelector('[data-field="objectFit"]')).toBeNull();
+  });
+
+  it('Inspector does NOT render button-specific fields (M5)', () => {
+    useEditorStore.getState().addTextBlock();
+    const { container } = render(<Inspector />);
+    expect(container.querySelector('[data-field="label"]')).toBeNull();
+    expect(container.querySelector('[data-field="action"]')).toBeNull();
+    expect(container.querySelector('[data-field="targetPageId"]')).toBeNull();
   });
 });

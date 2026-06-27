@@ -1,10 +1,14 @@
 import { useEditorStore } from '../store/editor-store';
+import { isTextBlock } from '../blocks/block-utils';
+import { TextBlockView } from '../blocks/TextBlockView';
 
 const CANVAS_WIDTH = 1280;
 const CANVAS_HEIGHT = 720;
 
 export function CanvasStage() {
   const currentPage = useEditorStore((s) => s.project.pages.find((p) => p.id === s.project.currentPageId) ?? null);
+  const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
+  const selectBlock = useEditorStore((s) => s.selectBlock);
 
   const bg =
     currentPage?.background.type === 'color'
@@ -24,17 +28,33 @@ export function CanvasStage() {
           height: CANVAS_HEIGHT,
           background: bg,
         }}
+        onClick={() => selectBlock(null)}
       >
         <div className="canvas-frame__label">
           {CANVAS_WIDTH} × {CANVAS_HEIGHT} · {currentPage?.title ?? '—'}
         </div>
+
         {currentPage && currentPage.blocks.length === 0 && (
           <div className="canvas-empty">
             <div className="canvas-empty__title">Halaman kosong</div>
-            <div>Tambahkan text/image/button block mulai dari M2.</div>
+            <div>Klik tombol + Teks di toolbar untuk menambah block.</div>
           </div>
         )}
-        {/* Block renderers will be added in M2/M4/M5 */}
+
+        {currentPage?.blocks.map((block) => {
+          if (isTextBlock(block)) {
+            return (
+              <TextBlockView
+                key={block.id}
+                block={block}
+                selected={block.id === selectedBlockId}
+                onSelect={selectBlock}
+              />
+            );
+          }
+          // Image and button blocks render in M4/M5.
+          return null;
+        })}
       </div>
     </main>
   );

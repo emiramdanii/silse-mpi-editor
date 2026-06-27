@@ -8,8 +8,8 @@ Setiap milestone = satu batch. Tidak lompat, tidak sekalian, tidak tambah fitur 
 | --------- | --------------------- | ----------- |
 | M0        | Repo Skeleton         | Done        |
 | M1        | Editor Kosong         | Done        |
-| M2        | Text Block            | Next        |
-| M3        | Page Flow Lengkap     | Planned     |
+| M2        | Text Block            | Done        |
+| M3        | Page Flow Lengkap     | Next        |
 | M4        | Image Block           | Planned     |
 | M5        | Button + Preview      | Planned     |
 | M6        | Export HTML           | Planned     |
@@ -78,6 +78,11 @@ Operasi `renamePage`, `deletePage`, dan `duplicatePage` **TIDAK boleh ada** di s
 - Tambah teks → teks muncul di canvas.
 - Edit teks → canvas berubah real-time.
 - Edit posisi/ukuran via inspector → block bergerak/berubah.
+
+**Scope lock:**
+- `removeBlock` sengaja **ditunda** — bukan scope M2. Block tidak bisa dihapus sampai milestone drag/resize (M8) atau milestone khusus.
+- Operasi `addImageBlock`/`addButtonBlock` **tidak boleh ada** di store/UI sampai M4/M5.
+- Scope-lock test (`src/tests/scope-lock.test.tsx`) di-bump dari M1-lock ke M2-lock: tombol `+ Teks` ENABLED, semua tombol lain DISABLED, inspector menampilkan field text-block saja (tidak ada field image/button).
 
 ---
 
