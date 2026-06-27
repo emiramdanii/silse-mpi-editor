@@ -13,8 +13,8 @@
 | M0 | Repo Skeleton | Done |
 | M1 | Editor Kosong | Done |
 | B1A | Scope-Lock Patch | Done |
-| **B1B** | **Core Contract, Schema, Style Adapter Lock** | **Next (required before M2)** |
-| M2 | Text Block + Text Role Dasar | Planned |
+| B1B | Core Contract, Schema, Style Adapter Lock | Done |
+| **M2** | **Text Block + Text Role Dasar** | **Active** |
 | M3 | Page Flow Lengkap | Planned |
 | M4 | Image Block + Image Variant | Planned |
 | M5 | Button + Preview + Interaction Role | Planned |

@@ -4,38 +4,87 @@
  * Layer: store
  * Allowed imports: ../core
  *
- * SCOPE: M1 — Editor Kosong.
- * Hanya operasi project lifecycle dan page dasar (add/select).
- * Operasi rename/delete/duplicate page ditunda ke M3 (Page Flow Lengkap).
- * Jangan tambahkan operasi block sampai M2.
+ * SCOPE:
+ *   M1 — project lifecycle + page add/select.
+ *   M2 — text block: addTextBlock, selectBlock, updateTextBlock.
+ *
+ * Kontrak M2 (docs/CORE_PRODUCT_CONTRACT.md section 5):
+ *   Setiap text block WAJIB punya variant. Default = 'body'.
+ *   updateTextBlock tidak boleh menghapus field variant.
+ *
+ * Operasi rename/delete/duplicate page (M3) belum ada.
+ * Operasi image/button block (M4/M5) belum ada.
+ * Operasi removeBlock sengaja ditunda — bukan scope M2.
  */
 
 import { create } from 'zustand';
-import type { SimplePage, SimpleProject } from '../core/types';
+import type { SimplePage, SimpleProject, TextBlock } from '../core/types';
 import { createEmptyPage, createProject } from '../core/project-factory';
+import { createTextBlock, type TextBlockEditable } from '../core/block-factory';
+import { TEXT_BLOCK_VARIANTS, type TextBlockVariant } from '../core/types';
 
 export type EditorState = {
   project: SimpleProject;
+  selectedBlockId: string | null;
 
-  // Project lifecycle (M1 scope)
+  // Project lifecycle (M1)
   newProject: () => void;
   setProject: (project: SimpleProject) => void;
 
-  // Page operations (M1 scope — hanya add & select)
+  // Page operations (M1)
   addPage: (title?: string) => string;
   selectPage: (pageId: string) => void;
   getCurrentPage: () => SimplePage | null;
+
+  // Block operations (M2 — text only)
+  addTextBlock: (overrides?: Partial<TextBlockEditable>) => string;
+  selectBlock: (blockId: string | null) => void;
+  updateTextBlock: (blockId: string, patch: Partial<TextBlockEditable>) => void;
+  getSelectedBlock: () => TextBlock | null;
 };
+
+function findBlock(project: SimpleProject, blockId: string): TextBlock | null {
+  for (const page of project.pages) {
+    for (const block of page.blocks) {
+      if (block.id === blockId && block.type === 'text') {
+        return block as TextBlock;
+      }
+    }
+  }
+  return null;
+}
+
+function blockExistsInCurrentPage(project: SimpleProject, blockId: string): boolean {
+  const page = project.pages.find((p) => p.id === project.currentPageId);
+  if (!page) return false;
+  return page.blocks.some((b) => b.id === blockId);
+}
+
+/**
+ * Sanitize patch — pastikan kalau `variant` di-patch, nilainya valid.
+ * Kontrak: variant tidak boleh di-set ke nilai di luar TEXT_BLOCK_VARIANTS.
+ */
+function sanitizePatch(patch: Partial<TextBlockEditable>): Partial<TextBlockEditable> {
+  const clean: Partial<TextBlockEditable> = { ...patch };
+  if (clean.variant !== undefined) {
+    if (!TEXT_BLOCK_VARIANTS.includes(clean.variant as TextBlockVariant)) {
+      // Buang variant invalid — block tetap punya variant lama.
+      delete clean.variant;
+    }
+  }
+  return clean;
+}
 
 export const useEditorStore = create<EditorState>((set, get) => ({
   project: createProject(),
+  selectedBlockId: null,
 
   newProject: () => {
-    set({ project: createProject() });
+    set({ project: createProject(), selectedBlockId: null });
   },
 
   setProject: (project) => {
-    set({ project });
+    set({ project, selectedBlockId: null });
   },
 
   addPage: (title) => {
@@ -46,6 +95,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         pages: [...state.project.pages, page],
         currentPageId: page.id,
       },
+      selectedBlockId: null,
     }));
     return page.id;
   },
@@ -53,12 +103,68 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   selectPage: (pageId) => {
     set((state) => {
       if (!state.project.pages.some((p) => p.id === pageId)) return state;
-      return { project: { ...state.project, currentPageId: pageId } };
+      return {
+        project: { ...state.project, currentPageId: pageId },
+        selectedBlockId: null,
+      };
     });
   },
 
   getCurrentPage: () => {
     const { project } = get();
     return project.pages.find((p) => p.id === project.currentPageId) ?? null;
+  },
+
+  // ----- Block operations (M2) -----
+
+  addTextBlock: (overrides) => {
+    const block = createTextBlock(overrides);
+    set((state) => {
+      const pages = state.project.pages.map((p) => {
+        if (p.id !== state.project.currentPageId) return p;
+        return { ...p, blocks: [...p.blocks, block] };
+      });
+      return {
+        project: { ...state.project, pages },
+        selectedBlockId: block.id,
+      };
+    });
+    return block.id;
+  },
+
+  selectBlock: (blockId) => {
+    set((state) => {
+      if (blockId === null) return { selectedBlockId: null };
+      if (!blockExistsInCurrentPage(state.project, blockId)) return state;
+      return { selectedBlockId: blockId };
+    });
+  },
+
+  updateTextBlock: (blockId, patch) => {
+    const cleanPatch = sanitizePatch(patch);
+    set((state) => {
+      const page = state.project.pages.find((p) => p.id === state.project.currentPageId);
+      if (!page) return state;
+      const blockExists = page.blocks.some((b) => b.id === blockId && b.type === 'text');
+      if (!blockExists) return state;
+
+      const pages = state.project.pages.map((p) => {
+        if (p.id !== state.project.currentPageId) return p;
+        return {
+          ...p,
+          blocks: p.blocks.map((b) => {
+            if (b.id !== blockId || b.type !== 'text') return b;
+            return { ...b, ...cleanPatch, type: 'text' } as TextBlock;
+          }),
+        };
+      });
+      return { project: { ...state.project, pages } };
+    });
+  },
+
+  getSelectedBlock: () => {
+    const { project, selectedBlockId } = get();
+    if (!selectedBlockId) return null;
+    return findBlock(project, selectedBlockId);
   },
 }));

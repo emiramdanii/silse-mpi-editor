@@ -9,8 +9,8 @@ Setiap milestone = satu batch. Tidak lompat, tidak sekalian, tidak tambah fitur 
 | M0        | Repo Skeleton                         | Done        |
 | M1        | Editor Kosong                         | Done        |
 | B1A       | Scope-Lock Patch                      | Done        |
-| **B1B**   | **Core Contract, Schema, Style Lock** | **Next**    |
-| M2        | Text Block + Text Role Dasar          | Planned     |
+| B1B       | Core Contract, Schema, Style Lock     | Done        |
+| **M2**    | **Text Block + Text Role Dasar**      | **Active**  |
 | M3        | Page Flow Lengkap                     | Planned     |
 | M4        | Image Block + Image Variant           | Planned     |
 | M5        | Button + Preview + Interaction        | Planned     |
@@ -75,7 +75,7 @@ Operasi `renamePage`, `deletePage`, dan `duplicatePage` **TIDAK boleh ada** di s
 
 ## Batch 1B — Core Contract, Schema, Style Adapter Lock
 
-**Status:** Next / Required Before M2
+**Status:** Done
 
 **Target:** Mengunci arah produk, kontrak data, schema authoring, dan style adapter sebelum fitur block dimulai.
 
@@ -300,33 +300,81 @@ Lihat [`docs/CORE_PRODUCT_CONTRACT.md`](CORE_PRODUCT_CONTRACT.md) dan [`docs/STY
 
 ---
 
-## M11 — Template Ringan
+## M11 — Guided Learning Style System
 
-**Target:** Beberapa template sederhana untuk start cepat.
+**Target:** Style system lengkap sesuai `docs/STYLE_SCHEMA_CONTRACT.md`.
 
 **Fitur:**
-- 3–5 template sederhana (cover, materi, latihan).
-- Template = preset project JSON, bukan engine.
-- Pilih template → project baru terisi template.
+
+- `ProjectStyle` (presetId + tokens).
+- 5 visual preset (cleanClassroom, civicWarm, brightKids, projectorHighContrast, minimalWorksheet).
+- `resolveBlockStyle` full implementation di `src/core/style/`.
+- Page Role mulai dipakai untuk default style ringan.
+- Editor/preview/export konsisten via adapter.
 
 **Acceptance:**
-- Pilih template cover → project baru muncul dengan halaman cover.
-- Edit template → tetap jadi project biasa (tidak terikat template).
+
+- Pilih preset → tokens berubah → editor/preview/export ikut.
+- Variant menghasilkan style default benar.
+- Local override menghasilkan default.
+- Snapshot editor/preview/export konsisten.
 
 ---
 
-## M12 — Paket MPI Siap Pakai
+## M12 — Template Pedagogis
 
-**Target:** Bisa dikirim ke guru lain sebagai paket.
+**Target:** Template sederhana yang membantu guru start cepat.
 
 **Fitur:**
+
+- 3–5 template pedagogis (cover+materi+latihan, full MPI, LKPD ringan).
+- Template = preset project JSON dengan page role + block variant sudah terisi.
+- Pilih template → project baru terisi template.
+- Template tidak mengikat; setelah dipilih, project jadi project biasa.
+
+**Acceptance:**
+
+- Pilih template → project baru muncul dengan halaman + block + variant.
+- Edit template → tetap jadi project biasa.
+- Tidak ada binding permanen ke template.
+
+**Bukan template engine.** Template hanya JSON preset, bukan registry rumit.
+
+---
+
+## M13 — Paket MPI Production-Ready
+
+**Target:** Bisa dikirim ke guru lain sebagai paket siap pakai.
+
+**Fitur:**
+
 - Kompres project + asset menjadi satu file `.mpi.zip`.
 - Buka paket → langsung jalan di editor.
 - Atau: export HTML + paket source JSON.
+- Validasi paket sebelum distribusi.
 
 **Acceptance:**
+
 - Save project sebagai paket → file terdownload.
 - Buka paket di mesin lain → project termuat utuh.
+- Paket berisi manifest + project.json + assets + (opsional) export HTML.
+
+---
+
+## P1–P4 — Hardening & Release
+
+Detail lengkap di [`docs/PRODUCTION_ROADMAP.md`](PRODUCTION_ROADMAP.md):
+
+- **P1 — Reliability Hardening:** error boundary, recovery corrupt data, coverage.
+- **P2 — UX Hardening:** undo/redo, keyboard shortcut, onboarding.
+- **P3 — Export QA Hardening:** test export di 4 browser, offline, proyektor.
+- **P4 — Documentation & Release:** user guide, dev guide, demo, tag v1.0.0.
+
+---
+
+## F1+ — Future Development
+
+Setelah v1.0.0. Detail di [`docs/PRODUCTION_ROADMAP.md`](PRODUCTION_ROADMAP.md). Future development tetap harus menghormati `CORE_PRODUCT_CONTRACT.md`.
 
 ---
 

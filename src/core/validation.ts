@@ -10,10 +10,12 @@
 import {
   BLOCK_TYPES,
   PROJECT_VERSION,
+  TEXT_BLOCK_VARIANTS,
   type BlockType,
   type SimpleBlock,
   type SimplePage,
   type SimpleProject,
+  type TextBlockVariant,
 } from './types';
 
 export type ValidationResult = { ok: true } | { ok: false; errors: string[] };
@@ -43,6 +45,36 @@ export function validateBlock(block: unknown): ValidationResult {
   if (!isNumber(block.height) || block.height <= 0) return fail('block.height must be a positive number');
   if (!isString(block.type) || !BLOCK_TYPES.includes(block.type as BlockType)) {
     return fail(`block.type must be one of: ${BLOCK_TYPES.join(', ')}`);
+  }
+
+  // Type-specific validation
+  if (block.type === 'text') {
+    return validateTextBlock(block);
+  }
+  // image/button validation lands in M4/M5
+  return { ok: true };
+}
+
+/**
+ * Validate a text block (M2 scope).
+ *
+ * Kontrak (docs/CORE_PRODUCT_CONTRACT.md section 5):
+ *   - field `text` wajib, string (boleh kosong tapi harus ada)
+ *   - field `variant` wajib, harus salah satu dari TEXT_BLOCK_VARIANTS
+ *
+ * Block text tanpa variant = scope leak, validation menolak.
+ */
+function validateTextBlock(block: Record<string, unknown>): ValidationResult {
+  if (!isString(block.text)) {
+    return fail('text block.text must be a string');
+  }
+  if (!isString(block.variant)) {
+    return fail('text block.variant is required (must be a string)');
+  }
+  if (!TEXT_BLOCK_VARIANTS.includes(block.variant as TextBlockVariant)) {
+    return fail(
+      `text block.variant must be one of: ${TEXT_BLOCK_VARIANTS.join(', ')} (got "${block.variant}")`,
+    );
   }
   return { ok: true };
 }
