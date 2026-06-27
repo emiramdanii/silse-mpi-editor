@@ -19,6 +19,9 @@ import type {
   CardComponentVariant,
   ImageComponent,
   ImageComponentVariant,
+  NavigationAction,
+  NavigationComponent,
+  NavigationComponentVariant,
   PageRole,
   TextComponent,
   TextComponentVariant,
@@ -124,6 +127,46 @@ export function createCardComponent(
     variant: DEFAULT_CARD_VARIANT,
     body,
     ...DEFAULT_CARD_COMPONENT,
+    ...overrides,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Navigation Component (M5)
+// ---------------------------------------------------------------------------
+
+export type NavigationComponentEditable = Omit<NavigationComponent, 'id' | 'type'>;
+
+export const DEFAULT_NAVIGATION_VARIANT: NavigationComponentVariant = 'navigation';
+
+export const DEFAULT_NAVIGATION_COMPONENT: Omit<
+  NavigationComponentEditable,
+  'variant' | 'label' | 'action'
+> = {
+  x: 900,
+  y: 620,
+  width: 280,
+  height: 60,
+};
+
+/**
+ * Create a new navigation component.
+ * label wajib (teks tombol). action wajib (next/prev/goto).
+ * Default variant = 'navigation'.
+ * targetPageId wajib jika action='goto' (caller responsibility).
+ */
+export function createNavigationComponent(
+  label: string,
+  action: NavigationAction,
+  overrides: Partial<NavigationComponentEditable> = {},
+): NavigationComponent {
+  return {
+    id: createComponentId(),
+    type: 'navigation',
+    variant: DEFAULT_NAVIGATION_VARIANT,
+    label,
+    action,
+    ...DEFAULT_NAVIGATION_COMPONENT,
     ...overrides,
   };
 }

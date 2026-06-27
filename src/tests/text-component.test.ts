@@ -189,16 +189,19 @@ describe('Capability Matrix — canAddComponent', () => {
     }
   });
 
-  it('navigation not yet allowed for any role (M5)', () => {
-    const roles: PageRole[] = [
-      'cover',
-      'free',
-      'material',
-      'activity',
-    ];
-    for (const r of roles) {
-      expect(canAddComponent(r, 'navigation' as never)).toBe(false);
-    }
+  it('navigation NOT allowed for cover/learningObjectives/quiz (M5)', () => {
+    expect(canAddComponent('cover', 'navigation' as never)).toBe(false);
+    expect(canAddComponent('learningObjectives', 'navigation' as never)).toBe(false);
+    expect(canAddComponent('quiz', 'navigation' as never)).toBe(false);
+  });
+
+  it('navigation allowed for material/activity/starter/free/reflection/closing (M5 active)', () => {
+    expect(canAddComponent('material', 'navigation' as never)).toBe(true);
+    expect(canAddComponent('activity', 'navigation' as never)).toBe(true);
+    expect(canAddComponent('starter', 'navigation' as never)).toBe(true);
+    expect(canAddComponent('free', 'navigation' as never)).toBe(true);
+    expect(canAddComponent('reflection', 'navigation' as never)).toBe(true);
+    expect(canAddComponent('closing', 'navigation' as never)).toBe(true);
   });
 
   it('image NOT allowed for cover (M4 — cover is controlled)', () => {

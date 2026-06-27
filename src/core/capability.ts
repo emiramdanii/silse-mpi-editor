@@ -57,7 +57,9 @@ export const DEFAULT_TEXT_VARIANT_BY_ROLE: Record<
  * M2: semua role mengizinkan hanya 'text'.
  * M4: material/activity/starter/free menambah 'image'+'card'.
  *     reflection menambah 'card' (tanpa image).
- * M5: menambah 'navigation'. M11: menambah 'question'.
+ * M5: material/activity/starter/free/reflection/closing menambah 'navigation'.
+ *     cover tetap controlled. quiz belum (quiz engine belum ada).
+ * M11: menambah 'question'.
  */
 export const PAGE_ROLE_CAPABILITIES: Record<PageRole, PageRoleCapability> = {
   cover: {
@@ -75,19 +77,19 @@ export const PAGE_ROLE_CAPABILITIES: Record<PageRole, PageRoleCapability> = {
   },
   starter: {
     role: 'starter',
-    allowedComponents: ['text', 'image', 'card'],
+    allowedComponents: ['text', 'image', 'card', 'navigation'],
     allowAddComponent: true,
     description: 'Pemantik / apersepsi',
   },
   material: {
     role: 'material',
-    allowedComponents: ['text', 'image', 'card'],
+    allowedComponents: ['text', 'image', 'card', 'navigation'],
     allowAddComponent: true,
     description: 'Materi utama',
   },
   activity: {
     role: 'activity',
-    allowedComponents: ['text', 'image', 'card'],
+    allowedComponents: ['text', 'image', 'card', 'navigation'],
     allowAddComponent: true,
     description: 'Aktivitas siswa',
   },
@@ -99,19 +101,19 @@ export const PAGE_ROLE_CAPABILITIES: Record<PageRole, PageRoleCapability> = {
   },
   reflection: {
     role: 'reflection',
-    allowedComponents: ['text', 'card'],
+    allowedComponents: ['text', 'card', 'navigation'],
     allowAddComponent: true,
     description: 'Refleksi pembelajaran',
   },
   closing: {
     role: 'closing',
-    allowedComponents: ['text'],
+    allowedComponents: ['text', 'navigation'],
     allowAddComponent: true,
     description: 'Penutup',
   },
   free: {
     role: 'free',
-    allowedComponents: ['text', 'image', 'card'],
+    allowedComponents: ['text', 'image', 'card', 'navigation'],
     allowAddComponent: true,
     description: 'Halaman bebas',
   },

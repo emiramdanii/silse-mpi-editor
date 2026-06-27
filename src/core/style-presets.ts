@@ -16,15 +16,44 @@
  * save sebagai reusable asset. Untuk Batch 2S, preset hanya built-in.
  */
 
-import type { StylePack, VisualPresetId } from './style-types';
+import type { InteractionRecipe, StylePack, VisualPresetId } from './style-types';
 
 // Re-export VisualPresetIds for convenience (so tests/consumers can import
 // from a single module).
 export { VISUAL_PRESET_IDS, type VisualPresetId } from './style-types';
 
+// ---------------------------------------------------------------------------
+// Default interaction recipes (M5 — konkret)
+//
+// Bounds aman (kontrak Batch 5 Scope D):
+//   - scale: maksimal 1.08
+//   - durationMs: 80–500
+// ---------------------------------------------------------------------------
+
+const DEFAULT_INTERACTION_RECIPES: InteractionRecipe = {
+  buttonHoverGrow: {
+    scale: 1.05,
+    durationMs: 150,
+    easing: 'ease-out',
+    shadowRole: 'soft',
+  },
+  buttonPress: {
+    scale: 0.96,
+    durationMs: 80,
+    easing: 'ease-in',
+    shadowRole: 'none',
+  },
+  focusRing: {
+    durationMs: 120,
+    easing: 'ease-out',
+    shadowRole: 'medium',
+    backgroundRole: 'primary',
+  },
+};
+
 const EMPTY_RECIPES = {
   componentRecipes: {},
-  interactionRecipes: {},
+  interactionRecipes: DEFAULT_INTERACTION_RECIPES,
   scoringRecipes: {},
 } as const;
 

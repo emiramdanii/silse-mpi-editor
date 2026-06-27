@@ -36,6 +36,9 @@ import type {
   CardComponentVariant,
   ImageComponent,
   ImageComponentVariant,
+  NavigationAction,
+  NavigationComponent,
+  NavigationComponentVariant,
   PageComponent,
   PageRole,
   SimplePage,
@@ -46,15 +49,19 @@ import type {
 import {
   CARD_COMPONENT_VARIANTS,
   IMAGE_COMPONENT_VARIANTS,
+  NAVIGATION_ACTIONS,
+  NAVIGATION_COMPONENT_VARIANTS,
   TEXT_COMPONENT_VARIANTS,
 } from '../core/types';
 import { createEmptyPage, createProject } from '../core/project-factory';
 import {
   createCardComponent,
   createImageComponent,
+  createNavigationComponent,
   createTextComponent,
   type CardComponentEditable,
   type ImageComponentEditable,
+  type NavigationComponentEditable,
   type TextComponentEditable,
 } from '../core/component-factory';
 import { canAddComponent, getCapability } from '../core/capability';
@@ -80,10 +87,16 @@ export type EditorState = {
   addTextComponent: (overrides?: Partial<TextComponentEditable>) => string | null;
   addImageComponent: (src: string, overrides?: Partial<ImageComponentEditable>) => string | null;
   addCardComponent: (body: string, overrides?: Partial<CardComponentEditable>) => string | null;
+  addNavigationComponent: (
+    label: string,
+    action: NavigationAction,
+    overrides?: Partial<NavigationComponentEditable>,
+  ) => string | null;
   selectComponent: (componentId: string | null) => void;
   updateTextComponent: (componentId: string, patch: Partial<TextComponentEditable>) => void;
   updateImageComponent: (componentId: string, patch: Partial<ImageComponentEditable>) => void;
   updateCardComponent: (componentId: string, patch: Partial<CardComponentEditable>) => void;
+  updateNavigationComponent: (componentId: string, patch: Partial<NavigationComponentEditable>) => void;
   getSelectedComponent: () => PageComponent | null;
 };
 
@@ -144,6 +157,28 @@ function sanitizeCardPatch(patch: Partial<CardComponentEditable>): Partial<CardC
   return clean;
 }
 
+function sanitizeNavigationPatch(
+  patch: Partial<NavigationComponentEditable>,
+): Partial<NavigationComponentEditable> {
+  const clean: Partial<NavigationComponentEditable> = { ...patch };
+  if (clean.variant !== undefined) {
+    if (!NAVIGATION_COMPONENT_VARIANTS.includes(clean.variant as NavigationComponentVariant)) {
+      delete clean.variant;
+    }
+  }
+  if (clean.action !== undefined) {
+    if (!NAVIGATION_ACTIONS.includes(clean.action as NavigationAction)) {
+      delete clean.action;
+    }
+  }
+  // If action changed to non-goto, clear targetPageId (set to undefined explicitly
+  // so the merge { ...c, ...cleanPatch } applies it to the component).
+  if (clean.action !== undefined && clean.action !== 'goto') {
+    clean.targetPageId = undefined;
+  }
+  return clean;
+}
+
 /**
  * Deep-copy a component with a fresh id.
  * Pertahankan semua field kecuali id (yang baru).
@@ -193,8 +228,23 @@ function deepCopyComponentWithNewId(c: PageComponent): PageComponent {
       height: cc.height,
     } as CardComponent;
   }
-  // Navigation/other — M5+ will handle. For now copy with new id.
-  return { ...c, id: newId } as PageComponent;
+  if (c.type === 'navigation') {
+    const nc = c as NavigationComponent;
+    return {
+      id: newId,
+      type: 'navigation',
+      variant: nc.variant,
+      label: nc.label,
+      action: nc.action,
+      targetPageId: nc.targetPageId,
+      x: nc.x,
+      y: nc.y,
+      width: nc.width,
+      height: nc.height,
+    } as NavigationComponent;
+  }
+  // Unknown type — copy with new id (shouldn't occur).
+  return { ...(c as Record<string, unknown>), id: newId } as PageComponent;
 }
 
 /**
@@ -371,6 +421,21 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     return component.id;
   },
 
+  // ----- Component operations (M5 — navigation) -----
+
+  addNavigationComponent: (label, action, overrides) => {
+    const state = get();
+    const currentPage = state.project.pages.find(
+      (p) => p.id === state.project.currentPageId,
+    );
+    if (!currentPage) return null;
+    if (!canAddComponent(currentPage.role, 'navigation')) return null;
+
+    const component = createNavigationComponent(label, action, overrides);
+    set((s) => addComponentToCurrentPage(s, component));
+    return component.id;
+  },
+
   // ----- Selection + update -----
 
   selectComponent: (componentId) => {
@@ -440,6 +505,28 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           components: p.components.map((c) => {
             if (c.id !== componentId || c.type !== 'card') return c;
             return { ...c, ...cleanPatch, type: 'card' } as CardComponent;
+          }),
+        };
+      });
+      return { project: { ...state.project, pages } };
+    });
+  },
+
+  updateNavigationComponent: (componentId, patch) => {
+    const cleanPatch = sanitizeNavigationPatch(patch);
+    set((state) => {
+      const page = state.project.pages.find((p) => p.id === state.project.currentPageId);
+      if (!page) return state;
+      const exists = page.components.some((c) => c.id === componentId && c.type === 'navigation');
+      if (!exists) return state;
+
+      const pages = state.project.pages.map((p) => {
+        if (p.id !== state.project.currentPageId) return p;
+        return {
+          ...p,
+          components: p.components.map((c) => {
+            if (c.id !== componentId || c.type !== 'navigation') return c;
+            return { ...c, ...cleanPatch, type: 'navigation' } as NavigationComponent;
           }),
         };
       });

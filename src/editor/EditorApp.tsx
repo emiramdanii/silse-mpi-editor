@@ -2,6 +2,7 @@ import { Topbar } from './Topbar';
 import { PagePanel } from './PagePanel';
 import { CanvasStage } from './CanvasStage';
 import { Inspector } from './Inspector';
+import { PreviewApp } from '../preview/PreviewApp';
 
 export function EditorApp() {
   return (
@@ -12,6 +13,7 @@ export function EditorApp() {
         <CanvasStage />
         <Inspector />
       </div>
+      <PreviewApp />
     </div>
   );
 }

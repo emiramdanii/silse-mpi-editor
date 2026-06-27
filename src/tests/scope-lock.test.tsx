@@ -87,27 +87,41 @@ describe('scope-lock M4 — Toolbar: + Teks/+ Gambar/+ Kartu by capability', () 
     expect(selectedComponentId).toBe(page.components[0].id);
   });
 
-  // ---- Still disabled: + Navigasi, Export, Preview ----
-  it('"+ Navigasi" button is disabled (M5 not started)', () => {
-    useEditorStore.getState().addPage();
+  // ---- + Navigasi ENABLED by capability (M5 active) ----
+  it('on cover: + Navigasi DISABLED (capability denied)', () => {
     const { container } = render(<Toolbar />);
     const btn = queryByAction(container, 'add-navigation');
     expect(btn).not.toBeNull();
     expect((btn as HTMLButtonElement).disabled).toBe(true);
   });
 
-  it('"Export HTML" button is disabled (M6 not started)', () => {
+  it('on free: + Navigasi ENABLED (M5 active)', () => {
     useEditorStore.getState().addPage();
     const { container } = render(<Toolbar />);
-    const btn = queryByAction(container, 'export-html');
+    const btn = queryByAction(container, 'add-navigation');
     expect(btn).not.toBeNull();
-    expect((btn as HTMLButtonElement).disabled).toBe(true);
+    expect((btn as HTMLButtonElement).disabled).toBe(false);
   });
 
-  it('"Preview" button is disabled (M5 not started)', () => {
-    useEditorStore.getState().addPage();
+  it('on material: + Navigasi ENABLED (M5 active)', () => {
+    useEditorStore.getState().addPage({ role: 'material' });
+    const { container } = render(<Toolbar />);
+    const btn = queryByAction(container, 'add-navigation');
+    expect((btn as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  // ---- Preview button ENABLED (M5 active) ----
+  it('"Preview" button is ENABLED (M5 active)', () => {
     const { container } = render(<Toolbar />);
     const btn = queryByAction(container, 'preview');
+    expect(btn).not.toBeNull();
+    expect((btn as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  // ---- Export HTML still disabled (M6) ----
+  it('"Export HTML" button is disabled (M6 not started)', () => {
+    const { container } = render(<Toolbar />);
+    const btn = queryByAction(container, 'export-html');
     expect(btn).not.toBeNull();
     expect((btn as HTMLButtonElement).disabled).toBe(true);
   });

@@ -23,8 +23,8 @@ Implikasi: Style Pack foundation harus ada **sebelum** M3, supaya M3–M8 tidak 
 | M2        | Page Role + Capability Matrix + Text Component | Done   |
 | B2S       | Style Pack Foundation + AI Remix Roadmap Lock | Done |
 | M3        | Page Flow + LayoutId Dasar            | Done        |
-| **M4**    | **Image + Card + Layout Recipes**     | **Active**  |
-| M5        | Navigation + Preview + Interaction Style Dasar | Planned |
+| M4        | Image + Card + Layout Recipes         | Done        |
+| **M5**    | **Navigation + Preview + Interaction Style Dasar** | **Active** |
 | M6        | Export HTML + Style Resolver Solid    | Planned     |
 | M7        | Save / Load + Style Pack Save         | Planned     |
 | M8        | AI JSON Import + Style Import MVP     | Planned     |
@@ -280,7 +280,7 @@ Lihat [`docs/CORE_PRODUCT_CONTRACT.md`](CORE_PRODUCT_CONTRACT.md) dan [`docs/STY
 
 ## M4 — Image + Card + Layout Recipes
 
-**Status:** Active
+**Status:** Done (commit `b520807`)
 
 **Prasyarat:** M3 ACCEPTED.
 
@@ -352,22 +352,65 @@ Nested container / component pattern baru di M11/M12.
 
 ## M5 — Navigation + Preview + Interaction Style Dasar
 
-**Target:** MPI bisa dipreview dengan navigasi antar halaman + interaction style dasar.
+**Status:** Active
+
+**Prasyarat:** M4 ACCEPTED.
+
+**Target:** Menambahkan navigation component, preview mode, dan interaction style dasar berbasis StylePack tanpa membuat export HTML, quiz/game, AI import, atau full style editor. Titik pertama di mana app mulai terasa seperti MPI hidup, bukan hanya editor statis.
+
+**Konsep penting (catatan dari senior):**
+Preview runtime state HARUS terpisah dari editor currentPageId. Klik tombol next di Preview TIDAK boleh mengubah halaman aktif editor. Preview punya runtime state sendiri:
+```
+PreviewRuntimeState { currentPageId: string; }
+```
+Nanti di M10/M11 diperluas: currentQuestionIndex, selectedAnswer, score, feedbackState, activeTab, openAccordionItems, activeHotspot. Interaksi hidup di dalam komponen, bukan menambah page seperti PowerPoint.
 
 **Fitur:**
 
-- Navigation component (variant: `navigation`/`primaryAction`/`secondaryAction`/`choice`).
-- Action: next, prev, goto page.
-- Preview fullscreen (mode terpisah dari editor).
-- Navigasi antar halaman di preview.
-- Interaction style dasar (hover, active state) via style pack `interactionRecipes`.
+- NavigationComponent resmi: `{ type:'navigation', variant, label, action, targetPageId?, x, y, width, height }`.
+  Variant: `navigation`/`primaryAction`/`secondaryAction`/`choice`.
+  Action: `next`/`prev`/`goto`. `targetPageId` wajib jika `action='goto'`.
+- Capability Matrix diperluas: `material`/`activity`/`starter`/`free`/`reflection`/`closing` boleh navigation. `cover` tetap controlled. `quiz` belum (quiz engine belum ada).
+- StylePack `interactionRecipes` dikonkretkan minimal: `buttonHoverGrow`/`buttonPress`/`focusRing`. Serializable + bounded (scale max 1.08, durationMs 80–500).
+- `addNavigationComponent`/`updateNavigationComponent` cek capability + sanitize.
+- Preview mode: `PreviewApp` dengan runtime state sendiri, next/prev/goto, tidak mutasi editor state, client-side only, tidak persist.
+- Topbar tombol Preview (buka/tutup).
+- Toolbar `+ Navigasi` ENABLED by capability.
 
 **Acceptance:**
 
-- Tambah navigation next → klik di preview → halaman berpindah.
-- Tambah navigation prev → klik di preview → halaman mundur.
-- Tambah navigation goto → klik di preview → halaman target tampil.
-- Interaction style konsisten editor vs preview (anchor untuk M6).
+- NavigationComponent validation (variant valid, label non-empty, action valid, targetPageId wajib untuk goto).
+- addNavigationComponent allowed/denied by capability.
+- updateNavigationComponent sanitize invalid variant/action.
+- duplicatePage regenerates navigation id.
+- Preview next/prev/goto works.
+- Preview does not mutate editor currentPageId.
+- Interaction recipes validate serializable and bounded.
+- Store tidak expose question/game/export/AI import/style editor.
+- UI tidak memakai kata block.
+- typecheck PASS, test PASS, build PASS.
+
+**Scope lock:**
+
+- Tidak ada export HTML (M6).
+- Tidak ada question/quiz/game/scoring (M10/M11).
+- Tidak ada AI import UI (M8).
+- Tidak ada style editor (M12).
+- Tidak ada full style resolver (M6).
+- Tidak ada raw HTML/CSS/JS import.
+- Tidak ada page role editor / setPageRole (M11).
+- Tidak ada drag/resize guard (M9).
+
+**Dilarang di M5:**
+
+- export HTML.
+- question/quiz/game/scoring.
+- AI import UI.
+- style editor.
+- full style resolver.
+- raw HTML/CSS/JS import.
+- page role editor.
+- drag/resize guard.
 
 ---
 

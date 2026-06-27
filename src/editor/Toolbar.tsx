@@ -1,48 +1,54 @@
 /**
  * Toolbar for component-level actions.
  *
- * M4 scope:
+ * M5 scope:
  *   - "+ Teks" ENABLED jika canAddComponent(role, 'text')
  *   - "+ Gambar" ENABLED jika canAddComponent(role, 'image')
  *   - "+ Kartu" ENABLED jika canAddComponent(role, 'card')
- *   - "+ Navigasi", "Export HTML", "Preview" remain DISABLED (M5/M6).
- *
- * Naming: UI uses "elemen"/"gambar"/"kartu", NOT "block".
+ *   - "+ Navigasi" ENABLED jika canAddComponent(role, 'navigation')
+ *   - "Preview" ENABLED (opens preview mode)
+ *   - "Export HTML" still DISABLED (M6).
  */
 
 import { useEditorStore } from '../store/editor-store';
+import { usePreviewStore } from '../preview/preview-store';
 import { canAddComponent } from '../core/capability';
+import type { NavigationAction } from '../core/types';
 
 export function Toolbar() {
   const addTextComponent = useEditorStore((s) => s.addTextComponent);
   const addImageComponent = useEditorStore((s) => s.addImageComponent);
   const addCardComponent = useEditorStore((s) => s.addCardComponent);
+  const addNavigationComponent = useEditorStore((s) => s.addNavigationComponent);
   const currentPage = useEditorStore(
     (s) => s.project.pages.find((p) => p.id === s.project.currentPageId) ?? null,
   );
+  const openPreview = usePreviewStore((s) => s.openPreview);
 
   const role = currentPage?.role;
   const canText = role ? canAddComponent(role, 'text') : false;
   const canImage = role ? canAddComponent(role, 'image') : false;
   const canCard = role ? canAddComponent(role, 'card') : false;
+  const canNavigation = role ? canAddComponent(role, 'navigation') : false;
 
   const handleAddText = () => {
-    const id = addTextComponent();
-    if (id === null) return; // capability denied, silent
+    addTextComponent();
   };
 
   const handleAddImage = () => {
-    // M4: simple prompt for image src (data URL or URL).
-    // M9 will add proper upload UI.
     const src = window.prompt('URL atau data URL gambar:');
     if (!src) return;
-    const id = addImageComponent(src);
-    if (id === null) return;
+    addImageComponent(src);
   };
 
   const handleAddCard = () => {
-    const id = addCardComponent('Konten card baru');
-    if (id === null) return;
+    addCardComponent('Konten card baru');
+  };
+
+  const handleAddNavigation = () => {
+    // M5 simple: default to 'next' action with label "Berikutnya"
+    const action: NavigationAction = 'next';
+    addNavigationComponent('Berikutnya', action);
   };
 
   return (
@@ -75,15 +81,26 @@ export function Toolbar() {
       >
         + Kartu
       </button>
-      <button disabled title="Tambah navigasi — aktif di M5" data-action="add-navigation">
+      <button
+        onClick={handleAddNavigation}
+        disabled={!canNavigation}
+        title={canNavigation ? 'Tambah tombol navigasi' : 'Tidak diizinkan di halaman ini'}
+        data-action="add-navigation"
+        data-milestone="M5"
+      >
         + Navigasi
       </button>
       <span className="toolbar__divider" />
+      <button
+        onClick={openPreview}
+        title="Buka pratinjau MPI"
+        data-action="preview"
+        data-milestone="M5"
+      >
+        ▶ Pratinjau
+      </button>
       <button disabled title="Export HTML — aktif di M6" data-action="export-html">
         Export HTML
-      </button>
-      <button disabled title="Preview MPI — aktif di M5" data-action="preview">
-        Preview
       </button>
     </div>
   );

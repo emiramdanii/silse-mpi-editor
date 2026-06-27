@@ -2,6 +2,9 @@ import { useEditorStore } from '../store/editor-store';
 import type {
   CardComponent,
   ImageComponent,
+  NavigationAction,
+  NavigationComponent,
+  NavigationComponentVariant,
   PageComponent,
   SimplePage,
   TextComponent,
@@ -9,11 +12,14 @@ import type {
 import type {
   CardComponentEditable,
   ImageComponentEditable,
+  NavigationComponentEditable,
   TextComponentEditable,
 } from '../core/component-factory';
 import {
   CARD_COMPONENT_VARIANTS,
   IMAGE_COMPONENT_VARIANTS,
+  NAVIGATION_ACTIONS,
+  NAVIGATION_COMPONENT_VARIANTS,
   TEXT_COMPONENT_VARIANTS,
   type CardComponentVariant,
   type ImageComponentVariant,
@@ -56,6 +62,19 @@ const CARD_VARIANT_LABELS: Record<CardComponentVariant, string> = {
   exampleCard: 'Kartu contoh',
 };
 
+const NAVIGATION_VARIANT_LABELS: Record<NavigationComponentVariant, string> = {
+  navigation: 'Navigasi',
+  primaryAction: 'Aksi utama',
+  secondaryAction: 'Aksi sekunder',
+  choice: 'Pilihan',
+};
+
+const NAVIGATION_ACTION_LABELS: Record<NavigationAction, string> = {
+  next: 'Halaman berikutnya',
+  prev: 'Halaman sebelumnya',
+  goto: 'Pergi ke halaman...',
+};
+
 const ROLE_LABELS: Record<string, string> = {
   cover: 'Cover (pembuka)',
   learningObjectives: 'Tujuan Pembelajaran',
@@ -87,6 +106,8 @@ export function Inspector() {
   const updateTextComponent = useEditorStore((s) => s.updateTextComponent);
   const updateImageComponent = useEditorStore((s) => s.updateImageComponent);
   const updateCardComponent = useEditorStore((s) => s.updateCardComponent);
+  const updateNavigationComponent = useEditorStore((s) => s.updateNavigationComponent);
+  const project = useEditorStore((s) => s.project);
 
   return (
     <aside className="inspector">
@@ -104,6 +125,8 @@ export function Inspector() {
             onUpdateText={updateTextComponent}
             onUpdateImage={updateImageComponent}
             onUpdateCard={updateCardComponent}
+            onUpdateNavigation={updateNavigationComponent}
+            pages={project.pages}
           />
         )}
       </div>
@@ -150,11 +173,15 @@ function ComponentEditor({
   onUpdateText,
   onUpdateImage,
   onUpdateCard,
+  onUpdateNavigation,
+  pages,
 }: {
   component: PageComponent;
   onUpdateText: (id: string, patch: Partial<TextComponentEditable>) => void;
   onUpdateImage: (id: string, patch: Partial<ImageComponentEditable>) => void;
   onUpdateCard: (id: string, patch: Partial<CardComponentEditable>) => void;
+  onUpdateNavigation: (id: string, patch: Partial<NavigationComponentEditable>) => void;
+  pages: SimplePage[];
 }) {
   if (component.type === 'text') {
     return <TextComponentEditor component={component} onChange={(p) => onUpdateText(component.id, p)} />;
@@ -165,7 +192,15 @@ function ComponentEditor({
   if (component.type === 'card') {
     return <CardComponentEditor component={component} onChange={(p) => onUpdateCard(component.id, p)} />;
   }
-  // Navigation editor lands in M5
+  if (component.type === 'navigation') {
+    return (
+      <NavigationComponentEditor
+        component={component}
+        pages={pages}
+        onChange={(p) => onUpdateNavigation(component.id, p)}
+      />
+    );
+  }
   return (
     <div className="inspector-placeholder">
       <p>Editor untuk tipe elemen ini belum tersedia.</p>
@@ -343,6 +378,88 @@ function CardComponentEditor({
           style={{ width: '100%', resize: 'vertical' }}
         />
       </Field>
+
+      <GeometryFields component={component} onChange={onChange} />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Navigation Component Editor (M5)
+// ---------------------------------------------------------------------------
+
+function NavigationComponentEditor({
+  component,
+  pages,
+  onChange,
+}: {
+  component: NavigationComponent;
+  pages: SimplePage[];
+  onChange: (patch: Partial<NavigationComponentEditable>) => void;
+}) {
+  return (
+    <div className="component-editor">
+      <div className="component-editor__head">
+        <span className="component-editor__type">Elemen Navigasi</span>
+        <span className="component-editor__id">{component.id.slice(0, 12)}…</span>
+      </div>
+
+      <Field label="Label tombol">
+        <input
+          type="text"
+          data-field="label"
+          value={component.label}
+          onChange={(e) => onChange({ label: e.target.value })}
+        />
+      </Field>
+
+      <Field label="Jenis navigasi">
+        <select
+          data-field="variant"
+          value={component.variant}
+          onChange={(e) => onChange({ variant: e.target.value as NavigationComponentVariant })}
+          style={{ width: '100%' }}
+        >
+          {NAVIGATION_COMPONENT_VARIANTS.map((v) => (
+            <option key={v} value={v}>
+              {NAVIGATION_VARIANT_LABELS[v]}
+            </option>
+          ))}
+        </select>
+      </Field>
+
+      <Field label="Aksi">
+        <select
+          data-field="action"
+          value={component.action}
+          onChange={(e) => onChange({ action: e.target.value as NavigationAction })}
+          style={{ width: '100%' }}
+        >
+          {NAVIGATION_ACTIONS.map((a) => (
+            <option key={a} value={a}>
+              {NAVIGATION_ACTION_LABELS[a]}
+            </option>
+          ))}
+        </select>
+      </Field>
+
+      {component.action === 'goto' && (
+        <Field label="Halaman tujuan">
+          <select
+            data-field="targetPageId"
+            value={component.targetPageId ?? ''}
+            onChange={(e) => onChange({ targetPageId: e.target.value })}
+            style={{ width: '100%' }}
+          >
+            <option value="">— Pilih halaman —</option>
+            {pages.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.title}
+              </option>
+            ))}
+          </select>
+        </Field>
+      )}
 
       <GeometryFields component={component} onChange={onChange} />
     </div>

@@ -83,17 +83,13 @@ export type StyleShadow = {
 };
 
 // ---------------------------------------------------------------------------
-// Recipe placeholders (stub untuk Batch 2S)
+// Recipe placeholders (Batch 2S stub → M5 konkret untuk interactionRecipes)
 //
 // Recipe = mapping dari semantic concept (variant/interaction/scoring)
 // ke concrete render style. Konkretnya diisi di milestone masing-masing:
 //   - componentRecipes: M6 (Export HTML + Style Resolver Solid)
-//   - interactionRecipes: M5 (Navigation + Preview + Interaction Style Dasar)
+//   - interactionRecipes: M5 (Navigation + Preview + Interaction Style Dasar) — NOW KONKRET
 //   - scoringRecipes: M10 (Question + Scoring Style)
-//
-// Untuk Batch 2S, recipe adalah objek kosong (Record<string, never>).
-// Type-nya sudah dipersiapkan agar M5/M6/M10 tinggal mengisi tanpa
-// mengubah schema ProjectStyle.
 // ---------------------------------------------------------------------------
 
 /**
@@ -101,25 +97,62 @@ export type StyleShadow = {
  * Key = `${componentType}:${variant}`, value = style token reference.
  * Contoh konkrit (M6): { 'text:title': { fontSize: '$typography.titleSize', ... } }
  *
- * Untuk Batch 2S: objek kosong, placeholder only.
+ * Untuk M5: objek kosong, placeholder only. M6 akan mengisi.
  */
 export type ComponentRecipe = Record<string, unknown>;
 
+// ---------------------------------------------------------------------------
+// Interaction Recipe (M5 — konkret)
+// ---------------------------------------------------------------------------
+
 /**
- * Recipe untuk interaction style (hover, active, focus state).
- * Key = interaction pattern name.
- * Contoh konkrit (M5): { 'navigation:hover': { ... } }
+ * Satu entry interaction recipe (e.g. buttonHoverGrow, buttonPress, focusRing).
  *
- * Untuk Batch 2S: objek kosong, placeholder only.
+ * Kontrak Batch 5 Scope D:
+ *   - Semua field serializable (number/string, no function).
+ *   - Bounds aman:
+ *     - scale: 0.8–1.08 (maksimal 1.08, jangan berlebihan)
+ *     - durationMs: 80–500 (cepat tapi tidak instant, tidak terlalu lambat)
+ *   - shadowRole/backgroundRole refer ke token names di StylePack (bukan nilai CSS langsung).
  */
-export type InteractionRecipe = Record<string, unknown>;
+export type InteractionRecipeEntry = {
+  /** Scale factor untuk transform. Range aman: 0.8–1.08. */
+  scale?: number;
+  /** Durasi transisi dalam milidetik. Range aman: 80–500. */
+  durationMs?: number;
+  /** CSS easing function string. Contoh: 'ease-out', 'cubic-bezier(0.4,0,0.2,1)'. */
+  easing?: string;
+  /** Reference ke shadow token: 'none' | 'soft' | 'medium'. */
+  shadowRole?: 'none' | 'soft' | 'medium';
+  /** Reference ke color token role: 'primary' | 'secondary' | 'surface' | 'success' | 'warning' | 'danger'. */
+  backgroundRole?: 'primary' | 'secondary' | 'surface' | 'success' | 'warning' | 'danger';
+};
+
+/**
+ * Interaction recipe collection untuk StylePack.
+ *
+ * M5 konkret: buttonHoverGrow, buttonPress, focusRing.
+ * M11+ boleh tambah entry lain (e.g. tabSwitch, accordionExpand).
+ *
+ * Serializable: semua field number/string. Tidak ada function/class.
+ */
+export type InteractionRecipe = {
+  /** Hover state untuk button/navigation — scale up sedikit. */
+  buttonHoverGrow?: InteractionRecipeEntry;
+  /** Press/click state — scale down sedikit + shadow change. */
+  buttonPress?: InteractionRecipeEntry;
+  /** Focus ring untuk accessibility — shadow/border highlight. */
+  focusRing?: InteractionRecipeEntry;
+  /** Allow future extensions (M11+). */
+  [key: string]: InteractionRecipeEntry | undefined;
+};
 
 /**
  * Recipe untuk scoring style (feedback benar/salah, animasi skor).
  * Key = scoring state.
  * Contoh konkrit (M10): { 'correct': { color: '$colors.success' } }
  *
- * Untuk Batch 2S: objek kosong, placeholder only.
+ * Untuk M5: objek kosong, placeholder only. M10 akan mengisi.
  */
 export type ScoringRecipe = Record<string, unknown>;
 

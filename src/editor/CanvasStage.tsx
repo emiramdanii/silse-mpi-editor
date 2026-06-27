@@ -1,8 +1,9 @@
 import { useEditorStore } from '../store/editor-store';
-import { isCardComponent, isImageComponent, isTextComponent } from '../components/component-utils';
+import { isCardComponent, isImageComponent, isNavigationComponent, isTextComponent } from '../components/component-utils';
 import { TextComponentView } from '../components/TextComponentView';
 import { ImageComponentView } from '../components/ImageComponentView';
 import { CardComponentView } from '../components/CardComponentView';
+import { NavigationComponentView } from '../components/NavigationComponentView';
 import { getCapability } from '../core/capability';
 
 const CANVAS_WIDTH = 1280;
@@ -87,7 +88,16 @@ export function CanvasStage() {
               />
             );
           }
-          // Navigation components render in M5.
+          if (isNavigationComponent(component)) {
+            return (
+              <NavigationComponentView
+                key={component.id}
+                component={component}
+                selected={component.id === selectedComponentId}
+                onSelect={selectComponent}
+              />
+            );
+          }
           return null;
         })}
       </div>

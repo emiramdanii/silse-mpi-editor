@@ -154,6 +154,27 @@ export const CARD_COMPONENT_VARIANTS = [
 export type CardComponentVariant = (typeof CARD_COMPONENT_VARIANTS)[number];
 
 // ---------------------------------------------------------------------------
+// Navigation Component Variant (M5)
+// ---------------------------------------------------------------------------
+
+export const NAVIGATION_COMPONENT_VARIANTS = [
+  'navigation',
+  'primaryAction',
+  'secondaryAction',
+  'choice',
+] as const;
+
+export type NavigationComponentVariant = (typeof NAVIGATION_COMPONENT_VARIANTS)[number];
+
+// ---------------------------------------------------------------------------
+// Navigation Action (M5)
+// ---------------------------------------------------------------------------
+
+export const NAVIGATION_ACTIONS = ['next', 'prev', 'goto'] as const;
+
+export type NavigationAction = (typeof NAVIGATION_ACTIONS)[number];
+
+// ---------------------------------------------------------------------------
 // Component — discriminated union on `type`
 // ---------------------------------------------------------------------------
 
@@ -208,12 +229,19 @@ export type CardComponent = BaseComponent & {
   body: string;
 };
 
+/**
+ * Navigation component (M5 scope).
+ *
+ * Elemen interaktif untuk navigasi antar halaman di preview mode.
+ * Variant wajib (anchor untuk style adapter M6).
+ * Action: next/prev/goto. targetPageId wajib jika action='goto'.
+ */
 export type NavigationComponent = BaseComponent & {
   type: 'navigation';
+  variant: NavigationComponentVariant;
   label: string;
-  action: 'next' | 'prev' | 'goto';
+  action: NavigationAction;
   targetPageId?: string;
-  // variant: NavigationComponentVariant — ditambahkan di M5
 };
 
 /**

@@ -899,15 +899,21 @@ describe('editor store — scope-lock (M4)', () => {
     expect(typeof store.updateCardComponent).toBe('function');
   });
 
+  // M5 navigation operations now EXIST
+  it('store EXPOSES addNavigationComponent (M5 active)', () => {
+    const store = useEditorStore.getState();
+    expect(typeof store.addNavigationComponent).toBe('function');
+  });
+
+  it('store EXPOSES updateNavigationComponent (M5 active)', () => {
+    const store = useEditorStore.getState();
+    expect(typeof store.updateNavigationComponent).toBe('function');
+  });
+
   // Still NOT exposed
   it('store does NOT expose setPageRole (M11 feature)', () => {
     const store = useEditorStore.getState();
     expect((store as unknown as Record<string, unknown>).setPageRole).toBeUndefined();
-  });
-
-  it('store does NOT expose addNavigationComponent (M5 feature)', () => {
-    const store = useEditorStore.getState();
-    expect((store as unknown as Record<string, unknown>).addNavigationComponent).toBeUndefined();
   });
 
   it('store does NOT expose addQuestionComponent (M11 feature)', () => {

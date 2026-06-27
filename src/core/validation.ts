@@ -18,6 +18,8 @@ import {
   COMPONENT_TYPES,
   IMAGE_COMPONENT_VARIANTS,
   LAYOUT_IDS,
+  NAVIGATION_ACTIONS,
+  NAVIGATION_COMPONENT_VARIANTS,
   PAGE_ROLES,
   PROJECT_VERSION,
   TEXT_COMPONENT_VARIANTS,
@@ -25,6 +27,8 @@ import {
   type ComponentType,
   type ImageComponentVariant,
   type LayoutId,
+  type NavigationAction,
+  type NavigationComponentVariant,
   type PageComponent,
   type PageRole,
   type SimplePage,
@@ -78,7 +82,9 @@ export function validateComponent(component: unknown): ValidationResult {
   if (component.type === 'card') {
     return validateCardComponent(component);
   }
-  // navigation validation lands in M5
+  if (component.type === 'navigation') {
+    return validateNavigationComponent(component);
+  }
   return { ok: true };
 }
 
@@ -164,6 +170,47 @@ function validateCardComponent(component: Record<string, unknown>): ValidationRe
   // Anti-pattern guard: card must NOT have nested components/children (M4 scope)
   if (component.components !== undefined || component.children !== undefined) {
     return fail('card component must NOT have nested components/children (M4 scope — nested container lands in M11/M12)');
+  }
+  return { ok: true };
+}
+
+/**
+ * Validate a navigation component (M5 scope).
+ *
+ * Kontrak:
+ *   - field `variant` wajib, salah satu dari NAVIGATION_COMPONENT_VARIANTS
+ *   - field `label` wajib, string non-empty
+ *   - field `action` wajib, salah satu dari NAVIGATION_ACTIONS
+ *   - field `targetPageId`:
+ *     - WAJIB string non-empty jika action='goto'
+ *     - boleh undefined / diabaikan jika action='next' atau 'prev'
+ */
+function validateNavigationComponent(component: Record<string, unknown>): ValidationResult {
+  if (!isString(component.variant)) {
+    return fail('navigation component.variant is required (must be a string)');
+  }
+  if (!NAVIGATION_COMPONENT_VARIANTS.includes(component.variant as NavigationComponentVariant)) {
+    return fail(
+      `navigation component.variant must be one of: ${NAVIGATION_COMPONENT_VARIANTS.join(', ')} (got "${component.variant}")`,
+    );
+  }
+  if (!isString(component.label) || component.label.length === 0) {
+    return fail('navigation component.label must be a non-empty string');
+  }
+  if (!isString(component.action) || !NAVIGATION_ACTIONS.includes(component.action as NavigationAction)) {
+    return fail(
+      `navigation component.action must be one of: ${NAVIGATION_ACTIONS.join(', ')}`,
+    );
+  }
+  // targetPageId wajib untuk goto
+  if (component.action === 'goto') {
+    if (!isString(component.targetPageId) || component.targetPageId.length === 0) {
+      return fail('navigation component.targetPageId is required when action="goto"');
+    }
+  }
+  // targetPageId untuk next/prev boleh undefined; kalau ada harus string
+  if (component.targetPageId !== undefined && !isString(component.targetPageId)) {
+    return fail('navigation component.targetPageId must be a string if present');
   }
   return { ok: true };
 }
@@ -349,6 +396,76 @@ export function validateStylePack(pack: unknown): ValidationResult {
   if (!isObject(pack.componentRecipes)) return fail('stylePack.componentRecipes must be an object');
   if (!isObject(pack.interactionRecipes)) return fail('stylePack.interactionRecipes must be an object');
   if (!isObject(pack.scoringRecipes)) return fail('stylePack.scoringRecipes must be an object');
+
+  // M5: validate interactionRecipes entries with bounds checking
+  const interactionR = validateInteractionRecipes(pack.interactionRecipes);
+  if (!interactionR.ok)
+    return fail(`stylePack.interactionRecipes: ${interactionR.errors.join('; ')}`);
+
+  return { ok: true };
+}
+
+/**
+ * Validate interaction recipes (M5 scope).
+ *
+ * Kontrak Batch 5 Scope D:
+ *   - Setiap entry boleh kosong (optional).
+ *   - Jika scale ada: range 0.8–1.08.
+ *   - Jika durationMs ada: range 80–500.
+ *   - shadowRole: 'none' | 'soft' | 'medium' jika ada.
+ *   - backgroundRole: salah satu dari valid roles jika ada.
+ *   - easing: string jika ada.
+ */
+function validateInteractionRecipes(recipes: unknown): ValidationResult {
+  if (!isObject(recipes)) return fail('interactionRecipes must be an object');
+
+  for (const [key, value] of Object.entries(recipes)) {
+    if (value === undefined || value === null) continue;
+    if (!isObject(value)) {
+      return fail(`interactionRecipes.${key} must be an object if present`);
+    }
+    const entry = value as Record<string, unknown>;
+
+    // scale bounds: 0.8–1.08
+    if (entry.scale !== undefined) {
+      if (!isNumber(entry.scale)) {
+        return fail(`interactionRecipes.${key}.scale must be a number`);
+      }
+      if (entry.scale < 0.8 || entry.scale > 1.08) {
+        return fail(`interactionRecipes.${key}.scale must be 0.8–1.08 (got ${entry.scale})`);
+      }
+    }
+
+    // durationMs bounds: 80–500
+    if (entry.durationMs !== undefined) {
+      if (!isNumber(entry.durationMs)) {
+        return fail(`interactionRecipes.${key}.durationMs must be a number`);
+      }
+      if (entry.durationMs < 80 || entry.durationMs > 500) {
+        return fail(`interactionRecipes.${key}.durationMs must be 80–500 (got ${entry.durationMs})`);
+      }
+    }
+
+    // easing: string if present
+    if (entry.easing !== undefined && !isString(entry.easing)) {
+      return fail(`interactionRecipes.${key}.easing must be a string if present`);
+    }
+
+    // shadowRole: 'none' | 'soft' | 'medium'
+    if (entry.shadowRole !== undefined) {
+      if (!isString(entry.shadowRole) || !['none', 'soft', 'medium'].includes(entry.shadowRole)) {
+        return fail(`interactionRecipes.${key}.shadowRole must be 'none' | 'soft' | 'medium'`);
+      }
+    }
+
+    // backgroundRole: valid role names
+    if (entry.backgroundRole !== undefined) {
+      const validRoles = ['primary', 'secondary', 'surface', 'success', 'warning', 'danger'];
+      if (!isString(entry.backgroundRole) || !validRoles.includes(entry.backgroundRole)) {
+        return fail(`interactionRecipes.${key}.backgroundRole must be one of: ${validRoles.join(', ')}`);
+      }
+    }
+  }
 
   return { ok: true };
 }
