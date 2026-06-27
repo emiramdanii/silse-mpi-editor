@@ -4,56 +4,30 @@
  * Layer: components
  * Allowed imports: ../core
  *
- * M4 scope: render image component dengan inline style.
- * Style placeholder: variant lookup hard-coded. M6 akan ganti ke resolveComponentStyle.
+ * M6 PATCH: Style datang dari resolvedStyle (resolveComponentStyle).
+ * TIDAK ADA hard-coded style lookup hard-coded lookup.
  */
 
 import type { CSSProperties } from 'react';
-import type { ImageComponent, ImageComponentVariant } from '../core/types';
+import type { ImageComponent } from '../core/types';
+import type { ResolvedComponentStyle } from '../core/style/resolveComponentStyle';
 
 export type ImageComponentViewProps = {
   component: ImageComponent;
+  resolvedStyle: ResolvedComponentStyle;
   selected?: boolean;
   onSelect?: (componentId: string) => void;
 };
 
-/**
- * Variant style lookup — placeholder sampai M6 style adapter.
- */
-const VARIANT_STYLE: Record<
-  ImageComponentVariant,
-  { border?: string; borderRadius?: number; shadow?: string }
-> = {
-  illustration: {
-    border: '1px solid #d1d5db',
-    borderRadius: 8,
-    shadow: '0 4px 12px rgba(0,0,0,0.10)',
-  },
-  background: {
-    border: 'none',
-    borderRadius: 0,
-    shadow: 'none',
-  },
-  imageCard: {
-    border: '2px solid #2563eb',
-    borderRadius: 12,
-    shadow: '0 4px 16px rgba(37,99,235,0.18)',
-  },
-};
-
-export function ImageComponentView({ component, selected, onSelect }: ImageComponentViewProps) {
-  const vs = VARIANT_STYLE[component.variant] ?? VARIANT_STYLE.illustration;
-
+export function ImageComponentView({ component, resolvedStyle, selected, onSelect }: ImageComponentViewProps) {
   const style: CSSProperties = {
     position: 'absolute',
     left: component.x,
     top: component.y,
     width: component.width,
     height: component.height,
-    border: vs.border,
-    borderRadius: vs.borderRadius,
-    boxShadow: vs.shadow,
-    overflow: 'hidden',
+    // Style dari resolver (border, borderRadius, boxShadow, overflow)
+    ...resolvedStyle.inlineStyle,
     boxSizing: 'border-box',
     outline: selected ? '2px solid #2563eb' : 'none',
     outlineOffset: 2,

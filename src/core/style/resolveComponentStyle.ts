@@ -19,8 +19,11 @@ import type {
   CardComponentVariant,
   ImageComponentVariant,
   NavigationComponentVariant,
+  PageComponent,
   PageRole,
   LayoutId,
+  SimplePage,
+  SimpleProject,
   TextComponentVariant,
 } from '../types';
 import type {
@@ -30,6 +33,7 @@ import type {
   StyleColors,
   StyleShadow,
 } from '../style-types';
+import { getStylePack } from '../style-presets';
 
 // ---------------------------------------------------------------------------
 // Resolved style types
@@ -462,4 +466,48 @@ export function resolveComponentStyleWithInteractions(
   }
 
   return base;
+}
+
+// ---------------------------------------------------------------------------
+// Convenience helper: get resolved style for a component in context
+// ---------------------------------------------------------------------------
+
+/**
+ * Get resolved style for a specific component within a project + page context.
+ *
+ * This is THE function that Editor, Preview, and Export all call.
+ * It looks up interactionRecipes from the built-in StylePack (via stylePackId).
+ *
+ * Pure function: no React/DOM/window/localStorage/store.
+ *
+ * @param project - The full project (for style tokens + stylePackId)
+ * @param page - The page containing the component (for role + layoutId)
+ * @param component - The component to resolve
+ * @returns ResolvedComponentStyle
+ */
+export function getResolvedComponentStyle(
+  project: SimpleProject,
+  page: SimplePage,
+  component: PageComponent,
+): ResolvedComponentStyle {
+  const tokens = project.style?.tokens;
+  if (!tokens) {
+    return { inlineStyle: {} };
+  }
+
+  // Look up interactionRecipes from built-in StylePack
+  const stylePackId = project.stylePackId;
+  const stylePack = stylePackId ? getStylePack(stylePackId) : undefined;
+  const interactionRecipes = stylePack?.interactionRecipes;
+
+  return resolveComponentStyleWithInteractions(
+    {
+      tokens,
+      componentType: component.type as 'text' | 'image' | 'card' | 'navigation',
+      variant: component.variant,
+      pageRole: page.role,
+      layoutId: page.layoutId,
+    },
+    interactionRecipes,
+  );
 }

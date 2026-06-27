@@ -5,14 +5,14 @@ import { ImageComponentView } from '../components/ImageComponentView';
 import { CardComponentView } from '../components/CardComponentView';
 import { NavigationComponentView } from '../components/NavigationComponentView';
 import { getCapability } from '../core/capability';
+import { getResolvedComponentStyle } from '../core/style/resolveComponentStyle';
 
 const CANVAS_WIDTH = 1280;
 const CANVAS_HEIGHT = 720;
 
 export function CanvasStage() {
-  const currentPage = useEditorStore(
-    (s) => s.project.pages.find((p) => p.id === s.project.currentPageId) ?? null,
-  );
+  const project = useEditorStore((s) => s.project);
+  const currentPage = project.pages.find((p) => p.id === project.currentPageId) ?? null;
   const selectedComponentId = useEditorStore((s) => s.selectedComponentId);
   const selectComponent = useEditorStore((s) => s.selectComponent);
 
@@ -51,18 +51,22 @@ export function CanvasStage() {
             </div>
             <div>
               {canAdd
-                ? 'Klik tombol + Teks / + Gambar / + Kartu di toolbar untuk menambah elemen pembelajaran.'
+                ? 'Klik tombol + Teks / + Gambar / + Kartu / + Navigasi di toolbar untuk menambah elemen.'
                 : 'Elemen halaman terpandu akan diisi via template pedagogis (M11/M12).'}
             </div>
           </div>
         )}
 
         {currentPage?.components.map((component) => {
+          // M6 PATCH: resolve style via shared resolver
+          const resolvedStyle = getResolvedComponentStyle(project, currentPage, component);
+
           if (isTextComponent(component)) {
             return (
               <TextComponentView
                 key={component.id}
                 component={component}
+                resolvedStyle={resolvedStyle}
                 selected={component.id === selectedComponentId}
                 onSelect={selectComponent}
               />
@@ -73,6 +77,7 @@ export function CanvasStage() {
               <ImageComponentView
                 key={component.id}
                 component={component}
+                resolvedStyle={resolvedStyle}
                 selected={component.id === selectedComponentId}
                 onSelect={selectComponent}
               />
@@ -83,6 +88,7 @@ export function CanvasStage() {
               <CardComponentView
                 key={component.id}
                 component={component}
+                resolvedStyle={resolvedStyle}
                 selected={component.id === selectedComponentId}
                 onSelect={selectComponent}
               />
@@ -93,6 +99,7 @@ export function CanvasStage() {
               <NavigationComponentView
                 key={component.id}
                 component={component}
+                resolvedStyle={resolvedStyle}
                 selected={component.id === selectedComponentId}
                 onSelect={selectComponent}
               />

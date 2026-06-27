@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import {
   resolveComponentStyle,
   resolveComponentStyleWithInteractions,
+  getResolvedComponentStyle,
   type ResolveStyleInput,
 } from '../core/style/resolveComponentStyle';
 import { CLEAN_CLASSROOM_PACK, stylePackToProjectStyle } from '../core/style-presets';
@@ -234,8 +235,9 @@ describe('exportProjectToHtml', () => {
 
   it('includes project data embedded in script', () => {
     const html = exportProjectToHtml(project);
-    expect(html).toContain('var PROJECT =');
-    expect(html).toContain(project.id);
+    expect(html).toContain('var MODEL =');
+    // Render model includes page title
+    expect(html).toContain(project.pages[0].title);
   });
 
   it('includes CSS variables from StylePack tokens', () => {
@@ -296,7 +298,7 @@ describe('exportProjectToHtml', () => {
   it('includes navigation button rendering in JS', () => {
     const html = exportProjectToHtml(project);
     expect(html).toContain('silse-nav-btn');
-    expect(html).toContain('data-action');
+    expect(html).toContain('dataset.action');
   });
 
   it('includes prev/next buttons in toolbar', () => {
@@ -335,5 +337,223 @@ describe('editor/preview/export use same resolver', () => {
 
     expect(editorResult).toEqual(previewResult);
     expect(previewResult).toEqual(exportResult);
+  });
+});
+
+// =========================================================================
+// M6 PATCH ENFORCEMENT TESTS
+// Component views must NOT have VARIANT_STYLE hard-coded.
+// Export must NOT have switch (comp.variant) for style.
+// Render model must contain resolvedStyle.
+// =========================================================================
+
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { buildExportRenderModel } from '../export/export-html';
+
+const SRC_DIR = resolve(__dirname, '..');
+
+function readSrcFile(relPath: string): string {
+  return readFileSync(resolve(SRC_DIR, relPath), 'utf8');
+}
+
+describe('M6 PATCH — component views do NOT have VARIANT_STYLE', () => {
+  it('TextComponentView.tsx does NOT contain VARIANT_STYLE', () => {
+    const content = readSrcFile('components/TextComponentView.tsx');
+    expect(content).not.toMatch(/VARIANT_STYLE/);
+  });
+
+  it('ImageComponentView.tsx does NOT contain VARIANT_STYLE', () => {
+    const content = readSrcFile('components/ImageComponentView.tsx');
+    expect(content).not.toMatch(/VARIANT_STYLE/);
+  });
+
+  it('CardComponentView.tsx does NOT contain VARIANT_STYLE', () => {
+    const content = readSrcFile('components/CardComponentView.tsx');
+    expect(content).not.toMatch(/VARIANT_STYLE/);
+  });
+
+  it('NavigationComponentView.tsx does NOT contain VARIANT_STYLE', () => {
+    const content = readSrcFile('components/NavigationComponentView.tsx');
+    expect(content).not.toMatch(/VARIANT_STYLE/);
+  });
+
+  it('TextComponentView accepts resolvedStyle prop', () => {
+    const content = readSrcFile('components/TextComponentView.tsx');
+    expect(content).toMatch(/resolvedStyle/);
+  });
+
+  it('ImageComponentView accepts resolvedStyle prop', () => {
+    const content = readSrcFile('components/ImageComponentView.tsx');
+    expect(content).toMatch(/resolvedStyle/);
+  });
+
+  it('CardComponentView accepts resolvedStyle prop', () => {
+    const content = readSrcFile('components/CardComponentView.tsx');
+    expect(content).toMatch(/resolvedStyle/);
+  });
+
+  it('NavigationComponentView accepts resolvedStyle prop', () => {
+    const content = readSrcFile('components/NavigationComponentView.tsx');
+    expect(content).toMatch(/resolvedStyle/);
+  });
+});
+
+describe('M6 PATCH — export does NOT have style switch per variant', () => {
+  it('export-html.ts does NOT contain switch on comp.variant for style', () => {
+    const content = readSrcFile('export/export-html.ts');
+    // The export should NOT have manual switch statements on variant for style
+    expect(content).not.toMatch(/switch\s*\(comp\.variant\)/);
+    expect(content).not.toMatch(/switch\s*\(component\.variant\)/);
+  });
+
+  it('export-html.ts does NOT have case statements for style variants', () => {
+    const content = readSrcFile('export/export-html.ts');
+    // No manual style case like "case 'title': fontSize = ..."
+    expect(content).not.toMatch(/case\s+['"]title['"]/);
+    expect(content).not.toMatch(/case\s+['"]illustration['"]/);
+    expect(content).not.toMatch(/case\s+['"]infoCard['"]/);
+    expect(content).not.toMatch(/case\s+['"]primaryAction['"]/);
+  });
+
+  it('export-html.ts uses buildExportRenderModel', () => {
+    const content = readSrcFile('export/export-html.ts');
+    expect(content).toMatch(/buildExportRenderModel/);
+  });
+
+  it('export-html.ts calls getResolvedComponentStyle', () => {
+    const content = readSrcFile('export/export-html.ts');
+    expect(content).toMatch(/getResolvedComponentStyle/);
+  });
+});
+
+describe('M6 PATCH — export render model contains resolvedStyle', () => {
+  it('buildExportRenderModel produces components with resolvedStyle', () => {
+    const project = createProject('Test Render Model');
+    const model = buildExportRenderModel(project);
+
+    expect(model.pages).toHaveLength(1);
+    const page = model.pages[0];
+    expect(page.components.length).toBeGreaterThan(0);
+
+    const comp = page.components[0];
+    expect(comp.resolvedStyle).toBeDefined();
+    expect(comp.resolvedStyle.inlineStyle).toBeDefined();
+    expect(typeof comp.resolvedStyle.inlineStyle).toBe('object');
+  });
+
+  it('render model resolvedStyle.inlineStyle has style properties', () => {
+    const project = createProject('Test Style Props');
+    const model = buildExportRenderModel(project);
+
+    // Cover page has 1 text component variant 'title'
+    const comp = model.pages[0].components[0];
+    expect(comp.type).toBe('text');
+    expect(comp.resolvedStyle.inlineStyle.fontSize).toBeDefined();
+    expect(comp.resolvedStyle.inlineStyle.color).toBeDefined();
+    expect(comp.resolvedStyle.inlineStyle.fontWeight).toBeDefined();
+  });
+
+  it('render model for navigation includes interactions', () => {
+    const project = createProject('Test Nav Interactions');
+    // Manually add navigation component to a free page
+    const freePage = {
+      ...project.pages[0],
+      id: 'test-free-page',
+      role: 'free' as const,
+      layoutId: 'blank' as const,
+      components: [
+        {
+          id: 'nav-test',
+          type: 'navigation' as const,
+          variant: 'navigation' as const,
+          label: 'Next',
+          action: 'next' as const,
+          x: 100,
+          y: 600,
+          width: 200,
+          height: 50,
+        },
+      ],
+    };
+    const testProject = { ...project, pages: [freePage], currentPageId: freePage.id };
+    const model = buildExportRenderModel(testProject);
+
+    const navComp = model.pages[0].components[0];
+    expect(navComp.type).toBe('navigation');
+    expect(navComp.resolvedStyle.interactions).toBeDefined();
+    expect(navComp.resolvedStyle.interactions?.hover).toBeDefined();
+    expect(navComp.resolvedStyle.interactions?.press).toBeDefined();
+    expect(navComp.resolvedStyle.interactions?.focus).toBeDefined();
+  });
+});
+
+describe('M6 PATCH — token change propagates through resolver', () => {
+  it('changing colors.primary changes resolvedStyle for primaryAction navigation', () => {
+    const project1 = createProject('Test Token Change 1');
+    // Create a modified project with different primary color
+    const project2: typeof project1 = {
+      ...project1,
+      style: {
+        ...project1.style!,
+        tokens: {
+          ...project1.style!.tokens,
+          colors: {
+            ...project1.style!.tokens.colors,
+            primary: '#ff0000', // changed from default
+          },
+        },
+      },
+    };
+
+    // Add a navigation component to both projects on a free page
+    const navComponent = {
+      id: 'nav-test',
+      type: 'navigation' as const,
+      variant: 'primaryAction' as const,
+      label: 'Test',
+      action: 'next' as const,
+      x: 100,
+      y: 600,
+      width: 200,
+      height: 50,
+    };
+    const freePage1 = { ...project1.pages[0], role: 'free' as const, layoutId: 'blank' as const, components: [navComponent] };
+    const freePage2 = { ...project2.pages[0], role: 'free' as const, layoutId: 'blank' as const, components: [navComponent] };
+
+    const testProject1 = { ...project1, pages: [freePage1] };
+    const testProject2 = { ...project2, pages: [freePage2] };
+
+    const resolved1 = getResolvedComponentStyle(testProject1, freePage1, navComponent);
+    const resolved2 = getResolvedComponentStyle(testProject2, freePage2, navComponent);
+
+    // The backgroundColor should differ because primary color changed
+    expect(resolved1.inlineStyle.backgroundColor).not.toBe(resolved2.inlineStyle.backgroundColor);
+    expect(resolved2.inlineStyle.backgroundColor).toBe('#ff0000');
+  });
+
+  it('changing typography.titleSize changes resolvedStyle for title text', () => {
+    const project1 = createProject('Test Font Change 1');
+    const project2: typeof project1 = {
+      ...project1,
+      style: {
+        ...project1.style!,
+        tokens: {
+          ...project1.style!.tokens,
+          typography: {
+            ...project1.style!.tokens.typography,
+            titleSize: 72, // changed from default 48
+          },
+        },
+      },
+    };
+
+    // Cover page has 1 pre-filled title component
+    const titleComp = project1.pages[0].components[0];
+    const resolved1 = getResolvedComponentStyle(project1, project1.pages[0], titleComp);
+    const resolved2 = getResolvedComponentStyle(project2, project2.pages[0], titleComp);
+
+    expect(resolved1.inlineStyle.fontSize).not.toBe(resolved2.inlineStyle.fontSize);
+    expect(resolved2.inlineStyle.fontSize).toBe('72px');
   });
 });

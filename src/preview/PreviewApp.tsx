@@ -4,13 +4,8 @@
  * Layer: preview
  * Allowed imports: ../core, ../components, ../store (read-only)
  *
- * M5 scope:
- *   - Render halaman dari project (read-only).
- *   - Navigation component bisa diklik → next/prev/goto.
- *   - Runtime state terpisah dari editor (preview-store.ts).
- *   - Tidak mengubah editor currentPageId.
- *   - Tidak menyimpan progress permanen.
- *   - Client-side only.
+ * M6 PATCH: Component views menerima resolvedStyle dari getResolvedComponentStyle.
+ * Editor dan Preview memakai resolver yang sama.
  */
 
 import { useEditorStore } from '../store/editor-store';
@@ -20,6 +15,7 @@ import { TextComponentView } from '../components/TextComponentView';
 import { ImageComponentView } from '../components/ImageComponentView';
 import { CardComponentView } from '../components/CardComponentView';
 import { NavigationComponentView } from '../components/NavigationComponentView';
+import { getResolvedComponentStyle } from '../core/style/resolveComponentStyle';
 import type { NavigationComponent } from '../core/types';
 
 const CANVAS_WIDTH = 1280;
@@ -106,20 +102,24 @@ export function PreviewApp() {
           }}
         >
           {currentPage.components.map((component) => {
+            // M6 PATCH: resolve style via shared resolver (same as editor + export)
+            const resolvedStyle = getResolvedComponentStyle(project, currentPage, component);
+
             if (isTextComponent(component)) {
-              return <TextComponentView key={component.id} component={component} />;
+              return <TextComponentView key={component.id} component={component} resolvedStyle={resolvedStyle} />;
             }
             if (isImageComponent(component)) {
-              return <ImageComponentView key={component.id} component={component} />;
+              return <ImageComponentView key={component.id} component={component} resolvedStyle={resolvedStyle} />;
             }
             if (isCardComponent(component)) {
-              return <CardComponentView key={component.id} component={component} />;
+              return <CardComponentView key={component.id} component={component} resolvedStyle={resolvedStyle} />;
             }
             if (isNavigationComponent(component)) {
               return (
                 <NavigationComponentView
                   key={component.id}
                   component={component}
+                  resolvedStyle={resolvedStyle}
                   onNavigate={() => handleNavigationClick(component)}
                 />
               );

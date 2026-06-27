@@ -4,35 +4,144 @@
  * Layer: export
  * Allowed imports: ../core (types, style resolver, style-presets)
  *
- * Kontrak (Batch 6 / M6):
+ * Kontrak (Batch 6 / M6 + M6 PATCH):
  *   - Satu file HTML standalone.
  *   - CSS inline dalam <style>.
  *   - JS inline dalam <script>.
- *   - Data project embedded sebagai JSON literal.
+ *   - Data project embedded sebagai JSON literal (render model).
+ *   - TIDAK ADA switch style manual per variant di JS export.
+ *   - Style datang dari resolveComponentStyle via buildExportRenderModel.
  *   - Tidak ada CDN, external script, external stylesheet.
  *   - Tidak ada React/Vite runtime.
- *   - Render page 1280×720, navigate next/prev/goto.
- *   - StylePack tokens sebagai CSS variables.
  *   - Security: escape `</script>` in project data.
  */
 
-import type { SimpleProject } from '../core/types';
+import type { SimpleProject, SimplePage, PageComponent } from '../core/types';
 import type { ProjectStyle } from '../core/style-types';
+import { getResolvedComponentStyle } from '../core/style/resolveComponentStyle';
 
 const CANVAS_WIDTH = 1280;
 const CANVAS_HEIGHT = 720;
 
 // ---------------------------------------------------------------------------
-// Security: escape `</script>` in JSON data
+// Export Render Model — pre-computed style via resolver
 // ---------------------------------------------------------------------------
 
 /**
- * Serialize project data safely for embedding in <script> tag.
- * Escapes `</script>` to prevent XSS / premature script termination.
+ * Render model for export. Each component has pre-computed resolvedStyle
+ * from resolveComponentStyle. The inline JS does NOT re-compute style.
  */
-function serializeProjectData(project: SimpleProject): string {
-  const json = JSON.stringify(project);
-  // Escape </script> to prevent premature script termination
+type ExportRenderModel = {
+  title: string;
+  pages: ExportRenderPage[];
+  cssVariables: Record<string, string>;
+};
+
+type ExportRenderPage = {
+  id: string;
+  title: string;
+  background: SimplePage['background'];
+  components: ExportRenderComponent[];
+};
+
+type ExportRenderComponent = {
+  id: string;
+  type: string;
+  variant: string;
+  // Geometry
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  // Component-specific data
+  text?: string;
+  src?: string;
+  alt?: string;
+  objectFit?: string;
+  cardTitle?: string;
+  body?: string;
+  label?: string;
+  action?: string;
+  targetPageId?: string;
+  // Pre-computed resolved style from resolver
+  resolvedStyle: {
+    inlineStyle: Record<string, string | number>;
+    className?: string;
+    interactions?: {
+      hover?: Record<string, string | undefined>;
+      press?: Record<string, string | undefined>;
+      focus?: Record<string, string | undefined>;
+    };
+  };
+};
+
+/**
+ * Build export render model with pre-computed resolvedStyle per component.
+ * This is where resolveComponentStyle is called for export.
+ */
+function buildExportRenderModel(project: SimpleProject): ExportRenderModel {
+  const cssVariables = generateCssVariablesMap(project.style);
+
+  const pages: ExportRenderPage[] = project.pages.map((page) => ({
+    id: page.id,
+    title: page.title,
+    background: page.background,
+    components: page.components.map((component) =>
+      buildExportRenderComponent(project, page, component),
+    ),
+  }));
+
+  return { title: project.title, pages, cssVariables };
+}
+
+function buildExportRenderComponent(
+  project: SimpleProject,
+  page: SimplePage,
+  component: PageComponent,
+): ExportRenderComponent {
+  // M6 PATCH: resolve style via shared resolver
+  const resolved = getResolvedComponentStyle(project, page, component);
+
+  const base: ExportRenderComponent = {
+    id: component.id,
+    type: component.type,
+    variant: (component as { variant: string }).variant,
+    x: component.x,
+    y: component.y,
+    width: component.width,
+    height: component.height,
+    resolvedStyle: {
+      inlineStyle: resolved.inlineStyle,
+      className: resolved.className,
+      interactions: resolved.interactions as Record<string, Record<string, string | undefined>> | undefined,
+    },
+  };
+
+  // Component-specific data
+  if (component.type === 'text') {
+    base.text = component.text;
+  } else if (component.type === 'image') {
+    base.src = component.src;
+    base.alt = component.alt ?? '';
+    base.objectFit = component.objectFit;
+  } else if (component.type === 'card') {
+    base.cardTitle = component.title ?? '';
+    base.body = component.body;
+  } else if (component.type === 'navigation') {
+    base.label = component.label;
+    base.action = component.action;
+    base.targetPageId = component.targetPageId ?? '';
+  }
+
+  return base;
+}
+
+// ---------------------------------------------------------------------------
+// Security: escape `</script>` in JSON data
+// ---------------------------------------------------------------------------
+
+function serializeRenderModel(model: ExportRenderModel): string {
+  const json = JSON.stringify(model);
   return json.replace(/<\/script>/gi, '<\\/script>');
 }
 
@@ -40,65 +149,55 @@ function serializeProjectData(project: SimpleProject): string {
 // CSS variables from StylePack tokens
 // ---------------------------------------------------------------------------
 
-function generateCssVariables(style: ProjectStyle | undefined): string {
-  if (!style) return '';
+function generateCssVariablesMap(style: ProjectStyle | undefined): Record<string, string> {
+  if (!style) return {};
 
   const { colors, typography, spacing, radius, shadow } = style.tokens;
-
-  const vars: string[] = [
-    `  --silse-color-background: ${colors.background};`,
-    `  --silse-color-surface: ${colors.surface};`,
-    `  --silse-color-primary: ${colors.primary};`,
-    `  --silse-color-secondary: ${colors.secondary};`,
-    `  --silse-color-text: ${colors.text};`,
-    `  --silse-color-muted-text: ${colors.mutedText};`,
-    `  --silse-color-border: ${colors.border};`,
-    `  --silse-color-success: ${colors.success};`,
-    `  --silse-color-warning: ${colors.warning};`,
-    `  --silse-color-danger: ${colors.danger};`,
-    `  --silse-font-family: ${typography.fontFamily};`,
-    `  --silse-title-size: ${typography.titleSize}px;`,
-    `  --silse-subtitle-size: ${typography.subtitleSize}px;`,
-    `  --silse-body-size: ${typography.bodySize}px;`,
-    `  --silse-small-size: ${typography.smallSize}px;`,
-    `  --silse-line-height: ${typography.lineHeight};`,
-    `  --silse-spacing-page-padding: ${spacing.pagePadding}px;`,
-    `  --silse-spacing-component-gap: ${spacing.componentGap}px;`,
-    `  --silse-spacing-card-padding: ${spacing.cardPadding}px;`,
-    `  --silse-radius-small: ${radius.small}px;`,
-    `  --silse-radius-medium: ${radius.medium}px;`,
-    `  --silse-radius-large: ${radius.large}px;`,
-    `  --silse-shadow-none: ${shadow.none};`,
-    `  --silse-shadow-soft: ${shadow.soft};`,
-    `  --silse-shadow-medium: ${shadow.medium};`,
-  ];
-
-  return vars.join('\n');
+  return {
+    '--silse-color-background': colors.background,
+    '--silse-color-surface': colors.surface,
+    '--silse-color-primary': colors.primary,
+    '--silse-color-secondary': colors.secondary,
+    '--silse-color-text': colors.text,
+    '--silse-color-muted-text': colors.mutedText,
+    '--silse-color-border': colors.border,
+    '--silse-color-success': colors.success,
+    '--silse-color-warning': colors.warning,
+    '--silse-color-danger': colors.danger,
+    '--silse-font-family': typography.fontFamily,
+    '--silse-title-size': `${typography.titleSize}px`,
+    '--silse-subtitle-size': `${typography.subtitleSize}px`,
+    '--silse-body-size': `${typography.bodySize}px`,
+    '--silse-small-size': `${typography.smallSize}px`,
+    '--silse-line-height': String(typography.lineHeight),
+    '--silse-spacing-page-padding': `${spacing.pagePadding}px`,
+    '--silse-spacing-component-gap': `${spacing.componentGap}px`,
+    '--silse-spacing-card-padding': `${spacing.cardPadding}px`,
+    '--silse-radius-small': `${radius.small}px`,
+    '--silse-radius-medium': `${radius.medium}px`,
+    '--silse-radius-large': `${radius.large}px`,
+    '--silse-shadow-none': shadow.none,
+    '--silse-shadow-soft': shadow.soft,
+    '--silse-shadow-medium': shadow.medium,
+  };
 }
 
-// ---------------------------------------------------------------------------
-// Component rendering for export
-// ---------------------------------------------------------------------------
-
-function escapeHTML(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+function generateCssVariablesString(vars: Record<string, string>): string {
+  return Object.entries(vars)
+    .map(([k, v]) => `  ${k}: ${v};`)
+    .join('\n');
 }
 
 // ---------------------------------------------------------------------------
 // CSS generation
 // ---------------------------------------------------------------------------
 
-function generateCSS(style: ProjectStyle | undefined): string {
-  const cssVars = generateCssVariables(style);
+function generateCSS(cssVars: Record<string, string>): string {
+  const varsStr = generateCssVariablesString(cssVars);
 
   return `
 :root {
-${cssVars}
+${varsStr}
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -151,28 +250,19 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
-}
-
-#silse-canvas .silse-nav-btn:hover {
-  transform: scale(1.05);
-}
-
-#silse-canvas .silse-nav-btn:active {
-  transform: scale(0.96);
 }
 `.trim();
 }
 
 // ---------------------------------------------------------------------------
-// JS generation (inline, no external dependencies)
+// JS generation — reads from render model, NO style switch
 // ---------------------------------------------------------------------------
 
-function generateJS(projectData: string): string {
+function generateJS(renderModelJson: string): string {
   return `
 (function() {
-  var PROJECT = ${projectData};
-  var pages = PROJECT.pages;
+  var MODEL = ${renderModelJson};
+  var pages = MODEL.pages;
   var currentPageIdx = 0;
 
   var canvas = document.getElementById('silse-canvas');
@@ -195,85 +285,112 @@ function generateJS(projectData: string): string {
       canvas.style.background = 'url(' + page.background.imageSrc + ') center/cover no-repeat';
     }
 
-    // Render components
+    // Render components — style from resolvedStyle, NO switch
     for (var i = 0; i < page.components.length; i++) {
       var comp = page.components[i];
-      var html = renderComponent(comp, page.role, page.layoutId);
-      if (html) canvas.insertAdjacentHTML('beforeend', html);
+      var el = renderComponent(comp);
+      if (el) canvas.appendChild(el);
     }
 
-    // Update nav buttons
     prevBtn.disabled = (currentPageIdx === 0);
     nextBtn.disabled = (currentPageIdx === pages.length - 1);
     pageInfo.textContent = (currentPageIdx + 1) + ' / ' + pages.length + ' - ' + page.title;
   }
 
-  function renderComponent(comp, pageRole, layoutId) {
-    var style = PROJECT.style;
-    var tokens = style ? style.tokens : null;
-    if (!tokens) return '';
+  function buildInlineStyle(comp) {
+    // Geometry + resolvedStyle.inlineStyle — NO style switch
+    var s = 'position:absolute;left:' + comp.x + 'px;top:' + comp.y + 'px;width:' + comp.width + 'px;height:' + comp.height + 'px;';
+    var rs = comp.resolvedStyle.inlineStyle;
+    for (var key in rs) {
+      if (rs.hasOwnProperty(key)) {
+        var cssKey = key.replace(/[A-Z]/g, function(m) { return '-' + m.toLowerCase(); });
+        s += cssKey + ':' + rs[key] + ';';
+      }
+    }
+    return s;
+  }
 
-    var geometryStyle = 'position:absolute;left:' + comp.x + 'px;top:' + comp.y + 'px;width:' + comp.width + 'px;height:' + comp.height + 'px;';
-    var resolvedStyle = '';
+  function renderComponent(comp) {
+    var style = buildInlineStyle(comp);
+    var el;
 
     if (comp.type === 'text') {
-      var fontSize, color, fontWeight, textAlign;
-      switch (comp.variant) {
-        case 'title': fontSize = tokens.typography.titleSize + 'px'; color = tokens.colors.text; fontWeight = 'bold'; break;
-        case 'subtitle': fontSize = tokens.typography.subtitleSize + 'px'; color = tokens.colors.mutedText; fontWeight = 'normal'; break;
-        case 'instruction': fontSize = tokens.typography.bodySize + 'px'; color = tokens.colors.primary; fontWeight = 'normal'; break;
-        case 'importantNote': fontSize = tokens.typography.bodySize + 'px'; color = tokens.colors.warning; fontWeight = 'bold'; break;
-        case 'questionPrompt': fontSize = tokens.typography.subtitleSize + 'px'; color = tokens.colors.text; fontWeight = 'bold'; break;
-        case 'reflectionBox': fontSize = tokens.typography.bodySize + 'px'; color = tokens.colors.secondary; fontWeight = 'normal'; break;
-        default: fontSize = tokens.typography.bodySize + 'px'; color = tokens.colors.text; fontWeight = 'normal'; break;
-      }
-      resolvedStyle = 'font-size:' + fontSize + ';color:' + color + ';font-weight:' + fontWeight + ';display:flex;align-items:center;padding:0 4px;overflow:hidden;white-space:pre-wrap;word-break:break-word;';
-      return '<div style="' + geometryStyle + resolvedStyle + '">' + escapeHtml(comp.text) + '</div>';
+      el = document.createElement('div');
+      el.style.cssText = style + 'display:flex;align-items:center;overflow:hidden;white-space:pre-wrap;word-break:break-word;box-sizing:border-box;';
+      el.textContent = comp.text || '';
+      return el;
     }
 
     if (comp.type === 'image') {
-      var border, borderRadius, boxShadow;
-      switch (comp.variant) {
-        case 'illustration': border = '1px solid ' + tokens.colors.border; borderRadius = tokens.radius.medium + 'px'; boxShadow = tokens.shadow.soft; break;
-        case 'background': border = 'none'; borderRadius = '0'; boxShadow = 'none'; break;
-        case 'imageCard': border = '2px solid ' + tokens.colors.primary; borderRadius = tokens.radius.large + 'px'; boxShadow = tokens.shadow.medium; break;
-        default: border = '1px solid ' + tokens.colors.border; borderRadius = tokens.radius.medium + 'px'; boxShadow = tokens.shadow.soft; break;
-      }
-      resolvedStyle = 'border:' + border + ';border-radius:' + borderRadius + ';box-shadow:' + boxShadow + ';overflow:hidden;';
-      return '<div style="' + geometryStyle + resolvedStyle + '"><img src="' + comp.src + '" alt="' + escapeHtml(comp.alt || '') + '" style="width:100%;height:100%;object-fit:' + comp.objectFit + ';display:block;pointer-events:none;" /></div>';
+      el = document.createElement('div');
+      el.style.cssText = style + 'overflow:hidden;box-sizing:border-box;';
+      var img = document.createElement('img');
+      img.src = comp.src;
+      img.alt = comp.alt || '';
+      img.style.cssText = 'width:100%;height:100%;object-fit:' + comp.objectFit + ';display:block;pointer-events:none;';
+      el.appendChild(img);
+      return el;
     }
 
     if (comp.type === 'card') {
-      var cardBg, cardBorder, cardColor;
-      switch (comp.variant) {
-        case 'infoCard': cardBg = tokens.colors.surface; cardBorder = '1px solid ' + tokens.colors.border; cardColor = tokens.colors.text; break;
-        case 'importantNote': cardBg = tokens.colors.surface; cardBorder = '1px solid ' + tokens.colors.warning; cardColor = tokens.colors.warning; break;
-        case 'exampleCard': cardBg = tokens.colors.surface; cardBorder = '1px solid ' + tokens.colors.success; cardColor = tokens.colors.text; break;
-        default: cardBg = tokens.colors.surface; cardBorder = '1px solid ' + tokens.colors.border; cardColor = tokens.colors.text; break;
+      el = document.createElement('div');
+      el.style.cssText = style + 'box-sizing:border-box;display:flex;flex-direction:column;gap:8px;overflow:hidden;';
+      if (comp.cardTitle) {
+        var title = document.createElement('strong');
+        title.style.fontSize = '16px';
+        title.textContent = comp.cardTitle;
+        el.appendChild(title);
       }
-      resolvedStyle = 'background-color:' + cardBg + ';border:' + cardBorder + ';border-radius:' + tokens.radius.medium + 'px;color:' + cardColor + ';padding:' + tokens.spacing.cardPadding + 'px;display:flex;flex-direction:column;gap:8px;overflow:hidden;';
-      var titleHtml = comp.title ? '<strong style="font-size:16px;">' + escapeHtml(comp.title) + '</strong>' : '';
-      return '<div style="' + geometryStyle + resolvedStyle + '">' + titleHtml + '<div style="font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word;flex:1;overflow:auto;">' + escapeHtml(comp.body) + '</div></div>';
+      var body = document.createElement('div');
+      body.style.cssText = 'font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word;flex:1;overflow:auto;';
+      body.textContent = comp.body || '';
+      el.appendChild(body);
+      return el;
     }
 
     if (comp.type === 'navigation') {
-      var navBg, navColor, navBorder;
-      switch (comp.variant) {
-        case 'navigation': navBg = tokens.colors.surface; navColor = tokens.colors.text; navBorder = '2px solid ' + tokens.colors.border; break;
-        case 'primaryAction': navBg = tokens.colors.primary; navColor = '#ffffff'; navBorder = '2px solid ' + tokens.colors.primary; break;
-        case 'secondaryAction': navBg = '#ffffff'; navColor = tokens.colors.primary; navBorder = '2px solid ' + tokens.colors.primary; break;
-        case 'choice': navBg = tokens.colors.surface; navColor = tokens.colors.warning; navBorder = '2px solid ' + tokens.colors.warning; break;
-        default: navBg = tokens.colors.surface; navColor = tokens.colors.text; navBorder = '2px solid ' + tokens.colors.border; break;
+      el = document.createElement('button');
+      el.className = 'silse-nav-btn';
+      el.dataset.action = comp.action;
+      el.dataset.target = comp.targetPageId || '';
+      el.style.cssText = style + 'cursor:pointer;display:flex;align-items:center;justify-content:center;user-select:none;';
+
+      // Apply interaction styles from resolvedStyle.interactions
+      var interactions = comp.resolvedStyle.interactions;
+      if (interactions && interactions.hover) {
+        var hover = interactions.hover;
+        if (hover.transition) el.style.transition = hover.transition;
+        // Store original + hover styles for event listeners
+        el._origTransform = el.style.transform || '';
+        el._hoverTransform = hover.transform || '';
+        el._hoverBoxShadow = hover.boxShadow || '';
+        el._origBoxShadow = el.style.boxShadow || '';
+
+        el.addEventListener('mouseenter', function() {
+          if (this._hoverTransform) this.style.transform = this._hoverTransform;
+          if (this._hoverBoxShadow) this.style.boxShadow = this._hoverBoxShadow;
+        });
+        el.addEventListener('mouseleave', function() {
+          this.style.transform = this._origTransform;
+          this.style.boxShadow = this._origBoxShadow;
+        });
       }
-      resolvedStyle = 'background-color:' + navBg + ';color:' + navColor + ';border:' + navBorder + ';border-radius:' + tokens.radius.medium + 'px;font-size:' + tokens.typography.bodySize + 'px;font-weight:normal;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform 0.15s ease-out;';
-      return '<button class="silse-nav-btn" data-action="' + comp.action + '" data-target="' + (comp.targetPageId || '') + '" style="' + geometryStyle + resolvedStyle + '">' + escapeHtml(comp.label) + '</button>';
+      if (interactions && interactions.press) {
+        var press = interactions.press;
+        el._pressTransform = press.transform || '';
+        el.addEventListener('mousedown', function() {
+          if (this._pressTransform) this.style.transform = this._pressTransform;
+        });
+        el.addEventListener('mouseup', function() {
+          this.style.transform = this._hoverTransform || this._origTransform;
+        });
+      }
+
+      el.textContent = comp.label || '';
+      return el;
     }
 
-    return '';
-  }
-
-  function escapeHtml(str) {
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    return null;
   }
 
   function navigate(action, target) {
@@ -291,7 +408,6 @@ function generateJS(projectData: string): string {
     }
   }
 
-  // Event listeners
   prevBtn.addEventListener('click', function() { navigate('prev'); });
   nextBtn.addEventListener('click', function() { navigate('next'); });
 
@@ -302,33 +418,33 @@ function generateJS(projectData: string): string {
     }
   });
 
-  // Initialize
   renderPage(0);
 })();
 `.trim();
 }
 
 // ---------------------------------------------------------------------------
+// HTML escape
+// ---------------------------------------------------------------------------
+
+function escapeHTML(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// ---------------------------------------------------------------------------
 // Main export function
 // ---------------------------------------------------------------------------
 
-/**
- * Render a SimpleProject as a standalone HTML string.
- *
- * Output: satu file HTML dengan:
- *   - CSS inline dalam <style>
- *   - JS inline dalam <script>
- *   - Data project embedded (escaped for security)
- *   - Tidak ada CDN, external script, external stylesheet
- *   - Tidak ada React/Vite runtime
- *   - Render page 1280×720
- *   - Navigate next/prev/goto
- *   - StylePack tokens sebagai CSS variables
- */
 export function exportProjectToHtml(project: SimpleProject): string {
-  const projectData = serializeProjectData(project);
-  const css = generateCSS(project.style);
-  const js = generateJS(projectData);
+  const renderModel = buildExportRenderModel(project);
+  const renderModelJson = serializeRenderModel(renderModel);
+  const css = generateCSS(renderModel.cssVariables);
+  const js = generateJS(renderModelJson);
 
   return `<!doctype html>
 <html lang="id">
@@ -353,3 +469,7 @@ ${js}
 </body>
 </html>`;
 }
+
+// Export for testing
+export { buildExportRenderModel };
+export type { ExportRenderModel, ExportRenderComponent };
