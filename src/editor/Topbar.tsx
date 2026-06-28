@@ -22,6 +22,7 @@ import { usePreviewStore } from '../preview/preview-store';
 import { exportProjectToHtml } from '../export/export-html';
 import { downloadHtmlFile } from '../export/export-download';
 import { checkMpiStandard } from '../core/mpi-quality-check';
+import { GuidedFlowDialog } from './GuidedFlowDialog';
 
 export function Topbar() {
   const project = useEditorStore((s) => s.project);
@@ -31,6 +32,7 @@ export function Topbar() {
 
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(project.title);
+  const [showGuidedFlow, setShowGuidedFlow] = useState(false);
 
   const startEditTitle = () => {
     setTitleDraft(project.title);
@@ -144,6 +146,15 @@ export function Topbar() {
           ⬇ Export HTML
         </button>
         <button
+          onClick={() => setShowGuidedFlow(true)}
+          className="editor-topbar__action editor-topbar__action--guided"
+          title="Buat paket MPI lengkap dari topik"
+          data-action="guided-flow"
+          data-testid="topbar-guided-flow"
+        >
+          🎯 Paket MPI dari Topik
+        </button>
+        <button
           onClick={() => {
             if (window.confirm('Buat MPI baru? Perubahan saat ini akan hilang jika belum disimpan.')) {
               newProject();
@@ -157,6 +168,9 @@ export function Topbar() {
           + MPI Baru
         </button>
       </div>
+      {showGuidedFlow && (
+        <GuidedFlowDialog onClose={() => setShowGuidedFlow(false)} />
+      )}
     </header>
   );
 }

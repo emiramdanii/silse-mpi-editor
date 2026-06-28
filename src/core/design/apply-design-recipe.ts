@@ -74,9 +74,9 @@ export function placeComponentInRecipe(
     // Subsequent text: stack in content zone
     return {
       x: contentZone.x,
-      y: contentZone.y + Math.min(index * 100, contentZone.height - 100),
+      y: contentZone.y + Math.min(index * 100, Math.max(0, contentZone.height - 100)),
       width: contentZone.width,
-      height: Math.min(120, contentZone.height - 100),
+      height: Math.max(60, Math.min(120, contentZone.height - 100)),
     };
   }
 
