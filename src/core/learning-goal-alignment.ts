@@ -344,3 +344,87 @@ export function getAlignmentScoreLabel(score: number): string {
   if (score >= 40) return 'Kurang Selaras';
   return 'Belum Selaras';
 }
+
+// ---------------------------------------------------------------------------
+// UI V2 helpers — page-level alignment level
+// ---------------------------------------------------------------------------
+
+/**
+ * Page-level alignment level, derived from PageAlignment.
+ * Used by PagePanel badge to show alignment status per halaman.
+ *
+ *  - 'aligned'   : page addresses >=1 objective AND no alignment issues on this page
+ *  - 'partial'   : page addresses >=1 objective BUT has alignment issues (warning)
+ *  - 'unaligned' : page addresses 0 objectives AND has alignment issues (e.g. MATERIAL_NOT_LINKED)
+ *  - 'empty'     : page addresses 0 objectives AND no issues (e.g. quiz page with no
+ *                  components — no assessment to trigger ASSESSMENT_NOT_LINKED, no role
+ *                  check fires). Page is effectively empty for alignment purposes.
+ *  - 'neutral'   : page role does not require alignment (cover, guide, menu, free)
+ *                  — page is not assessed for alignment
+ *
+ * Note: 'empty' vs 'unaligned' distinction:
+ *   - 'unaligned' = page TRIED (has components) but didn't match any objective → has issues
+ *   - 'empty'     = page didn't even try (no components, or role has no required check) → no issues
+ *   This distinction helps the UI show "kosong" vs "belum selaras" differently.
+ */
+export type PageAlignmentLevel = 'aligned' | 'partial' | 'unaligned' | 'empty' | 'neutral';
+
+const ALIGNMENT_NEUTRAL_ROLES = new Set<string>(['cover', 'guide', 'menu', 'free']);
+
+export function getPageAlignmentLevel(page: PageAlignment): PageAlignmentLevel {
+  // Neutral roles: not assessed for alignment.
+  if (ALIGNMENT_NEUTRAL_ROLES.has(page.pageRole)) return 'neutral';
+
+  // Unaligned: 0 objectives addressed AND has issues (MATERIAL/REFLECTION/ASSESSMENT_NOT_LINKED)
+  if (page.addressedObjectiveIds.length === 0 && page.issues.length > 0) {
+    return 'unaligned';
+  }
+
+  // Empty: 0 objectives addressed AND no issues (page has no components or role has no check)
+  if (page.addressedObjectiveIds.length === 0 && page.issues.length === 0) {
+    return 'empty';
+  }
+
+  // Partial: addresses >=1 objective but has alignment issues
+  if (page.issues.length > 0) return 'partial';
+
+  // Aligned: addresses >=1 objective, no issues
+  return 'aligned';
+}
+
+/**
+ * Get all alignment issues that reference a specific page (by pageId).
+ * Used by AlignmentDetailPanel to group issues per page.
+ */
+export function getAlignmentIssuesForPage(
+  alignment: ProjectAlignment,
+  pageId: string,
+): AlignmentIssue[] {
+  return alignment.issues.filter((i) => i.pageId === pageId);
+}
+
+/**
+ * Get a human-readable label for a PageAlignmentLevel.
+ */
+export function getPageAlignmentLevelLabel(level: PageAlignmentLevel): string {
+  switch (level) {
+    case 'aligned': return 'Selaras';
+    case 'partial': return 'Sebagian';
+    case 'unaligned': return 'Belum selaras';
+    case 'empty': return 'Kosong';
+    case 'neutral': return 'Netral';
+  }
+}
+
+/**
+ * Get an icon for a PageAlignmentLevel (single char, for badge).
+ */
+export function getPageAlignmentLevelIcon(level: PageAlignmentLevel): string {
+  switch (level) {
+    case 'aligned': return '✓';
+    case 'partial': return '◐';
+    case 'unaligned': return '✗';
+    case 'empty': return '○';
+    case 'neutral': return '—';
+  }
+}

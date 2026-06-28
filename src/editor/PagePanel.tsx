@@ -37,6 +37,13 @@ import {
   type PageStatusLevel,
 } from './mpi-page-status';
 import { PageThumbnail } from './PageThumbnail';
+import { AlignmentSummary, alignmentLevelToClass } from './AlignmentPanel';
+import { useLearningGoalAlignment } from './use-alignment';
+import {
+  getPageAlignmentLevel,
+  getPageAlignmentLevelIcon,
+  getPageAlignmentLevelLabel,
+} from '../core/learning-goal-alignment';
 
 const LAYOUT_LABELS: Record<string, string> = {
   blank: 'Bebas',
@@ -91,6 +98,34 @@ function StatusBadge({ status }: { status: PageStatus }) {
       {status.issues.length > 1 && (
         <span className="page-status-badge__count">{status.issues.length}</span>
       )}
+    </span>
+  );
+}
+
+/**
+ * LGA-UI-V2: Alignment badge per halaman (list view only).
+ * Shows page-level alignment level (aligned/partial/unaligned/empty/neutral).
+ * Neutral pages (cover/guide/menu/free) do not show the badge to keep UI clean.
+ */
+function AlignmentBadge({
+  pageId,
+  level,
+}: {
+  pageId: string;
+  level: ReturnType<typeof getPageAlignmentLevel>;
+}) {
+  // Neutral pages: don't render badge.
+  if (level === 'neutral') return null;
+  const label = getPageAlignmentLevelLabel(level);
+  const icon = getPageAlignmentLevelIcon(level);
+  return (
+    <span
+      className={`page-alignment-badge ${alignmentLevelToClass(level)}`}
+      title={`Alignment: ${label}`}
+      data-testid={`page-alignment-badge-${pageId}`}
+      data-level={level}
+    >
+      {icon}
     </span>
   );
 }
@@ -193,6 +228,10 @@ export function PagePanel() {
   // UX-02: compute per-page status + aggregate summary
   const pageStatuses = computeAllPageStatuses(project.pages, project);
   const summary = computeLearningFlowSummary(pageStatuses);
+  // LGA-UI-V2: compute alignment once for the whole panel.
+  const alignment = useLearningGoalAlignment();
+  // Build map: pageId → PageAlignment (for badge lookup).
+  const pageAlignmentMap = new Map(alignment.pages.map((pa) => [pa.pageId, pa]));
 
   /**
    * Determine if a page's inline issue list should be expanded.
@@ -222,6 +261,9 @@ export function PagePanel() {
     const status = pageStatuses[page.id];
     const hasIssues = status && status.issues.length > 0;
     const issuesExpanded = isIssueExpanded(page.id, isActive);
+    // LGA-UI-V2: per-page alignment level for badge.
+    const pageAlignment = pageAlignmentMap.get(page.id);
+    const alignmentLevel = pageAlignment ? getPageAlignmentLevel(pageAlignment) : 'neutral' as const;
 
     return (
       <div
@@ -263,6 +305,9 @@ export function PagePanel() {
                 {page.title}
               </span>
               {status && <StatusBadge status={status} />}
+              {pageAlignment && (
+                <AlignmentBadge pageId={page.id} level={alignmentLevel} />
+              )}
               {hasIssues && (
                 <button
                   type="button"
@@ -366,6 +411,7 @@ export function PagePanel() {
         </div>
       </div>
       <StatusSummary summary={summary} />
+      <AlignmentSummary />
       {viewMode === 'thumbnail' ? (
         <div className="page-panel__thumbnails" data-testid="page-panel-thumbnails">
           {project.pages.map((page) => (
