@@ -629,3 +629,276 @@ describe('LGA-UI-V2 — regression', () => {
     expect(JSON.stringify(project)).toBe(snapshot);
   });
 });
+
+// =========================================================================
+// 10. LGA-UI-V2-MANUAL-VERIFY-01 — 7 scenario verification tests
+// =========================================================================
+
+describe('LGA-UI-V2-MANUAL-VERIFY-01 — 7 scenario verification', () => {
+  beforeEach(() => {
+    useEditorStore.getState().newProject();
+  });
+
+  // Scenario 1 — Fresh project (no objectives)
+  it('S1. Fresh project: AlignmentSummary shows "Belum ada tujuan" and is non-interactive', () => {
+    const { container } = render(React.createElement(PagePanel));
+    const summary = container.querySelector('[data-testid="alignment-summary"]');
+    expect(summary).not.toBeNull();
+    expect(summary?.getAttribute('data-testid-empty')).toBe('true');
+    expect(summary?.textContent).toContain('Belum ada tujuan');
+    // Non-interactive: it's a div, not a button
+    expect(summary?.tagName).not.toBe('BUTTON');
+    // Click does not open modal
+    fireEvent.click(summary!);
+    expect(container.querySelector('[data-testid="alignment-detail-panel"]')).toBeNull();
+  });
+
+  // Scenario 2 — Sample PPKn: chip is clickable, opens modal
+  it('S2. Sample PPKn: AlignmentSummary is clickable button, opens detail panel', () => {
+    const project = createSamplePpknProject();
+    useEditorStore.getState().setProject(project);
+    const { container } = render(React.createElement(PagePanel));
+    const summary = container.querySelector('[data-testid="alignment-summary"]') as HTMLButtonElement;
+    expect(summary.tagName).toBe('BUTTON');
+    expect(summary?.getAttribute('data-score')).not.toBe('');
+    expect(summary?.getAttribute('data-score-label')).not.toBe('');
+    fireEvent.click(summary);
+    expect(container.querySelector('[data-testid="alignment-detail-panel"]')).not.toBeNull();
+  });
+
+  // Scenario 2b — Modal close: click inside doesn't close
+  it('S2b. Click inside modal does NOT close panel', () => {
+    const project = createSamplePpknProject();
+    useEditorStore.getState().setProject(project);
+    const { container } = render(React.createElement(PagePanel));
+    fireEvent.click(container.querySelector('[data-testid="alignment-summary"]') as HTMLButtonElement);
+    const panel = container.querySelector('[data-testid="alignment-detail-panel"]') as HTMLElement;
+    fireEvent.click(panel);
+    expect(container.querySelector('[data-testid="alignment-detail-panel"]')).not.toBeNull();
+  });
+
+  // Scenario 2c — Modal close: click outside (overlay) closes
+  it('S2c. Click outside (overlay) closes panel', () => {
+    const project = createSamplePpknProject();
+    useEditorStore.getState().setProject(project);
+    const { container } = render(React.createElement(PagePanel));
+    fireEvent.click(container.querySelector('[data-testid="alignment-summary"]') as HTMLButtonElement);
+    const overlay = container.querySelector('[data-testid="alignment-detail-overlay"]') as HTMLElement;
+    fireEvent.click(overlay);
+    expect(container.querySelector('[data-testid="alignment-detail-panel"]')).toBeNull();
+  });
+
+  // Scenario 3 — Detail panel content: all 4 sections when relevant
+  it('S3. Detail panel shows all relevant sections', () => {
+    const objTexts = ['Menjelaskan pengertian norma', 'Mengidentifikasi jenis norma'];
+    const materialPage = buildPage('material', [
+      textComp('Pengertian norma jelas.'),
+      navComp('Lanjut'),
+    ], 'Materi');
+    const quizPage = buildPage('quiz', [
+      questionComp('Kuis', 'Berapa 1+1?'),
+      navComp('Lanjut'),
+    ], 'Kuis');
+    const project = buildProjectWithObjectives(objTexts, [materialPage, quizPage]);
+    useEditorStore.getState().setProject(project);
+
+    const { container } = render(React.createElement(PagePanel));
+    fireEvent.click(container.querySelector('[data-testid="alignment-summary"]') as HTMLButtonElement);
+
+    expect(container.querySelector('[data-testid="alignment-detail-uncovered"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="alignment-detail-covered"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="alignment-detail-issues"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="alignment-detail-pages"]')).not.toBeNull();
+  });
+
+  // Scenario 3b — All-ok state shows friendly message
+  it('S3b. All-ok state shows friendly all-ok message', () => {
+    const objTexts = ['Menjelaskan pengertian norma'];
+    const materialPage = buildPage('material', [
+      textComp('Pengertian norma jelas.'),
+      navComp('Lanjut'),
+    ], 'Materi');
+    const project = buildProjectWithObjectives(objTexts, [materialPage]);
+    useEditorStore.getState().setProject(project);
+
+    const { container } = render(React.createElement(PagePanel));
+    fireEvent.click(container.querySelector('[data-testid="alignment-summary"]') as HTMLButtonElement);
+
+    const allOk = container.querySelector('[data-testid="alignment-detail-all-ok"]');
+    expect(allOk).not.toBeNull();
+    expect(allOk?.textContent).toContain('Semua tujuan pembelajaran tercover');
+  });
+
+  // Scenario 4 — List view badge: appears on non-neutral, not on neutral
+  it('S4. Badge appears in list view on non-neutral pages, not on neutral', () => {
+    const objTexts = ['Menjelaskan pengertian norma'];
+    const coverPage = buildPage('cover', [textComp('Judul')], 'Cover');
+    const materialPage = buildPage('material', [
+      textComp('Pengertian norma.'),
+      navComp('Lanjut'),
+    ], 'Materi');
+    const project = buildProjectWithObjectives(objTexts, [coverPage, materialPage]);
+    useEditorStore.getState().setProject(project);
+
+    const { container } = render(React.createElement(PagePanel));
+    fireEvent.click(container.querySelector('[data-testid="page-panel-view-toggle"]') as HTMLButtonElement);
+
+    // Material (non-neutral) has badge
+    const materialBadge = container.querySelector(`[data-testid="page-alignment-badge-${materialPage.id}"]`);
+    expect(materialBadge).not.toBeNull();
+    // Cover (neutral) does NOT have badge
+    const coverBadge = container.querySelector(`[data-testid="page-alignment-badge-${coverPage.id}"]`);
+    expect(coverBadge).toBeNull();
+  });
+
+  // Scenario 4b — Badge NOT in thumbnail view
+  it('S4b. Badge does NOT appear in thumbnail view', () => {
+    const objTexts = ['Menjelaskan pengertian norma'];
+    const materialPage = buildPage('material', [
+      textComp('Pengertian norma.'),
+      navComp('Lanjut'),
+    ], 'Materi');
+    const project = buildProjectWithObjectives(objTexts, [materialPage]);
+    useEditorStore.getState().setProject(project);
+
+    const { container } = render(React.createElement(PagePanel));
+    // Default view is thumbnail — no badge should appear
+    expect(container.querySelector('[data-testid="page-panel-thumbnails"]')).not.toBeNull();
+    const badge = container.querySelector(`[data-testid="page-alignment-badge-${materialPage.id}"]`);
+    expect(badge).toBeNull();
+  });
+
+  // Scenario 5 — PageThumbnail unchanged (no alignment badge in thumbnail)
+  it('S5. PageThumbnail unchanged — no alignment badge, still has data-role + data-status', () => {
+    const project = createSamplePpknProject();
+    useEditorStore.getState().setProject(project);
+    const { container } = render(React.createElement(PagePanel));
+    const thumbnail = container.querySelector('[data-testid^="page-thumbnail-"]');
+    expect(thumbnail).not.toBeNull();
+    expect(thumbnail?.hasAttribute('data-role')).toBe(true);
+    expect(thumbnail?.hasAttribute('data-status')).toBe(true);
+    // No alignment badge inside thumbnail
+    expect(thumbnail?.querySelector('[data-testid^="page-alignment-badge-"]')).toBeNull();
+  });
+
+  // Scenario 6 — Broken alignment fixture: issue + uncovered + click navigates
+  it('S6. Broken alignment: issue shown, click issue navigates to page', () => {
+    const objTexts = ['Menjelaskan pengertian norma', 'Mengidentifikasi jenis norma'];
+    const materialPage = buildPage('material', [
+      textComp('Pengertian norma jelas.'),
+      navComp('Lanjut'),
+    ], 'Materi');
+    const quizPage = buildPage('quiz', [
+      questionComp('Kuis', 'Berapa 1+1?'),
+      navComp('Lanjut'),
+    ], 'Kuis');
+    const project = buildProjectWithObjectives(objTexts, [materialPage, quizPage]);
+    useEditorStore.getState().setProject(project);
+
+    const { container } = render(React.createElement(PagePanel));
+    // Summary shows issue flag
+    const summary = container.querySelector('[data-testid="alignment-summary"]');
+    expect(summary?.getAttribute('data-issue-count')).not.toBe('0');
+
+    // Open detail
+    fireEvent.click(summary as HTMLButtonElement);
+
+    // Uncovered section exists (objective 2 not covered)
+    expect(container.querySelector('[data-testid="alignment-detail-uncovered"]')).not.toBeNull();
+
+    // Find issue with pageId (ASSESSMENT_NOT_LINKED on quizPage)
+    const issues = container.querySelectorAll('[data-testid^="alignment-detail-issue-"]');
+    const clickableIssue = Array.from(issues).find(
+      (el) => (el as HTMLElement).getAttribute('data-page-id') !== '',
+    ) as HTMLElement;
+    expect(clickableIssue).toBeDefined();
+
+    // Click it → should select quizPage and close panel
+    fireEvent.click(clickableIssue);
+    expect(useEditorStore.getState().project.currentPageId).toBe(quizPage.id);
+    expect(container.querySelector('[data-testid="alignment-detail-panel"]')).toBeNull();
+  });
+
+  // Scenario 7 — Duplicate objective ID fixture
+  it('S7. Duplicate objective ID: issue appears in detail panel, not clickable (no pageId)', () => {
+    // Build project with explicit duplicate objective IDs
+    const project = createProject();
+    const page = buildPage('material', [textComp('Pengertian norma.'), navComp('Lanjut')], 'Materi');
+    project.curriculum = {
+      subject: 'Test', grade: '7', phase: 'D', topic: 'Test',
+      objectives: [
+        { id: 'obj-1', text: 'Menjelaskan pengertian norma' },
+        { id: 'obj-1', text: 'Mengidentifikasi jenis norma' },
+      ],
+    };
+    project.pages = [page];
+    project.currentPageId = page.id;
+    useEditorStore.getState().setProject(project);
+
+    const { container } = render(React.createElement(PagePanel));
+    // Summary shows not-ok
+    const summary = container.querySelector('[data-testid="alignment-summary"]');
+    expect(summary?.getAttribute('data-ok')).toBe('false');
+
+    // Open detail
+    fireEvent.click(summary as HTMLButtonElement);
+
+    // Find OBJECTIVE_DUPLICATE_ID issue
+    const issues = container.querySelectorAll('[data-testid^="alignment-detail-issue-"]');
+    const dupIssue = Array.from(issues).find(
+      (el) => (el as HTMLElement).getAttribute('data-code') === 'OBJECTIVE_DUPLICATE_ID',
+    ) as HTMLElement;
+    expect(dupIssue).toBeDefined();
+    expect(dupIssue.getAttribute('data-severity')).toBe('error');
+    // No pageId → data-page-id should be empty
+    expect(dupIssue.getAttribute('data-page-id')).toBe('');
+    // Should NOT have is-clickable class
+    expect(dupIssue.classList.contains('is-clickable')).toBe(false);
+  });
+});
+
+// =========================================================================
+// 11. LGA-UI-V2-MANUAL-VERIFY-01 Patch — UX copy wording fix
+// =========================================================================
+
+describe('LGA-UI-V2-MANUAL-VERIFY-01 Patch — UX copy wording', () => {
+  beforeEach(() => {
+    useEditorStore.getState().newProject();
+  });
+
+  it('Detail panel header uses "Selaras" (not "Aligned") when ok=true', () => {
+    const objTexts = ['Menjelaskan pengertian norma'];
+    const materialPage = buildPage('material', [
+      textComp('Pengertian norma jelas.'),
+      navComp('Lanjut'),
+    ], 'Materi');
+    const project = buildProjectWithObjectives(objTexts, [materialPage]);
+    useEditorStore.getState().setProject(project);
+
+    const { container } = render(React.createElement(PagePanel));
+    fireEvent.click(container.querySelector('[data-testid="alignment-summary"]') as HTMLButtonElement);
+
+    const okFlag = container.querySelector('.alignment-detail__ok-flag');
+    expect(okFlag).not.toBeNull();
+    expect(okFlag?.textContent).toContain('Selaras');
+    expect(okFlag?.textContent).not.toContain('Aligned');
+  });
+
+  it('Detail panel header uses "Belum selaras" (not "Belum aligned") when ok=false', () => {
+    const objTexts = ['Menjelaskan pengertian norma', 'Mengidentifikasi jenis norma'];
+    const materialPage = buildPage('material', [
+      textComp('Pengertian norma.'),
+      navComp('Lanjut'),
+    ], 'Materi');
+    const project = buildProjectWithObjectives(objTexts, [materialPage]);
+    useEditorStore.getState().setProject(project);
+
+    const { container } = render(React.createElement(PagePanel));
+    fireEvent.click(container.querySelector('[data-testid="alignment-summary"]') as HTMLButtonElement);
+
+    const notOkFlag = container.querySelector('.alignment-detail__not-ok-flag');
+    expect(notOkFlag).not.toBeNull();
+    expect(notOkFlag?.textContent).toContain('Belum selaras');
+    expect(notOkFlag?.textContent).not.toContain('Belum aligned');
+  });
+});

@@ -182,9 +182,9 @@ function AlignmentDetailPanel({ onClose }: { onClose: () => void }) {
             <span className="alignment-detail__score-label">{scoreLabel}</span>
             <span className="alignment-detail__summary-label">{summaryLabel}</span>
             {alignment.ok ? (
-              <span className="alignment-detail__ok-flag">✓ Aligned</span>
+              <span className="alignment-detail__ok-flag">✓ Selaras</span>
             ) : (
-              <span className="alignment-detail__not-ok-flag">✗ Belum aligned</span>
+              <span className="alignment-detail__not-ok-flag">✗ Belum selaras</span>
             )}
           </div>
         </div>
@@ -198,8 +198,8 @@ function AlignmentDetailPanel({ onClose }: { onClose: () => void }) {
                 Tujuan Tidak Tercover ({alignment.uncoveredObjectiveIds.length})
               </h3>
               <ul className="alignment-detail__list" data-testid="alignment-detail-uncovered">
-                {alignment.uncoveredObjectiveIds.map((objId) => (
-                  <li key={objId} className="alignment-detail__item alignment-detail__item--error">
+                {alignment.uncoveredObjectiveIds.map((objId, idx) => (
+                  <li key={`${objId}-${idx}`} className="alignment-detail__item alignment-detail__item--error">
                     <span className="alignment-detail__item-icon">✗</span>
                     <span className="alignment-detail__item-text">
                       {objectiveTexts.get(objId) ?? objId}
@@ -219,8 +219,8 @@ function AlignmentDetailPanel({ onClose }: { onClose: () => void }) {
               <ul className="alignment-detail__list" data-testid="alignment-detail-covered">
                 {project.curriculum?.objectives
                   ?.filter((obj) => !alignment.uncoveredObjectiveIds.includes(obj.id))
-                  .map((obj) => (
-                    <li key={obj.id} className="alignment-detail__item alignment-detail__item--ok">
+                  .map((obj, idx) => (
+                    <li key={`${obj.id}-${idx}`} className="alignment-detail__item alignment-detail__item--ok">
                       <span className="alignment-detail__item-icon">✓</span>
                       <span className="alignment-detail__item-text">{obj.text}</span>
                     </li>
