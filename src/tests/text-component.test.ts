@@ -189,10 +189,11 @@ describe('Capability Matrix — canAddComponent', () => {
     }
   });
 
-  it('navigation NOT allowed for cover/learningObjectives/quiz (M5)', () => {
+  it('navigation NOT allowed for cover only (UX-03 Patch-1: learningObjectives + quiz now allow nav)', () => {
     expect(canAddComponent('cover', 'navigation' as never)).toBe(false);
-    expect(canAddComponent('learningObjectives', 'navigation' as never)).toBe(false);
-    expect(canAddComponent('quiz', 'navigation' as never)).toBe(false);
+    // UX-03 Patch-1: learningObjectives + quiz now allow navigation (bebas jalan bantu)
+    expect(canAddComponent('learningObjectives', 'navigation' as never)).toBe(true);
+    expect(canAddComponent('quiz', 'navigation' as never)).toBe(true);
   });
 
   it('navigation allowed for material/activity/starter/free/reflection/closing (M5 active)', () => {

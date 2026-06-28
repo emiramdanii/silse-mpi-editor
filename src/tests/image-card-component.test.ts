@@ -256,16 +256,18 @@ describe('Capability Matrix — image/card per role (M4)', () => {
     expect(canAddComponent('quiz', 'card')).toBe(false);
   });
 
-  it('closing allows text only (no image/card)', () => {
+  it('closing allows text + card + navigation (UX-03 Patch-1: card added for badge/rangkuman patterns)', () => {
     expect(canAddComponent('closing', 'text')).toBe(true);
     expect(canAddComponent('closing', 'image')).toBe(false);
-    expect(canAddComponent('closing', 'card')).toBe(false);
+    // UX-03 Patch-1: closing now allows card for penutup-badge, penutup-rangkuman patterns
+    expect(canAddComponent('closing', 'card')).toBe(true);
   });
 
-  it('navigation NOT allowed for cover/learningObjectives/quiz (M5)', () => {
+  it('navigation NOT allowed for cover only (UX-03 Patch-1: learningObjectives + quiz now allow nav)', () => {
     expect(canAddComponent('cover', 'navigation' as never)).toBe(false);
-    expect(canAddComponent('learningObjectives', 'navigation' as never)).toBe(false);
-    expect(canAddComponent('quiz', 'navigation' as never)).toBe(false);
+    // UX-03 Patch-1: learningObjectives + quiz now allow navigation
+    expect(canAddComponent('learningObjectives', 'navigation' as never)).toBe(true);
+    expect(canAddComponent('quiz', 'navigation' as never)).toBe(true);
   });
 
   it('navigation allowed for material/activity/starter/free/reflection/closing (M5 active)', () => {

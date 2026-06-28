@@ -1,12 +1,13 @@
 /**
- * Content Pattern Library (UX-03 — Content Pattern Library + Smart Teaching Suggestion).
+ * Content Pattern Library (UX-03 + UX-03 Patch-1 — Rich Content Patterns).
  *
  * Layer: editor
  * Allowed imports: ../core/types (type-only), ../core/component-factory, ../core/ids
  *
- * Kontrak (UX-03 Scope A):
- *   Predefined "pola isi" per page role. Setiap pola adalah template siap-pakai
- *   yang menghasilkan komponen dengan fresh IDs + posisi masuk akal.
+ * Kontrak (UX-03 Patch-1):
+ *   26 pola isi predefined per page role — naik dari 12 (UX-03) ke 26.
+ *   Tiap pola punya reason pedagogis yang menjelaskan KAPAN dipakai,
+ *   bukan hanya "siap diterapkan".
  *
  *   Pola DIPAKAI oleh:
  *     - PatternLibraryPanel (UI) — menampilkan pola yang relevan untuk halaman aktif
@@ -18,11 +19,13 @@
  *     - buildComponents mengembalikan array PageComponent dengan fresh IDs.
  *     - Pola tidak menghapus elemen existing — hanya menambah.
  *     - Pola bisa baca project context (mis. curriculum.objectives untuk tujuan).
+ *     - Pola materi-gambar BENAR-BENAR menambah image component (placeholder SVG).
  */
 
 import type { PageComponent, PageRole, SimplePage, SimpleProject } from '../core/types';
 import {
   createTextComponent,
+  createImageComponent,
   createCardComponent,
   createNavigationComponent,
   createQuestionComponent,
@@ -51,6 +54,11 @@ export type ContentPattern = {
   /** Role halaman yang cocok untuk pola ini. */
   applicableRoles: PageRole[];
   /**
+   * Reason pedagogis: kapan pola ini dipakai, apa tujuan belajarnya.
+   * Bukan hanya "siap diterapkan" — harus menjelaskan konteks pedagogis.
+   */
+  pedagogicalReason: string;
+  /**
    * Factory yang mengembalikan array komponen siap-pakai dengan fresh IDs.
    * Posisi (x/y/width/height) sudah diatur supaya tidak overlap kacau.
    */
@@ -77,18 +85,26 @@ const POS = {
   centerX: 140,
 } as const;
 
+/**
+ * Placeholder image SVG (data URL) untuk pola yang butuh gambar.
+ * Guru bisa replace src-nya via Panel Isi setelah pola diterapkan.
+ */
+const PLACEHOLDER_IMAGE_SRC =
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 280'><rect width='400' height='280' fill='%23e3ddcd'/><text x='200' y='140' font-family='sans-serif' font-size='14' text-anchor='middle' fill='%238a8775'>Ganti gambar di sini</text></svg>";
+
 // =========================================================================
-// 12 Content Patterns
+// 26 Content Patterns
 // =========================================================================
 
 export const CONTENT_PATTERNS: readonly ContentPattern[] = [
-  // --- 1. Cover ---
+  // ===== COVER (1) =====
   {
     id: 'cover-title',
     name: 'Halaman Cover',
     description: 'Judul utama + sub-judul (mapel, kelas, fase) terpusat.',
     icon: '🎬',
     applicableRoles: ['cover'],
+    pedagogicalReason: 'Pembuka pertama yang siswa lihat. Gunakan untuk menampilkan judul MPI dan identitas mapel/kelas/fase.',
     buildComponents: () => [
       createTextComponent('cover', {
         variant: 'title',
@@ -103,13 +119,14 @@ export const CONTENT_PATTERNS: readonly ContentPattern[] = [
     ],
   },
 
-  // --- 2. Guide ---
+  // ===== GUIDE (1) =====
   {
     id: 'guide-petunjuk',
     name: 'Panduan Penggunaan',
     description: 'Judul + kartu petunjuk langkah + tombol Mulai.',
     icon: '📖',
     applicableRoles: ['guide'],
+    pedagogicalReason: 'Beri siswa peta jalan sebelum mulai. Cocok untuk MPI yang punya alur panjang (pemantik → materi → kuis → game → refleksi).',
     buildComponents: () => [
       createTextComponent('guide', {
         variant: 'title',
@@ -131,13 +148,14 @@ export const CONTENT_PATTERNS: readonly ContentPattern[] = [
     ],
   },
 
-  // --- 3. Learning Objectives ---
+  // ===== LEARNING OBJECTIVES (1) =====
   {
     id: 'tujuan-daftar',
     name: 'Daftar Tujuan Pembelajaran',
     description: 'Judul + daftar tujuan dari kurikulum + tombol lanjut.',
     icon: '🎯',
     applicableRoles: ['learningObjectives'],
+    pedagogicalReason: 'Siswa perlu tahu tujuan belajar sebelum mulai. Daftar terstruktur membantu mereka fokus pada apa yang akan dicapai.',
     buildComponents: (ctx) => {
       const objectives = ctx.project.curriculum?.objectives ?? [];
       const objText = objectives.length > 0
@@ -162,13 +180,14 @@ export const CONTENT_PATTERNS: readonly ContentPattern[] = [
     },
   },
 
-  // --- 4. Menu (Peta Materi) ---
+  // ===== MENU (2) =====
   {
     id: 'menu-peta',
     name: 'Peta Materi (4 Kartu)',
     description: 'Judul + 4 kartu menu (Pemantik, Materi, Kuis, Game) + tombol lanjut.',
     icon: '🗂️',
     applicableRoles: ['menu'],
+    pedagogicalReason: 'Beri siswa peta isi MPI supaya mereka tahu apa yang akan datang. Cocok untuk MPI dengan banyak scene.',
     buildComponents: () => [
       createTextComponent('menu', {
         variant: 'title',
@@ -201,14 +220,39 @@ export const CONTENT_PATTERNS: readonly ContentPattern[] = [
       }),
     ],
   },
+  {
+    id: 'menu-daftar',
+    name: 'Menu Daftar Sederhana',
+    description: 'Judul + teks daftar menu (tanpa kartu) + tombol lanjut (alternatif).',
+    icon: '📋',
+    applicableRoles: ['menu'],
+    pedagogicalReason: 'Alternatif lebih ringkas dari Peta Materi. Cocok untuk MPI pendek dengan sedikit scene.',
+    buildComponents: () => [
+      createTextComponent('menu', {
+        variant: 'title',
+        text: 'Menu Materi',
+        x: 80, y: POS.titleY, width: POS.fullWidth, height: POS.titleH,
+      }),
+      createTextComponent('menu', {
+        variant: 'body',
+        text: '1. Pemantik\n2. Materi\n3. Kuis\n4. Game\n5. Refleksi',
+        x: 80, y: POS.bodyY, width: POS.fullWidth, height: 300,
+      }),
+      createNavigationComponent('Mulai →', 'next', {
+        variant: 'primaryAction',
+        x: POS.navX, y: POS.navY, width: POS.navW, height: POS.navH,
+      }),
+    ],
+  },
 
-  // --- 5. Starter (Pemantik) ---
+  // ===== STARTER / PEMANTIK (4) =====
   {
     id: 'pemantik-pertanyaan',
     name: 'Pemantik dengan Pertanyaan',
     description: 'Pertanyaan pemantik + kartu "pikirkan" + tombol materi.',
     icon: '💡',
     applicableRoles: ['starter'],
+    pedagogicalReason: 'Buka dengan pertanyaan reflektif untuk mengaktifkan pengetahuan awal siswa. Cocok untuk topik yang punya koneksi ke pengalaman sehari-hari.',
     buildComponents: () => [
       createTextComponent('starter', {
         variant: 'questionPrompt',
@@ -226,14 +270,116 @@ export const CONTENT_PATTERNS: readonly ContentPattern[] = [
       }),
     ],
   },
+  {
+    id: 'pemantik-kasus',
+    name: 'Kasus Kehidupan Siswa',
+    description: 'Kartu cerita kasus sehari-hari + pertanyaan refleksi + tombol materi.',
+    icon: '🏠',
+    applicableRoles: ['starter'],
+    pedagogicalReason: 'Mulai dari kasus kehidupan sehari-hari siswa supaya materi terasa relevan. Cocok untuk topik yang dekat dengan pengalaman mereka.',
+    buildComponents: () => [
+      createTextComponent('starter', {
+        variant: 'title',
+        text: 'Bayangkan Ini...',
+        x: 80, y: POS.titleY, width: POS.fullWidth, height: POS.titleH,
+      }),
+      createCardComponent(
+        'Pagi tadi, Andi terlambat masuk sekolah. Ia tidak sempat sarapan, lupa salam ke guru, dan terburu-buru di kelas. Apa akibatnya? Mengapa hal seperti ini sering terjadi?',
+        {
+          variant: 'exampleCard',
+          title: 'Kasus',
+          x: 100, y: 140, width: 1080, height: 200,
+        },
+      ),
+      createTextComponent('starter', {
+        variant: 'questionPrompt',
+        text: 'Pernahkah kamu mengalami situasi serupa? Apa yang kamu rasakan?',
+        x: 100, y: 380, width: 1080, height: 100,
+      }),
+      createNavigationComponent('Materi →', 'next', {
+        variant: 'primaryAction',
+        x: POS.navX, y: POS.navY, width: POS.navW, height: POS.navH,
+      }),
+    ],
+  },
+  {
+    id: 'pemantik-setuju',
+    name: 'Setuju atau Tidak Setuju',
+    description: 'Pernyataan kontroversial + kartu "posisikan dirimu" + tombol materi.',
+    icon: '⚖️',
+    applicableRoles: ['starter'],
+    pedagogicalReason: 'Minta siswa posisi setuju/tidak setuju pada pernyataan provokatif. Cocok untuk topik yang melibatkan opini, nilai, atau etika.',
+    buildComponents: () => [
+      createTextComponent('starter', {
+        variant: 'questionPrompt',
+        text: '“Aturan itu membatasi kebebasan kita.”',
+        x: 100, y: 160, width: 1080, height: 120,
+      }),
+      createCardComponent(
+        'Apakah kamu SETUJU atau TIDAK SETUJU dengan pernyataan di atas?\n\nTulis alasanmu di buku catatan. Kita akan bahas ini setelah materi.',
+        {
+          variant: 'importantNote',
+          title: 'Posisikan Dirimu',
+          x: 200, y: 340, width: 880, height: 200,
+        },
+      ),
+      createNavigationComponent('Materi →', 'next', {
+        variant: 'primaryAction',
+        x: POS.navX, y: POS.navY, width: POS.navW, height: POS.navH,
+      }),
+    ],
+  },
+  {
+    id: 'pemantik-poll',
+    name: 'Mini Poll',
+    description: 'Pertanyaan jajak pendapat + 3 kartu pilihan + tombol materi.',
+    icon: '📊',
+    applicableRoles: ['starter'],
+    pedagogicalReason: 'Jajak pendapat singkat untuk memancing partisipasi di awal. Cocok untuk topik yang punya beberapa sudut pandang.',
+    buildComponents: () => [
+      createTextComponent('starter', {
+        variant: 'questionPrompt',
+        text: 'Menurutmu, norma apa yang paling penting di kelas?',
+        x: 100, y: 100, width: 1080, height: 80,
+      }),
+      createCardComponent('Aturan dari Tuhan', {
+        variant: 'infoCard',
+        title: 'Norma Agama',
+        x: 80, y: 220, width: 340, height: 140,
+      }),
+      createCardComponent('Aturan dari masyarakat', {
+        variant: 'infoCard',
+        title: 'Norma Sosial',
+        x: 470, y: 220, width: 340, height: 140,
+      }),
+      createCardComponent('Aturan dari negara', {
+        variant: 'infoCard',
+        title: 'Norma Hukum',
+        x: 860, y: 220, width: 340, height: 140,
+      }),
+      createCardComponent(
+        'Pilih satu, lalu diskusikan dengan teman sebangku mengapa kamu memilih itu.',
+        {
+          variant: 'importantNote',
+          title: 'Diskusi',
+          x: 200, y: 400, width: 880, height: 140,
+        },
+      ),
+      createNavigationComponent('Materi →', 'next', {
+        variant: 'primaryAction',
+        x: POS.navX, y: POS.navY, width: POS.navW, height: POS.navH,
+      }),
+    ],
+  },
 
-  // --- 6. Material (Materi Tunggal) — primary ---
+  // ===== MATERIAL / MATERI (7) =====
   {
     id: 'materi-tunggal',
     name: 'Materi Tunggal',
-    description: 'Judul + isi materi + kartu info (jenis/contoh) + tombol kuis.',
+    description: 'Judul + isi materi + kartu info (ringkasan) + tombol kuis.',
     icon: '📚',
     applicableRoles: ['material'],
+    pedagogicalReason: 'Struktur materi paling umum: judul + penjelasan + ringkasan. Cocok untuk konsep yang bisa dijelaskan dalam satu halaman.',
     buildComponents: () => [
       createTextComponent('material', {
         variant: 'title',
@@ -256,14 +402,208 @@ export const CONTENT_PATTERNS: readonly ContentPattern[] = [
       }),
     ],
   },
-
-  // --- 7. Material (Materi + Gambar) — alternative ---
   {
     id: 'materi-gambar',
     name: 'Materi dengan Gambar',
-    description: 'Judul + gambar + isi materi + tombol kuis (alternatif).',
+    description: 'Judul + gambar (placeholder) + isi materi di samping + tombol kuis.',
     icon: '🖼️',
     applicableRoles: ['material'],
+    pedagogicalReason: 'Materi dengan ilustrasi di samping teks. Cocok untuk konsep yang butuh visualisasi (diagram, foto, skema).',
+    buildComponents: () => [
+      createTextComponent('material', {
+        variant: 'title',
+        text: 'Judul Materi',
+        x: 80, y: POS.titleY, width: POS.fullWidth, height: POS.titleH,
+      }),
+      // UX-03 Patch-1 fix: BENAR-BENAR tambah image component dengan placeholder SVG.
+      createImageComponent(PLACEHOLDER_IMAGE_SRC, {
+        variant: 'illustration',
+        alt: 'Ilustrasi materi — ganti dengan gambar relevan',
+        objectFit: 'cover',
+        x: 80, y: 140, width: 440, height: 320,
+      }),
+      createTextComponent('material', {
+        variant: 'body',
+        text: 'Tulis penjelasan materi di sini. Gambar di samping membantu siswa memahami konsep secara visual.',
+        x: 540, y: 140, width: 660, height: 320,
+      }),
+      createNavigationComponent('Kuis →', 'next', {
+        variant: 'primaryAction',
+        x: POS.navX, y: POS.navY, width: POS.navW, height: POS.navH,
+      }),
+    ],
+  },
+  {
+    id: 'materi-kartu-konsep',
+    name: 'Kartu Konsep',
+    description: 'Judul + 4 kartu konsep kecil (untuk istilah/kategori) + tombol kuis.',
+    icon: '🃏',
+    applicableRoles: ['material'],
+    pedagogicalReason: 'Konsep dipecah jadi kartu-kartu kecil. Cocok untuk banyak istilah atau kategori yang perlu diingat.',
+    buildComponents: () => [
+      createTextComponent('material', {
+        variant: 'title',
+        text: 'Judul Materi',
+        x: 80, y: POS.titleY, width: POS.fullWidth, height: POS.titleH,
+      }),
+      createCardComponent('Definisi singkat konsep pertama.', {
+        variant: 'infoCard',
+        title: 'Konsep 1',
+        x: 80, y: 140, width: 520, height: 180,
+      }),
+      createCardComponent('Definisi singkat konsep kedua.', {
+        variant: 'infoCard',
+        title: 'Konsep 2',
+        x: 680, y: 140, width: 520, height: 180,
+      }),
+      createCardComponent('Definisi singkat konsep ketiga.', {
+        variant: 'infoCard',
+        title: 'Konsep 3',
+        x: 80, y: 360, width: 520, height: 180,
+      }),
+      createCardComponent('Definisi singkat konsep keempat.', {
+        variant: 'infoCard',
+        title: 'Konsep 4',
+        x: 680, y: 360, width: 520, height: 180,
+      }),
+      createNavigationComponent('Kuis →', 'next', {
+        variant: 'primaryAction',
+        x: POS.navX, y: POS.navY, width: POS.navW, height: POS.navH,
+      }),
+    ],
+  },
+  {
+    id: 'materi-contoh-vs-bukan',
+    name: 'Contoh vs Bukan Contoh',
+    description: 'Judul + kartu "Contoh" + kartu "Bukan Contoh" + penjelasan + tombol kuis.',
+    icon: '✅❌',
+    applicableRoles: ['material'],
+    pedagogicalReason: 'Bandingkan contoh dan bukan contoh supaya siswa paham batas konsep. Cocok untuk konsep yang sering keliru.',
+    buildComponents: () => [
+      createTextComponent('material', {
+        variant: 'title',
+        text: 'Judul Konsep',
+        x: 80, y: POS.titleY, width: POS.fullWidth, height: POS.titleH,
+      }),
+      createCardComponent(
+        'Tulis contoh yang SESUAI dengan konsep di sini.\n\nJelaskan mengapa ini contoh yang benar.',
+        {
+          variant: 'exampleCard',
+          title: '✓ Contoh',
+          x: 80, y: 140, width: 520, height: 280,
+        },
+      ),
+      createCardComponent(
+        'Tulis contoh yang TIDAK SESUAI dengan konsep di sini.\n\nJelaskan mengapa ini bukan contoh.',
+        {
+          variant: 'importantNote',
+          title: '✗ Bukan Contoh',
+          x: 680, y: 140, width: 520, height: 280,
+        },
+      ),
+      createCardComponent(
+        'Apa ciri-ciri yang membedakan contoh dari bukan contoh? Tulis di sini.',
+        {
+          variant: 'infoCard',
+          title: 'Ciri Pembeda',
+          x: 200, y: 460, width: 880, height: 120,
+        },
+      ),
+      createNavigationComponent('Kuis →', 'next', {
+        variant: 'primaryAction',
+        x: POS.navX, y: POS.navY, width: POS.navW, height: POS.navH,
+      }),
+    ],
+  },
+  {
+    id: 'materi-fakta-mitos',
+    name: 'Fakta vs Mitos',
+    description: 'Judul + kartu "Fakta" + kartu "Mitos" + klarifikasi + tombol kuis.',
+    icon: '🔬',
+    applicableRoles: ['material'],
+    pedagogicalReason: 'Bedakan fakta vs mitos untuk meluruskan miskonsepsi. Cocok untuk topik yang banyak salah paham.',
+    buildComponents: () => [
+      createTextComponent('material', {
+        variant: 'title',
+        text: 'Fakta atau Mitos?',
+        x: 80, y: POS.titleY, width: POS.fullWidth, height: POS.titleH,
+      }),
+      createCardComponent(
+        'Tulis pernyataan yang merupakan FAKTA di sini.\n\nSertakan bukti atau sumber.',
+        {
+          variant: 'infoCard',
+          title: '✓ Fakta',
+          x: 80, y: 140, width: 520, height: 280,
+        },
+      ),
+      createCardComponent(
+        'Tulis pernyataan yang merupakan MITOS di sini.\n\nJelaskan mengapa ini keliru.',
+        {
+          variant: 'importantNote',
+          title: '✗ Mitos',
+          x: 680, y: 140, width: 520, height: 280,
+        },
+      ),
+      createCardComponent(
+        'Setelah tahu faktanya, apa kesimpulan yang benar? Tulis di sini.',
+        {
+          variant: 'exampleCard',
+          title: 'Klarifikasi',
+          x: 200, y: 460, width: 880, height: 120,
+        },
+      ),
+      createNavigationComponent('Kuis →', 'next', {
+        variant: 'primaryAction',
+        x: POS.navX, y: POS.navY, width: POS.navW, height: POS.navH,
+      }),
+    ],
+  },
+  {
+    id: 'materi-step-by-step',
+    name: 'Step-by-Step',
+    description: 'Judul + 4 kartu langkah berurutan (Langkah 1-4) + tombol kuis.',
+    icon: '🔢',
+    applicableRoles: ['material'],
+    pedagogicalReason: 'Langkah-langkah berurutan dengan nomor. Cocok untuk proses, prosedur, atau algoritma.',
+    buildComponents: () => [
+      createTextComponent('material', {
+        variant: 'title',
+        text: 'Judul Proses',
+        x: 80, y: POS.titleY, width: POS.fullWidth, height: POS.titleH,
+      }),
+      createCardComponent('Jelaskan langkah pertama.', {
+        variant: 'infoCard',
+        title: 'Langkah 1',
+        x: 80, y: 140, width: 520, height: 180,
+      }),
+      createCardComponent('Jelaskan langkah kedua.', {
+        variant: 'infoCard',
+        title: 'Langkah 2',
+        x: 680, y: 140, width: 520, height: 180,
+      }),
+      createCardComponent('Jelaskan langkah ketiga.', {
+        variant: 'infoCard',
+        title: 'Langkah 3',
+        x: 80, y: 360, width: 520, height: 180,
+      }),
+      createCardComponent('Jelaskan langkah keempat.', {
+        variant: 'infoCard',
+        title: 'Langkah 4',
+        x: 680, y: 360, width: 520, height: 180,
+      }),
+      createNavigationComponent('Kuis →', 'next', {
+        variant: 'primaryAction',
+        x: POS.navX, y: POS.navY, width: POS.navW, height: POS.navH,
+      }),
+    ],
+  },
+  {
+    id: 'materi-mini-checkpoint',
+    name: 'Materi + Mini Checkpoint',
+    description: 'Judul + materi + pertanyaan singkat cek pemahaman + ringkasan + tombol kuis.',
+    icon: '🛑',
+    applicableRoles: ['material'],
+    pedagogicalReason: 'Materi diselingi pertanyaan singkat untuk cek pemahaman. Cocok untuk materi panjang supaya siswa tidak passif.',
     buildComponents: () => [
       createTextComponent('material', {
         variant: 'title',
@@ -272,8 +612,21 @@ export const CONTENT_PATTERNS: readonly ContentPattern[] = [
       }),
       createTextComponent('material', {
         variant: 'body',
-        text: 'Tulis penjelasan materi di sini.',
-        x: 540, y: POS.bodyY, width: 660, height: 280,
+        text: 'Tulis penjelasan materi utama di sini.',
+        x: 80, y: 120, width: POS.fullWidth, height: 120,
+      }),
+      createCardComponent(
+        'Sebelum lanjut, jawab dulu:\n\nApa inti dari materi di atas? Tulis dengan kalimatmu sendiri.',
+        {
+          variant: 'importantNote',
+          title: '🛑 Cek Pemahaman',
+          x: 80, y: 280, width: POS.fullWidth, height: 160,
+        },
+      ),
+      createCardComponent('1. Poin kunci pertama\n2. Poin kunci kedua\n3. Poin kunci ketiga', {
+        variant: 'exampleCard',
+        title: 'Ringkasan',
+        x: 80, y: 480, width: POS.fullWidth, height: 120,
       }),
       createNavigationComponent('Kuis →', 'next', {
         variant: 'primaryAction',
@@ -282,13 +635,14 @@ export const CONTENT_PATTERNS: readonly ContentPattern[] = [
     ],
   },
 
-  // --- 8. Quiz (Pilihan Ganda) ---
+  // ===== QUIZ (1) =====
   {
     id: 'kuis-pilgan',
     name: 'Kuis Pilihan Ganda',
-    description: 'Satu pertanyaan pilihan ganda + tombol lanjut.',
+    description: 'Satu pertanyaan pilihan ganda (4 pilihan) + tombol lanjut.',
     icon: '✏️',
     applicableRoles: ['quiz'],
+    pedagogicalReason: 'Evaluasi pemahaman siswa dengan pilihan ganda. Cocok untuk konsep yang punya jawaban benar-tunggal.',
     buildComponents: () => [
       createQuestionComponent({
         title: 'Kuis',
@@ -313,13 +667,14 @@ export const CONTENT_PATTERNS: readonly ContentPattern[] = [
     ],
   },
 
-  // --- 9. Activity (Game Misi) ---
+  // ===== ACTIVITY / GAME (1) =====
   {
     id: 'game-misi',
     name: 'Game Petualangan Misi',
     description: 'Game dengan 2 misi pilihan ganda + tombol lanjut.',
     icon: '🎮',
     applicableRoles: ['activity'],
+    pedagogicalReason: 'Latihan interaktif dengan struktur misi. Cocok untuk memberi siswa kesempatan mencoba konsep dalam situasi/game.',
     buildComponents: () => [
       createGameComponent({
         title: 'Petualangan Misi',
@@ -364,13 +719,14 @@ export const CONTENT_PATTERNS: readonly ContentPattern[] = [
     ],
   },
 
-  // --- 10. Reflection ---
+  // ===== REFLECTION (4) =====
   {
     id: 'refleksi-diri',
-    name: 'Refleksi Diri',
-    description: 'Kartu pertanyaan refleksi + tombol penutup.',
+    name: 'Refleksi Diri (Terbuka)',
+    description: 'Kartu pertanyaan reflektif terbuka + tombol penutup.',
     icon: '🪞',
     applicableRoles: ['reflection'],
+    pedagogicalReason: 'Pertanyaan reflektif terbuka untuk menenangkan siswa di akhir pembelajaran. Cocok untuk MPI yang menekankan internalisasi.',
     buildComponents: () => [
       createCardComponent(
         'Setelah mempelajari materi ini, renungkan:\n\n• Apa yang sudah aku pahami?\n• Apa yang masih aku bingungkan?\n• Apa yang akan aku lakukan selanjutnya?\n\nTulis jawabanmu di buku catatan.',
@@ -386,14 +742,96 @@ export const CONTENT_PATTERNS: readonly ContentPattern[] = [
       }),
     ],
   },
+  {
+    id: 'refleksi-rumpang',
+    name: 'Kalimat Rumpang',
+    description: 'Kalimat tidak lengkap yang siswa lengkapi + tombol penutup.',
+    icon: '✍️',
+    applicableRoles: ['reflection'],
+    pedagogicalReason: 'Kalimat rumpang yang siswa lengkapi untuk cek pemahaman ringan. Cocok untuk konsep yang punya definisi jelas.',
+    buildComponents: () => [
+      createTextComponent('reflection', {
+        variant: 'title',
+        text: 'Lengkapi Kalimat Ini',
+        x: 80, y: POS.titleY, width: POS.fullWidth, height: POS.titleH,
+      }),
+      createCardComponent(
+        'Setelah mempelajari materi ini, aku sekarang paham bahwa ____________________.\n\nHal yang paling menarik dari materi ini adalah ____________________.\n\nAku akan menggunakan pengetahuan ini untuk ____________________.',
+        {
+          variant: 'importantNote',
+          title: 'Lengkapi',
+          x: 100, y: 140, width: 1080, height: 360,
+        },
+      ),
+      createNavigationComponent('Penutup →', 'next', {
+        variant: 'primaryAction',
+        x: POS.navX, y: POS.navY, width: POS.navW, height: POS.navH,
+      }),
+    ],
+  },
+  {
+    id: 'refleksi-komitmen',
+    name: 'Checklist Komitmen',
+    description: 'Kartu checklist komitmen tindakan nyata + tombol penutup.',
+    icon: '📌',
+    applicableRoles: ['reflection'],
+    pedagogicalReason: 'Checklist komitmen tindakan nyata. Cocok untuk pembelajaran yang mendorong siswa bertindak di kehidupan sehari-hari.',
+    buildComponents: () => [
+      createTextComponent('reflection', {
+        variant: 'title',
+        text: 'Komitmenku',
+        x: 80, y: POS.titleY, width: POS.fullWidth, height: POS.titleH,
+      }),
+      createCardComponent(
+        'Mulai hari ini, aku berkomitmen untuk:\n\n☐ Menerapkan ____________________ di rumah.\n☐ Membagi apa yang aku pelajari ke ____________________.\n☐ Menghentikan kebiasaan ____________________.\n\nTandai yang akan kamu lakukan.',
+        {
+          variant: 'importantNote',
+          title: 'Komitmen Tindakan',
+          x: 100, y: 140, width: 1080, height: 380,
+        },
+      ),
+      createNavigationComponent('Penutup →', 'next', {
+        variant: 'primaryAction',
+        x: POS.navX, y: POS.navY, width: POS.navW, height: POS.navH,
+      }),
+    ],
+  },
+  {
+    id: 'refleksi-3-2-1',
+    name: 'Refleksi 3-2-1',
+    description: '3 hal dipelajari + 2 hal menarik + 1 pertanyaan + tombol penutup.',
+    icon: '🔢',
+    applicableRoles: ['reflection'],
+    pedagogicalReason: 'Refleksi 3-2-1 yang terstruktur. Cocok untuk MPI yang ingin siswa merangkum sekaligus mengidentifikasi pertanyaan terbuka.',
+    buildComponents: () => [
+      createTextComponent('reflection', {
+        variant: 'title',
+        text: 'Refleksi 3-2-1',
+        x: 80, y: POS.titleY, width: POS.fullWidth, height: POS.titleH,
+      }),
+      createCardComponent(
+        'Tulis di buku catatanmu:\n\n3 — Tiga hal yang aku pelajari hari ini:\n  1. ____________________\n  2. ____________________\n  3. ____________________\n\n2 — Dua hal yang paling menarik:\n  1. ____________________\n  2. ____________________\n\n1 — Satu pertanyaan yang masih aku punya:\n  • ____________________',
+        {
+          variant: 'importantNote',
+          title: 'Struktur 3-2-1',
+          x: 80, y: 140, width: POS.fullWidth, height: 440,
+        },
+      ),
+      createNavigationComponent('Penutup →', 'next', {
+        variant: 'primaryAction',
+        x: POS.navX, y: POS.navY, width: POS.navW, height: POS.navH,
+      }),
+    ],
+  },
 
-  // --- 11. Closing ---
+  // ===== CLOSING (4) =====
   {
     id: 'penutup-terima-kasih',
     name: 'Penutup Terima Kasih',
     description: 'Judul "Terima Kasih" + sub-judul pesan penutup.',
     icon: '🎓',
     applicableRoles: ['closing'],
+    pedagogicalReason: 'Penutup klasik dengan ucapan terima kasih. Cocok untuk MPI formal yang menekankan apresiasi.',
     buildComponents: () => [
       createTextComponent('closing', {
         variant: 'title',
@@ -407,29 +845,68 @@ export const CONTENT_PATTERNS: readonly ContentPattern[] = [
       }),
     ],
   },
-
-  // --- 12. Menu (Daftar Sederhana) — alternative ---
   {
-    id: 'menu-daftar',
-    name: 'Menu Daftar Sederhana',
-    description: 'Judul + teks daftar menu (tanpa kartu) + tombol lanjut (alternatif).',
-    icon: '📋',
-    applicableRoles: ['menu'],
+    id: 'penutup-badge',
+    name: 'Badge Selesai',
+    description: 'Kartu "Selamat! Kamu menyelesaikan ..." dengan celebratory tone.',
+    icon: '🏆',
+    applicableRoles: ['closing'],
+    pedagogicalReason: 'Badge "Selesai" sebagai apresiasi. Cocok untuk siswa muda atau MPI bergaya game-like supaya merasa berprestasi.',
     buildComponents: () => [
-      createTextComponent('menu', {
+      createCardComponent(
+        '🎉 Selamat! 🎉\n\nKamu telah menyelesaikan pembelajaran ini.\n\nKamu berhak atas badge "Siswa Hebat"!',
+        {
+          variant: 'exampleCard',
+          title: '🏆 Badge Selesai',
+          x: 200, y: 200, width: 880, height: 280,
+        },
+      ),
+    ],
+  },
+  {
+    id: 'penutup-rangkuman',
+    name: 'Rangkuman 3 Poin',
+    description: 'Kartu "3 hal kunci" yang harus siswa ingat dari pembelajaran.',
+    icon: '📝',
+    applicableRoles: ['closing'],
+    pedagogicalReason: 'Rangkuman 3 poin kunci untuk menegaskan inti pembelajaran. Cocok untuk MPI yang ingin siswa ingat hal-hal penting.',
+    buildComponents: () => [
+      createTextComponent('closing', {
         variant: 'title',
-        text: 'Menu Materi',
+        text: '3 Hal yang Harus Diingat',
         x: 80, y: POS.titleY, width: POS.fullWidth, height: POS.titleH,
       }),
-      createTextComponent('menu', {
-        variant: 'body',
-        text: '1. Pemantik\n2. Materi\n3. Kuis\n4. Game\n5. Refleksi',
-        x: 80, y: POS.bodyY, width: POS.fullWidth, height: 300,
+      createCardComponent(
+        '1. Poin kunci pertama dari pembelajaran.\n\n2. Poin kunci kedua dari pembelajaran.\n\n3. Poin kunci ketiga dari pembelajaran.\n\nTuliskan kembali dengan kalimatmu sendiri di buku catatan.',
+        {
+          variant: 'infoCard',
+          title: 'Rangkuman',
+          x: 100, y: 140, width: 1080, height: 400,
+        },
+      ),
+    ],
+  },
+  {
+    id: 'penutup-ajakan',
+    name: 'Ajakan Praktik',
+    description: 'Kartu ajakan untuk praktik di kehidupan sehari-hari.',
+    icon: '🌟',
+    applicableRoles: ['closing'],
+    pedagogicalReason: 'Ajakan praktik di kehidupan sehari-hari. Cocok untuk pembelajaran berorientasi aksi yang ingin siswa terapkan.',
+    buildComponents: () => [
+      createTextComponent('closing', {
+        variant: 'title',
+        text: 'Sekarang Giliranmu!',
+        x: 80, y: POS.titleY, width: POS.fullWidth, height: POS.titleH,
       }),
-      createNavigationComponent('Mulai →', 'next', {
-        variant: 'primaryAction',
-        x: POS.navX, y: POS.navY, width: POS.navW, height: POS.navH,
-      }),
+      createCardComponent(
+        'Pelajaran ini tidak berhenti di kelas.\n\nMulai hari ini, coba lakukan satu hal kecil yang kamu pelajari.\n\nContoh:\n• Sapa guru dengan sopan saat masuk kelas.\n• Patuhi aturan antri di kantin.\n• Bantu teman yang kesulitan.\n\nApa yang akan kamu lakukan hari ini?',
+        {
+          variant: 'importantNote',
+          title: '🌟 Ajakan Praktik',
+          x: 100, y: 140, width: 1080, height: 420,
+        },
+      ),
     ],
   },
 ];

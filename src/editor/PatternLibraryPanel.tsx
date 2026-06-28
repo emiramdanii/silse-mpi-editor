@@ -115,7 +115,12 @@ function PatternCard({
         </div>
       </div>
       <p className="pattern-card__description">{pattern.description}</p>
+      {/* UX-03 Patch-1: use pattern's pedagogicalReason (rich, explains WHEN to use) */}
       <p className="pattern-card__reason" data-testid={`pattern-reason-${pattern.id}`}>
+        {pattern.pedagogicalReason}
+      </p>
+      {/* Secondary hint: page-state context from suggestion engine */}
+      <p className="pattern-card__hint" data-testid={`pattern-hint-${pattern.id}`}>
         {reason}
       </p>
       <button

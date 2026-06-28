@@ -85,7 +85,9 @@ export const PAGE_ROLE_CAPABILITIES: Record<PageRole, PageRoleCapability> = {
   },
   learningObjectives: {
     role: 'learningObjectives',
-    allowedComponents: ['text'],
+    // UX-03 Patch-1: add 'navigation' so patterns can add "Lanjut →" button.
+    // Aligns with "bebas jalan bantu" principle — every scene needs a way out.
+    allowedComponents: ['text', 'navigation'],
     allowAddComponent: true,
     description: 'Tujuan pembelajaran',
   },
@@ -109,7 +111,8 @@ export const PAGE_ROLE_CAPABILITIES: Record<PageRole, PageRoleCapability> = {
   },
   quiz: {
     role: 'quiz',
-    allowedComponents: ['text', 'question', 'game'],
+    // UX-03 Patch-1: add 'navigation' so patterns can add "Berikutnya →" button.
+    allowedComponents: ['text', 'question', 'game', 'navigation'],
     allowAddComponent: true,
     description: 'Evaluasi / kuis',
   },
@@ -121,7 +124,8 @@ export const PAGE_ROLE_CAPABILITIES: Record<PageRole, PageRoleCapability> = {
   },
   closing: {
     role: 'closing',
-    allowedComponents: ['text', 'navigation'],
+    // UX-03 Patch-1: add 'card' so patterns can add badge/rangkuman cards.
+    allowedComponents: ['text', 'card', 'navigation'],
     allowAddComponent: true,
     description: 'Penutup',
   },

@@ -78,17 +78,19 @@ function makeCtx(project: SimpleProject): PatternContext {
 // =========================================================================
 
 describe('UX-03 — Content Patterns library', () => {
-  it('has exactly 12 predefined patterns', () => {
-    expect(CONTENT_PATTERNS).toHaveLength(12);
+  it('has exactly 26 predefined patterns (UX-03 Patch-1: 12 → 26)', () => {
+    expect(CONTENT_PATTERNS).toHaveLength(26);
   });
 
-  it('each pattern has id, name, description, icon, applicableRoles, buildComponents', () => {
+  it('each pattern has id, name, description, icon, applicableRoles, pedagogicalReason, buildComponents', () => {
     for (const p of CONTENT_PATTERNS) {
       expect(p.id.length).toBeGreaterThan(0);
       expect(p.name.length).toBeGreaterThan(0);
       expect(p.description.length).toBeGreaterThan(0);
       expect(p.icon.length).toBeGreaterThan(0);
       expect(p.applicableRoles.length).toBeGreaterThan(0);
+      // UX-03 Patch-1: pedagogicalReason wajib, bukan hanya "siap diterapkan"
+      expect(p.pedagogicalReason.length).toBeGreaterThan(20);
       expect(typeof p.buildComponents).toBe('function');
     }
   });
@@ -112,11 +114,18 @@ describe('UX-03 — Content Patterns library', () => {
     expect(getPatternsForRole('free')).toHaveLength(0);
   });
 
-  it('material role has 2 patterns (primary + alternative)', () => {
+  it('material role has 7 patterns (UX-03 Patch-1: 2 → 7)', () => {
     const patterns = getPatternsForRole('material');
-    expect(patterns).toHaveLength(2);
+    expect(patterns).toHaveLength(7);
     expect(patterns[0].id).toBe('materi-tunggal');
     expect(patterns[1].id).toBe('materi-gambar');
+    // 5 new patterns from UX-03 Patch-1
+    const ids = patterns.map((p) => p.id);
+    expect(ids).toContain('materi-kartu-konsep');
+    expect(ids).toContain('materi-contoh-vs-bukan');
+    expect(ids).toContain('materi-fakta-mitos');
+    expect(ids).toContain('materi-step-by-step');
+    expect(ids).toContain('materi-mini-checkpoint');
   });
 
   it('menu role has 2 patterns (peta + daftar)', () => {
@@ -323,7 +332,8 @@ describe('UX-03 — Teaching Suggestion engine', () => {
   it('empty page → primary pattern first with priority="primary"', () => {
     const project = buildProjectWithPage('material');
     const suggestions = suggestPatternsForPage(project.pages[0], project);
-    expect(suggestions.length).toBe(2); // materi-tunggal + materi-gambar
+    // UX-03 Patch-1: material now has 7 patterns
+    expect(suggestions.length).toBe(7);
     expect(suggestions[0].priority).toBe('primary');
     expect(suggestions[0].pattern.id).toBe('materi-tunggal');
     expect(suggestions[0].reason).toMatch(/kosong/i);
@@ -332,7 +342,9 @@ describe('UX-03 — Teaching Suggestion engine', () => {
   it('empty page → secondary patterns with priority="secondary"', () => {
     const project = buildProjectWithPage('material');
     const suggestions = suggestPatternsForPage(project.pages[0], project);
+    // UX-03 Patch-1: 6 secondary patterns (index 1-6)
     expect(suggestions[1].priority).toBe('secondary');
+    expect(suggestions[6].priority).toBe('secondary');
     expect(suggestions[1].reason).toMatch(/alternatif/i);
   });
 
@@ -512,13 +524,18 @@ describe('UX-03 — PatternLibraryPanel UI', () => {
     expect(container.querySelector('[data-testid="pattern-library"]')).toBeNull();
   });
 
-  it('material page shows 2 pattern cards (materi-tunggal + materi-gambar)', () => {
+  it('material page shows 7 pattern cards (UX-03 Patch-1: 2 → 7)', () => {
     useEditorStore.getState().addPage({ role: 'material' });
     const { container } = render(React.createElement(Inspector));
     const cards = container.querySelectorAll('.pattern-card');
-    expect(cards).toHaveLength(2);
+    expect(cards).toHaveLength(7);
     expect(container.querySelector('[data-testid="pattern-card-materi-tunggal"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="pattern-card-materi-gambar"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="pattern-card-materi-kartu-konsep"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="pattern-card-materi-contoh-vs-bukan"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="pattern-card-materi-fakta-mitos"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="pattern-card-materi-step-by-step"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="pattern-card-materi-mini-checkpoint"]')).not.toBeNull();
   });
 
   it('primary pattern card has is-primary class + "Disarankan" badge', () => {

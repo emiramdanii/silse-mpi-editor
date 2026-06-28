@@ -140,17 +140,18 @@ describe('UX-01 Patch-2 — "+ Tambah Elemen" dropdown behavior', () => {
     expect(container.querySelector('[data-action="add-game"]')).toBeNull();
   });
 
-  it('on quiz: dropdown shows text + question + game (quiz allows question+game)', () => {
+  it('on quiz: dropdown shows text + question + game + navigation (UX-03 Patch-1: quiz now allows nav)', () => {
     useEditorStore.getState().addPage({ role: 'quiz' });
     const { container } = render(React.createElement(Toolbar));
     openAddMenu(container);
     expect(container.querySelector('[data-action="add-text"]')).not.toBeNull();
     expect(container.querySelector('[data-action="add-question"]')).not.toBeNull();
     expect(container.querySelector('[data-action="add-game"]')).not.toBeNull();
-    // Quiz does NOT allow image, card, navigation
+    // UX-03 Patch-1: quiz now allows navigation (bebas jalan bantu)
+    expect(container.querySelector('[data-action="add-navigation"]')).not.toBeNull();
+    // Quiz still does NOT allow image, card
     expect(container.querySelector('[data-action="add-image"]')).toBeNull();
     expect(container.querySelector('[data-action="add-card"]')).toBeNull();
-    expect(container.querySelector('[data-action="add-navigation"]')).toBeNull();
   });
 
   it('dropdown groups buttons into Konten + Interaksi sections', () => {

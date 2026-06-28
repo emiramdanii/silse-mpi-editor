@@ -131,12 +131,12 @@ describe('Capability Matrix — navigation per role (M5)', () => {
     expect(canAddComponent('cover', 'navigation')).toBe(false);
   });
 
-  it('learningObjectives denies navigation', () => {
-    expect(canAddComponent('learningObjectives', 'navigation')).toBe(false);
+  it('learningObjectives allows navigation (UX-03 Patch-1: bebas jalan bantu)', () => {
+    expect(canAddComponent('learningObjectives', 'navigation')).toBe(true);
   });
 
-  it('quiz denies navigation (quiz engine belum ada)', () => {
-    expect(canAddComponent('quiz', 'navigation')).toBe(false);
+  it('quiz allows navigation (UX-03 Patch-1: bebas jalan bantu)', () => {
+    expect(canAddComponent('quiz', 'navigation')).toBe(true);
   });
 
   it('material allows navigation', () => {
@@ -286,11 +286,11 @@ describe('editor store — M5 scope (navigation component)', () => {
     expect(c.variant).toBe('navigation');
   });
 
-  it('addNavigationComponent on quiz returns null (not allowed)', () => {
+  it('addNavigationComponent on quiz succeeds (UX-03 Patch-1: quiz allows nav)', () => {
     const store = useEditorStore.getState();
     store.addPage({ role: 'quiz' });
     const result = store.addNavigationComponent('Next', 'next');
-    expect(result).toBeNull();
+    expect(result).not.toBeNull();
   });
 
   it('updateNavigationComponent modifies label + action', () => {
