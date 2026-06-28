@@ -13,6 +13,8 @@ import type { PageRole } from '../core/types';
  */
 const ROLE_LABELS_SHORT: Record<PageRole, string> = {
   cover: 'Cover',
+  guide: 'Panduan',
+  menu: 'Menu',
   learningObjectives: 'Tujuan',
   starter: 'Pemantik',
   material: 'Materi',

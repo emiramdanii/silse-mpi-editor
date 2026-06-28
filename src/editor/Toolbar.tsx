@@ -17,6 +17,7 @@ import { saveStylePack } from '../storage/style-pack-storage';
 import { getStylePack } from '../core/style-presets';
 import { parseAndNormalizeAiJson } from '../ai-import/normalizer';
 import { createSamplePpknProject } from '../core/sample-project';
+import { checkMpiStandard } from '../core/mpi-quality-check';
 import { useState } from 'react';
 
 export function Toolbar() {
@@ -75,6 +76,18 @@ export function Toolbar() {
 
   const handleExport = () => {
     const project = useEditorStore.getState().project;
+    const qc = checkMpiStandard(project);
+    if (!qc.pass || qc.warnings.length > 0) {
+      const msgs = [
+        ...qc.errors.map((e) => '❌ ' + e),
+        ...qc.warnings.map((w) => '⚠️ ' + w),
+      ];
+      const proceed = window.confirm(
+        'Cek Standar MPI:\n\n' + msgs.join('\n') +
+        '\n\nApakah Anda tetap ingin export?'
+      );
+      if (!proceed) return;
+    }
     const html = exportProjectToHtml(project);
     downloadHtmlFile(project.title, html);
   };

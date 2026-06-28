@@ -42,6 +42,10 @@ function defaultTitleForRole(role: PageRole): string {
   switch (role) {
     case 'cover':
       return 'Cover';
+    case 'guide':
+      return 'Panduan';
+    case 'menu':
+      return 'Menu Materi';
     case 'learningObjectives':
       return 'Tujuan Pembelajaran';
     case 'starter':

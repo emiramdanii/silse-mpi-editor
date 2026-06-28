@@ -41,6 +41,8 @@ export const DEFAULT_TEXT_VARIANT_BY_ROLE: Record<
   import('./types').TextComponentVariant
 > = {
   cover: 'title',
+  guide: 'body',
+  menu: 'body',
   starter: 'questionPrompt',
   activity: 'instruction',
   quiz: 'questionPrompt',
@@ -65,9 +67,21 @@ export const PAGE_ROLE_CAPABILITIES: Record<PageRole, PageRoleCapability> = {
   cover: {
     role: 'cover',
     allowedComponents: ['text'],
-    allowAddComponent: false, // guided — fixed slots di M11/M12
+    allowAddComponent: false,
     fixedSlots: ['title', 'subtitle', 'meta'],
     description: 'Halaman pembuka MPI',
+  },
+  guide: {
+    role: 'guide',
+    allowedComponents: ['text', 'card', 'navigation'],
+    allowAddComponent: true,
+    description: 'Panduan / petunjuk penggunaan MPI',
+  },
+  menu: {
+    role: 'menu',
+    allowedComponents: ['text', 'card', 'navigation'],
+    allowAddComponent: true,
+    description: 'Menu / peta materi MPI',
   },
   learningObjectives: {
     role: 'learningObjectives',

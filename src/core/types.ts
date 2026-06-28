@@ -21,6 +21,20 @@
 
 export const PROJECT_VERSION = 1 as const;
 
+export type CurriculumObjective = {
+  id: string;
+  text: string;
+};
+
+export type Curriculum = {
+  subject: string;
+  grade: string;
+  phase: string;
+  topic: string;
+  cp?: string;
+  objectives: CurriculumObjective[];
+};
+
 export type SimpleProject = {
   id: string;
   title: string;
@@ -29,12 +43,14 @@ export type SimpleProject = {
   currentPageId: string;
   /**
    * Style pack reference + inline tokens (Batch 2S).
-   * Optional untuk backward-compat dengan project lama — kalau undefined,
-   * editor memakai DEFAULT_STYLE_PACK. M7 akan memperkenalkan save/load
-   * style pack sebagai reusable asset.
    */
   stylePackId?: string;
   style?: import('./style-types').ProjectStyle;
+  /**
+   * Curriculum metadata (Batch 11B Patch).
+   * Wajib untuk MPI standar: subject, grade, phase, topic, objectives.
+   */
+  curriculum?: Curriculum;
 };
 
 // ---------------------------------------------------------------------------
@@ -44,6 +60,8 @@ export type SimpleProject = {
 
 export const PAGE_ROLES = [
   'cover',
+  'guide',
+  'menu',
   'learningObjectives',
   'starter',
   'material',

@@ -24,6 +24,8 @@ import type { LayoutId, PageRole } from './types';
  */
 export const DEFAULT_LAYOUT_ID_BY_ROLE: Record<PageRole, LayoutId> = {
   cover: 'coverCentered',
+  guide: 'blank',
+  menu: 'blank',
   learningObjectives: 'blank',
   starter: 'blank',
   material: 'singleColumn',
