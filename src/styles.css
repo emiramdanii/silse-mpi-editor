@@ -787,6 +787,7 @@ textarea {
 
 .editor-toolbar__group--files {
   margin-left: auto;
+  position: relative;
 }
 
 .editor-toolbar__group-label {
@@ -795,6 +796,99 @@ textarea {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--color-muted);
+}
+
+.editor-toolbar__more-wrap {
+  position: relative;
+}
+
+.editor-toolbar__more-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--color-border);
+  background: var(--color-panel);
+  border-radius: var(--radius-md);
+  color: var(--color-text-soft);
+  cursor: pointer;
+}
+
+.editor-toolbar__more-btn:hover {
+  background: var(--color-panel-soft);
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
+.editor-toolbar__more-btn[aria-expanded="true"] {
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.editor-toolbar__more-chevron {
+  font-size: 10px;
+  color: var(--color-muted);
+}
+
+.editor-toolbar__more-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 220px;
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 100;
+}
+
+.editor-toolbar__more-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 7px 10px;
+  font-size: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--color-text);
+}
+
+.editor-toolbar__more-menu button:hover:not(.danger) {
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.editor-toolbar__more-menu button.danger {
+  color: var(--color-danger);
+}
+
+.editor-toolbar__more-menu button.danger:hover {
+  background: var(--color-danger-soft);
+  border-color: var(--color-danger);
+}
+
+.editor-toolbar__more-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: 2px 0;
+}
+
+.editor-toolbar__more-clickaway {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: transparent;
+  cursor: default;
 }
 
 .editor-toolbar__group-btns {
@@ -970,7 +1064,7 @@ textarea {
   white-space: nowrap;
 }
 
-.inspector-page-info__capability {
+.inspector-page-info__status {
   margin-top: 12px;
   padding: 10px;
   background: var(--color-panel-soft);
@@ -981,20 +1075,20 @@ textarea {
   text-align: left;
 }
 
-.inspector-page-info__capability.is-locked {
+.inspector-page-info__status.is-locked {
   background: var(--color-warning-soft);
   border-color: var(--color-warning);
   color: var(--color-warning);
 }
 
-.inspector-page-info__capability-hint {
+.inspector-page-info__status-hint {
   margin: 6px 0 0 0;
   font-size: 11px;
   font-style: italic;
   color: var(--color-muted);
 }
 
-.inspector-page-info__capability.is-locked .inspector-page-info__capability-hint {
+.inspector-page-info__status.is-locked .inspector-page-info__status-hint {
   color: var(--color-warning);
 }
 
@@ -1135,6 +1229,151 @@ textarea {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+}
+
+/* =========================================================================
+   Question / Game editors (UX-01 Patch Scope C)
+   ========================================================================= */
+
+.question-choices,
+.game-missions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.question-choice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.question-choice__radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-panel);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-soft);
+  flex-shrink: 0;
+}
+
+.question-choice__radio input[type='radio'] {
+  margin: 0;
+  cursor: pointer;
+}
+
+.question-choice__text {
+  flex: 1;
+  font-size: 12px;
+  padding: 4px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-panel);
+}
+
+.question-choice__remove {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1;
+  border: 1px solid var(--color-border);
+  background: var(--color-panel);
+  border-radius: var(--radius-sm);
+  color: var(--color-danger);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.question-choice__remove:hover {
+  background: var(--color-danger-soft);
+  border-color: var(--color-danger);
+}
+
+.question-choice__add {
+  align-self: flex-start;
+  padding: 4px 10px;
+  font-size: 12px;
+  border: 1px dashed var(--color-border-strong);
+  background: var(--color-panel-soft);
+  color: var(--color-text-soft);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.question-choice__add:hover {
+  background: var(--color-panel);
+  border-style: solid;
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.game-mission {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px;
+  background: var(--color-panel-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.game-mission__head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.game-mission__title {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-panel);
+}
+
+.game-mission__remove {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1;
+  border: 1px solid var(--color-danger);
+  background: var(--color-panel);
+  border-radius: var(--radius-sm);
+  color: var(--color-danger);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.game-mission__remove:hover {
+  background: var(--color-danger-soft);
+}
+
+.game-mission__choices {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 0;
+  border-top: 1px dashed var(--color-border);
+  border-bottom: 1px dashed var(--color-border);
+}
+
+.game-mission__choices-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-muted);
 }
 
 /* =========================================================================

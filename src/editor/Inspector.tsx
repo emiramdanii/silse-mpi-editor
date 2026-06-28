@@ -23,25 +23,34 @@ import { useState } from 'react';
 import { useEditorStore } from '../store/editor-store';
 import type {
   CardComponent,
+  GameComponent,
+  GameMission,
   ImageComponent,
   NavigationAction,
   NavigationComponent,
   NavigationComponentVariant,
   PageComponent,
+  QuestionChoice,
+  QuestionComponent,
   SimplePage,
   TextComponent,
 } from '../core/types';
 import type {
   CardComponentEditable,
+  GameComponentEditable,
   ImageComponentEditable,
   NavigationComponentEditable,
+  QuestionComponentEditable,
   TextComponentEditable,
 } from '../core/component-factory';
 import {
   CARD_COMPONENT_VARIANTS,
+  GAME_TYPES,
   IMAGE_COMPONENT_VARIANTS,
   NAVIGATION_ACTIONS,
   NAVIGATION_COMPONENT_VARIANTS,
+  QUESTION_COMPONENT_VARIANTS,
+  SCORING_STYLES,
   TEXT_COMPONENT_VARIANTS,
   type CardComponentVariant,
   type ImageComponentVariant,
@@ -49,6 +58,7 @@ import {
 } from '../core/types';
 import { getCapability } from '../core/capability';
 import { getRoleInfo } from './mpi-standard-roles';
+import { createComponentId } from '../core/ids';
 
 const TEXT_VARIANT_LABELS: Record<TextComponentVariant, string> = {
   title: 'Judul',
@@ -83,6 +93,22 @@ const NAVIGATION_ACTION_LABELS: Record<NavigationAction, string> = {
   next: 'Halaman berikutnya',
   prev: 'Halaman sebelumnya',
   goto: 'Pergi ke halaman tertentu',
+};
+
+// UX-01 Patch Scope C: friendly labels for Question / Game editor options.
+const QUESTION_VARIANT_LABELS: Record<string, string> = {
+  multipleChoice: 'Pilihan ganda',
+  trueFalse: 'Benar / Salah',
+};
+
+const GAME_TYPE_LABELS: Record<string, string> = {
+  missionQuiz: 'Kuis Misi',
+};
+
+const SCORING_STYLE_LABELS: Record<string, string> = {
+  points: 'Poin angka',
+  stars: 'Bintang',
+  badge: 'Lencana',
 };
 
 const LAYOUT_LABELS: Record<string, string> = {
@@ -152,6 +178,8 @@ export function Inspector() {
   const updateImageComponent = useEditorStore((s) => s.updateImageComponent);
   const updateCardComponent = useEditorStore((s) => s.updateCardComponent);
   const updateNavigationComponent = useEditorStore((s) => s.updateNavigationComponent);
+  const updateQuestionComponent = useEditorStore((s) => s.updateQuestionComponent);
+  const updateGameComponent = useEditorStore((s) => s.updateGameComponent);
   const project = useEditorStore((s) => s.project);
 
   return (
@@ -173,12 +201,34 @@ export function Inspector() {
             onUpdateImage={updateImageComponent}
             onUpdateCard={updateCardComponent}
             onUpdateNavigation={updateNavigationComponent}
+            onUpdateQuestion={updateQuestionComponent}
+            onUpdateGame={updateGameComponent}
             pages={project.pages}
           />
         )}
       </div>
     </aside>
   );
+}
+
+const COMPONENT_TYPE_FRIENDLY: Record<string, string> = {
+  text: 'Teks',
+  image: 'Gambar',
+  card: 'Kartu',
+  navigation: 'Tombol navigasi',
+  question: 'Pertanyaan',
+  game: 'Game misi',
+};
+
+/**
+ * Map a list of allowed component types (raw) to friendly labels.
+ * Used by PageInfo to show "Yang bisa ditambahkan: Teks, Kartu, Tombol navigasi"
+ * instead of raw "text, card, navigation".
+ */
+function friendlyComponentTypes(types: ReadonlyArray<string>): string {
+  return types
+    .map((t) => COMPONENT_TYPE_FRIENDLY[t] ?? t)
+    .join(', ');
 }
 
 function PageInfo({ currentPage }: { currentPage: SimplePage }) {
@@ -191,8 +241,9 @@ function PageInfo({ currentPage }: { currentPage: SimplePage }) {
       acc[t] = (acc[t] ?? 0) + 1;
       return acc;
     }, {});
+  // UX-01 Patch Scope B: friendly summary "2 Teks, 1 Kartu" — not raw "2 text, 1 card".
   const summaryText = Object.entries(componentTypeSummary)
-    .map(([t, n]) => `${n} ${t}`)
+    .map(([t, n]) => `${n} ${COMPONENT_TYPE_FRIENDLY[t] ?? t}`)
     .join(', ');
 
   return (
@@ -204,7 +255,7 @@ function PageInfo({ currentPage }: { currentPage: SimplePage }) {
 
       <dl className="inspector-page-info__meta">
         <div>
-          <dt>Layout</dt>
+          <dt>Pola tampilan</dt>
           <dd>{LAYOUT_LABELS[currentPage.layoutId] ?? currentPage.layoutId}</dd>
         </div>
         <div>
@@ -219,19 +270,22 @@ function PageInfo({ currentPage }: { currentPage: SimplePage }) {
         )}
       </dl>
 
-      <div className={`inspector-page-info__capability${capability.allowAddComponent ? '' : ' is-locked'}`}>
+      <div
+        className={`inspector-page-info__status${capability.allowAddComponent ? '' : ' is-locked'}`}
+        data-testid="inspector-page-status"
+      >
         {capability.allowAddComponent ? (
           <>
-            <strong>Boleh tambah elemen:</strong>{' '}
-            <span>{capability.allowedComponents.join(', ')}</span>
-            <p className="inspector-page-info__capability-hint">
+            <strong>Yang bisa ditambahkan:</strong>{' '}
+            <span>{friendlyComponentTypes(capability.allowedComponents)}</span>
+            <p className="inspector-page-info__status-hint">
               Klik elemen di kanvas untuk mengedit, atau gunakan tombol tambah di toolbar atas kanvas.
             </p>
           </>
         ) : (
           <>
             <strong>Halaman terpandu.</strong>
-            <p className="inspector-page-info__capability-hint">
+            <p className="inspector-page-info__status-hint">
               Elemen halaman ini sudah diatur dan tidak boleh ditambah manual.
             </p>
           </>
@@ -247,6 +301,8 @@ function ComponentEditor({
   onUpdateImage,
   onUpdateCard,
   onUpdateNavigation,
+  onUpdateQuestion,
+  onUpdateGame,
   pages,
 }: {
   component: PageComponent;
@@ -254,6 +310,8 @@ function ComponentEditor({
   onUpdateImage: (id: string, patch: Partial<ImageComponentEditable>) => void;
   onUpdateCard: (id: string, patch: Partial<CardComponentEditable>) => void;
   onUpdateNavigation: (id: string, patch: Partial<NavigationComponentEditable>) => void;
+  onUpdateQuestion: (id: string, patch: Partial<QuestionComponentEditable>) => void;
+  onUpdateGame: (id: string, patch: Partial<GameComponentEditable>) => void;
   pages: SimplePage[];
 }) {
   if (component.type === 'text') {
@@ -273,6 +331,12 @@ function ComponentEditor({
         onChange={(p) => onUpdateNavigation(component.id, p)}
       />
     );
+  }
+  if (component.type === 'question') {
+    return <QuestionComponentEditor component={component} onChange={(p) => onUpdateQuestion(component.id, p)} />;
+  }
+  if (component.type === 'game') {
+    return <GameComponentEditor component={component} onChange={(p) => onUpdateGame(component.id, p)} />;
   }
   return (
     <div className="inspector-placeholder">
@@ -600,6 +664,445 @@ function NavigationComponentEditor({
             ))}
           </select>
         </Field>
+      </Section>
+
+      <Section title="Posisi & Ukuran">
+        <GeometryFields component={component} onChange={onChange} />
+      </Section>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Question Component Editor (UX-01 Patch Scope C)
+// ---------------------------------------------------------------------------
+
+function QuestionComponentEditor({
+  component,
+  onChange,
+}: {
+  component: QuestionComponent;
+  onChange: (patch: Partial<QuestionComponentEditable>) => void;
+}) {
+  const updateChoiceText = (choiceIdx: number, text: string) => {
+    const newChoices = component.choices.map((c, i) =>
+      i === choiceIdx ? { ...c, text } : c,
+    );
+    onChange({ choices: newChoices });
+  };
+  const addChoice = () => {
+    const newChoice: QuestionChoice = { id: createComponentId(), text: 'Pilihan baru' };
+    onChange({ choices: [...component.choices, newChoice] });
+  };
+  const removeChoice = (choiceIdx: number) => {
+    if (component.choices.length <= 2) {
+      window.alert('Minimal harus ada 2 pilihan jawaban.');
+      return;
+    }
+    const newChoices = component.choices.filter((_, i) => i !== choiceIdx);
+    // If we removed the correct choice, reset to first
+    let newCorrect = component.correctChoiceIndex;
+    if (choiceIdx === component.correctChoiceIndex) {
+      newCorrect = 0;
+    } else if (choiceIdx < component.correctChoiceIndex) {
+      newCorrect = component.correctChoiceIndex - 1;
+    }
+    onChange({ choices: newChoices, correctChoiceIndex: newCorrect });
+  };
+
+  return (
+    <div className="component-editor" data-testid="component-editor-question">
+      <div className="component-editor__head">
+        <span className="component-editor__type">{friendlyElementName(component)}</span>
+      </div>
+
+      <Section title="Isi">
+        <Field label="Judul kuis">
+          <input
+            type="text"
+            data-field="title"
+            value={component.title}
+            onChange={(e) => onChange({ title: e.target.value })}
+            placeholder="Contoh: Kuis Norma"
+          />
+        </Field>
+        <Field label="Pertanyaan">
+          <textarea
+            data-field="prompt"
+            value={component.prompt}
+            onChange={(e) => onChange({ prompt: e.target.value })}
+            rows={3}
+            style={{ width: '100%', resize: 'vertical' }}
+            placeholder="Tulis pertanyaan..."
+          />
+        </Field>
+      </Section>
+
+      <Section title="Pilihan jawaban">
+        <div className="question-choices" data-testid="question-choices">
+          {component.choices.map((choice, idx) => (
+            <div key={choice.id} className="question-choice">
+              <label className="question-choice__radio" title="Tandai sebagai jawaban benar">
+                <input
+                  type="radio"
+                  name={`correct-${component.id}`}
+                  checked={component.correctChoiceIndex === idx}
+                  onChange={() => onChange({ correctChoiceIndex: idx })}
+                  data-field="correctChoiceIndex"
+                  data-choice-idx={idx}
+                />
+                <span aria-hidden>{String.fromCharCode(65 + idx)}</span>
+              </label>
+              <input
+                type="text"
+                className="question-choice__text"
+                value={choice.text}
+                onChange={(e) => updateChoiceText(idx, e.target.value)}
+                placeholder={`Teks pilihan ${String.fromCharCode(65 + idx)}`}
+                data-field={`choice-text-${idx}`}
+              />
+              <button
+                type="button"
+                className="question-choice__remove"
+                onClick={() => removeChoice(idx)}
+                title="Hapus pilihan ini"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          className="question-choice__add"
+          onClick={addChoice}
+          title="Tambah pilihan jawaban"
+          data-action="add-choice"
+        >
+          + Tambah pilihan
+        </button>
+        <div className="component-editor__hint component-editor__hint--small">
+          Pilih huruf (A, B, C, …) untuk menandai jawaban benar.
+        </div>
+      </Section>
+
+      <Section title="Feedback">
+        <Field label="Feedback jika benar">
+          <textarea
+            data-field="feedbackCorrect"
+            value={component.feedbackCorrect}
+            onChange={(e) => onChange({ feedbackCorrect: e.target.value })}
+            rows={2}
+            style={{ width: '100%', resize: 'vertical' }}
+            placeholder="Contoh: Benar! Itu norma kesopanan."
+          />
+        </Field>
+        <Field label="Feedback jika salah">
+          <textarea
+            data-field="feedbackWrong"
+            value={component.feedbackWrong}
+            onChange={(e) => onChange({ feedbackWrong: e.target.value })}
+            rows={2}
+            style={{ width: '100%', resize: 'vertical' }}
+            placeholder="Contoh: Belum tepat. Coba lihat lagi materinya."
+          />
+        </Field>
+      </Section>
+
+      <Section title="Skor & Tampilan">
+        <div className="field-row">
+          <Field label="Skor">
+            <input
+              type="number"
+              data-field="points"
+              value={component.points}
+              onChange={(e) => onChange({ points: Number(e.target.value) })}
+              min={0}
+            />
+          </Field>
+          <Field label="Gaya skor">
+            <select
+              data-field="scoringStyle"
+              value={component.scoringStyle}
+              onChange={(e) => onChange({ scoringStyle: e.target.value as QuestionComponent['scoringStyle'] })}
+            >
+              {SCORING_STYLES.map((s) => (
+                <option key={s} value={s}>
+                  {SCORING_STYLE_LABELS[s] ?? s}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </div>
+        <Field label="Jenis pertanyaan">
+          <select
+            data-field="variant"
+            value={component.variant}
+            onChange={(e) => onChange({ variant: e.target.value as QuestionComponent['variant'] })}
+          >
+            {QUESTION_COMPONENT_VARIANTS.map((v) => (
+              <option key={v} value={v}>
+                {QUESTION_VARIANT_LABELS[v] ?? v}
+              </option>
+            ))}
+          </select>
+        </Field>
+      </Section>
+
+      <Section title="Posisi & Ukuran">
+        <GeometryFields component={component} onChange={onChange} />
+      </Section>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Game Component Editor (UX-01 Patch Scope C)
+// ---------------------------------------------------------------------------
+
+function GameComponentEditor({
+  component,
+  onChange,
+}: {
+  component: GameComponent;
+  onChange: (patch: Partial<GameComponentEditable>) => void;
+}) {
+  const updateMission = (missionIdx: number, patch: Partial<GameMission>) => {
+    const newMissions = component.missions.map((m, i) =>
+      i === missionIdx ? { ...m, ...patch } : m,
+    );
+    onChange({ missions: newMissions });
+  };
+  const addMission = () => {
+    const newMission: GameMission = {
+      id: createComponentId(),
+      title: `Misi ${component.missions.length + 1}`,
+      prompt: 'Pertanyaan misi baru?',
+      choices: [
+        { id: createComponentId(), text: 'Pilihan A' },
+        { id: createComponentId(), text: 'Pilihan B' },
+      ],
+      correctChoiceIndex: 0,
+      feedbackCorrect: 'Benar!',
+      feedbackWrong: 'Belum tepat.',
+      points: 10,
+    };
+    onChange({ missions: [...component.missions, newMission] });
+  };
+  const removeMission = (missionIdx: number) => {
+    if (component.missions.length <= 1) {
+      window.alert('Game minimal harus punya 1 misi.');
+      return;
+    }
+    onChange({
+      missions: component.missions.filter((_, i) => i !== missionIdx),
+    });
+  };
+  const updateMissionChoiceText = (
+    missionIdx: number,
+    choiceIdx: number,
+    text: string,
+  ) => {
+    const mission = component.missions[missionIdx];
+    const newChoices = mission.choices.map((c, i) =>
+      i === choiceIdx ? { ...c, text } : c,
+    );
+    updateMission(missionIdx, { choices: newChoices });
+  };
+  const addMissionChoice = (missionIdx: number) => {
+    const mission = component.missions[missionIdx];
+    const newChoice: QuestionChoice = { id: createComponentId(), text: 'Pilihan baru' };
+    updateMission(missionIdx, { choices: [...mission.choices, newChoice] });
+  };
+  const removeMissionChoice = (missionIdx: number, choiceIdx: number) => {
+    const mission = component.missions[missionIdx];
+    if (mission.choices.length <= 2) {
+      window.alert('Minimal harus ada 2 pilihan jawaban.');
+      return;
+    }
+    const newChoices = mission.choices.filter((_, i) => i !== choiceIdx);
+    let newCorrect = mission.correctChoiceIndex;
+    if (choiceIdx === mission.correctChoiceIndex) {
+      newCorrect = 0;
+    } else if (choiceIdx < mission.correctChoiceIndex) {
+      newCorrect = mission.correctChoiceIndex - 1;
+    }
+    updateMission(missionIdx, { choices: newChoices, correctChoiceIndex: newCorrect });
+  };
+
+  return (
+    <div className="component-editor" data-testid="component-editor-game">
+      <div className="component-editor__head">
+        <span className="component-editor__type">{friendlyElementName(component)}</span>
+      </div>
+
+      <Section title="Isi">
+        <Field label="Judul game">
+          <input
+            type="text"
+            data-field="title"
+            value={component.title}
+            onChange={(e) => onChange({ title: e.target.value })}
+            placeholder="Contoh: Petualangan Norma"
+          />
+        </Field>
+        <Field label="Instruksi">
+          <textarea
+            data-field="instruction"
+            value={component.instruction}
+            onChange={(e) => onChange({ instruction: e.target.value })}
+            rows={2}
+            style={{ width: '100%', resize: 'vertical' }}
+            placeholder="Contoh: Jawab semua misi untuk menyelesaikan petualangan!"
+          />
+        </Field>
+      </Section>
+
+      <Section title="Tampilan">
+        <div className="field-row">
+          <Field label="Jenis game">
+            <select
+              data-field="gameType"
+              value={component.gameType}
+              onChange={(e) => onChange({ gameType: e.target.value as GameComponent['gameType'] })}
+            >
+              {GAME_TYPES.map((g) => (
+                <option key={g} value={g}>
+                  {GAME_TYPE_LABELS[g] ?? g}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Gaya skor">
+            <select
+              data-field="scoringStyle"
+              value={component.scoringStyle}
+              onChange={(e) => onChange({ scoringStyle: e.target.value as GameComponent['scoringStyle'] })}
+            >
+              {SCORING_STYLES.map((s) => (
+                <option key={s} value={s}>
+                  {SCORING_STYLE_LABELS[s] ?? s}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </div>
+      </Section>
+
+      <Section title={`Misi (${component.missions.length})`}>
+        <div className="game-missions" data-testid="game-missions">
+          {component.missions.map((mission, mIdx) => (
+            <div key={mission.id} className="game-mission" data-testid={`game-mission-${mIdx}`}>
+              <div className="game-mission__head">
+                <input
+                  type="text"
+                  className="game-mission__title"
+                  value={mission.title}
+                  onChange={(e) => updateMission(mIdx, { title: e.target.value })}
+                  placeholder={`Misi ${mIdx + 1}`}
+                  data-field={`mission-title-${mIdx}`}
+                />
+                <button
+                  type="button"
+                  className="game-mission__remove"
+                  onClick={() => removeMission(mIdx)}
+                  title="Hapus misi ini"
+                >
+                  ×
+                </button>
+              </div>
+              <Field label="Pertanyaan misi">
+                <textarea
+                  value={mission.prompt}
+                  onChange={(e) => updateMission(mIdx, { prompt: e.target.value })}
+                  rows={2}
+                  style={{ width: '100%', resize: 'vertical' }}
+                  placeholder="Pertanyaan untuk misi ini..."
+                  data-field={`mission-prompt-${mIdx}`}
+                />
+              </Field>
+              <div className="game-mission__choices">
+                <span className="game-mission__choices-label">Pilihan jawaban:</span>
+                {mission.choices.map((choice, cIdx) => (
+                  <div key={choice.id} className="question-choice">
+                    <label className="question-choice__radio" title="Tandai sebagai jawaban benar">
+                      <input
+                        type="radio"
+                        name={`correct-mission-${mission.id}`}
+                        checked={mission.correctChoiceIndex === cIdx}
+                        onChange={() => updateMission(mIdx, { correctChoiceIndex: cIdx })}
+                      />
+                      <span aria-hidden>{String.fromCharCode(65 + cIdx)}</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="question-choice__text"
+                      value={choice.text}
+                      onChange={(e) => updateMissionChoiceText(mIdx, cIdx, e.target.value)}
+                      placeholder={`Teks pilihan ${String.fromCharCode(65 + cIdx)}`}
+                    />
+                    <button
+                      type="button"
+                      className="question-choice__remove"
+                      onClick={() => removeMissionChoice(mIdx, cIdx)}
+                      title="Hapus pilihan ini"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className="question-choice__add"
+                  onClick={() => addMissionChoice(mIdx)}
+                  title="Tambah pilihan jawaban untuk misi ini"
+                >
+                  + Tambah pilihan
+                </button>
+              </div>
+              <div className="field-row">
+                <Field label="Skor misi">
+                  <input
+                    type="number"
+                    value={mission.points}
+                    onChange={(e) => updateMission(mIdx, { points: Number(e.target.value) })}
+                    min={0}
+                    data-field={`mission-points-${mIdx}`}
+                  />
+                </Field>
+              </div>
+              <Field label="Feedback jika benar">
+                <textarea
+                  value={mission.feedbackCorrect}
+                  onChange={(e) => updateMission(mIdx, { feedbackCorrect: e.target.value })}
+                  rows={2}
+                  style={{ width: '100%', resize: 'vertical' }}
+                  placeholder="Contoh: Benar! ..."
+                  data-field={`mission-feedback-correct-${mIdx}`}
+                />
+              </Field>
+              <Field label="Feedback jika salah">
+                <textarea
+                  value={mission.feedbackWrong}
+                  onChange={(e) => updateMission(mIdx, { feedbackWrong: e.target.value })}
+                  rows={2}
+                  style={{ width: '100%', resize: 'vertical' }}
+                  placeholder="Contoh: Belum tepat. ..."
+                  data-field={`mission-feedback-wrong-${mIdx}`}
+                />
+              </Field>
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          className="question-choice__add"
+          onClick={addMission}
+          title="Tambah misi baru"
+          data-action="add-mission"
+        >
+          + Tambah misi
+        </button>
       </Section>
 
       <Section title="Posisi & Ukuran">

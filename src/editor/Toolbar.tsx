@@ -72,6 +72,8 @@ export function Toolbar() {
   const [showAiDialog, setShowAiDialog] = useState(false);
   const [aiJsonText, setAiJsonText] = useState('');
   const [aiError, setAiError] = useState<string | null>(null);
+  // UX-01 Patch Scope A: file actions collapsed into "Lainnya" dropdown.
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   const role = currentPage?.role;
   const roleLabel = role ? getRoleInfo(role).label : '—';
@@ -97,15 +99,18 @@ export function Toolbar() {
   const handleLoadSample = () => {
     const sample = createSamplePpknProject();
     setProject(sample);
+    setShowMoreMenu(false);
     window.alert('Contoh MPI "Hidup Tertib dengan Norma" dimuat!');
   };
 
   const handleSave = () => {
     const ok = saveCurrent();
+    setShowMoreMenu(false);
     if (!ok) window.alert('Gagal menyimpan proyek.');
   };
 
   const handleLoad = () => {
+    setShowMoreMenu(false);
     const saved = listSavedProjects();
     if (saved.length === 0) {
       const ok = loadCurrent();
@@ -129,6 +134,7 @@ export function Toolbar() {
   };
 
   const handleExportJson = () => {
+    setShowMoreMenu(false);
     const project = useEditorStore.getState().project;
     const json = exportProjectJson(project);
     const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
@@ -143,6 +149,7 @@ export function Toolbar() {
   };
 
   const handleImportJson = () => {
+    setShowMoreMenu(false);
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json,.silse.json,application/json';
@@ -166,12 +173,14 @@ export function Toolbar() {
   };
 
   const handleReset = () => {
+    setShowMoreMenu(false);
     if (window.confirm('Reset proyek? Semua perubahan akan hilang.')) {
       resetProject();
     }
   };
 
   const handleSaveToLibrary = () => {
+    setShowMoreMenu(false);
     const project = useEditorStore.getState().project;
     const result = saveProjectToLibrary(project);
     if (result.ok) {
@@ -182,6 +191,7 @@ export function Toolbar() {
   };
 
   const handleSaveStylePack = () => {
+    setShowMoreMenu(false);
     const project = useEditorStore.getState().project;
     const stylePackId = project.stylePackId;
     if (!stylePackId) {
@@ -202,6 +212,7 @@ export function Toolbar() {
   };
 
   const handleAiImport = () => {
+    setShowMoreMenu(false);
     setShowAiDialog(true);
     setAiJsonText('');
     setAiError(null);
@@ -281,17 +292,51 @@ export function Toolbar() {
         </div>
 
         <div className="editor-toolbar__group editor-toolbar__group--files" data-testid="editor-toolbar-group-berkas">
-          <span className="editor-toolbar__group-label">Berkas</span>
-          <div className="editor-toolbar__group-btns editor-toolbar__group-btns--compact">
-            <button onClick={handleSave}           title="Simpan proyek ke penyimpanan lokal" data-action="save"           data-testid="toolbar-save">💾 Simpan</button>
-            <button onClick={handleLoad}           title="Muat proyek dari penyimpanan lokal" data-action="load"           data-testid="toolbar-load">📂 Muat</button>
-            <button onClick={handleSaveToLibrary}  title="Simpan ke perpustakaan proyek"      data-action="save-library"   data-testid="toolbar-save-library">⭐ Perpustakaan</button>
-            <button onClick={handleExportJson}     title="Cadangkan proyek sebagai JSON"      data-action="export-json"    data-testid="toolbar-export-json">📦 Cadangan JSON</button>
-            <button onClick={handleImportJson}     title="Impor proyek dari cadangan JSON"    data-action="import-json"    data-testid="toolbar-import-json">📥 Impor JSON</button>
-            <button onClick={handleSaveStylePack}  title="Simpan paket gaya saat ini"        data-action="save-style-pack" data-testid="toolbar-save-style-pack">🎨 Paket Gaya</button>
-            <button onClick={handleLoadSample}     title="Muat contoh MPI PPKn"              data-action="load-sample"    data-testid="toolbar-load-sample">📋 Contoh MPI</button>
-            <button onClick={handleAiImport}       title="Impor JSON dari AI"                data-action="ai-import"      data-milestone="M8" data-testid="toolbar-ai-import">🤖 Impor AI JSON</button>
-            <button onClick={handleReset}          title="Reset proyek ke kosong"            data-action="reset"          data-testid="toolbar-reset" className="danger">↺ Reset</button>
+          <div className="editor-toolbar__more-wrap">
+            <button
+              type="button"
+              className="editor-toolbar__more-btn"
+              onClick={() => setShowMoreMenu((v) => !v)}
+              title="Tampilkan aksi berkas lainnya"
+              data-action="more-menu"
+              data-testid="toolbar-more"
+              aria-expanded={showMoreMenu}
+              aria-haspopup="menu"
+            >
+              ⋯ Lainnya
+              <span className="editor-toolbar__more-chevron" aria-hidden>
+                {showMoreMenu ? '▴' : '▾'}
+              </span>
+            </button>
+            {showMoreMenu && (
+              <div
+                className="editor-toolbar__more-menu"
+                role="menu"
+                data-testid="toolbar-more-menu"
+              >
+                <button onClick={handleSave}          role="menuitem" title="Simpan proyek ke penyimpanan lokal"   data-action="save"            data-testid="toolbar-save">💾 Simpan</button>
+                <button onClick={handleLoad}          role="menuitem" title="Muat proyek dari penyimpanan lokal"   data-action="load"            data-testid="toolbar-load">📂 Muat</button>
+                <button onClick={handleSaveToLibrary} role="menuitem" title="Simpan ke perpustakaan proyek"        data-action="save-library"    data-testid="toolbar-save-library">⭐ Simpan ke Perpustakaan</button>
+                <div className="editor-toolbar__more-divider" />
+                <button onClick={handleExportJson}    role="menuitem" title="Cadangkan proyek sebagai JSON"        data-action="export-json"     data-testid="toolbar-export-json">📦 Cadangan JSON</button>
+                <button onClick={handleImportJson}    role="menuitem" title="Impor proyek dari cadangan JSON"      data-action="import-json"     data-testid="toolbar-import-json">📥 Impor JSON</button>
+                <div className="editor-toolbar__more-divider" />
+                <button onClick={handleSaveStylePack} role="menuitem" title="Simpan paket gaya saat ini"          data-action="save-style-pack" data-testid="toolbar-save-style-pack">🎨 Simpan Paket Gaya</button>
+                <button onClick={handleLoadSample}    role="menuitem" title="Muat contoh MPI PPKn"                 data-action="load-sample"     data-testid="toolbar-load-sample">📋 Muat Contoh MPI</button>
+                <button onClick={handleAiImport}      role="menuitem" title="Impor JSON dari AI"                   data-action="ai-import"       data-milestone="M8" data-testid="toolbar-ai-import">🤖 Impor AI JSON</button>
+                <div className="editor-toolbar__more-divider" />
+                <button onClick={handleReset}         role="menuitem" title="Reset proyek ke kosong"               data-action="reset"           data-testid="toolbar-reset" className="danger">↺ Reset</button>
+              </div>
+            )}
+            {/* Click-away overlay: invisible full-screen layer that closes the menu on outside click. */}
+            {showMoreMenu && (
+              <div
+                className="editor-toolbar__more-clickaway"
+                onClick={() => setShowMoreMenu(false)}
+                aria-hidden
+                data-testid="toolbar-more-clickaway"
+              />
+            )}
           </div>
         </div>
       </div>
