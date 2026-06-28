@@ -57,13 +57,22 @@ export function PageThumbnail({
   const bgColor = page.background.type === 'color' ? page.background.color : '#ffffff';
 
   return (
-    <div
+    <button
+      type="button"
       className={`page-thumbnail${isActive ? ' is-active' : ''}`}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
       data-testid={`page-thumbnail-${page.id}`}
       data-role={page.role}
       data-status={status.level}
       title={`${page.title} — ${info.label}`}
+      aria-label={`${page.title}, ${info.label}, status ${status.level}`}
+      aria-pressed={isActive}
     >
       {/* Mini canvas */}
       <div
@@ -96,7 +105,7 @@ export function PageThumbnail({
           {statusIcon(status.level as PageStatusLevel)}
         </span>
       </div>
-    </div>
+    </button>
   );
 }
 

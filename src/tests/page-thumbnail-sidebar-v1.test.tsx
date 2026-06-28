@@ -230,3 +230,93 @@ describe('PAGE-THUMBNAIL-SIDEBAR-V1 — regression', () => {
     expect(container.textContent ?? '').not.toMatch(/\bblock\b/i);
   });
 });
+
+// =========================================================================
+// PAGE-THUMBNAIL-SIDEBAR-V1 Patch-1 — Accessibility
+// =========================================================================
+
+describe('PAGE-THUMBNAIL-SIDEBAR-V1 Patch-1 — Accessibility', () => {
+  it('thumbnail root is a <button> element (semantic button)', () => {
+    const page: SimplePage = {
+      id: createPageId(),
+      title: 'Test',
+      role: 'material',
+      layoutId: 'blank',
+      background: { type: 'color', color: '#fff' },
+      components: [],
+    };
+    const { container } = render(
+      React.createElement(PageThumbnail, { page, isActive: false, onClick: () => {} }),
+    );
+    const thumb = container.querySelector('.page-thumbnail');
+    expect(thumb?.tagName).toBe('BUTTON');
+  });
+
+  it('thumbnail has aria-label', () => {
+    const page: SimplePage = {
+      id: createPageId(),
+      title: 'Materi Norma',
+      role: 'material',
+      layoutId: 'blank',
+      background: { type: 'color', color: '#fff' },
+      components: [],
+    };
+    const { container } = render(
+      React.createElement(PageThumbnail, { page, isActive: false, onClick: () => {} }),
+    );
+    const thumb = container.querySelector('.page-thumbnail') as HTMLElement;
+    expect(thumb.getAttribute('aria-label')).toMatch(/Materi Norma/);
+  });
+
+  it('thumbnail can be selected with Enter key', () => {
+    let clicked = false;
+    const page: SimplePage = {
+      id: createPageId(),
+      title: 'Test',
+      role: 'material',
+      layoutId: 'blank',
+      background: { type: 'color', color: '#fff' },
+      components: [],
+    };
+    const { container } = render(
+      React.createElement(PageThumbnail, { page, isActive: false, onClick: () => { clicked = true; } }),
+    );
+    const thumb = container.querySelector('.page-thumbnail') as HTMLElement;
+    fireEvent.keyDown(thumb, { key: 'Enter' });
+    expect(clicked).toBe(true);
+  });
+
+  it('thumbnail can be selected with Space key', () => {
+    let clicked = false;
+    const page: SimplePage = {
+      id: createPageId(),
+      title: 'Test',
+      role: 'material',
+      layoutId: 'blank',
+      background: { type: 'color', color: '#fff' },
+      components: [],
+    };
+    const { container } = render(
+      React.createElement(PageThumbnail, { page, isActive: false, onClick: () => { clicked = true; } }),
+    );
+    const thumb = container.querySelector('.page-thumbnail') as HTMLElement;
+    fireEvent.keyDown(thumb, { key: ' ' });
+    expect(clicked).toBe(true);
+  });
+
+  it('thumbnail has aria-pressed when active', () => {
+    const page: SimplePage = {
+      id: createPageId(),
+      title: 'Active',
+      role: 'material',
+      layoutId: 'blank',
+      background: { type: 'color', color: '#fff' },
+      components: [],
+    };
+    const { container } = render(
+      React.createElement(PageThumbnail, { page, isActive: true, onClick: () => {} }),
+    );
+    const thumb = container.querySelector('.page-thumbnail') as HTMLElement;
+    expect(thumb.getAttribute('aria-pressed')).toBe('true');
+  });
+});

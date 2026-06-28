@@ -2283,6 +2283,10 @@ textarea {
   padding: 4px;
   border: 2px solid transparent;
   transition: border-color 0.12s;
+  text-align: left;
+  width: 100%;
+  font-family: inherit;
+  background: transparent;
 }
 
 .page-thumbnail:hover {
