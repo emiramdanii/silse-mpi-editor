@@ -59,6 +59,7 @@ import {
 import { getCapability } from '../core/capability';
 import { getRoleInfo } from './mpi-standard-roles';
 import { createComponentId } from '../core/ids';
+import { PatternLibraryPanel } from './PatternLibraryPanel';
 
 const TEXT_VARIANT_LABELS: Record<TextComponentVariant, string> = {
   title: 'Judul',
@@ -193,7 +194,10 @@ export function Inspector() {
             <p>Tidak ada halaman terpilih.</p>
           </div>
         ) : !selectedComponent ? (
-          <PageInfo currentPage={currentPage} />
+          <>
+            <PageInfo currentPage={currentPage} />
+            <PatternLibraryPanel currentPage={currentPage} project={project} />
+          </>
         ) : (
           <ComponentEditor
             component={selectedComponent}

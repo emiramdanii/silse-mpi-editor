@@ -1869,3 +1869,148 @@ textarea {
   gap: 8px;
   justify-content: flex-end;
 }
+
+/* =========================================================================
+   UX-03 — Content Pattern Library (Saran Isi / PatternLibraryPanel)
+   ========================================================================= */
+
+.pattern-library {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.pattern-library__head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 10px;
+}
+
+.pattern-library__title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-soft);
+}
+
+.pattern-library__sub {
+  font-size: 11px;
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+.pattern-library__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pattern-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px;
+  background: var(--color-panel);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+.pattern-card.is-primary {
+  border-color: var(--color-accent);
+  border-width: 2px;
+  background: var(--color-accent-soft);
+}
+
+.pattern-card__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.pattern-card__icon {
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.pattern-card__title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.pattern-card__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1.3;
+}
+
+.pattern-card.is-primary .pattern-card__name {
+  color: var(--color-accent);
+}
+
+.pattern-card__badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-accent);
+  background: var(--color-panel);
+  border: 1px solid var(--color-accent);
+  border-radius: 999px;
+  padding: 1px 6px;
+  width: fit-content;
+}
+
+.pattern-card__description {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-text-soft);
+  line-height: 1.4;
+}
+
+.pattern-card__reason {
+  margin: 0;
+  font-size: 11px;
+  color: var(--color-muted);
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.pattern-card__apply {
+  align-self: flex-start;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 14px;
+  border: 1px solid var(--color-border);
+  background: var(--color-panel);
+  color: var(--color-text-soft);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.12s;
+  margin-top: 2px;
+}
+
+.pattern-card__apply:hover {
+  background: var(--color-panel-soft);
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
+.pattern-card__apply.is-primary {
+  background: var(--color-accent);
+  color: white;
+  border-color: var(--color-accent);
+}
+
+.pattern-card__apply.is-primary:hover {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+}

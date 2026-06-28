@@ -47,6 +47,7 @@ import type {
   SimpleProject,
   TextComponent,
   TextComponentVariant,
+  ComponentType,
 } from '../core/types';
 import {
   CARD_COMPONENT_VARIANTS,
@@ -73,7 +74,7 @@ import {
   type QuestionComponentEditable,
   type TextComponentEditable,
 } from '../core/component-factory';
-import { canAddComponent, getCapability } from '../core/capability';
+import { canAddComponent, getCapability, PAGE_ROLE_CAPABILITIES } from '../core/capability';
 import { createComponentId, createPageId } from '../core/ids';
 import {
   saveCurrentProject,
@@ -122,6 +123,12 @@ export type EditorState = {
   updateComponentGeometry: (componentId: string, rect: Rect) => void;
   removeComponent: (componentId: string) => void;
   getSelectedComponent: () => PageComponent | null;
+
+  // UX-03: bulk add components from Content Pattern Library.
+  // Adds an array of pre-built components (with fresh IDs) to a page.
+  // Respects capability matrix — disallowed component types are skipped.
+  // Returns the number of components actually added.
+  addComponentsToPage: (pageId: string, components: PageComponent[]) => number;
 
   // Save / Load (M7)
   saveCurrent: () => boolean;
@@ -765,6 +772,39 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const { project, selectedComponentId } = get();
     if (!selectedComponentId) return null;
     return findComponentInProject(project, selectedComponentId);
+  },
+
+  // ----- UX-03: Content Pattern Library -----
+
+  addComponentsToPage: (pageId, components) => {
+    let addedCount = 0;
+    set((state) => {
+      const page = state.project.pages.find((p) => p.id === pageId);
+      if (!page) return state;
+
+      // Capability check: filter out component types not allowed for this role.
+      const cap = PAGE_ROLE_CAPABILITIES[page.role];
+      if (!cap || !cap.allowAddComponent) return state;
+
+      const allowed = components.filter((c) =>
+        cap.allowedComponents.includes(c.type as ComponentType),
+      );
+
+      if (allowed.length === 0) return state;
+
+      const pages = state.project.pages.map((p) => {
+        if (p.id !== pageId) return p;
+        return { ...p, components: [...p.components, ...allowed] };
+      });
+
+      addedCount = allowed.length;
+      return {
+        project: { ...state.project, pages },
+        // Don't auto-select — let guru choose what to edit.
+        selectedComponentId: null,
+      };
+    });
+    return addedCount;
   },
 
   // ----- Save / Load (M7) -----
