@@ -273,13 +273,14 @@ export type PageComponent =
   | NavigationComponent
   | QuestionComponent
   | GameComponent
-  | LayeredInfoComponent;
+  | LayeredInfoComponent
+  | LearningBridgeComponent;
 
 // ---------------------------------------------------------------------------
 // Component type literals — exported as constants for runtime guards
 // ---------------------------------------------------------------------------
 
-export const COMPONENT_TYPES = ['text', 'image', 'card', 'navigation', 'question', 'game', 'layered-info'] as const;
+export const COMPONENT_TYPES = ['text', 'image', 'card', 'navigation', 'question', 'game', 'layered-info', 'learning-bridge'] as const;
 export type ComponentType = (typeof COMPONENT_TYPES)[number];
 
 // ---------------------------------------------------------------------------
@@ -349,6 +350,36 @@ export type LayeredInfoComponent = BaseComponent & {
   layers: LayeredInfoLayer[];
   /** Index layer yang terbuka by default. null = semua tertutup (untuk accordion). */
   defaultOpenIndex: number | null;
+};
+
+// ---------------------------------------------------------------------------
+// Learning Bridge Component (LXC-03)
+//
+// Komponen resmi dari Learning Experience Contract (LXC-01).
+// Penghubung antar scene yang menjelaskan transisi — "kamu sudah selesai X,
+// sekarang kita lanjut ke Y karena Z". Mencegah lompatan mendadak.
+//
+// Applicable roles: starter, material, activity, quiz, reflection,
+// learningObjectives, closing.
+// Variants: transition, recap, preview.
+//
+// No runtime state — jembatan adalah komponen statis (tidak interaktif).
+// ---------------------------------------------------------------------------
+
+export const LEARNING_BRIDGE_VARIANTS = [
+  'transition',
+  'recap',
+  'preview',
+] as const;
+
+export type LearningBridgeVariant = (typeof LEARNING_BRIDGE_VARIANTS)[number];
+
+export type LearningBridgeComponent = BaseComponent & {
+  type: 'learning-bridge';
+  variant: LearningBridgeVariant;
+  title: string;
+  message: string;
+  nextButtonLabel: string;
 };
 
 // ---------------------------------------------------------------------------

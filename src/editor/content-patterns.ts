@@ -5,7 +5,8 @@
  * Allowed imports: ../core/types (type-only), ../core/component-factory, ../core/ids
  *
  * Kontrak (UX-03 Patch-1):
- *   26 pola isi predefined per page role — naik dari 12 (UX-03) ke 26.
+ *   30 pola isi predefined per page role — naik dari 27 (LXC-02) ke 30
+ *   (LXC-03: +3 pola learning-bridge).
  *   Tiap pola punya reason pedagogis yang menjelaskan KAPAN dipakai,
  *   bukan hanya "siap diterapkan".
  *
@@ -33,6 +34,7 @@ import {
   createGameMission,
   createLayeredInfoComponent,
   createLayeredInfoLayer,
+  createLearningBridgeComponent,
 } from '../core/component-factory';
 
 /**
@@ -95,7 +97,7 @@ const PLACEHOLDER_IMAGE_SRC =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 280'><rect width='400' height='280' fill='%23e3ddcd'/><text x='200' y='140' font-family='sans-serif' font-size='14' text-anchor='middle' fill='%238a8775'>Ganti gambar di sini</text></svg>";
 
 // =========================================================================
-// 26 Content Patterns
+// 30 Content Patterns
 // =========================================================================
 
 export const CONTENT_PATTERNS: readonly ContentPattern[] = [
@@ -969,6 +971,74 @@ export const CONTENT_PATTERNS: readonly ContentPattern[] = [
           x: 100, y: 140, width: 1080, height: 420,
         },
       ),
+    ],
+  },
+
+  // ===== LEARNING BRIDGE (3) =====
+  // LXC-03: Jembatan Belajar untuk transisi antar scene.
+  // Applicable ke 7 role: starter, material, activity, quiz, reflection,
+  // learningObjectives, closing.
+  {
+    id: 'bridge-transisi',
+    name: 'Jembatan Transisi',
+    description: 'Pesan singkat penghubung antar bagian + tombol lanjut.',
+    icon: '🔀',
+    applicableRoles: ['starter', 'material', 'activity', 'quiz', 'reflection', 'learningObjectives', 'closing'],
+    pedagogicalReason: 'Mencegah lompatan mendadak antar scene. Cocok dipakai di tengah halaman ketika guru ingin menyampaikan "kita sudah selesai X, sekarang lanjut ke Y".',
+    buildComponents: () => [
+      createLearningBridgeComponent({
+        variant: 'transition',
+        title: 'Lanjut ke Bagian Berikutnya',
+        message: 'Kamu sudah selesai dengan bagian ini. Sekarang kita lanjut ke bagian berikutnya yang masih berkaitan.',
+        nextButtonLabel: 'Lanjut →',
+        x: 200, y: 250, width: 880, height: 200,
+      }),
+      createNavigationComponent('Lanjut →', 'next', {
+        variant: 'primaryAction',
+        x: POS.navX, y: POS.navY, width: POS.navW, height: POS.navH,
+      }),
+    ],
+  },
+  {
+    id: 'bridge-recap',
+    name: 'Jembatan Recap',
+    description: 'Ringkasan apa yang baru dipelajari + tombol lanjut.',
+    icon: '✅',
+    applicableRoles: ['starter', 'material', 'activity', 'quiz', 'reflection', 'learningObjectives', 'closing'],
+    pedagogicalReason: 'Membantu siswa mengkonsolidasikan apa yang baru dipelajari sebelum melangkah. Cocok di akhir scene pembelajaran (materi/aktivitas/kuis) sebelum refleksi atau penutup.',
+    buildComponents: () => [
+      createLearningBridgeComponent({
+        variant: 'recap',
+        title: 'Apa yang Sudah Kita Pelajari?',
+        message: 'Sebelum lanjut, mari kita ingat sekilas:\n\n• Poin pertama yang dipelajari\n• Poin kedua yang dipelajari\n• Poin ketiga yang dipelajari\n\nApakah kamu sudah paham ketiganya? Kalau ya, kita lanjut.',
+        nextButtonLabel: 'Saya Sudah Paham →',
+        x: 200, y: 220, width: 880, height: 260,
+      }),
+      createNavigationComponent('Lanjut →', 'next', {
+        variant: 'primaryAction',
+        x: POS.navX, y: POS.navY, width: POS.navW, height: POS.navH,
+      }),
+    ],
+  },
+  {
+    id: 'bridge-preview',
+    name: 'Jembatan Preview',
+    description: 'Intipan apa yang akan datang di bagian berikutnya + tombol lanjut.',
+    icon: '👀',
+    applicableRoles: ['starter', 'material', 'activity', 'quiz', 'reflection', 'learningObjectives', 'closing'],
+    pedagogicalReason: 'Membangun ekspektasi dan rasa ingin tahu siswa sebelum masuk ke scene berikutnya. Cocok dipakai di akhir halaman untuk "menggoda" siswa dengan apa yang akan dipelajari berikutnya.',
+    buildComponents: () => [
+      createLearningBridgeComponent({
+        variant: 'preview',
+        title: 'Selanjutnya Kita Akan...',
+        message: 'Di bagian berikutnya, kita akan mempelajari:\n\n• Hal baru yang menarik\n• Hubungannya dengan yang baru dipelajari\n• Latihan untuk menguji pemahaman\n\nSiap? Yuk lanjut!',
+        nextButtonLabel: 'Lanjut →',
+        x: 200, y: 220, width: 880, height: 260,
+      }),
+      createNavigationComponent('Lanjut →', 'next', {
+        variant: 'primaryAction',
+        x: POS.navX, y: POS.navY, width: POS.navW, height: POS.navH,
+      }),
     ],
   },
 ];

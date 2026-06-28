@@ -49,7 +49,7 @@ type AddButtonSpec = {
   milestone: string;
   icon: string;
   /** Which capability slot to check; if undefined, always allowed when role allows add. */
-  capability: 'text' | 'image' | 'card' | 'navigation' | 'question' | 'game' | 'layered-info';
+  capability: 'text' | 'image' | 'card' | 'navigation' | 'question' | 'game' | 'layered-info' | 'learning-bridge';
   /** Section in the dropdown menu. */
   section: 'konten' | 'interaksi';
 };
@@ -64,6 +64,7 @@ const ADD_BUTTONS: AddButtonSpec[] = [
   { action: 'add-navigation', label: 'Navigasi',    hint: 'Tombol pindah halaman', milestone: 'M5',   icon: '➡️', capability: 'navigation', section: 'interaksi' },
   { action: 'add-question',   label: 'Pertanyaan',  hint: 'Pilihan ganda + feedback', milestone: 'M10', icon: '❓', capability: 'question',   section: 'interaksi' },
   { action: 'add-game',       label: 'Game',        hint: 'Misi interaktif',         milestone: 'M11A', icon: '🎮', capability: 'game',       section: 'interaksi' },
+  { action: 'add-learning-bridge', label: 'Jembatan Belajar', hint: 'Penghubung antar scene', milestone: 'LXC-03', icon: '🌉', capability: 'learning-bridge', section: 'interaksi' },
 ];
 
 const SECTION_LABELS: Record<AddButtonSpec['section'], string> = {
@@ -79,6 +80,7 @@ export function Toolbar() {
   const addQuestionComponent = useEditorStore((s) => s.addQuestionComponent);
   const addGameComponent = useEditorStore((s) => s.addGameComponent);
   const addLayeredInfoComponent = useEditorStore((s) => s.addLayeredInfoComponent);
+  const addLearningBridgeComponent = useEditorStore((s) => s.addLearningBridgeComponent);
   const saveCurrent = useEditorStore((s) => s.saveCurrent);
   const loadCurrent = useEditorStore((s) => s.loadCurrent);
   const resetProject = useEditorStore((s) => s.resetProject);
@@ -135,6 +137,7 @@ export function Toolbar() {
       case 'add-question': return () => addQuestionComponent();
       case 'add-game': return () => addGameComponent();
       case 'add-layered-info': return () => addLayeredInfoComponent();
+      case 'add-learning-bridge': return () => addLearningBridgeComponent();
       default: return null;
     }
   };

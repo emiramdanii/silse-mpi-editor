@@ -59,38 +59,47 @@ describe('UX-03 Patch-1 — Acceptance #1: Material has 7+ patterns', () => {
     expect(patterns.length).toBeGreaterThanOrEqual(7);
   });
 
-  it('starter role has 4 patterns (1 original + 3 new)', () => {
+  it('starter role has 7 patterns (1 original + 3 new + 3 LXC-03 bridge)', () => {
     const patterns = getPatternsForRole('starter');
-    expect(patterns).toHaveLength(4);
+    expect(patterns).toHaveLength(7);
     const ids = patterns.map((p) => p.id);
     expect(ids).toContain('pemantik-pertanyaan');
     expect(ids).toContain('pemantik-kasus');
     expect(ids).toContain('pemantik-setuju');
     expect(ids).toContain('pemantik-poll');
+    expect(ids).toContain('bridge-transisi');
+    expect(ids).toContain('bridge-recap');
+    expect(ids).toContain('bridge-preview');
   });
 
-  it('reflection role has 4 patterns (1 original + 3 new)', () => {
+  it('reflection role has 7 patterns (1 original + 3 new + 3 LXC-03 bridge)', () => {
     const patterns = getPatternsForRole('reflection');
-    expect(patterns).toHaveLength(4);
+    expect(patterns).toHaveLength(7);
     const ids = patterns.map((p) => p.id);
     expect(ids).toContain('refleksi-diri');
     expect(ids).toContain('refleksi-rumpang');
     expect(ids).toContain('refleksi-komitmen');
     expect(ids).toContain('refleksi-3-2-1');
+    expect(ids).toContain('bridge-transisi');
+    expect(ids).toContain('bridge-recap');
+    expect(ids).toContain('bridge-preview');
   });
 
-  it('closing role has 4 patterns (1 original + 3 new)', () => {
+  it('closing role has 7 patterns (1 original + 3 new + 3 LXC-03 bridge)', () => {
     const patterns = getPatternsForRole('closing');
-    expect(patterns).toHaveLength(4);
+    expect(patterns).toHaveLength(7);
     const ids = patterns.map((p) => p.id);
     expect(ids).toContain('penutup-terima-kasih');
     expect(ids).toContain('penutup-badge');
     expect(ids).toContain('penutup-rangkuman');
     expect(ids).toContain('penutup-ajakan');
+    expect(ids).toContain('bridge-transisi');
+    expect(ids).toContain('bridge-recap');
+    expect(ids).toContain('bridge-preview');
   });
 
-  it('total patterns is 27 (LXC-02: 26 → 27, +tujuan-berlapis)', () => {
-    expect(CONTENT_PATTERNS).toHaveLength(27);
+  it('total patterns is 30 (LXC-03: 27 → 30, +3 bridge patterns)', () => {
+    expect(CONTENT_PATTERNS).toHaveLength(30);
   });
 });
 
@@ -100,7 +109,7 @@ describe('UX-03 Patch-1 — Acceptance #1: Material has 7+ patterns', () => {
 
 describe('UX-03 Patch-1 — Acceptance #2: no rogue component types', () => {
   it('all pattern components use only known types (text/image/card/navigation/question/game)', () => {
-    const knownTypes = new Set(['text', 'image', 'card', 'navigation', 'question', 'game', 'layered-info']);
+    const knownTypes = new Set(['text', 'image', 'card', 'navigation', 'question', 'game', 'layered-info', 'learning-bridge']);
     const roles: SimplePage['role'][] = [
       'cover', 'guide', 'learningObjectives', 'menu',
       'starter', 'material', 'quiz', 'activity', 'reflection', 'closing',
@@ -235,10 +244,10 @@ describe('UX-03 Patch-1 — Acceptance #5: pedagogical reasons', () => {
 // =========================================================================
 
 describe('UX-03 Patch-1 — Acceptance #6: unique pattern IDs', () => {
-  it('all 27 pattern IDs are unique', () => {
+  it('all 30 pattern IDs are unique', () => {
     const ids = CONTENT_PATTERNS.map((p) => p.id);
     expect(new Set(ids).size).toBe(ids.length);
-    expect(ids.length).toBe(27);
+    expect(ids.length).toBe(30);
   });
 
   it('all pattern IDs match snake-case format (lowercase, hyphens)', () => {
@@ -264,7 +273,7 @@ describe('UX-03 Patch-1 — Acceptance #7: fresh IDs from buildComponents', () =
     expect(ids1).not.toEqual(ids2);
   });
 
-  it('fresh IDs across ALL 26 patterns', () => {
+  it('fresh IDs across ALL 30 patterns', () => {
     const roles: SimplePage['role'][] = [
       'cover', 'guide', 'learningObjectives', 'menu',
       'starter', 'material', 'quiz', 'activity', 'reflection', 'closing',
@@ -423,25 +432,25 @@ describe('UX-03 Patch-1 — UI rendering for new patterns', () => {
     useEditorStore.getState().newProject();
   });
 
-  it('starter page shows 4 pattern cards (1 original + 3 new)', () => {
+  it('starter page shows 7 pattern cards (1 original + 3 new + 3 LXC-03 bridge)', () => {
     useEditorStore.getState().addPage({ role: 'starter' });
     const { container } = render(React.createElement(Inspector));
     const cards = container.querySelectorAll('.pattern-card');
-    expect(cards).toHaveLength(4);
+    expect(cards).toHaveLength(7);
   });
 
-  it('reflection page shows 4 pattern cards', () => {
+  it('reflection page shows 7 pattern cards', () => {
     useEditorStore.getState().addPage({ role: 'reflection' });
     const { container } = render(React.createElement(Inspector));
     const cards = container.querySelectorAll('.pattern-card');
-    expect(cards).toHaveLength(4);
+    expect(cards).toHaveLength(7);
   });
 
-  it('closing page shows 4 pattern cards', () => {
+  it('closing page shows 7 pattern cards', () => {
     useEditorStore.getState().addPage({ role: 'closing' });
     const { container } = render(React.createElement(Inspector));
     const cards = container.querySelectorAll('.pattern-card');
-    expect(cards).toHaveLength(4);
+    expect(cards).toHaveLength(7);
   });
 
   it('clicking Terapkan on materi-kartu-konsep adds 6 components', () => {
@@ -476,7 +485,7 @@ describe('UX-03 Patch-1 — regression', () => {
     useEditorStore.getState().newProject();
   });
 
-  it('all 26 patterns have valid x/y/width/height on every component', () => {
+  it('all 30 patterns have valid x/y/width/height on every component', () => {
     const roles: SimplePage['role'][] = [
       'cover', 'guide', 'learningObjectives', 'menu',
       'starter', 'material', 'quiz', 'activity', 'reflection', 'closing',

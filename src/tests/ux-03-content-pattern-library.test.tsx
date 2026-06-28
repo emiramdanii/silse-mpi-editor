@@ -78,8 +78,8 @@ function makeCtx(project: SimpleProject): PatternContext {
 // =========================================================================
 
 describe('UX-03 — Content Patterns library', () => {
-  it('has exactly 27 predefined patterns (LXC-02: 26 → 27, +tujuan-berlapis)', () => {
-    expect(CONTENT_PATTERNS).toHaveLength(27);
+  it('has exactly 30 predefined patterns (LXC-03: 27 → 30, +3 bridge patterns)', () => {
+    expect(CONTENT_PATTERNS).toHaveLength(30);
   });
 
   it('each pattern has id, name, description, icon, applicableRoles, pedagogicalReason, buildComponents', () => {
@@ -114,9 +114,9 @@ describe('UX-03 — Content Patterns library', () => {
     expect(getPatternsForRole('free')).toHaveLength(0);
   });
 
-  it('material role has 7 patterns (UX-03 Patch-1: 2 → 7)', () => {
+  it('material role has 10 patterns (UX-03 Patch-1: 7 + LXC-03: 3 bridge = 10)', () => {
     const patterns = getPatternsForRole('material');
-    expect(patterns).toHaveLength(7);
+    expect(patterns).toHaveLength(10);
     expect(patterns[0].id).toBe('materi-tunggal');
     expect(patterns[1].id).toBe('materi-gambar');
     // 5 new patterns from UX-03 Patch-1
@@ -126,6 +126,10 @@ describe('UX-03 — Content Patterns library', () => {
     expect(ids).toContain('materi-fakta-mitos');
     expect(ids).toContain('materi-step-by-step');
     expect(ids).toContain('materi-mini-checkpoint');
+    // LXC-03: +3 bridge patterns applicable to material
+    expect(ids).toContain('bridge-transisi');
+    expect(ids).toContain('bridge-recap');
+    expect(ids).toContain('bridge-preview');
   });
 
   it('menu role has 2 patterns (peta + daftar)', () => {
@@ -332,8 +336,8 @@ describe('UX-03 — Teaching Suggestion engine', () => {
   it('empty page → primary pattern first with priority="primary"', () => {
     const project = buildProjectWithPage('material');
     const suggestions = suggestPatternsForPage(project.pages[0], project);
-    // UX-03 Patch-1: material now has 7 patterns
-    expect(suggestions.length).toBe(7);
+    // LXC-03: material now has 10 patterns
+    expect(suggestions.length).toBe(10);
     expect(suggestions[0].priority).toBe('primary');
     expect(suggestions[0].pattern.id).toBe('materi-tunggal');
     expect(suggestions[0].reason).toMatch(/kosong/i);
@@ -342,9 +346,9 @@ describe('UX-03 — Teaching Suggestion engine', () => {
   it('empty page → secondary patterns with priority="secondary"', () => {
     const project = buildProjectWithPage('material');
     const suggestions = suggestPatternsForPage(project.pages[0], project);
-    // UX-03 Patch-1: 6 secondary patterns (index 1-6)
+    // LXC-03: 9 secondary patterns (index 1-9)
     expect(suggestions[1].priority).toBe('secondary');
-    expect(suggestions[6].priority).toBe('secondary');
+    expect(suggestions[9].priority).toBe('secondary');
     expect(suggestions[1].reason).toMatch(/alternatif/i);
   });
 
@@ -524,11 +528,11 @@ describe('UX-03 — PatternLibraryPanel UI', () => {
     expect(container.querySelector('[data-testid="pattern-library"]')).toBeNull();
   });
 
-  it('material page shows 7 pattern cards (UX-03 Patch-1: 2 → 7)', () => {
+  it('material page shows 10 pattern cards (UX-03 Patch-1: 7 + LXC-03: 3 bridge = 10)', () => {
     useEditorStore.getState().addPage({ role: 'material' });
     const { container } = render(React.createElement(Inspector));
     const cards = container.querySelectorAll('.pattern-card');
-    expect(cards).toHaveLength(7);
+    expect(cards).toHaveLength(10);
     expect(container.querySelector('[data-testid="pattern-card-materi-tunggal"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="pattern-card-materi-gambar"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="pattern-card-materi-kartu-konsep"]')).not.toBeNull();
@@ -536,6 +540,10 @@ describe('UX-03 — PatternLibraryPanel UI', () => {
     expect(container.querySelector('[data-testid="pattern-card-materi-fakta-mitos"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="pattern-card-materi-step-by-step"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="pattern-card-materi-mini-checkpoint"]')).not.toBeNull();
+    // LXC-03: +3 bridge patterns applicable to material
+    expect(container.querySelector('[data-testid="pattern-card-bridge-transisi"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="pattern-card-bridge-recap"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="pattern-card-bridge-preview"]')).not.toBeNull();
   });
 
   it('primary pattern card has is-primary class + "Disarankan" badge', () => {

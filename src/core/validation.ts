@@ -20,6 +20,7 @@ import {
   IMAGE_COMPONENT_VARIANTS,
   LAYOUT_IDS,
   LAYERED_INFO_VARIANTS,
+  LEARNING_BRIDGE_VARIANTS,
   NAVIGATION_ACTIONS,
   NAVIGATION_COMPONENT_VARIANTS,
   PAGE_ROLES,
@@ -33,6 +34,7 @@ import {
   type ImageComponentVariant,
   type LayeredInfoVariant,
   type LayoutId,
+  type LearningBridgeVariant,
   type NavigationAction,
   type NavigationComponentVariant,
   type PageComponent,
@@ -101,6 +103,9 @@ export function validateComponent(component: unknown): ValidationResult {
   }
   if (component.type === 'layered-info') {
     return validateLayeredInfoComponent(component);
+  }
+  if (component.type === 'learning-bridge') {
+    return validateLearningBridgeComponent(component);
   }
   return { ok: true };
 }
@@ -684,6 +689,38 @@ function validateLayeredInfoComponent(component: Record<string, unknown>): Valid
     component.defaultOpenIndex >= component.layers.length
   ) {
     return fail('layered-info component.defaultOpenIndex must be < layers.length');
+  }
+  return { ok: true };
+}
+
+/**
+ * Validate a learning-bridge component (LXC-03).
+ *
+ * Kontrak:
+ *   - field `variant` wajib, harus salah satu dari LEARNING_BRIDGE_VARIANTS
+ *   - field `title` wajib, string (boleh kosong)
+ *   - field `message` wajib, string (boleh kosong)
+ *   - field `nextButtonLabel` wajib, string (boleh kosong)
+ *
+ * Bridge adalah komponen statis — tidak ada runtime state yang divalidasi.
+ */
+function validateLearningBridgeComponent(component: Record<string, unknown>): ValidationResult {
+  if (!isString(component.variant)) {
+    return fail('learning-bridge component.variant is required (must be a string)');
+  }
+  if (!LEARNING_BRIDGE_VARIANTS.includes(component.variant as LearningBridgeVariant)) {
+    return fail(
+      `learning-bridge component.variant must be one of: ${LEARNING_BRIDGE_VARIANTS.join(', ')} (got "${component.variant}")`,
+    );
+  }
+  if (!isString(component.title)) {
+    return fail('learning-bridge component.title must be a string');
+  }
+  if (!isString(component.message)) {
+    return fail('learning-bridge component.message must be a string');
+  }
+  if (!isString(component.nextButtonLabel)) {
+    return fail('learning-bridge component.nextButtonLabel must be a string');
   }
   return { ok: true };
 }

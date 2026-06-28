@@ -25,6 +25,8 @@ import type {
   LayeredInfoComponent,
   LayeredInfoLayer,
   LayeredInfoVariant,
+  LearningBridgeComponent,
+  LearningBridgeVariant,
   NavigationAction,
   NavigationComponent,
   NavigationComponentVariant,
@@ -333,6 +335,36 @@ export function createLayeredInfoComponent(
     title: overrides.title ?? 'Info Berlapis',
     layers: overrides.layers ?? defaultLayers,
     ...DEFAULT_LAYERED_INFO_COMPONENT,
+    ...overrides,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Learning Bridge Component (LXC-03)
+// ---------------------------------------------------------------------------
+
+export type LearningBridgeComponentEditable = Omit<LearningBridgeComponent, 'id' | 'type'>;
+
+export const DEFAULT_LEARNING_BRIDGE_VARIANT: LearningBridgeVariant = 'transition';
+
+export const DEFAULT_LEARNING_BRIDGE_COMPONENT: Omit<LearningBridgeComponentEditable, 'variant' | 'title' | 'message' | 'nextButtonLabel'> = {
+  x: 200,
+  y: 250,
+  width: 880,
+  height: 200,
+};
+
+export function createLearningBridgeComponent(
+  overrides: Partial<LearningBridgeComponentEditable> = {},
+): LearningBridgeComponent {
+  return {
+    id: createComponentId(),
+    type: 'learning-bridge',
+    variant: overrides.variant ?? DEFAULT_LEARNING_BRIDGE_VARIANT,
+    title: overrides.title ?? 'Jembatan Belajar',
+    message: overrides.message ?? 'Kamu sudah selesai bagian ini. Sekarang kita lanjut ke bagian berikutnya.',
+    nextButtonLabel: overrides.nextButtonLabel ?? 'Lanjut →',
+    ...DEFAULT_LEARNING_BRIDGE_COMPONENT,
     ...overrides,
   };
 }

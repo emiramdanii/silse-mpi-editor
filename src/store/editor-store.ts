@@ -39,6 +39,8 @@ import type {
   ImageComponentVariant,
   LayeredInfoComponent,
   LayeredInfoVariant,
+  LearningBridgeComponent,
+  LearningBridgeVariant,
   NavigationAction,
   NavigationComponent,
   NavigationComponentVariant,
@@ -56,6 +58,7 @@ import {
   GAME_TYPES,
   IMAGE_COMPONENT_VARIANTS,
   LAYERED_INFO_VARIANTS,
+  LEARNING_BRIDGE_VARIANTS,
   NAVIGATION_ACTIONS,
   NAVIGATION_COMPONENT_VARIANTS,
   QUESTION_COMPONENT_VARIANTS,
@@ -68,6 +71,7 @@ import {
   createGameComponent,
   createImageComponent,
   createLayeredInfoComponent,
+  createLearningBridgeComponent,
   createNavigationComponent,
   createQuestionComponent,
   createTextComponent,
@@ -75,6 +79,7 @@ import {
   type GameComponentEditable,
   type ImageComponentEditable,
   type LayeredInfoComponentEditable,
+  type LearningBridgeComponentEditable,
   type NavigationComponentEditable,
   type QuestionComponentEditable,
   type TextComponentEditable,
@@ -119,6 +124,7 @@ export type EditorState = {
   addQuestionComponent: (overrides?: Partial<QuestionComponentEditable>) => string | null;
   addGameComponent: (overrides?: Partial<GameComponentEditable>) => string | null;
   addLayeredInfoComponent: (overrides?: Partial<LayeredInfoComponentEditable>) => string | null;
+  addLearningBridgeComponent: (overrides?: Partial<LearningBridgeComponentEditable>) => string | null;
   selectComponent: (componentId: string | null) => void;
   updateTextComponent: (componentId: string, patch: Partial<TextComponentEditable>) => void;
   updateImageComponent: (componentId: string, patch: Partial<ImageComponentEditable>) => void;
@@ -127,6 +133,7 @@ export type EditorState = {
   updateQuestionComponent: (componentId: string, patch: Partial<QuestionComponentEditable>) => void;
   updateGameComponent: (componentId: string, patch: Partial<GameComponentEditable>) => void;
   updateLayeredInfoComponent: (componentId: string, patch: Partial<LayeredInfoComponentEditable>) => void;
+  updateLearningBridgeComponent: (componentId: string, patch: Partial<LearningBridgeComponentEditable>) => void;
   updateComponentGeometry: (componentId: string, rect: Rect) => void;
   removeComponent: (componentId: string) => void;
   getSelectedComponent: () => PageComponent | null;
@@ -272,6 +279,18 @@ function sanitizeLayeredInfoPatch(
   return clean;
 }
 
+function sanitizeLearningBridgePatch(
+  patch: Partial<LearningBridgeComponentEditable>,
+): Partial<LearningBridgeComponentEditable> {
+  const clean: Partial<LearningBridgeComponentEditable> = { ...patch };
+  if (clean.variant !== undefined) {
+    if (!LEARNING_BRIDGE_VARIANTS.includes(clean.variant as LearningBridgeVariant)) {
+      delete clean.variant;
+    }
+  }
+  return clean;
+}
+
 /**
  * Deep-copy a component with a fresh id.
  * Pertahankan semua field kecuali id (yang baru).
@@ -394,6 +413,22 @@ function deepCopyComponentWithNewId(c: PageComponent): PageComponent {
       width: lc.width,
       height: lc.height,
     } as LayeredInfoComponent;
+  }
+  // LXC-03: deep-copy learning-bridge (static component, no nested IDs).
+  if (c.type === 'learning-bridge') {
+    const bc = c as LearningBridgeComponent;
+    return {
+      id: newId,
+      type: 'learning-bridge',
+      variant: bc.variant,
+      title: bc.title,
+      message: bc.message,
+      nextButtonLabel: bc.nextButtonLabel,
+      x: bc.x,
+      y: bc.y,
+      width: bc.width,
+      height: bc.height,
+    } as LearningBridgeComponent;
   }
   // Unknown type — copy with new id (shouldn't occur).
   return { ...(c as Record<string, unknown>), id: newId } as PageComponent;
@@ -639,6 +674,19 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     return component.id;
   },
 
+  addLearningBridgeComponent: (overrides) => {
+    const state = get();
+    const currentPage = state.project.pages.find(
+      (p) => p.id === state.project.currentPageId,
+    );
+    if (!currentPage) return null;
+    if (!canAddComponent(currentPage.role, 'learning-bridge')) return null;
+
+    const component = createLearningBridgeComponent(overrides);
+    set((s) => addComponentToCurrentPage(s, component));
+    return component.id;
+  },
+
   // ----- Selection + update -----
 
   selectComponent: (componentId) => {
@@ -796,6 +844,28 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           components: p.components.map((c) => {
             if (c.id !== componentId || c.type !== 'layered-info') return c;
             return { ...c, ...cleanPatch, type: 'layered-info' } as LayeredInfoComponent;
+          }),
+        };
+      });
+      return { project: { ...state.project, pages } };
+    });
+  },
+
+  updateLearningBridgeComponent: (componentId, patch) => {
+    const cleanPatch = sanitizeLearningBridgePatch(patch);
+    set((state) => {
+      const page = state.project.pages.find((p) => p.id === state.project.currentPageId);
+      if (!page) return state;
+      const exists = page.components.some((c) => c.id === componentId && c.type === 'learning-bridge');
+      if (!exists) return state;
+
+      const pages = state.project.pages.map((p) => {
+        if (p.id !== state.project.currentPageId) return p;
+        return {
+          ...p,
+          components: p.components.map((c) => {
+            if (c.id !== componentId || c.type !== 'learning-bridge') return c;
+            return { ...c, ...cleanPatch, type: 'learning-bridge' } as LearningBridgeComponent;
           }),
         };
       });

@@ -416,7 +416,7 @@ describe('LXC-01 — Contract file is pure spec (no runtime leak)', () => {
     const match = content.match(/export const COMPONENT_TYPES = \[([^\]]+)\]/);
     expect(match).not.toBeNull();
     const types = match![1].split(',').map((t) => t.trim().replace(/['"]/g, ''));
-    expect(types).toEqual(['text', 'image', 'card', 'navigation', 'question', 'game', 'layered-info']);
+    expect(types).toEqual(['text', 'image', 'card', 'navigation', 'question', 'game', 'layered-info', 'learning-bridge']);
   });
 });
 
@@ -575,7 +575,7 @@ describe('LXC-01 Patch-1 — Contract Alignment (layered-info, interactive-start
       const match = content.match(/export const COMPONENT_TYPES = \[([^\]]+)\]/);
       expect(match).not.toBeNull();
       const types = match![1].split(',').map((t) => t.trim().replace(/['"]/g, ''));
-      expect(types).toEqual(['text', 'image', 'card', 'navigation', 'question', 'game', 'layered-info']);
+      expect(types).toEqual(['text', 'image', 'card', 'navigation', 'question', 'game', 'layered-info', 'learning-bridge']);
     });
 
     it('no runtime implementation added (contract file still pure spec)', () => {

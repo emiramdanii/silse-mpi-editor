@@ -82,6 +82,11 @@ type ExportRenderComponent = {
   layeredVariant?: string;
   layers?: { id: string; title: string; body: string; icon?: string }[];
   defaultOpenIndex?: number | null;
+  // Learning-bridge-specific (LXC-03)
+  bridgeTitle?: string;
+  bridgeVariant?: string;
+  bridgeMessage?: string;
+  bridgeNextButtonLabel?: string;
   // Pre-computed resolved style from resolver
   resolvedStyle: {
     inlineStyle: Record<string, string | number>;
@@ -170,6 +175,11 @@ function buildExportRenderComponent(
     base.layeredVariant = component.variant;
     base.layers = component.layers;
     base.defaultOpenIndex = component.defaultOpenIndex;
+  } else if (component.type === 'learning-bridge') {
+    base.bridgeTitle = component.title;
+    base.bridgeVariant = component.variant;
+    base.bridgeMessage = component.message;
+    base.bridgeNextButtonLabel = component.nextButtonLabel;
   }
 
   return base;
@@ -920,6 +930,44 @@ function generateJS(renderModelJson: string): string {
         el.appendChild(tl);
       }
 
+      return el;
+    }
+
+    if (comp.type === 'learning-bridge') {
+      el = document.createElement('div');
+      el.className = 'silse-learning-bridge';
+      el.style.cssText = style + 'box-sizing:border-box;display:flex;flex-direction:column;gap:10px;overflow:hidden;padding:16px;';
+
+      var bridgeVariantIcon = { transition: '🔀', recap: '✅', preview: '👀' }[comp.bridgeVariant] || '🌉';
+      var bridgeVariantLabel = { transition: 'Transisi', recap: 'Recap', preview: 'Preview' }[comp.bridgeVariant] || comp.bridgeVariant;
+
+      var bridgeBadge = document.createElement('div');
+      bridgeBadge.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#6b7280;white-space:normal;overflow-wrap:anywhere;';
+      bridgeBadge.textContent = bridgeVariantIcon + ' ' + bridgeVariantLabel;
+      el.appendChild(bridgeBadge);
+
+      if (comp.bridgeTitle) {
+        var bTitle = document.createElement('strong');
+        bTitle.style.cssText = 'font-size:18px;font-weight:700;white-space:normal;overflow-wrap:anywhere;';
+        bTitle.textContent = comp.bridgeTitle;
+        el.appendChild(bTitle);
+      }
+
+      var bMsg = document.createElement('div');
+      bMsg.style.cssText = 'font-size:14px;line-height:1.6;white-space:normal;overflow-wrap:anywhere;flex:1;overflow:auto;';
+      bMsg.textContent = comp.bridgeMessage || '';
+      el.appendChild(bMsg);
+
+      var bBtnWrap = document.createElement('div');
+      bBtnWrap.style.cssText = 'display:flex;justify-content:flex-end;margin-top:auto;';
+      var bBtn = document.createElement('button');
+      bBtn.type = 'button';
+      bBtn.style.cssText = 'padding:10px 20px;font-size:14px;font-weight:600;border:2px solid #2563eb;border-radius:8px;background:#2563eb;color:#ffffff;cursor:pointer;white-space:normal;overflow-wrap:anywhere;min-height:44px;display:inline-flex;align-items:center;gap:6px;';
+      bBtn.textContent = comp.bridgeNextButtonLabel || 'Lanjut →';
+      // LXC-03: bridge "next" button is visual-only — does not trigger navigation.
+      // Real navigation comes from a separate NavigationComponent.
+      bBtnWrap.appendChild(bBtn);
+      el.appendChild(bBtnWrap);
       return el;
     }
 

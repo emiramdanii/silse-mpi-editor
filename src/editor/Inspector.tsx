@@ -28,6 +28,7 @@ import type {
   ImageComponent,
   LayeredInfoComponent,
   LayeredInfoLayer,
+  LearningBridgeComponent,
   NavigationAction,
   NavigationComponent,
   NavigationComponentVariant,
@@ -42,6 +43,7 @@ import type {
   GameComponentEditable,
   ImageComponentEditable,
   LayeredInfoComponentEditable,
+  LearningBridgeComponentEditable,
   NavigationComponentEditable,
   QuestionComponentEditable,
   TextComponentEditable,
@@ -51,6 +53,7 @@ import {
   GAME_TYPES,
   IMAGE_COMPONENT_VARIANTS,
   LAYERED_INFO_VARIANTS,
+  LEARNING_BRIDGE_VARIANTS,
   NAVIGATION_ACTIONS,
   NAVIGATION_COMPONENT_VARIANTS,
   QUESTION_COMPONENT_VARIANTS,
@@ -59,6 +62,7 @@ import {
   type CardComponentVariant,
   type ImageComponentVariant,
   type LayeredInfoVariant,
+  type LearningBridgeVariant,
   type TextComponentVariant,
 } from '../core/types';
 import { getCapability } from '../core/capability';
@@ -126,6 +130,12 @@ const LAYERED_INFO_VARIANT_LABELS: Record<LayeredInfoVariant, string> = {
   timeline: 'Linimasa',
 };
 
+const LEARNING_BRIDGE_VARIANT_LABELS: Record<LearningBridgeVariant, string> = {
+  transition: 'Transisi',
+  recap: 'Recap',
+  preview: 'Preview',
+};
+
 const LAYOUT_LABELS: Record<string, string> = {
   blank: 'Bebas (manual)',
   coverCentered: 'Cover terpusat',
@@ -179,6 +189,9 @@ function friendlyElementName(component: PageComponent): string {
   if (component.type === 'layered-info') {
     return 'Info Berlapis';
   }
+  if (component.type === 'learning-bridge') {
+    return 'Jembatan Belajar';
+  }
   return 'Elemen';
 }
 
@@ -199,6 +212,7 @@ export function Inspector() {
   const updateQuestionComponent = useEditorStore((s) => s.updateQuestionComponent);
   const updateGameComponent = useEditorStore((s) => s.updateGameComponent);
   const updateLayeredInfoComponent = useEditorStore((s) => s.updateLayeredInfoComponent);
+  const updateLearningBridgeComponent = useEditorStore((s) => s.updateLearningBridgeComponent);
   const project = useEditorStore((s) => s.project);
 
   return (
@@ -226,6 +240,7 @@ export function Inspector() {
             onUpdateQuestion={updateQuestionComponent}
             onUpdateGame={updateGameComponent}
             onUpdateLayeredInfo={updateLayeredInfoComponent}
+            onUpdateBridge={updateLearningBridgeComponent}
             pages={project.pages}
           />
         )}
@@ -241,6 +256,8 @@ const COMPONENT_TYPE_FRIENDLY: Record<string, string> = {
   navigation: 'Tombol navigasi',
   question: 'Pertanyaan',
   game: 'Game misi',
+  'layered-info': 'Info Berlapis',
+  'learning-bridge': 'Jembatan Belajar',
 };
 
 /**
@@ -327,6 +344,7 @@ function ComponentEditor({
   onUpdateQuestion,
   onUpdateGame,
   onUpdateLayeredInfo,
+  onUpdateBridge,
   pages,
 }: {
   component: PageComponent;
@@ -337,6 +355,7 @@ function ComponentEditor({
   onUpdateQuestion: (id: string, patch: Partial<QuestionComponentEditable>) => void;
   onUpdateGame: (id: string, patch: Partial<GameComponentEditable>) => void;
   onUpdateLayeredInfo: (id: string, patch: Partial<LayeredInfoComponentEditable>) => void;
+  onUpdateBridge: (id: string, patch: Partial<LearningBridgeComponentEditable>) => void;
   pages: SimplePage[];
 }) {
   if (component.type === 'text') {
@@ -365,6 +384,9 @@ function ComponentEditor({
   }
   if (component.type === 'layered-info') {
     return <LayeredInfoComponentEditor component={component} onChange={(p) => onUpdateLayeredInfo(component.id, p)} />;
+  }
+  if (component.type === 'learning-bridge') {
+    return <LearningBridgeComponentEditor component={component} onChange={(p) => onUpdateBridge(component.id, p)} />;
   }
   return (
     <div className="inspector-placeholder">
@@ -1354,6 +1376,88 @@ function LayeredInfoComponentEditor({
         </Field>
         <div className="component-editor__hint">
           Lapisan yang otomatis terbuka saat siswa pertama kali lihat halaman. Untuk accordion, pilih "Semua tertutup" supaya siswa klik sendiri.
+        </div>
+      </Section>
+
+      <Section title="Posisi & Ukuran">
+        <GeometryFields component={component} onChange={onChange} />
+      </Section>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Learning Bridge Component Editor (LXC-03)
+//
+// Bridge adalah komponen statis: judul + pesan + tombol "next".
+// Guru edit isi (title/message/nextButtonLabel), pilih variant (transition/
+// recap/preview), dan posisi & ukuran. Tidak ada state runtime.
+// ---------------------------------------------------------------------------
+
+function LearningBridgeComponentEditor({
+  component,
+  onChange,
+}: {
+  component: LearningBridgeComponent;
+  onChange: (patch: Partial<LearningBridgeComponentEditable>) => void;
+}) {
+  return (
+    <div className="component-editor" data-testid="component-editor-learning-bridge">
+      <div className="component-editor__head">
+        <span className="component-editor__type">{friendlyElementName(component)}</span>
+      </div>
+
+      <Section title="Isi">
+        <Field label="Judul jembatan">
+          <input
+            type="text"
+            data-field="title"
+            value={component.title}
+            onChange={(e) => onChange({ title: e.target.value })}
+            placeholder="Contoh: Kita sudah selesai dengan materi, sekarang lanjut ke kuis."
+          />
+        </Field>
+        <Field label="Pesan jembatan">
+          <textarea
+            data-field="message"
+            value={component.message}
+            onChange={(e) => onChange({ message: e.target.value })}
+            rows={5}
+            style={{ width: '100%', resize: 'vertical' }}
+            placeholder="Tulis pesan transisi / recap / preview di sini..."
+          />
+        </Field>
+        <Field label="Label tombol lanjut">
+          <input
+            type="text"
+            data-field="nextButtonLabel"
+            value={component.nextButtonLabel}
+            onChange={(e) => onChange({ nextButtonLabel: e.target.value })}
+            placeholder="Contoh: Lanjut →"
+          />
+        </Field>
+        <div className="component-editor__hint">
+          Tombol "lanjut" pada jembatan bersifat visual. Untuk navigasi nyata antar halaman, tambahkan elemen Navigasi terpisah.
+        </div>
+      </Section>
+
+      <Section title="Tampilan">
+        <Field label="Jenis jembatan">
+          <select
+            data-field="variant"
+            value={component.variant}
+            onChange={(e) => onChange({ variant: e.target.value as LearningBridgeVariant })}
+            style={{ width: '100%' }}
+          >
+            {LEARNING_BRIDGE_VARIANTS.map((v) => (
+              <option key={v} value={v}>
+                {LEARNING_BRIDGE_VARIANT_LABELS[v]}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <div className="component-editor__hint">
+          <strong>Transisi</strong>: pesan singkat antar bagian. <strong>Recap</strong>: ringkasan apa yang baru dipelajari. <strong>Preview</strong>: intipan apa yang akan datang.
         </div>
       </Section>
 

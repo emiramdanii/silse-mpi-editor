@@ -12,6 +12,7 @@ import type {
   GameComponent,
   ImageComponent,
   LayeredInfoComponent,
+  LearningBridgeComponent,
   NavigationComponent,
   PageComponent,
   QuestionComponent,
@@ -44,4 +45,8 @@ export function isGameComponent(c: PageComponent): c is GameComponent {
 
 export function isLayeredInfoComponent(c: PageComponent): c is LayeredInfoComponent {
   return c.type === 'layered-info';
+}
+
+export function isLearningBridgeComponent(c: PageComponent): c is LearningBridgeComponent {
+  return c.type === 'learning-bridge';
 }

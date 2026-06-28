@@ -91,46 +91,46 @@ export const PAGE_ROLE_CAPABILITIES: Record<PageRole, PageRoleCapability> = {
     // Aligns with "bebas jalan bantu" principle — every scene needs a way out.
     // LXC-02: add 'layered-info' for Tujuan Pembelajaran berlapis
     // (sebelumnya/hari ini/berikutnya, CP/ATP/TP, dll).
-    allowedComponents: ['text', 'navigation', 'layered-info'],
+    allowedComponents: ['text', 'navigation', 'layered-info', 'learning-bridge'],
     allowAddComponent: true,
     description: 'Tujuan pembelajaran',
   },
   starter: {
     role: 'starter',
-    allowedComponents: ['text', 'image', 'card', 'navigation'],
+    allowedComponents: ['text', 'image', 'card', 'navigation', 'learning-bridge'],
     allowAddComponent: true,
     description: 'Pemantik / apersepsi',
   },
   material: {
     role: 'material',
     // LXC-02: add 'layered-info' for materi berlapis (progressive disclosure).
-    allowedComponents: ['text', 'image', 'card', 'navigation', 'layered-info'],
+    allowedComponents: ['text', 'image', 'card', 'navigation', 'layered-info', 'learning-bridge'],
     allowAddComponent: true,
     description: 'Materi utama',
   },
   activity: {
     role: 'activity',
-    allowedComponents: ['text', 'image', 'card', 'navigation', 'game'],
+    allowedComponents: ['text', 'image', 'card', 'navigation', 'game', 'learning-bridge'],
     allowAddComponent: true,
     description: 'Aktivitas siswa',
   },
   quiz: {
     role: 'quiz',
     // UX-03 Patch-1: add 'navigation' so patterns can add "Berikutnya →" button.
-    allowedComponents: ['text', 'question', 'game', 'navigation'],
+    allowedComponents: ['text', 'question', 'game', 'navigation', 'learning-bridge'],
     allowAddComponent: true,
     description: 'Evaluasi / kuis',
   },
   reflection: {
     role: 'reflection',
-    allowedComponents: ['text', 'card', 'navigation'],
+    allowedComponents: ['text', 'card', 'navigation', 'learning-bridge'],
     allowAddComponent: true,
     description: 'Refleksi pembelajaran',
   },
   closing: {
     role: 'closing',
     // UX-03 Patch-1: add 'card' so patterns can add badge/rangkuman cards.
-    allowedComponents: ['text', 'card', 'navigation'],
+    allowedComponents: ['text', 'card', 'navigation', 'learning-bridge'],
     allowAddComponent: true,
     description: 'Penutup',
   },

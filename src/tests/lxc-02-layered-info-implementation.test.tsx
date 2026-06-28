@@ -8,7 +8,7 @@
  *   2. Factory createLayeredInfoComponent menghasilkan komponen valid
  *   3. PAGE_ROLE_CAPABILITIES mengizinkan layered-info di 4 role
  *   4. Validation menerima komponen valid, menolak yang invalid
- *   5. View renderer shared (preview = export)
+ *   5. View renderer follows render contract (preview and export share style model)
  *   6. Store action addLayeredInfoComponent + updateLayeredInfoComponent
  *   7. Editor di Inspector hanya edit layer aktif (tidak semua sekaligus)
  *   8. Pattern "Tujuan Lengkap Berlapis" pakai layered-info
@@ -243,10 +243,10 @@ describe('LXC-02 — Validation', () => {
 });
 
 // =========================================================================
-// Scope 5 — View renderer (shared preview = export)
+// Scope 5 — View renderer (render contract: preview and export share style model)
 // =========================================================================
 
-describe('LXC-02 — LayeredInfoComponentView shared renderer', () => {
+describe('LXC-02 — LayeredInfoComponentView render contract', () => {
   it('view file exists and exports component', async () => {
     const mod = await import('../components/LayeredInfoComponentView');
     expect(mod.LayeredInfoComponentView).toBeDefined();

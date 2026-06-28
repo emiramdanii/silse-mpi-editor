@@ -140,8 +140,9 @@ export function computePageStatus(page: SimplePage): PageStatus {
     }
     case 'learningObjectives': {
       // LXC-02: layered-info juga hitung sebagai konten (Tujuan Lengkap Berlapis)
+      // LXC-03: learning-bridge juga hitung sebagai konten (jembatan antar scene)
       const hasText = page.components.some(
-        (c) => c.type === 'text' || c.type === 'layered-info',
+        (c) => c.type === 'text' || c.type === 'layered-info' || c.type === 'learning-bridge',
       );
       if (!hasText) {
         issues.push({
@@ -168,7 +169,8 @@ export function computePageStatus(page: SimplePage): PageStatus {
         (c) =>
           c.type === 'text' ||
           c.type === 'image' ||
-          c.type === 'card',
+          c.type === 'card' ||
+          c.type === 'learning-bridge',
       );
       if (!hasContent) {
         issues.push({
@@ -184,7 +186,8 @@ export function computePageStatus(page: SimplePage): PageStatus {
           c.type === 'text' ||
           c.type === 'image' ||
           c.type === 'card' ||
-          c.type === 'layered-info',
+          c.type === 'layered-info' ||
+          c.type === 'learning-bridge',
       );
       if (!hasContent) {
         issues.push({
@@ -237,7 +240,7 @@ export function computePageStatus(page: SimplePage): PageStatus {
     }
     case 'reflection': {
       const hasContent = page.components.some(
-        (c) => c.type === 'text' || c.type === 'card',
+        (c) => c.type === 'text' || c.type === 'card' || c.type === 'learning-bridge',
       );
       if (!hasContent) {
         issues.push({
@@ -248,7 +251,9 @@ export function computePageStatus(page: SimplePage): PageStatus {
       break;
     }
     case 'closing': {
-      const hasText = page.components.some((c) => c.type === 'text');
+      const hasText = page.components.some(
+        (c) => c.type === 'text' || c.type === 'learning-bridge',
+      );
       if (!hasText) {
         issues.push({
           level: 'warning',

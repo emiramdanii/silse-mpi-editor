@@ -19,6 +19,7 @@ import type {
   CardComponentVariant,
   ImageComponentVariant,
   LayeredInfoVariant,
+  LearningBridgeVariant,
   NavigationComponentVariant,
   PageComponent,
   PageRole,
@@ -73,8 +74,8 @@ export type ResolvedInteractionStyle = {
 export type ResolveStyleInput = {
   /** Project style tokens (from project.style). */
   tokens: ProjectStyle['tokens'];
-  /** Component type: text/image/card/navigation/question/game/layered-info. */
-  componentType: 'text' | 'image' | 'card' | 'navigation' | 'question' | 'game' | 'layered-info';
+  /** Component type: text/image/card/navigation/question/game/layered-info/learning-bridge. */
+  componentType: 'text' | 'image' | 'card' | 'navigation' | 'question' | 'game' | 'layered-info' | 'learning-bridge';
   /** Component variant (per type). */
   variant: string;
   /** Page role (context for default style). */
@@ -456,6 +457,46 @@ function resolveLayeredInfoStyle(
 }
 
 // ---------------------------------------------------------------------------
+// Learning Bridge component style resolver (LXC-03)
+// ---------------------------------------------------------------------------
+
+function resolveLearningBridgeStyle(
+  variant: LearningBridgeVariant,
+  tokens: ProjectStyle['tokens'],
+): ResolvedComponentStyle {
+  const { colors, radius, spacing, shadow, typography } = tokens;
+
+  // Base style: surface background, text color, border, radius, padding, shadow.
+  const baseInline: Record<string, string | number> = {
+    backgroundColor: colors.surface,
+    color: colors.text,
+    border: `1px solid ${colors.border}`,
+    borderRadius: `${radius.medium}px`,
+    padding: `${spacing.cardPadding}px`,
+    boxShadow: shadow.soft,
+    fontSize: `${typography.bodySize}px`,
+  };
+
+  // Per-variant: transition = base, recap = success border, preview = primary border.
+  const variantMap: Record<LearningBridgeVariant, ResolvedComponentStyle> = {
+    transition: {
+      inlineStyle: baseInline,
+      className: 'silse-bridge-transition',
+    },
+    recap: {
+      inlineStyle: { ...baseInline, border: `1px solid ${colors.success}` },
+      className: 'silse-bridge-recap',
+    },
+    preview: {
+      inlineStyle: { ...baseInline, border: `1px solid ${colors.primary}` },
+      className: 'silse-bridge-preview',
+    },
+  };
+
+  return variantMap[variant] ?? variantMap.transition;
+}
+
+// ---------------------------------------------------------------------------
 // Main resolver
 // ---------------------------------------------------------------------------
 
@@ -497,6 +538,12 @@ export function resolveComponentStyle(input: ResolveStyleInput): ResolvedCompone
     case 'layered-info':
       return resolveLayeredInfoStyle(
         variant as LayeredInfoVariant,
+        tokens,
+      );
+
+    case 'learning-bridge':
+      return resolveLearningBridgeStyle(
+        variant as LearningBridgeVariant,
         tokens,
       );
 
@@ -562,7 +609,7 @@ export function getResolvedComponentStyle(
   return resolveComponentStyleWithInteractions(
     {
       tokens,
-      componentType: component.type as 'text' | 'image' | 'card' | 'navigation' | 'question' | 'game' | 'layered-info',
+      componentType: component.type as 'text' | 'image' | 'card' | 'navigation' | 'question' | 'game' | 'layered-info' | 'learning-bridge',
       variant: (component as { variant?: string }).variant ?? 'default',
       pageRole: page.role,
       layoutId: page.layoutId,
