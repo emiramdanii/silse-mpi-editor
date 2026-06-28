@@ -3,6 +3,9 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
+import { render } from '@testing-library/react';
+import React from 'react';
+import { Toolbar } from '../editor/Toolbar';
 import { createGameComponent, createGameMission } from '../core/component-factory';
 import { canAddComponent } from '../core/capability';
 import { validateComponent, isValidComponent } from '../core/validation';
@@ -13,6 +16,13 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const SRC_DIR = resolve(__dirname, '..');
+
+/** Helper: render Toolbar with a free page active so add buttons are enabled. */
+function renderToolbarWithFreePage() {
+  useEditorStore.getState().newProject();
+  useEditorStore.getState().addPage(); // free page
+  return render(React.createElement(Toolbar));
+}
 
 // =========================================================================
 // Game validation
@@ -217,10 +227,15 @@ describe('M11A — no page-spam', () => {
 // =========================================================================
 
 describe('M11A — UI checks', () => {
-  it('Toolbar has + Game button', () => {
+  it('Toolbar has + Game button (UX-01: rendered label, source has action spec)', () => {
     const content = readFileSync(resolve(SRC_DIR, 'editor/Toolbar.tsx'), 'utf8');
-    expect(content).toMatch(/\+ Game/);
-    expect(content).toMatch(/data-action="add-game"/);
+    // UX-01: button spec is centralized — verify the action 'add-game' is declared.
+    expect(content).toMatch(/action:\s*['"]add-game['"]/);
+    // UX-01: label is rendered via spec, so check the rendered output too.
+    const { container: tbContainer } = renderToolbarWithFreePage();
+    const gameBtn = tbContainer.querySelector('[data-action="add-game"]');
+    expect(gameBtn).not.toBeNull();
+    expect(gameBtn?.textContent ?? '').toMatch(/Game/);
   });
 
   it('UI does NOT contain "block"', () => {

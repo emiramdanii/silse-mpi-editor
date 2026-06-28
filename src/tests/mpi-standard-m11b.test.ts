@@ -172,12 +172,14 @@ describe('M11B PATCH — MPI quality check', () => {
 // =========================================================================
 
 describe('M11B PATCH — export guard', () => {
-  it('Toolbar handleExport calls checkMpiStandard', () => {
+  it('Topbar handleExport calls checkMpiStandard (UX-01: export moved to Topbar)', () => {
     const fs = require('node:fs');
     const path = require('node:path');
-    const content = fs.readFileSync(path.resolve(__dirname, '../editor/Toolbar.tsx'), 'utf8');
-    expect(content).toMatch(/checkMpiStandard/);
-    expect(content).toMatch(/confirm/);
+    // UX-01: Export HTML button moved from Toolbar to Topbar (primary action).
+    // Verify the guard is wired into the new Topbar location.
+    const topbarContent = fs.readFileSync(path.resolve(__dirname, '../editor/Topbar.tsx'), 'utf8');
+    expect(topbarContent).toMatch(/checkMpiStandard/);
+    expect(topbarContent).toMatch(/confirm/);
   });
 });
 
@@ -274,13 +276,13 @@ describe('M11B PATCH-2 — sample navigation completion', () => {
     expect(wouldShowDialog).toBe(false);
   });
 
-  it('Toolbar handleExport uses checkMpiStandard guard before export', () => {
+  it('Toolbar handleExport uses checkMpiStandard guard before export (UX-01: now in Topbar)', () => {
     const fs = require('node:fs');
     const path = require('node:path');
-    const content = fs.readFileSync(path.resolve(__dirname, '../editor/Toolbar.tsx'), 'utf8');
-    // Guard pattern: if (!qc.pass || qc.warnings.length > 0) → confirm dialog
-    expect(content).toMatch(/checkMpiStandard/);
-    expect(content).toMatch(/!qc\.pass\s*\|\|\s*qc\.warnings\.length/);
+    // UX-01: Export HTML button moved to Topbar — guard should be in Topbar now.
+    const topbarContent = fs.readFileSync(path.resolve(__dirname, '../editor/Topbar.tsx'), 'utf8');
+    expect(topbarContent).toMatch(/checkMpiStandard/);
+    expect(topbarContent).toMatch(/!qc\.pass\s*\|\|\s*qc\.warnings\.length/);
   });
 });
 

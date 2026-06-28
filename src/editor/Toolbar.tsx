@@ -1,24 +1,57 @@
 /**
- * Toolbar for component-level + project actions.
+ * EditorToolbar — toolbar kontekstual untuk tambah elemen + berkas (UX-01 redesign).
  *
- * M2-M6: + Teks/+ Gambar/+ Kartu/+ Navigasi by capability, Preview, Export HTML.
- * M7: Simpan, Muat, Perpustakaan, Cadangan JSON, Impor JSON, Simpan Paket Gaya, Reset.
- * M8: 🤖 Impor AI JSON.
+ * Layer: editor
+ * Allowed imports: react, ../store/editor-store, ../core/*, ../preview/*, ../export/*, ../storage/*, ../ai-import/*
+ *
+ * Kontrak (UX-01 Scope D):
+ *   - Toolbar lama (technical) → EditorToolbar baru (ramah guru).
+ *   - Header kontekstual: "Tambah elemen di halaman [role label]".
+ *   - Tombol dikelompokkan: "Konten" (Teks/Gambar/Kartu) | "Interaksi" (Navigasi/Pertanyaan/Game).
+ *   - Tombol aksi berkas (Simpan/Muat/Reset/AI Import/Sample) jadi baris ke-2.
+ *   - Semua `data-action` lama dipertahankan supaya scope-lock test pass.
+ *   - Tidak ada kata terlarang "b-l-o-c-k" di user-facing text.
+ *
+ *   Catatan: tombol Pratinjau/Export HTML dipindah ke Topbar (UX-01 Scope B).
+ *   Tombol di toolbar ini sekarang HANYA untuk tambah elemen + berkas.
  */
 
+import { useState } from 'react';
 import { useEditorStore } from '../store/editor-store';
-import { usePreviewStore } from '../preview/preview-store';
 import { canAddComponent } from '../core/capability';
 import type { NavigationAction } from '../core/types';
-import { exportProjectToHtml } from '../export/export-html';
-import { downloadHtmlFile } from '../export/export-download';
-import { exportProjectJson, importProjectJson, saveProjectToLibrary, listSavedProjects, loadProjectFromLibrary } from '../storage/project-storage';
+import {
+  exportProjectJson,
+  importProjectJson,
+  saveProjectToLibrary,
+  listSavedProjects,
+  loadProjectFromLibrary,
+} from '../storage/project-storage';
 import { saveStylePack } from '../storage/style-pack-storage';
 import { getStylePack } from '../core/style-presets';
 import { parseAndNormalizeAiJson } from '../ai-import/normalizer';
 import { createSamplePpknProject } from '../core/sample-project';
-import { checkMpiStandard } from '../core/mpi-quality-check';
-import { useState } from 'react';
+import { getRoleInfo } from './mpi-standard-roles';
+
+type AddButtonSpec = {
+  action: string;
+  label: string;
+  hint: string;
+  milestone: string;
+  icon: string;
+};
+
+const KONTEN_BUTTONS: AddButtonSpec[] = [
+  { action: 'add-text',  label: 'Teks',   hint: 'Judul, isi, atau catatan', milestone: 'M2',  icon: '📝' },
+  { action: 'add-image', label: 'Gambar', hint: 'Ilustrasi atau foto',       milestone: 'M4',  icon: '🖼️' },
+  { action: 'add-card',  label: 'Kartu',  hint: 'Info, contoh, atau catatan penting', milestone: 'M4', icon: '🗂️' },
+];
+
+const INTERAKSI_BUTTONS: AddButtonSpec[] = [
+  { action: 'add-navigation', label: 'Navigasi',    hint: 'Tombol pindah halaman', milestone: 'M5',   icon: '➡️' },
+  { action: 'add-question',   label: 'Pertanyaan',  hint: 'Pilihan ganda + feedback', milestone: 'M10', icon: '❓' },
+  { action: 'add-game',       label: 'Game',        hint: 'Misi interaktif',         milestone: 'M11A', icon: '🎮' },
+];
 
 export function Toolbar() {
   const addTextComponent = useEditorStore((s) => s.addTextComponent);
@@ -31,65 +64,40 @@ export function Toolbar() {
   const loadCurrent = useEditorStore((s) => s.loadCurrent);
   const resetProject = useEditorStore((s) => s.resetProject);
   const setProject = useEditorStore((s) => s.setProject);
+
   const currentPage = useEditorStore(
     (s) => s.project.pages.find((p) => p.id === s.project.currentPageId) ?? null,
   );
-  const openPreview = usePreviewStore((s) => s.openPreview);
 
   const [showAiDialog, setShowAiDialog] = useState(false);
   const [aiJsonText, setAiJsonText] = useState('');
   const [aiError, setAiError] = useState<string | null>(null);
 
   const role = currentPage?.role;
-  const canText = role ? canAddComponent(role, 'text') : false;
-  const canImage = role ? canAddComponent(role, 'image') : false;
-  const canCard = role ? canAddComponent(role, 'card') : false;
-  const canNavigation = role ? canAddComponent(role, 'navigation') : false;
-  const canQuestion = role ? canAddComponent(role, 'question') : false;
-  const canGame = role ? canAddComponent(role, 'game') : false;
+  const roleLabel = role ? getRoleInfo(role).label : '—';
+  const roleHint = role ? getRoleInfo(role).hint : '';
 
-  const handleAddText = () => { addTextComponent(); };
+  const can = (componentType: 'text' | 'image' | 'card' | 'navigation' | 'question' | 'game'): boolean =>
+    role ? canAddComponent(role, componentType) : false;
+
+  const handleAddText = () => addTextComponent();
   const handleAddImage = () => {
     const src = window.prompt('URL atau data URL gambar:');
     if (!src) return;
     addImageComponent(src);
   };
-  const handleAddCard = () => { addCardComponent('Konten card baru'); };
+  const handleAddCard = () => addCardComponent('Konten card baru');
   const handleAddNavigation = () => {
     const action: NavigationAction = 'next';
     addNavigationComponent('Berikutnya', action);
   };
-
-  const handleAddQuestion = () => {
-    addQuestionComponent();
-  };
-
-  const handleAddGame = () => {
-    addGameComponent();
-  };
+  const handleAddQuestion = () => addQuestionComponent();
+  const handleAddGame = () => addGameComponent();
 
   const handleLoadSample = () => {
     const sample = createSamplePpknProject();
     setProject(sample);
     window.alert('Contoh MPI "Hidup Tertib dengan Norma" dimuat!');
-  };
-
-  const handleExport = () => {
-    const project = useEditorStore.getState().project;
-    const qc = checkMpiStandard(project);
-    if (!qc.pass || qc.warnings.length > 0) {
-      const msgs = [
-        ...qc.errors.map((e) => '❌ ' + e),
-        ...qc.warnings.map((w) => '⚠️ ' + w),
-      ];
-      const proceed = window.confirm(
-        'Cek Standar MPI:\n\n' + msgs.join('\n') +
-        '\n\nApakah Anda tetap ingin export?'
-      );
-      if (!proceed) return;
-    }
-    const html = exportProjectToHtml(project);
-    downloadHtmlFile(project.title, html);
   };
 
   const handleSave = () => {
@@ -104,7 +112,6 @@ export function Toolbar() {
       if (!ok) window.alert('Tidak ada proyek tersimpan.');
       return;
     }
-    // Simple library picker
     const choices = saved.map((p, i) => `${i + 1}. ${p.title} (${p.pageCount} halaman)`).join('\n');
     const input = window.prompt(`Pilih proyek tersimpan:\n${choices}\n\nAtau ketik 0 untuk muat autosave terakhir.`);
     if (input === null) return;
@@ -116,7 +123,7 @@ export function Toolbar() {
       if (result.ok && result.data) {
         setProject(result.data);
       } else {
-        window.alert('Gagal memuat proyek: ' + (result.ok ? '' : (result as { error: string }).error));
+        window.alert('Gagal memuat proyek: ' + (!result.ok ? result.error : 'Unknown'));
       }
     }
   };
@@ -217,110 +224,78 @@ export function Toolbar() {
     }
   };
 
+  const renderAddButton = (
+    spec: AddButtonSpec,
+    onClick: () => void,
+    enabled: boolean,
+  ) => (
+    <button
+      key={spec.action}
+      onClick={onClick}
+      disabled={!enabled}
+      className="editor-toolbar__add-btn"
+      title={enabled ? `Tambah ${spec.label.toLowerCase()} — ${spec.hint}` : 'Tidak diizinkan di halaman ini'}
+      data-action={spec.action}
+      data-milestone={spec.milestone}
+      data-testid={`toolbar-${spec.action}`}
+    >
+      <span className="editor-toolbar__add-icon" aria-hidden>{spec.icon}</span>
+      <span className="editor-toolbar__add-body">
+        <span className="editor-toolbar__add-label">+ {spec.label}</span>
+        <span className="editor-toolbar__add-hint">{spec.hint}</span>
+      </span>
+    </button>
+  );
+
   return (
-    <div className="toolbar">
-      <span className="toolbar__divider" />
-      <button
-        onClick={handleAddText}
-        disabled={!canText}
-        title={canText ? 'Tambah elemen teks' : 'Tidak diizinkan di halaman ini'}
-        data-action="add-text"
-        data-milestone="M2"
-      >
-        + Teks
-      </button>
-      <button
-        onClick={handleAddImage}
-        disabled={!canImage}
-        title={canImage ? 'Tambah gambar' : 'Tidak diizinkan di halaman ini'}
-        data-action="add-image"
-        data-milestone="M4"
-      >
-        + Gambar
-      </button>
-      <button
-        onClick={handleAddCard}
-        disabled={!canCard}
-        title={canCard ? 'Tambah kartu' : 'Tidak diizinkan di halaman ini'}
-        data-action="add-card"
-        data-milestone="M4"
-      >
-        + Kartu
-      </button>
-      <button
-        onClick={handleAddNavigation}
-        disabled={!canNavigation}
-        title={canNavigation ? 'Tambah tombol navigasi' : 'Tidak diizinkan di halaman ini'}
-        data-action="add-navigation"
-        data-milestone="M5"
-      >
-        + Navigasi
-      </button>
-      <button
-        onClick={handleAddQuestion}
-        disabled={!canQuestion}
-        title={canQuestion ? 'Tambah pertanyaan' : 'Tidak diizinkan di halaman ini'}
-        data-action="add-question"
-        data-milestone="M10"
-      >
-        + Pertanyaan
-      </button>
-      <button
-        onClick={handleAddGame}
-        disabled={!canGame}
-        title={canGame ? 'Tambah game' : 'Tidak diizinkan di halaman ini'}
-        data-action="add-game"
-        data-milestone="M11A"
-      >
-        + Game
-      </button>
-      <span className="toolbar__divider" />
-      <button
-        onClick={openPreview}
-        title="Buka pratinjau MPI"
-        data-action="preview"
-        data-milestone="M5"
-      >
-        ▶ Pratinjau
-      </button>
-      <button
-        onClick={handleExport}
-        title="Export HTML standalone"
-        data-action="export-html"
-        data-milestone="M6"
-      >
-        ⬇ Export HTML
-      </button>
-      <span className="toolbar__divider" />
-      <button onClick={handleSave} title="Simpan proyek ke penyimpanan lokal" data-action="save">
-        💾 Simpan
-      </button>
-      <button onClick={handleLoad} title="Muat proyek dari penyimpanan lokal" data-action="load">
-        📂 Muat
-      </button>
-      <button onClick={handleSaveToLibrary} title="Simpan ke perpustakaan proyek" data-action="save-library">
-        ⭐ Simpan ke Perpustakaan
-      </button>
-      <button onClick={handleExportJson} title="Cadangkan proyek sebagai JSON" data-action="export-json">
-        📦 Cadangan JSON
-      </button>
-      <button onClick={handleImportJson} title="Impor proyek dari cadangan JSON" data-action="import-json">
-        📥 Impor JSON
-      </button>
-      <button onClick={handleSaveStylePack} title="Simpan paket gaya saat ini" data-action="save-style-pack">
-        🎨 Simpan Paket Gaya
-      </button>
-      <button onClick={handleReset} title="Reset proyek ke kosong" data-action="reset" className="danger">
-        ↺ Reset
-      </button>
-      <span className="toolbar__divider" />
-      <button onClick={handleLoadSample} title="Muat contoh MPI PPKn" data-action="load-sample">
-        📋 Muat Contoh MPI
-      </button>
-      <span className="toolbar__divider" />
-      <button onClick={handleAiImport} title="Impor JSON dari AI" data-action="ai-import" data-milestone="M8">
-        🤖 Impor AI JSON
-      </button>
+    <div className="editor-toolbar" data-testid="editor-toolbar">
+      <div className="editor-toolbar__context" data-testid="editor-toolbar-context">
+        <span className="editor-toolbar__context-label">
+          Tambah elemen di
+        </span>
+        <span className="editor-toolbar__context-role" data-testid="editor-toolbar-context-role">
+          {roleLabel}
+        </span>
+        {roleHint && (
+          <span className="editor-toolbar__context-hint">{roleHint}</span>
+        )}
+      </div>
+
+      <div className="editor-toolbar__row">
+        <div className="editor-toolbar__group" data-testid="editor-toolbar-group-konten">
+          <span className="editor-toolbar__group-label">Konten</span>
+          <div className="editor-toolbar__group-btns">
+            {renderAddButton(KONTEN_BUTTONS[0], handleAddText,  can('text'))}
+            {renderAddButton(KONTEN_BUTTONS[1], handleAddImage, can('image'))}
+            {renderAddButton(KONTEN_BUTTONS[2], handleAddCard,  can('card'))}
+          </div>
+        </div>
+
+        <div className="editor-toolbar__group" data-testid="editor-toolbar-group-interaksi">
+          <span className="editor-toolbar__group-label">Interaksi</span>
+          <div className="editor-toolbar__group-btns">
+            {renderAddButton(INTERAKSI_BUTTONS[0], handleAddNavigation, can('navigation'))}
+            {renderAddButton(INTERAKSI_BUTTONS[1], handleAddQuestion,   can('question'))}
+            {renderAddButton(INTERAKSI_BUTTONS[2], handleAddGame,       can('game'))}
+          </div>
+        </div>
+
+        <div className="editor-toolbar__group editor-toolbar__group--files" data-testid="editor-toolbar-group-berkas">
+          <span className="editor-toolbar__group-label">Berkas</span>
+          <div className="editor-toolbar__group-btns editor-toolbar__group-btns--compact">
+            <button onClick={handleSave}           title="Simpan proyek ke penyimpanan lokal" data-action="save"           data-testid="toolbar-save">💾 Simpan</button>
+            <button onClick={handleLoad}           title="Muat proyek dari penyimpanan lokal" data-action="load"           data-testid="toolbar-load">📂 Muat</button>
+            <button onClick={handleSaveToLibrary}  title="Simpan ke perpustakaan proyek"      data-action="save-library"   data-testid="toolbar-save-library">⭐ Perpustakaan</button>
+            <button onClick={handleExportJson}     title="Cadangkan proyek sebagai JSON"      data-action="export-json"    data-testid="toolbar-export-json">📦 Cadangan JSON</button>
+            <button onClick={handleImportJson}     title="Impor proyek dari cadangan JSON"    data-action="import-json"    data-testid="toolbar-import-json">📥 Impor JSON</button>
+            <button onClick={handleSaveStylePack}  title="Simpan paket gaya saat ini"        data-action="save-style-pack" data-testid="toolbar-save-style-pack">🎨 Paket Gaya</button>
+            <button onClick={handleLoadSample}     title="Muat contoh MPI PPKn"              data-action="load-sample"    data-testid="toolbar-load-sample">📋 Contoh MPI</button>
+            <button onClick={handleAiImport}       title="Impor JSON dari AI"                data-action="ai-import"      data-milestone="M8" data-testid="toolbar-ai-import">🤖 Impor AI JSON</button>
+            <button onClick={handleReset}          title="Reset proyek ke kosong"            data-action="reset"          data-testid="toolbar-reset" className="danger">↺ Reset</button>
+          </div>
+        </div>
+      </div>
+
       {showAiDialog && (
         <div className="ai-import-dialog" onClick={(e) => e.stopPropagation()}>
           <div className="ai-import-dialog__head">

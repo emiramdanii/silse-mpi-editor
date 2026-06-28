@@ -3,6 +3,9 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
+import { render } from '@testing-library/react';
+import React from 'react';
+import { Toolbar } from '../editor/Toolbar';
 import { createQuestionComponent } from '../core/component-factory';
 import { canAddComponent } from '../core/capability';
 import { validateComponent, isValidComponent } from '../core/validation';
@@ -254,15 +257,24 @@ describe('M10 — answer option UX lock (no clipping)', () => {
 // =========================================================================
 
 describe('M10 — UI checks', () => {
-  it('Toolbar has + Pertanyaan button', () => {
+  it('Toolbar has + Pertanyaan button (UX-01: rendered label, source has action spec)', () => {
     const content = readFileSync(resolve(SRC_DIR, 'editor/Toolbar.tsx'), 'utf8');
-    expect(content).toMatch(/Pertanyaan/);
-    expect(content).toMatch(/data-action="add-question"/);
+    // UX-01: button spec is centralized — verify the action 'add-question' is declared.
+    expect(content).toMatch(/action:\s*['"]add-question['"]/);
+    // UX-01: label is rendered via spec — verify rendered output too.
+    useEditorStore.getState().newProject();
+    useEditorStore.getState().addPage(); // free page so button is enabled
+    const { container } = render(React.createElement(Toolbar));
+    const btn = container.querySelector('[data-action="add-question"]');
+    expect(btn).not.toBeNull();
+    expect(btn?.textContent ?? '').toMatch(/Pertanyaan/);
   });
 
-  it('Toolbar + Pertanyaan disabled on cover', () => {
+  it('Toolbar + Pertanyaan disabled on cover (UX-01: capability check via can())', () => {
     const content = readFileSync(resolve(SRC_DIR, 'editor/Toolbar.tsx'), 'utf8');
-    expect(content).toMatch(/canQuestion/);
+    // UX-01: capability check is done via can('question') in renderAddButton.
+    // Verify the source has the question capability check.
+    expect(content).toMatch(/can\('question'\)|canQuestion/);
   });
 
   it('UI does NOT contain "block"', () => {

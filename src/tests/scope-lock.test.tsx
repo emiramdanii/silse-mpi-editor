@@ -25,6 +25,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { render } from '@testing-library/react';
 import { Toolbar } from '../editor/Toolbar';
+import { Topbar } from '../editor/Topbar';
 import { PagePanel } from '../editor/PagePanel';
 import { Inspector } from '../editor/Inspector';
 import { useEditorStore } from '../store/editor-store';
@@ -32,6 +33,23 @@ import { TEXT_COMPONENT_VARIANTS } from '../core/types';
 
 function queryByAction(container: HTMLElement, action: string): HTMLElement | null {
   return container.querySelector(`[data-action="${action}"]`);
+}
+
+/**
+ * Helper: find a button by data-action across both Topbar (primary actions)
+ * and Toolbar (component + file actions). UX-01 split primary actions to
+ * Topbar, so the contract "button exists and is enabled" is now checked
+ * across both components.
+ */
+function queryByActionInTopbarOrToolbar(action: string): HTMLElement | null {
+  // Render both into a single container so we can query across both.
+  const { container } = render(
+    <>
+      <Topbar />
+      <Toolbar />
+    </>,
+  );
+  return queryByAction(container, action);
 }
 
 describe('scope-lock M4 — Toolbar: + Teks/+ Gambar/+ Kartu by capability', () => {
@@ -111,17 +129,17 @@ describe('scope-lock M4 — Toolbar: + Teks/+ Gambar/+ Kartu by capability', () 
   });
 
   // ---- Preview button ENABLED (M5 active) ----
-  it('"Preview" button is ENABLED (M5 active)', () => {
-    const { container } = render(<Toolbar />);
-    const btn = queryByAction(container, 'preview');
+  // UX-01: Preview moved to Topbar (primary action).
+  it('"Preview" button is ENABLED (M5 active, lives in Topbar)', () => {
+    const btn = queryByActionInTopbarOrToolbar('preview');
     expect(btn).not.toBeNull();
     expect((btn as HTMLButtonElement).disabled).toBe(false);
   });
 
   // ---- Export HTML ENABLED (M6 active) ----
-  it('"Export HTML" button is ENABLED (M6 active)', () => {
-    const { container } = render(<Toolbar />);
-    const btn = queryByAction(container, 'export-html');
+  // UX-01: Export HTML moved to Topbar (primary action).
+  it('"Export HTML" button is ENABLED (M6 active, lives in Topbar)', () => {
+    const btn = queryByActionInTopbarOrToolbar('export-html');
     expect(btn).not.toBeNull();
     expect((btn as HTMLButtonElement).disabled).toBe(false);
   });

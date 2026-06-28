@@ -8,6 +8,10 @@
  *   - Clamp to canvas.
  *   - Keyboard delete (Delete/Backspace) — skip in input/textarea/select.
  *   - No drag in preview. No external drag library.
+ *
+ * UX-01:
+ *   - EditorToolbar ditempatkan di atas canvas (konteks dekat dengan aksi).
+ *   - Empty state memakai label role ramah guru + saran elemen pertama.
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -22,6 +26,8 @@ import { GameComponentView } from '../components/GameComponentView';
 import { getCapability } from '../core/capability';
 import { getResolvedComponentStyle } from '../core/style/resolveComponentStyle';
 import { snapToGrid, clampRectToCanvas, CANVAS_WIDTH, CANVAS_HEIGHT, type Rect } from '../core/geometry';
+import { Toolbar } from './Toolbar';
+import { getRoleInfo } from './mpi-standard-roles';
 
 export function CanvasStage() {
   const project = useEditorStore((s) => s.project);
@@ -140,36 +146,50 @@ export function CanvasStage() {
 
   const capability = currentPage ? getCapability(currentPage.role) : null;
   const canAdd = capability?.allowAddComponent ?? false;
+  const roleInfo = currentPage ? getRoleInfo(currentPage.role) : null;
+
+  const emptyHint = (() => {
+    if (!currentPage) return '';
+    if (canAdd) {
+      return `Pakai tombol di toolbar atas kanvas untuk menambah elemen pertama di halaman ${roleInfo?.label ?? ''}.`;
+    }
+    return 'Halaman terpandu — elemen diatur otomatis oleh template.';
+  })();
 
   return (
-    <main className="canvas-stage">
-      <div
-        ref={canvasRef}
-        className="canvas-frame"
-        style={{
-          width: CANVAS_WIDTH,
-          height: CANVAS_HEIGHT,
-          background: bg,
-        }}
-        onClick={() => selectComponent(null)}
-      >
-        <div className="canvas-frame__label">
-          {CANVAS_WIDTH} × {CANVAS_HEIGHT} · {currentPage?.title ?? '—'} ·{' '}
-          {currentPage ? `role: ${currentPage.role}, layout: ${currentPage.layoutId}` : ''}
-        </div>
-
-        {currentPage && currentPage.components.length === 0 && (
-          <div className="canvas-empty">
-            <div className="canvas-empty__title">
-              {canAdd ? 'Halaman kosong' : `Halaman ${currentPage.role} (terpandu)`}
-            </div>
-            <div>
-              {canAdd
-                ? 'Klik tombol + Teks / + Gambar / + Kartu / + Navigasi di toolbar untuk menambah elemen.'
-                : 'Elemen halaman terpandu akan diisi via template pedagogis (M11/M12).'}
-            </div>
+    <main className="canvas-stage" data-testid="canvas-stage">
+      <Toolbar />
+      <div className="canvas-stage__canvas-area">
+        <div
+          ref={canvasRef}
+          className="canvas-frame"
+          style={{
+            width: CANVAS_WIDTH,
+            height: CANVAS_HEIGHT,
+            background: bg,
+          }}
+          onClick={() => selectComponent(null)}
+        >
+          <div className="canvas-frame__label" data-testid="canvas-frame-label">
+            {CANVAS_WIDTH} × {CANVAS_HEIGHT} · {currentPage?.title ?? '—'} ·{' '}
+            {currentPage ? `${roleInfo?.label ?? currentPage.role} · ${currentPage.layoutId}` : ''}
           </div>
-        )}
+
+          {currentPage && currentPage.components.length === 0 && (
+            <div className="canvas-empty" data-testid="canvas-empty">
+              <div className="canvas-empty__icon" aria-hidden>
+                {roleInfo?.icon ?? '📄'}
+              </div>
+              <div className="canvas-empty__title">
+                {canAdd
+                  ? `Halaman ${roleInfo?.label ?? currentPage.role} masih kosong`
+                  : `Halaman ${roleInfo?.label ?? currentPage.role} (terpandu)`}
+              </div>
+              <div className="canvas-empty__hint">
+                {emptyHint}
+              </div>
+            </div>
+          )}
 
         {currentPage?.components.map((component) => {
           const resolvedStyle = getResolvedComponentStyle(project, currentPage, component);
@@ -267,6 +287,7 @@ export function CanvasStage() {
             </div>
           );
         })}
+        </div>
       </div>
     </main>
   );

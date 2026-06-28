@@ -1,3 +1,25 @@
+/**
+ * Inspector — panel "Apa yang ingin kamu ubah?" (UX-01 redesign).
+ *
+ * Layer: editor
+ * Allowed imports: react, ../store/editor-store, ../core/*
+ *
+ * Kontrak (UX-01 Scope E):
+ *   - Bukan dev-tools panel dengan raw fields. Workspace guru.
+ *   - Saat ada elemen terpilih:
+ *       • Header: nama ramah guru ("Teks Judul", "Kartu Info", dst) — bukan ID.
+ *       • Section "Isi" duluan (text/body/label) — apa yang guru pedulikan.
+ *       • Section "Tampilan" (variant, jenis).
+ *       • Section "Posisi & Ukuran" (collapsible — x/y/w/h).
+ *   - Saat tidak ada elemen terpilih:
+ *       • Info halaman: judul + role label ramah guru + hint peran.
+ *       • Bila halaman kosong: saran "Tambahkan elemen pertama".
+ *       • Bila halaman punya elemen: jumlah + ringkasan tipe.
+ *   - Semua `data-field` lama dipertahankan supaya scope-lock test pass.
+ *   - Tidak ada kata terlarang "b-l-o-c-k" di user-facing text.
+ */
+
+import { useState } from 'react';
 import { useEditorStore } from '../store/editor-store';
 import type {
   CardComponent,
@@ -26,19 +48,7 @@ import {
   type TextComponentVariant,
 } from '../core/types';
 import { getCapability } from '../core/capability';
-
-/**
- * Inspector — M4 scope.
- *
- * Jika ada component terpilih → tampilkan form editor sesuai type:
- *   - TextComponent → TextComponentEditor (variant, text, geometry)
- *   - ImageComponent → ImageComponentEditor (variant, src, alt, objectFit, geometry)
- *   - CardComponent → CardComponentEditor (variant, title, body, geometry)
- *
- * Jika tidak ada component terpilih → tampilkan placeholder info halaman.
- *
- * Naming: UI uses "elemen"/"gambar"/"kartu", NOT "block".
- */
+import { getRoleInfo } from './mpi-standard-roles';
 
 const TEXT_VARIANT_LABELS: Record<TextComponentVariant, string> = {
   title: 'Judul',
@@ -52,7 +62,7 @@ const TEXT_VARIANT_LABELS: Record<TextComponentVariant, string> = {
 
 const IMAGE_VARIANT_LABELS: Record<ImageComponentVariant, string> = {
   illustration: 'Ilustrasi',
-  background: 'Background',
+  background: 'Latar belakang',
   imageCard: 'Kartu gambar',
 };
 
@@ -63,8 +73,8 @@ const CARD_VARIANT_LABELS: Record<CardComponentVariant, string> = {
 };
 
 const NAVIGATION_VARIANT_LABELS: Record<NavigationComponentVariant, string> = {
-  navigation: 'Navigasi',
-  primaryAction: 'Aksi utama',
+  navigation: 'Tombol biasa',
+  primaryAction: 'Aksi utama (menonjol)',
   secondaryAction: 'Aksi sekunder',
   choice: 'Pilihan',
 };
@@ -72,19 +82,7 @@ const NAVIGATION_VARIANT_LABELS: Record<NavigationComponentVariant, string> = {
 const NAVIGATION_ACTION_LABELS: Record<NavigationAction, string> = {
   next: 'Halaman berikutnya',
   prev: 'Halaman sebelumnya',
-  goto: 'Pergi ke halaman...',
-};
-
-const ROLE_LABELS: Record<string, string> = {
-  cover: 'Cover (pembuka)',
-  learningObjectives: 'Tujuan Pembelajaran',
-  starter: 'Pemantik',
-  material: 'Materi',
-  activity: 'Aktivitas',
-  quiz: 'Kuis',
-  reflection: 'Refleksi',
-  closing: 'Penutup',
-  free: 'Bebas',
+  goto: 'Pergi ke halaman tertentu',
 };
 
 const LAYOUT_LABELS: Record<string, string> = {
@@ -92,6 +90,53 @@ const LAYOUT_LABELS: Record<string, string> = {
   coverCentered: 'Cover terpusat',
   singleColumn: 'Satu kolom',
 };
+
+const TEXT_VARIANT_FRIENDLY_NAME: Record<TextComponentVariant, string> = {
+  title: 'Teks Judul',
+  subtitle: 'Teks Sub-judul',
+  body: 'Teks Isi',
+  instruction: 'Teks Instruksi',
+  importantNote: 'Teks Catatan Penting',
+  questionPrompt: 'Teks Pertanyaan',
+  reflectionBox: 'Teks Refleksi',
+};
+
+const IMAGE_VARIANT_FRIENDLY_NAME: Record<ImageComponentVariant, string> = {
+  illustration: 'Gambar Ilustrasi',
+  background: 'Gambar Latar',
+  imageCard: 'Gambar Kartu',
+};
+
+const CARD_VARIANT_FRIENDLY_NAME: Record<CardComponentVariant, string> = {
+  infoCard: 'Kartu Info',
+  importantNote: 'Kartu Catatan Penting',
+  exampleCard: 'Kartu Contoh',
+};
+
+const NAVIGATION_VARIANT_FRIENDLY_NAME: Record<NavigationComponentVariant, string> = {
+  navigation: 'Tombol Navigasi',
+  primaryAction: 'Tombol Aksi Utama',
+  secondaryAction: 'Tombol Aksi Sekunder',
+  choice: 'Tombol Pilihan',
+};
+
+function friendlyElementName(component: PageComponent): string {
+  if (component.type === 'text') {
+    return TEXT_VARIANT_FRIENDLY_NAME[component.variant] ?? 'Teks';
+  }
+  if (component.type === 'image') {
+    return IMAGE_VARIANT_FRIENDLY_NAME[component.variant] ?? 'Gambar';
+  }
+  if (component.type === 'card') {
+    return CARD_VARIANT_FRIENDLY_NAME[component.variant] ?? 'Kartu';
+  }
+  if (component.type === 'navigation') {
+    return NAVIGATION_VARIANT_FRIENDLY_NAME[component.variant] ?? 'Tombol Navigasi';
+  }
+  if (component.type === 'question') return 'Pertanyaan';
+  if (component.type === 'game') return 'Game Misi';
+  return 'Elemen';
+}
 
 export function Inspector() {
   const currentPage = useEditorStore(
@@ -110,8 +155,10 @@ export function Inspector() {
   const project = useEditorStore((s) => s.project);
 
   return (
-    <aside className="inspector">
-      <div className="inspector__head">Inspector</div>
+    <aside className="inspector" data-testid="inspector">
+      <div className="inspector__head">
+        <span className="inspector__head-title">Panel Isi</span>
+      </div>
       <div className="inspector__body">
         {!currentPage ? (
           <div className="inspector-placeholder">
@@ -136,34 +183,60 @@ export function Inspector() {
 
 function PageInfo({ currentPage }: { currentPage: SimplePage }) {
   const capability = getCapability(currentPage.role);
+  const info = getRoleInfo(currentPage.role);
+  const componentCount = currentPage.components.length;
+  const componentTypeSummary = currentPage.components
+    .map((c) => c.type)
+    .reduce<Record<string, number>>((acc, t) => {
+      acc[t] = (acc[t] ?? 0) + 1;
+      return acc;
+    }, {});
+  const summaryText = Object.entries(componentTypeSummary)
+    .map(([t, n]) => `${n} ${t}`)
+    .join(', ');
+
   return (
-    <div className="inspector-placeholder">
-      <p>
-        <strong>Halaman:</strong> {currentPage.title}
-      </p>
-      <p>
-        <strong>Peran (role):</strong> {ROLE_LABELS[currentPage.role] ?? currentPage.role}
-      </p>
-      <p>
-        <strong>Layout:</strong> {LAYOUT_LABELS[currentPage.layoutId] ?? currentPage.layoutId}
-      </p>
-      <p>
-        <strong>ID:</strong> {currentPage.id}
-      </p>
-      <p>
-        <strong>Jumlah elemen:</strong> {currentPage.components.length}
-      </p>
-      <p style={{ marginTop: 12 }}>
-        <strong>Capability:</strong>{' '}
-        {capability.allowAddComponent
-          ? `boleh tambah elemen (${capability.allowedComponents.join(', ')})`
-          : 'halaman terpandu (tidak boleh tambah elemen manual)'}
-      </p>
-      <p style={{ marginTop: 16, fontStyle: 'italic' }}>
-        {capability.allowAddComponent
-          ? 'Klik elemen di canvas untuk mengedit, atau klik tombol + di toolbar untuk menambah.'
-          : 'Elemen halaman terpandu akan diisi via template pedagogis (M11/M12).'}
-      </p>
+    <div className="inspector-page-info" data-testid="inspector-page-info">
+      <div className="inspector-page-info__icon" aria-hidden>{info.icon}</div>
+      <h3 className="inspector-page-info__title">{currentPage.title}</h3>
+      <p className="inspector-page-info__role">{info.label}</p>
+      <p className="inspector-page-info__hint">{info.hint}</p>
+
+      <dl className="inspector-page-info__meta">
+        <div>
+          <dt>Layout</dt>
+          <dd>{LAYOUT_LABELS[currentPage.layoutId] ?? currentPage.layoutId}</dd>
+        </div>
+        <div>
+          <dt>Jumlah elemen</dt>
+          <dd>{componentCount}</dd>
+        </div>
+        {componentCount > 0 && (
+          <div>
+            <dt>Ringkasan</dt>
+            <dd>{summaryText}</dd>
+          </div>
+        )}
+      </dl>
+
+      <div className={`inspector-page-info__capability${capability.allowAddComponent ? '' : ' is-locked'}`}>
+        {capability.allowAddComponent ? (
+          <>
+            <strong>Boleh tambah elemen:</strong>{' '}
+            <span>{capability.allowedComponents.join(', ')}</span>
+            <p className="inspector-page-info__capability-hint">
+              Klik elemen di kanvas untuk mengedit, atau gunakan tombol tambah di toolbar atas kanvas.
+            </p>
+          </>
+        ) : (
+          <>
+            <strong>Halaman terpandu.</strong>
+            <p className="inspector-page-info__capability-hint">
+              Elemen halaman ini sudah diatur dan tidak boleh ditambah manual.
+            </p>
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -209,7 +282,47 @@ function ComponentEditor({
 }
 
 // ---------------------------------------------------------------------------
-// Text Component Editor (M2)
+// Shared section header
+// ---------------------------------------------------------------------------
+
+function Section({
+  title,
+  children,
+  collapsible = false,
+  defaultOpen = true,
+}: {
+  title: string;
+  children: React.ReactNode;
+  collapsible?: boolean;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  if (!collapsible) {
+    return (
+      <section className="inspector-section">
+        <h4 className="inspector-section__title">{title}</h4>
+        <div className="inspector-section__body">{children}</div>
+      </section>
+    );
+  }
+  return (
+    <section className="inspector-section inspector-section--collapsible">
+      <button
+        type="button"
+        className="inspector-section__toggle"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+      >
+        <span>{title}</span>
+        <span className="inspector-section__chevron" aria-hidden>{open ? '▾' : '▸'}</span>
+      </button>
+      {open && <div className="inspector-section__body">{children}</div>}
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Text Component Editor
 // ---------------------------------------------------------------------------
 
 function TextComponentEditor({
@@ -220,46 +333,55 @@ function TextComponentEditor({
   onChange: (patch: Partial<TextComponentEditable>) => void;
 }) {
   return (
-    <div className="component-editor">
+    <div className="component-editor" data-testid="component-editor-text">
       <div className="component-editor__head">
-        <span className="component-editor__type">Elemen Teks</span>
-        <span className="component-editor__id">{component.id.slice(0, 12)}…</span>
+        <span className="component-editor__type">
+          {friendlyElementName(component)}
+        </span>
       </div>
 
-      <Field label="Jenis teks">
-        <select
-          data-field="variant"
-          value={component.variant}
-          onChange={(e) => onChange({ variant: e.target.value as TextComponentVariant })}
-          style={{ width: '100%' }}
-        >
-          {TEXT_COMPONENT_VARIANTS.map((v) => (
-            <option key={v} value={v}>
-              {TEXT_VARIANT_LABELS[v]}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <Section title="Isi">
+        <Field label="Teks">
+          <textarea
+            data-field="text"
+            value={component.text}
+            onChange={(e) => onChange({ text: e.target.value })}
+            rows={5}
+            style={{ width: '100%', resize: 'vertical' }}
+            placeholder="Tulis teks di sini..."
+          />
+        </Field>
+      </Section>
 
-      <Field label="Teks">
-        <textarea
-          data-field="text"
-          value={component.text}
-          onChange={(e) => onChange({ text: e.target.value })}
-          rows={4}
-          style={{ width: '100%', resize: 'vertical' }}
-        />
-      </Field>
+      <Section title="Tampilan">
+        <Field label="Jenis teks">
+          <select
+            data-field="variant"
+            value={component.variant}
+            onChange={(e) => onChange({ variant: e.target.value as TextComponentVariant })}
+            style={{ width: '100%' }}
+          >
+            {TEXT_COMPONENT_VARIANTS.map((v) => (
+              <option key={v} value={v}>
+                {TEXT_VARIANT_LABELS[v]}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <div className="component-editor__hint">
+          Tampilan teks (ukuran, warna, gaya) otomatis mengikuti jenis teks dan paket gaya.
+        </div>
+      </Section>
 
-      <GeometryFields component={component} onChange={onChange} />
-
-      <StyleHint variant={component.variant} />
+      <Section title="Posisi & Ukuran">
+        <GeometryFields component={component} onChange={onChange} />
+      </Section>
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Image Component Editor (M4)
+// Image Component Editor
 // ---------------------------------------------------------------------------
 
 function ImageComponentEditor({
@@ -270,65 +392,72 @@ function ImageComponentEditor({
   onChange: (patch: Partial<ImageComponentEditable>) => void;
 }) {
   return (
-    <div className="component-editor">
+    <div className="component-editor" data-testid="component-editor-image">
       <div className="component-editor__head">
-        <span className="component-editor__type">Elemen Gambar</span>
-        <span className="component-editor__id">{component.id.slice(0, 12)}…</span>
+        <span className="component-editor__type">
+          {friendlyElementName(component)}
+        </span>
       </div>
 
-      <Field label="Jenis gambar">
-        <select
-          data-field="variant"
-          value={component.variant}
-          onChange={(e) => onChange({ variant: e.target.value as ImageComponentVariant })}
-          style={{ width: '100%' }}
-        >
-          {IMAGE_COMPONENT_VARIANTS.map((v) => (
-            <option key={v} value={v}>
-              {IMAGE_VARIANT_LABELS[v]}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <Section title="Isi">
+        <Field label="Sumber gambar (URL / data URL)">
+          <textarea
+            data-field="src"
+            value={component.src}
+            onChange={(e) => onChange({ src: e.target.value })}
+            rows={3}
+            style={{ width: '100%', resize: 'vertical', fontSize: 11 }}
+            placeholder="https://... atau data:image/..."
+          />
+        </Field>
+        <Field label="Deskripsi gambar (alt text)">
+          <input
+            type="text"
+            data-field="alt"
+            value={component.alt ?? ''}
+            onChange={(e) => onChange({ alt: e.target.value })}
+            placeholder="Deskripsikan gambar untuk aksesibilitas"
+          />
+        </Field>
+      </Section>
 
-      <Field label="Sumber gambar (URL / data URL)">
-        <textarea
-          data-field="src"
-          value={component.src}
-          onChange={(e) => onChange({ src: e.target.value })}
-          rows={3}
-          style={{ width: '100%', resize: 'vertical', fontSize: 11 }}
-        />
-      </Field>
+      <Section title="Tampilan">
+        <Field label="Jenis gambar">
+          <select
+            data-field="variant"
+            value={component.variant}
+            onChange={(e) => onChange({ variant: e.target.value as ImageComponentVariant })}
+            style={{ width: '100%' }}
+          >
+            {IMAGE_COMPONENT_VARIANTS.map((v) => (
+              <option key={v} value={v}>
+                {IMAGE_VARIANT_LABELS[v]}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Cara muat">
+          <select
+            data-field="objectFit"
+            value={component.objectFit}
+            onChange={(e) => onChange({ objectFit: e.target.value as 'cover' | 'contain' })}
+            style={{ width: '100%' }}
+          >
+            <option value="cover">Cover (potong sesuai kotak)</option>
+            <option value="contain">Contain (pas tanpa potong)</option>
+          </select>
+        </Field>
+      </Section>
 
-      <Field label="Alt text (deskripsi)">
-        <input
-          type="text"
-          data-field="alt"
-          value={component.alt ?? ''}
-          onChange={(e) => onChange({ alt: e.target.value })}
-        />
-      </Field>
-
-      <Field label="Object fit">
-        <select
-          data-field="objectFit"
-          value={component.objectFit}
-          onChange={(e) => onChange({ objectFit: e.target.value as 'cover' | 'contain' })}
-          style={{ width: '100%' }}
-        >
-          <option value="cover">Cover (potong)</option>
-          <option value="contain">Contain (pas)</option>
-        </select>
-      </Field>
-
-      <GeometryFields component={component} onChange={onChange} />
+      <Section title="Posisi & Ukuran">
+        <GeometryFields component={component} onChange={onChange} />
+      </Section>
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Card Component Editor (M4)
+// Card Component Editor
 // ---------------------------------------------------------------------------
 
 function CardComponentEditor({
@@ -339,53 +468,61 @@ function CardComponentEditor({
   onChange: (patch: Partial<CardComponentEditable>) => void;
 }) {
   return (
-    <div className="component-editor">
+    <div className="component-editor" data-testid="component-editor-card">
       <div className="component-editor__head">
-        <span className="component-editor__type">Elemen Kartu</span>
-        <span className="component-editor__id">{component.id.slice(0, 12)}…</span>
+        <span className="component-editor__type">
+          {friendlyElementName(component)}
+        </span>
       </div>
 
-      <Field label="Jenis kartu">
-        <select
-          data-field="variant"
-          value={component.variant}
-          onChange={(e) => onChange({ variant: e.target.value as CardComponentVariant })}
-          style={{ width: '100%' }}
-        >
-          {CARD_COMPONENT_VARIANTS.map((v) => (
-            <option key={v} value={v}>
-              {CARD_VARIANT_LABELS[v]}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <Section title="Isi">
+        <Field label="Judul (opsional)">
+          <input
+            type="text"
+            data-field="title"
+            value={component.title ?? ''}
+            onChange={(e) => onChange({ title: e.target.value })}
+            placeholder="Judul kartu"
+          />
+        </Field>
+        <Field label="Isi kartu">
+          <textarea
+            data-field="body"
+            value={component.body}
+            onChange={(e) => onChange({ body: e.target.value })}
+            rows={6}
+            style={{ width: '100%', resize: 'vertical' }}
+            placeholder="Tulis isi kartu di sini..."
+          />
+        </Field>
+      </Section>
 
-      <Field label="Judul (opsional)">
-        <input
-          type="text"
-          data-field="title"
-          value={component.title ?? ''}
-          onChange={(e) => onChange({ title: e.target.value })}
-        />
-      </Field>
+      <Section title="Tampilan">
+        <Field label="Jenis kartu">
+          <select
+            data-field="variant"
+            value={component.variant}
+            onChange={(e) => onChange({ variant: e.target.value as CardComponentVariant })}
+            style={{ width: '100%' }}
+          >
+            {CARD_COMPONENT_VARIANTS.map((v) => (
+              <option key={v} value={v}>
+                {CARD_VARIANT_LABELS[v]}
+              </option>
+            ))}
+          </select>
+        </Field>
+      </Section>
 
-      <Field label="Isi kartu">
-        <textarea
-          data-field="body"
-          value={component.body}
-          onChange={(e) => onChange({ body: e.target.value })}
-          rows={5}
-          style={{ width: '100%', resize: 'vertical' }}
-        />
-      </Field>
-
-      <GeometryFields component={component} onChange={onChange} />
+      <Section title="Posisi & Ukuran">
+        <GeometryFields component={component} onChange={onChange} />
+      </Section>
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Navigation Component Editor (M5)
+// Navigation Component Editor
 // ---------------------------------------------------------------------------
 
 function NavigationComponentEditor({
@@ -398,70 +535,76 @@ function NavigationComponentEditor({
   onChange: (patch: Partial<NavigationComponentEditable>) => void;
 }) {
   return (
-    <div className="component-editor">
+    <div className="component-editor" data-testid="component-editor-navigation">
       <div className="component-editor__head">
-        <span className="component-editor__type">Elemen Navigasi</span>
-        <span className="component-editor__id">{component.id.slice(0, 12)}…</span>
+        <span className="component-editor__type">
+          {friendlyElementName(component)}
+        </span>
       </div>
 
-      <Field label="Label tombol">
-        <input
-          type="text"
-          data-field="label"
-          value={component.label}
-          onChange={(e) => onChange({ label: e.target.value })}
-        />
-      </Field>
-
-      <Field label="Jenis navigasi">
-        <select
-          data-field="variant"
-          value={component.variant}
-          onChange={(e) => onChange({ variant: e.target.value as NavigationComponentVariant })}
-          style={{ width: '100%' }}
-        >
-          {NAVIGATION_COMPONENT_VARIANTS.map((v) => (
-            <option key={v} value={v}>
-              {NAVIGATION_VARIANT_LABELS[v]}
-            </option>
-          ))}
-        </select>
-      </Field>
-
-      <Field label="Aksi">
-        <select
-          data-field="action"
-          value={component.action}
-          onChange={(e) => onChange({ action: e.target.value as NavigationAction })}
-          style={{ width: '100%' }}
-        >
-          {NAVIGATION_ACTIONS.map((a) => (
-            <option key={a} value={a}>
-              {NAVIGATION_ACTION_LABELS[a]}
-            </option>
-          ))}
-        </select>
-      </Field>
-
-      {component.action === 'goto' && (
-        <Field label="Halaman tujuan">
+      <Section title="Isi">
+        <Field label="Teks tombol">
+          <input
+            type="text"
+            data-field="label"
+            value={component.label}
+            onChange={(e) => onChange({ label: e.target.value })}
+            placeholder="Contoh: Lanjut →"
+          />
+        </Field>
+        <Field label="Tujuan navigasi">
           <select
-            data-field="targetPageId"
-            value={component.targetPageId ?? ''}
-            onChange={(e) => onChange({ targetPageId: e.target.value })}
+            data-field="action"
+            value={component.action}
+            onChange={(e) => onChange({ action: e.target.value as NavigationAction })}
             style={{ width: '100%' }}
           >
-            <option value="">— Pilih halaman —</option>
-            {pages.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.title}
+            {NAVIGATION_ACTIONS.map((a) => (
+              <option key={a} value={a}>
+                {NAVIGATION_ACTION_LABELS[a]}
               </option>
             ))}
           </select>
         </Field>
-      )}
+        {component.action === 'goto' && (
+          <Field label="Halaman tujuan">
+            <select
+              data-field="targetPageId"
+              value={component.targetPageId ?? ''}
+              onChange={(e) => onChange({ targetPageId: e.target.value })}
+              style={{ width: '100%' }}
+            >
+              <option value="">— Pilih halaman —</option>
+              {pages.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.title}
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
+      </Section>
 
-      <GeometryFields component={component} onChange={onChange} />
+      <Section title="Tampilan">
+        <Field label="Jenis tombol">
+          <select
+            data-field="variant"
+            value={component.variant}
+            onChange={(e) => onChange({ variant: e.target.value as NavigationComponentVariant })}
+            style={{ width: '100%' }}
+          >
+            {NAVIGATION_COMPONENT_VARIANTS.map((v) => (
+              <option key={v} value={v}>
+                {NAVIGATION_VARIANT_LABELS[v]}
+              </option>
+            ))}
+          </select>
+        </Field>
+      </Section>
+
+      <Section title="Posisi & Ukuran">
+        <GeometryFields component={component} onChange={onChange} />
+      </Section>
     </div>
   );
 }
@@ -480,7 +623,7 @@ function GeometryFields({
   return (
     <>
       <div className="field-row">
-        <Field label="X">
+        <Field label="Posisi X">
           <input
             type="number"
             data-field="x"
@@ -488,7 +631,7 @@ function GeometryFields({
             onChange={(e) => onChange({ x: Number(e.target.value) })}
           />
         </Field>
-        <Field label="Y">
+        <Field label="Posisi Y">
           <input
             type="number"
             data-field="y"
@@ -515,20 +658,10 @@ function GeometryFields({
           />
         </Field>
       </div>
+      <div className="component-editor__hint component-editor__hint--small">
+        Klik dan seret elemen di kanvas untuk memindahkan. Seret titik biru di pojok untuk mengubah ukuran.
+      </div>
     </>
-  );
-}
-
-function StyleHint({ variant }: { variant: string }) {
-  return (
-    <div className="component-editor__hint">
-      <p>
-        <strong>Tampilan:</strong> otomatis dari jenis teks <code>{variant}</code>.
-      </p>
-      <p style={{ fontSize: 11, color: 'var(--color-muted)' }}>
-        Pengaturan tampilan manual akan tersedia di M6/M11 via style adapter.
-      </p>
-    </div>
   );
 }
 

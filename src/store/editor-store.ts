@@ -90,6 +90,8 @@ export type EditorState = {
   // Project lifecycle (M1)
   newProject: () => void;
   setProject: (project: SimpleProject) => void;
+  // UX-01: rename project title from topbar inline editor
+  setProjectTitle: (title: string) => void;
 
   // Page operations (M1 + M3)
   addPage: (opts?: { title?: string; role?: PageRole }) => string;
@@ -393,6 +395,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   setProject: (project) => {
     set({ project, selectedComponentId: null });
+  },
+
+  setProjectTitle: (title) => {
+    const trimmed = title.trim();
+    if (!trimmed) return;
+    set((state) => ({
+      project: { ...state.project, title: trimmed },
+    }));
   },
 
   addPage: (opts) => {
