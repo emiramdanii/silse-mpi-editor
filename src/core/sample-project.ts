@@ -2,7 +2,12 @@
  * Sample project: PPKn "Hidup Tertib dengan Norma"
  *
  * Batch 11B Patch — MPI Standard + Curriculum Alignment.
+ * Batch 11B Patch-2 — Sample Navigation Completion (bebas jalan bantu).
  * Contoh MPI standar: Cover → Panduan → Tujuan → Menu → Pemantik → Materi → Quiz → Game → Refleksi → Penutup
+ *
+ * Prinsip: setiap scene (kecuali closing) punya jalan keluar — tombol navigasi
+ * ke scene berikutnya. Game punya tombol internal (misi berikutnya, ulangi),
+ * tetapi setelah selesai tetap perlu navigasi scene ke Refleksi.
  */
 
 import type { SimpleProject, CurriculumObjective } from './types';
@@ -124,7 +129,7 @@ export function createSamplePpknProject(): SimpleProject {
         id: gameId, title: 'Game Misi', role: 'activity', layoutId: 'blank',
         background: { type: 'color', color: '#f0fdf4' },
         components: [
-          { id: createComponentId(), type: 'game', gameType: 'missionQuiz', title: 'Petualangan Norma', instruction: 'Jawab semua misi untuk menyelesaikan petualangan!', scoringStyle: 'stars', x: 100, y: 40, width: 700, height: 600, missions: [
+          { id: createComponentId(), type: 'game', gameType: 'missionQuiz', title: 'Petualangan Norma', instruction: 'Jawab semua misi untuk menyelesaikan petualangan!', scoringStyle: 'stars', x: 100, y: 40, width: 700, height: 540, missions: [
             { id: createComponentId(), title: 'Misi 1', prompt: 'Berdiri saat guru masuk kelas adalah contoh norma...', choices: [
               { id: createComponentId(), text: 'Kesopanan' }, { id: createComponentId(), text: 'Hukum' }, { id: createComponentId(), text: 'Agama' },
             ], correctChoiceIndex: 0, feedbackCorrect: 'Benar! Itu norma kesopanan di sekolah.', feedbackWrong: 'Belum tepat. Itu contoh tata krama di sekolah.', points: 10 },
@@ -135,6 +140,9 @@ export function createSamplePpknProject(): SimpleProject {
               { id: createComponentId(), text: 'Norma Hukum' }, { id: createComponentId(), text: 'Norma Kesopanan' }, { id: createComponentId(), text: 'Norma Kesusilaan' },
             ], correctChoiceIndex: 0, feedbackCorrect: 'Benar! Norma hukum memiliki sanksi tegas dari negara.', feedbackWrong: 'Belum tepat. Norma hukum yang paling tegas sanksinya.', points: 15 },
           ] },
+          // Scope A (Patch-2): tombol navigasi keluar dari Game → Refleksi.
+          // Setelah game selesai, siswa punya jalan ke scene berikutnya.
+          { id: createComponentId(), type: 'navigation', variant: 'primaryAction', label: 'Lanjut ke Refleksi →', action: 'next', x: 900, y: 620, width: 300, height: 60 },
         ],
       },
       // 9. Refleksi
@@ -143,6 +151,8 @@ export function createSamplePpknProject(): SimpleProject {
         background: { type: 'color', color: '#faf5ff' },
         components: [
           { id: createComponentId(), type: 'card', variant: 'importantNote', title: 'Refleksi Diri', body: 'Setelah mempelajari materi ini, renungkan:\n\n• Norma apa yang sudah aku jalankan dengan baik?\n• Norma apa yang masih sering aku langgar?\n• Apa yang akan aku lakukan untuk hidup lebih tertib?\n\nTulis jawabanmu di buku catatan.', x: 150, y: 150, width: 980, height: 350 },
+          // Patch-2: Refleksi juga punya jalan keluar ke Penutup (bebas jalan bantu).
+          { id: createComponentId(), type: 'navigation', variant: 'primaryAction', label: 'Penutup →', action: 'next', x: 900, y: 620, width: 300, height: 60 },
         ],
       },
       // 10. Penutup
