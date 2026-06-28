@@ -9,6 +9,9 @@
  *   M11A PATCH: Game runtime (gameStates, answerGameMission, nextGameMission, resetGame).
  *     - Score game masuk totalScore global (konsisten dengan export).
  *     - openPreview reset gameStates.
+ *   UX-01 Patch (preview-fix): openPreview mulai di halaman yang sedang aktif
+ *     di editor (project.currentPageId), supaya edits terakhir langsung kelihatan.
+ *     Fallback ke halaman pertama kalau currentPageId tidak valid.
  */
 
 import { create } from 'zustand';
@@ -70,8 +73,22 @@ export const usePreviewStore = create<PreviewStore>((set, get) => ({
 
   openPreview: () => {
     const project = getProject();
-    const firstPageId = project.pages[0]?.id ?? null;
-    set({ isOpen: true, currentPageId: firstPageId, questionAnswers: {}, gameStates: {}, totalScore: 0 });
+    // UX-01 Patch (preview-fix): start preview at the editor's current page,
+    // so edits the user just made are immediately visible.
+    // Fallback to first page if editor's currentPageId is missing or stale.
+    const editorCurrent = project.currentPageId;
+    const editorPageExists = !!editorCurrent &&
+      project.pages.some((p) => p.id === editorCurrent);
+    const startPageId = editorPageExists
+      ? editorCurrent!
+      : (project.pages[0]?.id ?? null);
+    set({
+      isOpen: true,
+      currentPageId: startPageId,
+      questionAnswers: {},
+      gameStates: {},
+      totalScore: 0,
+    });
   },
 
   closePreview: () => {

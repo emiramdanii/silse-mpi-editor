@@ -363,7 +363,9 @@ describe('preview runtime state (M5)', () => {
     usePreviewStore.getState().closePreview();
   });
 
-  it('openPreview sets isOpen=true and currentPageId to first page', () => {
+  it('openPreview sets isOpen=true and currentPageId to editor current page (UX-01 Patch: preview-fix)', () => {
+    // newProject() sets currentPageId to pages[0].id (cover), so preview
+    // should start at the same page.
     const store = useEditorStore.getState();
     const firstPageId = store.project.pages[0].id;
 
@@ -371,6 +373,33 @@ describe('preview runtime state (M5)', () => {
     const preview = usePreviewStore.getState();
     expect(preview.isOpen).toBe(true);
     expect(preview.currentPageId).toBe(firstPageId);
+  });
+
+  it('openPreview starts at the editor current page (not always page 1) — UX-01 Patch: preview-fix', () => {
+    // Add 2 more pages, then navigate editor to page 3.
+    useEditorStore.getState().addPage(); // page 2
+    useEditorStore.getState().addPage(); // page 3
+    const page3Id = useEditorStore.getState().project.pages[2].id;
+    useEditorStore.getState().selectPage(page3Id);
+
+    usePreviewStore.getState().openPreview();
+    // Preview should now start at page 3 (the editor's current page),
+    // NOT page 1.
+    expect(usePreviewStore.getState().currentPageId).toBe(page3Id);
+  });
+
+  it('openPreview falls back to first page if editor currentPageId is stale — UX-01 Patch: preview-fix', () => {
+    // Manually corrupt editor state: set currentPageId to a non-existent page.
+    const store = useEditorStore.getState();
+    const bogusId = 'non-existent-page-id';
+    useEditorStore.setState({
+      project: { ...store.project, currentPageId: bogusId },
+    });
+    usePreviewStore.getState().openPreview();
+    // Should fall back to pages[0].id
+    expect(usePreviewStore.getState().currentPageId).toBe(
+      useEditorStore.getState().project.pages[0].id,
+    );
   });
 
   it('closePreview sets isOpen=false', () => {
@@ -384,6 +413,9 @@ describe('preview runtime state (M5)', () => {
     useEditorStore.getState().addPage(); // page 3
     const page1Id = useEditorStore.getState().project.pages[0].id;
     const page2Id = useEditorStore.getState().project.pages[1].id;
+    // UX-01 Patch (preview-fix): openPreview starts at editor's current page,
+    // so navigate editor back to page 1 before opening preview.
+    useEditorStore.getState().selectPage(page1Id);
 
     usePreviewStore.getState().openPreview();
     expect(usePreviewStore.getState().currentPageId).toBe(page1Id);

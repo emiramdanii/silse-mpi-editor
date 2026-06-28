@@ -25,6 +25,7 @@ import { Topbar } from '../editor/Topbar';
 import { Toolbar } from '../editor/Toolbar';
 import { Inspector } from '../editor/Inspector';
 import { useEditorStore } from '../store/editor-store';
+import { usePreviewStore } from '../preview/preview-store';
 
 // =========================================================================
 // Scope A — Toolbar hanya Konten, Interaksi, dan Lainnya
@@ -394,5 +395,127 @@ describe('UX-01 Patch — Scope D: Preview/Export still in Topbar', () => {
     const { container } = render(React.createElement(Toolbar));
     expect(container.querySelector('[data-action="preview"]')).toBeNull();
     expect(container.querySelector('[data-action="export-html"]')).toBeNull();
+  });
+});
+
+// =========================================================================
+// Preview-fix — openPreview starts at editor's current page + edits reflect
+// =========================================================================
+
+describe('UX-01 Patch — preview-fix: openPreview starts at editor current page', () => {
+  beforeEach(() => {
+    useEditorStore.getState().newProject();
+    usePreviewStore.getState().closePreview();
+  });
+
+  it('editor on page 3 → openPreview starts at page 3 (not page 1)', () => {
+    useEditorStore.getState().addPage(); // page 2
+    useEditorStore.getState().addPage(); // page 3
+    const page3Id = useEditorStore.getState().project.pages[2].id;
+    useEditorStore.getState().selectPage(page3Id);
+
+    usePreviewStore.getState().openPreview();
+    expect(usePreviewStore.getState().currentPageId).toBe(page3Id);
+  });
+
+  it('editor on cover → openPreview starts at cover', () => {
+    const coverId = useEditorStore.getState().project.pages[0].id;
+    usePreviewStore.getState().openPreview();
+    expect(usePreviewStore.getState().currentPageId).toBe(coverId);
+  });
+});
+
+describe('UX-01 Patch — preview-fix: edits to Question/Game reflect in preview', () => {
+  // These tests verify there is no stale-state bug: editing a Question or Game
+  // via the Panel Isi editor must propagate to the project store, and the
+  // preview (which reads project from useEditorStore) must show the new content.
+  beforeEach(() => {
+    useEditorStore.getState().newProject();
+    usePreviewStore.getState().closePreview();
+  });
+
+  it('edit Question prompt → open preview → preview page shows the new prompt', () => {
+    // Set up: quiz page with a Question component.
+    useEditorStore.getState().addPage({ role: 'quiz' });
+    useEditorStore.getState().addQuestionComponent();
+    const state = useEditorStore.getState();
+    const page = state.project.pages.find((p) => p.id === state.project.currentPageId)!;
+    const q = page.components.find((c) => c.type === 'question') as
+      | { id: string; prompt: string }
+      | undefined;
+    expect(q).toBeDefined();
+
+    // Edit the prompt via the store action (simulating what Panel Isi does).
+    useEditorStore.getState().updateQuestionComponent(q!.id, {
+      prompt: 'Pertanyaan baru hasil editan guru?',
+    });
+
+    // Open preview — should start at the quiz page (editor's current page).
+    usePreviewStore.getState().openPreview();
+    const previewState = usePreviewStore.getState();
+    expect(previewState.currentPageId).toBe(state.project.currentPageId);
+
+    // Read the project that preview would render.
+    const project = useEditorStore.getState().project;
+    const previewPage = project.pages.find((p) => p.id === previewState.currentPageId)!;
+    const previewQ = previewPage.components.find((c) => c.type === 'question') as
+      | { prompt: string }
+      | undefined;
+    expect(previewQ?.prompt).toBe('Pertanyaan baru hasil editan guru?');
+  });
+
+  it('edit Game title → open preview → preview page shows the new title', () => {
+    // Set up: activity page with a Game component.
+    useEditorStore.getState().addPage({ role: 'activity' });
+    useEditorStore.getState().addGameComponent();
+    const state = useEditorStore.getState();
+    const page = state.project.pages.find((p) => p.id === state.project.currentPageId)!;
+    const g = page.components.find((c) => c.type === 'game') as
+      | { id: string; title: string }
+      | undefined;
+    expect(g).toBeDefined();
+
+    // Edit the title via the store action.
+    useEditorStore.getState().updateGameComponent(g!.id, {
+      title: 'Petualangan Hasil Editan Guru',
+    });
+
+    // Open preview — should start at the activity page (editor's current page).
+    usePreviewStore.getState().openPreview();
+    const previewState = usePreviewStore.getState();
+    expect(previewState.currentPageId).toBe(state.project.currentPageId);
+
+    const project = useEditorStore.getState().project;
+    const previewPage = project.pages.find((p) => p.id === previewState.currentPageId)!;
+    const previewG = previewPage.components.find((c) => c.type === 'game') as
+      | { title: string }
+      | undefined;
+    expect(previewG?.title).toBe('Petualangan Hasil Editan Guru');
+  });
+
+  it('add a Question choice via editor → open preview → preview page renders the new choice count', () => {
+    useEditorStore.getState().addPage({ role: 'quiz' });
+    useEditorStore.getState().addQuestionComponent();
+    const state = useEditorStore.getState();
+    const page = state.project.pages.find((p) => p.id === state.project.currentPageId)!;
+    const q = page.components.find((c) => c.type === 'question') as
+      | { id: string; choices: { id: string; text: string }[] }
+      | undefined;
+    expect(q).toBeDefined();
+    const beforeCount = q!.choices.length;
+
+    // Add a new choice (simulating what the "+ Tambah pilihan" button does).
+    useEditorStore.getState().updateQuestionComponent(q!.id, {
+      choices: [...q!.choices, { id: 'test-new-choice-id', text: 'Pilihan C baru' }],
+    });
+
+    usePreviewStore.getState().openPreview();
+    const previewState = usePreviewStore.getState();
+    const project = useEditorStore.getState().project;
+    const previewPage = project.pages.find((p) => p.id === previewState.currentPageId)!;
+    const previewQ = previewPage.components.find((c) => c.type === 'question') as
+      | { choices: unknown[] }
+      | undefined;
+    expect(previewQ?.choices.length).toBe(beforeCount + 1);
   });
 });
