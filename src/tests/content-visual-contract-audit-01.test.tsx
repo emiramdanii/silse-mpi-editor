@@ -155,12 +155,28 @@ describe('CONTENT-VISUAL-CONTRACT-AUDIT-01 — 10 mandatory tests', () => {
 // =========================================================================
 
 describe('CONTENT-VISUAL-CONTRACT-AUDIT-01 Patch-1 — mandatory tests', () => {
-  // Test 1: broken resolver / forced dark text cover detected by visual checker
-  it('1. Cover with resolver working: visual checker returns no issues (text is readable)', () => {
+  // Test 1 (Patch-1 hardening): cover dark background + no style tokens → resolver returns
+  // empty inlineStyle → text color falls back to #000000 → low contrast with dark bg →
+  // warning detected. This actually exercises the ratio < 4.5 branch.
+  it('1. Cover with dark background + no style tokens → low contrast warning detected', () => {
+    const project = createSamplePpknProject();
+    const coverPage = project.pages.find((p) => p.role === 'cover')!;
+    // Force dark background
+    (coverPage.background as { color: string }).color = '#1e3a5f';
+    // Strip style tokens — resolver will return { inlineStyle: {} } → text color falls back to '#000000'
+    const broken = { ...project, style: undefined };
+    const issues = checkPageVisualReadability(broken, coverPage);
+    expect(issues.length).toBeGreaterThan(0);
+    const visualIssue = issues.find((i) => i.message.includes('kontras rendah'));
+    expect(visualIssue).toBeDefined();
+    expect(visualIssue?.level).toBe('warning');
+  });
+
+  // Test 1b (regression): same cover WITH style tokens + resolver working → no visual issues.
+  it('1b. Cover with resolver working: visual checker returns no issues (text is readable)', () => {
     const project = createSamplePpknProject();
     const coverPage = project.pages.find((p) => p.role === 'cover')!;
     const issues = checkPageVisualReadability(project, coverPage);
-    // With resolver working, there should be NO issues (text is readable).
     expect(issues.length).toBe(0);
   });
 

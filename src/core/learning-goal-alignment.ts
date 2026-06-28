@@ -75,6 +75,16 @@ export type ProjectAlignment = {
 /**
  * V1 heuristic: check if component text content references objective text.
  * This is a simple text-match approach. V2 could use explicit objectiveRef field.
+ *
+ * Patch-1: field yang diekstrak per tipe komponen:
+ *   - text: text
+ *   - image: alt (caption/deskripsi gambar, BUKAN src)
+ *   - card: title + body
+ *   - question: title + prompt
+ *   - game: title + instruction + missions[].prompt
+ *   - layered-info: title + layers[].title + layers[].body
+ *   - learning-bridge: title + message
+ *   - navigation: TIDAK diekstrak (label tombol BUKAN konten pembelajaran)
  */
 function componentAddressesObjectives(
   comp: PageComponent,
@@ -86,6 +96,10 @@ function componentAddressesObjectives(
   // Collect text content from component
   if (comp.type === 'text') {
     texts.push((comp as { text: string }).text);
+  } else if (comp.type === 'image') {
+    // Patch-1: image caption (alt) counts as learning content.
+    const img = comp as { alt?: string };
+    texts.push(img.alt ?? '');
   } else if (comp.type === 'card') {
     const c = comp as { title?: string; body: string };
     texts.push(c.title ?? '', c.body);
@@ -102,6 +116,7 @@ function componentAddressesObjectives(
     const lb = comp as { title: string; message: string };
     texts.push(lb.title, lb.message);
   }
+  // navigation: TIDAK diekstrak — label tombol BUKAN konten pembelajaran.
 
   const combinedText = texts.join(' ').toLowerCase();
 
@@ -120,6 +135,15 @@ function componentAddressesObjectives(
   }
 
   return addressed;
+}
+
+// ---------------------------------------------------------------------------
+// Helper: extract significant words from objective (length > 3)
+// Patch-1: needed for OBJECTIVE_TOO_SHORT check.
+// ---------------------------------------------------------------------------
+
+function objectiveSignificantWords(text: string): string[] {
+  return text.toLowerCase().split(/\s+/).filter((w) => w.length > 3);
 }
 
 // ---------------------------------------------------------------------------
@@ -158,6 +182,20 @@ export function checkLearningGoalAlignment(project: SimpleProject): ProjectAlign
   const objectives = project.curriculum.objectives;
   const objectiveIds = new Set(objectives.map((o) => o.id));
   const coveredObjectiveIds = new Set<string>();
+
+  // Patch-1: OBJECTIVE_TOO_SHORT warning — objective with no significant words
+  // cannot be tested by text-match heuristic.
+  for (const obj of objectives) {
+    const sigWords = objectiveSignificantWords(obj.text);
+    if (sigWords.length === 0) {
+      issues.push({
+        severity: 'warning',
+        code: 'OBJECTIVE_TOO_SHORT',
+        message: `Tujuan pembelajaran "${obj.text}" terlalu pendek — tidak ada kata signifikan (panjang > 3 huruf) untuk dicek heuristik text-match. Tulis ulang dengan lebih spesifik.`,
+        objectiveId: obj.id,
+      });
+    }
+  }
 
   // 2. Check each page
   for (const page of project.pages) {

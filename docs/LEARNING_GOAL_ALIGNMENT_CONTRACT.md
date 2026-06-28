@@ -14,6 +14,11 @@ Yang V1 lakukan:
 - `checkLearningGoalAlignment(project)` — pure function yang menganalisis project dan mengembalikan alignment report.
 - Heuristik text-match untuk mendeteksi apakah konten komponen terhubung ke objective.
 
+Yang V1 **Patch-1** lakukan (hardening contract + checker + test guard, UI tetap di V2):
+- Eksplisit dokumen field teks per tipe komponen (image.alt diekstrak; navigation.label TIDAK diekstrak).
+- Tambah check `OBJECTIVE_TOO_SHORT` (warning) untuk objective yang tidak bisa diuji text-match.
+- Test guard hardening: image.alt, navigation tidak dihitung, layered-info multi-layer, learning-bridge, OBJECTIVE_TOO_SHORT, score 100, determinism, pure function.
+
 Yang V1 **tidak** lakukan:
 - Tidak menambah field `objectiveRefs` ke component schema (itu V2).
 - Tidak mengubah UI editor (integrasi di batch berikutnya).
@@ -73,7 +78,30 @@ type ProjectAlignment = {
 
 ### Heuristik V1
 
-V1 menggunakan text-match sederhana: untuk setiap komponen, kumpulkan semua teks (text, body, title, prompt, instruction, layers). Lalu untuk setiap objective, cek apakah minimal 2 kata signifikan (panjang > 3) dari objective muncul di teks komponen.
+V1 menggunakan text-match sederhana: untuk setiap komponen, kumpulkan semua teks yang relevan secara pembelajaran. Lalu untuk setiap objective, cek apakah minimal 2 kata signifikan (panjang > 3) dari objective muncul di teks komponen.
+
+**Teks yang DIIKUTSERTAKAN per tipe komponen (Patch-1):**
+
+| Tipe | Field yang diekstrak | Catatan |
+|---|---|---|
+| text | `text` | Seluruh body teks |
+| image | `alt` | Caption/deskripsi gambar (bukan `src`) |
+| card | `title`, `body` | Judul + isi kartu |
+| question | `title`, `prompt` | Soal cek pemahaman |
+| game | `title`, `instruction`, `missions[].prompt` | Instruksi + prompt misi |
+| layered-info | `title`, `layers[].title`, `layers[].body` | Semua lapisan |
+| learning-bridge | `title`, `message` | Pesan jembatan |
+| navigation | — (tidak diekstrak) | Label tombol BUKAN konten pembelajaran |
+
+**Aturan penting:** label tombol navigasi (mis. "Lanjut", "Kembali") tidak dianggap konten pembelajaran. Hanya konten yang membawa makna pembelajaran yang diekstrak.
+
+### Check Tambahan (Patch-1)
+
+| Check | Severity | Code | Kondisi |
+|---|---|---|---|
+| Objective terlalu pendek | warning | `OBJECTIVE_TOO_SHORT` | objective tidak punya ≥1 kata signifikan (panjang > 3), sehingga tidak bisa dicek oleh heuristik text-match |
+
+Tujuan: kalau sebuah objective hanya berisi kata-kata pendek (mis. "IPA kelas 7"), heuristik text-match tidak akan pernah match. Warning ini memberi sinyal ke guru untuk menulis ulang objective dengan lebih spesifik.
 
 V2 akan menggunakan field `objectiveRefs` eksplisit di component schema, sehingga guru bisa men-tag komponen ke objective secara manual.
 

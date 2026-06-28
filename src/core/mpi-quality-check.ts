@@ -136,10 +136,10 @@ export function checkMpiStandard(project: SimpleProject): QualityCheckResult {
         const g = comp as { missions: { feedbackCorrect: string; feedbackWrong: string; prompt: string }[] };
         for (const m of g.missions) {
           if (!m.feedbackCorrect || m.feedbackCorrect.trim().length < 3) {
-            warnings.push(`Game mission "${m.prompt}" umpan balik benar terlalu lemah.`);
+            warnings.push(`Misi game "${m.prompt}" umpan balik benar terlalu lemah.`);
           }
           if (!m.feedbackWrong || m.feedbackWrong.trim().length < 3) {
-            warnings.push(`Game mission "${m.prompt}" umpan balik salah terlalu lemah.`);
+            warnings.push(`Misi game "${m.prompt}" umpan balik salah terlalu lemah.`);
           }
         }
       }
