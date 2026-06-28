@@ -150,18 +150,24 @@ export const LEARNING_EXPERIENCE_COMPONENTS: readonly LearningExperienceComponen
     name: 'Info Berlapis',
     icon: '📚',
     learningPurpose: 'Sajikan materi dalam lapisan progressive disclosure — siswa buka layer demi layer supaya tidak kewalahan dengan info sekaligus.',
-    applicableRoles: ['material', 'guide', 'menu'],
+    // LXC-01 Patch-1: tambah 'learningObjectives' — tujuan pembelajaran juga
+    // bisa disajikan berlapis (sebelumnya/hari ini/berikutnya).
+    applicableRoles: ['material', 'guide', 'menu', 'learningObjectives'],
     variants: [
       { id: 'accordion', label: 'Accordion', description: 'Layer bisa dilipat/dibuka satu per satu.' },
       { id: 'tabs', label: 'Tab', description: 'Layer sebagai tab horizontal.' },
-      { id: 'stepper', label: 'Stepper', description: 'Layer sebagai langkah berurutan.' },
+      // LXC-01 Patch-1: variant tambahan supaya tidak sempit
+      { id: 'iconTabs', label: 'Tab Ikon', description: 'Tab dengan ikon di tiap label — cocok untuk kategori visual.' },
+      { id: 'stepper', label: 'Stepper', description: 'Layer sebagai langkah berurutan dengan nomor.' },
+      { id: 'cardGrid', label: 'Kartu Grid', description: 'Layer sebagai kartu-kartu dalam grid — siswa klik untuk detail.' },
+      { id: 'timeline', label: 'Linimasa', description: 'Layer sebagai titik-titik di linimasa — cocok untuk urutan kronologis.' },
     ],
     dataModel: {
       typeName: 'LayeredInfoComponent',
       fields: [
         { name: 'title', type: 'string', required: true, description: 'Judul utama komponen.' },
-        { name: 'variant', type: "'accordion' | 'tabs' | 'stepper'", required: true, description: 'Variasi tampilan.' },
-        { name: 'layers', type: 'Array<{ id: string; title: string; body: string }>', required: true, description: 'Daftar lapisan info.' },
+        { name: 'variant', type: "'accordion' | 'tabs' | 'iconTabs' | 'stepper' | 'cardGrid' | 'timeline'", required: true, description: 'Variasi tampilan.' },
+        { name: 'layers', type: 'Array<{ id: string; title: string; body: string; icon?: string }>', required: true, description: 'Daftar lapisan info (icon opsional untuk iconTabs).' },
         { name: 'defaultOpenIndex', type: 'number | null', required: false, description: 'Index layer yang terbuka by default.' },
       ],
     },
@@ -233,21 +239,25 @@ export const LEARNING_EXPERIENCE_COMPONENTS: readonly LearningExperienceComponen
     id: 'interactive-starter',
     name: 'Pemantik Interaktif',
     icon: '💡',
-    learningPurpose: 'Aktifkan pengetahuan awal siswa dengan interaksi singkat — pilih posisi, jawab poll, atau refleksi kasus sebelum materi.',
+    learningPurpose: 'Aktifkan pengetahuan awal siswa dengan interaksi singkat — pilih posisi, jawab poll, refleksi kasus, atau hadapi dilema sebelum materi.',
     applicableRoles: ['starter'],
     variants: [
       { id: 'poll', label: 'Mini Poll', description: 'Siswa pilih satu dari beberapa opsi.' },
       { id: 'stance', label: 'Setuju / Tidak', description: 'Siswa posisikan diri setuju/tidak pada pernyataan.' },
       { id: 'case', label: 'Kasus', description: 'Siswa baca kasus lalu refleksi singkat.' },
+      // LXC-01 Patch-1: variant tambahan untuk skenario/dilema — kontrak tidak sempit
+      { id: 'bigQuestion', label: 'Pertanyaan Besar', description: 'Pertanyaan terbuka yang memancing rasa ingin tahu sepanjang pembelajaran.' },
+      { id: 'decisionScenario', label: 'Skenario Keputusan', description: 'Siswa hadapi skenario dan ambil keputusan dari beberapa pilihan.' },
+      { id: 'dilemma', label: 'Dilema', description: 'Dilema dengan dua sisi sama-sama kuat — siswa pertimbangkan trade-off.' },
     ],
     dataModel: {
       typeName: 'InteractiveStarterComponent',
       fields: [
         { name: 'title', type: 'string', required: true, description: 'Judul pemantik.' },
-        { name: 'variant', type: "'poll' | 'stance' | 'case'", required: true, description: 'Variasi interaksi.' },
+        { name: 'variant', type: "'poll' | 'stance' | 'case' | 'bigQuestion' | 'decisionScenario' | 'dilemma'", required: true, description: 'Variasi interaksi.' },
         { name: 'prompt', type: 'string', required: true, description: 'Pertanyaan/pernyataan pemantik.' },
-        { name: 'options', type: 'Array<{ id: string; label: string }>', required: true, description: 'Opsi pilihan (untuk poll/stance).' },
-        { name: 'caseText', type: 'string', required: false, description: 'Teks kasus (untuk variant case).' },
+        { name: 'options', type: 'Array<{ id: string; label: string }>', required: false, description: 'Opsi pilihan (wajib untuk poll/stance/decisionScenario/dilemma).' },
+        { name: 'caseText', type: 'string', required: false, description: 'Teks kasus/skenario (wajib untuk case/decisionScenario/dilemma).' },
         { name: 'reflectionPrompt', type: 'string', required: false, description: 'Prompt refleksi setelah siswa memilih.' },
       ],
     },
@@ -454,7 +464,9 @@ export const LEARNING_EXPERIENCE_COMPONENTS: readonly LearningExperienceComponen
     name: 'Jembatan Belajar',
     icon: '🌉',
     learningPurpose: 'Penghubung antar scene yang menjelaskan transisi — "kamu sudah selesai X, sekarang kita lanjut ke Y karena Z". Mencegah lompatan mendadak.',
-    applicableRoles: ['starter', 'material', 'activity', 'quiz', 'reflection'],
+    // LXC-01 Patch-1: tambah 'learningObjectives' (sebelumnya/hari ini/berikutnya)
+    // dan 'closing' (preview materi selanjutnya).
+    applicableRoles: ['starter', 'material', 'activity', 'quiz', 'reflection', 'learningObjectives', 'closing'],
     variants: [
       { id: 'transition', label: 'Transisi', description: 'Pesan transisi singkat + tombol lanjut.' },
       { id: 'recap', label: 'Recap', description: 'Rangkuman singkat scene sebelumnya + tombol lanjut.' },

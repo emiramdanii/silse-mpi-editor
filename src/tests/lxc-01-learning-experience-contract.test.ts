@@ -419,3 +419,250 @@ describe('LXC-01 — Contract file is pure spec (no runtime leak)', () => {
     expect(types).toEqual(['text', 'image', 'card', 'navigation', 'question', 'game']);
   });
 });
+
+// =========================================================================
+// LXC-01 Patch-1 — Contract Alignment
+// =========================================================================
+
+describe('LXC-01 Patch-1 — Contract Alignment (layered-info, interactive-starter, learning-bridge)', () => {
+
+  // ----- layered-info: applicable to learningObjectives + richer variants -----
+
+  describe('layered-info (Patch-1 alignment)', () => {
+    it('applicable to learningObjectives (Patch-1: sebelumnya/hari ini/berikutnya)', () => {
+      const layered = getComponentSpec('layered-info')!;
+      expect(layered.applicableRoles).toContain('learningObjectives');
+    });
+
+    it('still applicable to material, guide, menu (original roles preserved)', () => {
+      const layered = getComponentSpec('layered-info')!;
+      expect(layered.applicableRoles).toContain('material');
+      expect(layered.applicableRoles).toContain('guide');
+      expect(layered.applicableRoles).toContain('menu');
+    });
+
+    it('has accordion + tabs + iconTabs + stepper + cardGrid + timeline variants', () => {
+      const layered = getComponentSpec('layered-info')!;
+      const variantIds = layered.variants.map((v) => v.id);
+      expect(variantIds).toContain('accordion');
+      expect(variantIds).toContain('tabs');
+      expect(variantIds).toContain('iconTabs');
+      expect(variantIds).toContain('stepper');
+      // cardGrid OR timeline — minimal salah satu (Patch-1 spec: "cardGrid/timeline")
+      expect(variantIds.includes('cardGrid') || variantIds.includes('timeline')).toBe(true);
+      // Best case: both present
+      expect(variantIds).toContain('cardGrid');
+      expect(variantIds).toContain('timeline');
+    });
+
+    it('has at least 6 variants (was 3 before Patch-1)', () => {
+      const layered = getComponentSpec('layered-info')!;
+      expect(layered.variants.length).toBeGreaterThanOrEqual(6);
+    });
+
+    it('dataModel variant field includes all 6 variant IDs', () => {
+      const layered = getComponentSpec('layered-info')!;
+      const variantField = layered.dataModel.fields.find((f) => f.name === 'variant');
+      expect(variantField).toBeDefined();
+      expect(variantField!.type).toContain('accordion');
+      expect(variantField!.type).toContain('tabs');
+      expect(variantField!.type).toContain('iconTabs');
+      expect(variantField!.type).toContain('stepper');
+      expect(variantField!.type).toContain('cardGrid');
+      expect(variantField!.type).toContain('timeline');
+    });
+
+    it('layers field supports optional icon (for iconTabs variant)', () => {
+      const layered = getComponentSpec('layered-info')!;
+      const layersField = layered.dataModel.fields.find((f) => f.name === 'layers');
+      expect(layersField).toBeDefined();
+      // icon should be optional (icon?) in the layers array type
+      expect(layersField!.type).toMatch(/icon\?/);
+    });
+  });
+
+  // ----- interactive-starter: scenario/dilemma variants -----
+
+  describe('interactive-starter (Patch-1 alignment)', () => {
+    it('has scenario variant (decisionScenario or equivalent)', () => {
+      const starter = getComponentSpec('interactive-starter')!;
+      const variantIds = starter.variants.map((v) => v.id);
+      // Patch-1 spec: "decisionScenario" minimal
+      expect(variantIds).toContain('decisionScenario');
+    });
+
+    it('has dilemma variant', () => {
+      const starter = getComponentSpec('interactive-starter')!;
+      const variantIds = starter.variants.map((v) => v.id);
+      expect(variantIds).toContain('dilemma');
+    });
+
+    it('has bigQuestion variant', () => {
+      const starter = getComponentSpec('interactive-starter')!;
+      const variantIds = starter.variants.map((v) => v.id);
+      expect(variantIds).toContain('bigQuestion');
+    });
+
+    it('preserves original variants (poll, stance, case)', () => {
+      const starter = getComponentSpec('interactive-starter')!;
+      const variantIds = starter.variants.map((v) => v.id);
+      expect(variantIds).toContain('poll');
+      expect(variantIds).toContain('stance');
+      expect(variantIds).toContain('case');
+    });
+
+    it('has at least 6 variants (was 3 before Patch-1)', () => {
+      const starter = getComponentSpec('interactive-starter')!;
+      expect(starter.variants.length).toBeGreaterThanOrEqual(6);
+    });
+
+    it('dataModel variant field includes all 6 variant IDs', () => {
+      const starter = getComponentSpec('interactive-starter')!;
+      const variantField = starter.dataModel.fields.find((f) => f.name === 'variant');
+      expect(variantField).toBeDefined();
+      expect(variantField!.type).toContain('poll');
+      expect(variantField!.type).toContain('stance');
+      expect(variantField!.type).toContain('case');
+      expect(variantField!.type).toContain('bigQuestion');
+      expect(variantField!.type).toContain('decisionScenario');
+      expect(variantField!.type).toContain('dilemma');
+    });
+  });
+
+  // ----- learning-bridge: applicable to learningObjectives + closing -----
+
+  describe('learning-bridge (Patch-1 alignment)', () => {
+    it('applicable to learningObjectives (Patch-1: sebelumnya/hari ini/berikutnya)', () => {
+      const bridge = getComponentSpec('learning-bridge')!;
+      expect(bridge.applicableRoles).toContain('learningObjectives');
+    });
+
+    it('applicable to closing (Patch-1: preview materi selanjutnya)', () => {
+      const bridge = getComponentSpec('learning-bridge')!;
+      expect(bridge.applicableRoles).toContain('closing');
+    });
+
+    it('still applicable to original roles (starter, material, activity, quiz, reflection)', () => {
+      const bridge = getComponentSpec('learning-bridge')!;
+      expect(bridge.applicableRoles).toContain('starter');
+      expect(bridge.applicableRoles).toContain('material');
+      expect(bridge.applicableRoles).toContain('activity');
+      expect(bridge.applicableRoles).toContain('quiz');
+      expect(bridge.applicableRoles).toContain('reflection');
+    });
+
+    it('has at least 7 applicable roles (was 5 before Patch-1)', () => {
+      const bridge = getComponentSpec('learning-bridge')!;
+      expect(bridge.applicableRoles.length).toBeGreaterThanOrEqual(7);
+    });
+
+    it('preserves original variants (transition, recap, preview)', () => {
+      const bridge = getComponentSpec('learning-bridge')!;
+      const variantIds = bridge.variants.map((v) => v.id);
+      expect(variantIds).toContain('transition');
+      expect(variantIds).toContain('recap');
+      expect(variantIds).toContain('preview');
+    });
+  });
+
+  // ----- Cross-cutting guards -----
+
+  describe('Patch-1 cross-cutting guards', () => {
+    it('COMPONENT_TYPES still unchanged (still 6 original, no runtime yet)', () => {
+      // Re-verify: LXC-01 Patch-1 is still CONTRACT ONLY — no new types added
+      const path = resolve(__dirname, '../core/types.ts');
+      const content = readFileSync(path, 'utf8');
+      const match = content.match(/export const COMPONENT_TYPES = \[([^\]]+)\]/);
+      expect(match).not.toBeNull();
+      const types = match![1].split(',').map((t) => t.trim().replace(/['"]/g, ''));
+      expect(types).toEqual(['text', 'image', 'card', 'navigation', 'question', 'game']);
+    });
+
+    it('no runtime implementation added (contract file still pure spec)', () => {
+      const path = resolve(__dirname, '../core/learning-experience-contract.ts');
+      const content = readFileSync(path, 'utf8');
+      expect(content).not.toMatch(/from ['"]\.\.\/component-factory['"]/);
+      expect(content).not.toMatch(/from ['"]react['"]/);
+      expect(content).not.toMatch(/createComponent\(/);
+      expect(content).not.toMatch(/createElement\(/);
+    });
+
+    it('still has exactly 10 official components (Patch-1 does not add new components)', () => {
+      expect(LEARNING_EXPERIENCE_COMPONENTS).toHaveLength(10);
+    });
+
+    it('all 10 component IDs still unique after Patch-1', () => {
+      const ids = LEARNING_EXPERIENCE_COMPONENTS.map((c) => c.id);
+      expect(new Set(ids).size).toBe(ids.length);
+    });
+
+    it('all variant IDs still unique within each component after Patch-1', () => {
+      for (const c of LEARNING_EXPERIENCE_COMPONENTS) {
+        const ids = c.variants.map((v) => v.id);
+        expect(new Set(ids).size).toBe(ids.length);
+      }
+    });
+
+    it('previewEqualsExport still true for ALL components after Patch-1', () => {
+      for (const c of LEARNING_EXPERIENCE_COMPONENTS) {
+        expect(c.previewExportRules.previewEqualsExport).toBe(true);
+      }
+    });
+  });
+
+  // ----- Docs update verification -----
+
+  describe('Patch-1 docs verification', () => {
+    it('contract docs mention iconTabs variant', () => {
+      const path = join(DOCS_DIR, 'LEARNING_EXPERIENCE_CONTRACT.md');
+      const content = readFileSync(path, 'utf8');
+      expect(content).toMatch(/iconTabs/);
+    });
+
+    it('contract docs mention timeline variant', () => {
+      const path = join(DOCS_DIR, 'LEARNING_EXPERIENCE_CONTRACT.md');
+      const content = readFileSync(path, 'utf8');
+      expect(content).toMatch(/timeline/);
+    });
+
+    it('contract docs mention decisionScenario variant', () => {
+      const path = join(DOCS_DIR, 'LEARNING_EXPERIENCE_CONTRACT.md');
+      const content = readFileSync(path, 'utf8');
+      expect(content).toMatch(/decisionScenario/);
+    });
+
+    it('contract docs mention dilemma variant', () => {
+      const path = join(DOCS_DIR, 'LEARNING_EXPERIENCE_CONTRACT.md');
+      const content = readFileSync(path, 'utf8');
+      expect(content).toMatch(/dilemma/);
+    });
+
+    it('contract docs mention bigQuestion variant', () => {
+      const path = join(DOCS_DIR, 'LEARNING_EXPERIENCE_CONTRACT.md');
+      const content = readFileSync(path, 'utf8');
+      expect(content).toMatch(/bigQuestion/);
+    });
+
+    it('contract docs mention learningObjectives applicable to layered-info', () => {
+      const path = join(DOCS_DIR, 'LEARNING_EXPERIENCE_CONTRACT.md');
+      const content = readFileSync(path, 'utf8');
+      // Should mention learningObjectives in context of layered-info or general
+      expect(content).toMatch(/learningObjectives/);
+    });
+
+    it('contract docs mention learning-bridge applicable to learningObjectives + closing', () => {
+      const path = join(DOCS_DIR, 'LEARNING_EXPERIENCE_CONTRACT.md');
+      const content = readFileSync(path, 'utf8');
+      // In the learning-bridge section, should mention both roles
+      const bridgeSection = content.split('### 8. Jembatan Belajar')[1]?.split('###')[0] ?? '';
+      expect(bridgeSection).toMatch(/learningObjectives/);
+      expect(bridgeSection).toMatch(/closing/);
+    });
+
+    it('contract docs mention LXC-01 Patch-1 changes', () => {
+      const path = join(DOCS_DIR, 'LEARNING_EXPERIENCE_CONTRACT.md');
+      const content = readFileSync(path, 'utf8');
+      expect(content).toMatch(/LXC-01 Patch-1/);
+    });
+  });
+});

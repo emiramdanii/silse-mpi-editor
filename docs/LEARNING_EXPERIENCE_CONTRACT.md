@@ -40,20 +40,32 @@ setelah kontrak ini di-ACCEPT.
 | Field | Nilai |
 |---|---|
 | **Tujuan pembelajaran** | Sajikan materi dalam lapisan progressive disclosure — siswa buka layer demi layer supaya tidak kewalahan dengan info sekaligus. |
-| **Applicable roles** | `material`, `guide`, `menu` |
-| **Variants** | `accordion`, `tabs`, `stepper` |
+| **Applicable roles** | `material`, `guide`, `menu`, `learningObjectives` |
+| **Variants** | `accordion`, `tabs`, `iconTabs`, `stepper`, `cardGrid`, `timeline` |
 | **Has runtime state** | Ya (layer yang terbuka) |
 | **Contributes to score** | Tidak |
 | **Contributes to progress** | Tidak |
 | **Triggers appreciation** | Tidak |
 | **Max per page** | 3 |
 
+**Variants:**
+- `accordion` — layer bisa dilipat/dibuka satu per satu
+- `tabs` — layer sebagai tab horizontal
+- `iconTabs` — tab dengan ikon di tiap label (cocok untuk kategori visual)
+- `stepper` — layer sebagai langkah berurutan dengan nomor
+- `cardGrid` — layer sebagai kartu-kartu dalam grid (siswa klik untuk detail)
+- `timeline` — layer sebagai titik-titik di linimasa (cocok untuk urutan kronologis)
+
+**Applicable roles note:**
+- `learningObjectives` ditambahkan di LXC-01 Patch-1 — tujuan pembelajaran
+  bisa disajikan berlapis (sebelumnya/hari ini/berikutnya).
+
 **Data model:**
 ```ts
 type LayeredInfoComponent = {
   title: string;
-  variant: 'accordion' | 'tabs' | 'stepper';
-  layers: Array<{ id: string; title: string; body: string }>;
+  variant: 'accordion' | 'tabs' | 'iconTabs' | 'stepper' | 'cardGrid' | 'timeline';
+  layers: Array<{ id: string; title: string; body: string; icon?: string }>;
   defaultOpenIndex?: number | null;
 };
 ```
@@ -100,11 +112,23 @@ di-set oleh guru. Diisi oleh runtime berdasarkan progress siswa.
 
 | Field | Nilai |
 |---|---|
-| **Tujuan pembelajaran** | Aktifkan pengetahuan awal siswa dengan interaksi singkat — pilih posisi, jawab poll, atau refleksi kasus sebelum materi. |
+| **Tujuan pembelajaran** | Aktifkan pengetahuan awal siswa dengan interaksi singkat — pilih posisi, jawab poll, refleksi kasus, atau hadapi dilema sebelum materi. |
 | **Applicable roles** | `starter` |
-| **Variants** | `poll`, `stance`, `case` |
+| **Variants** | `poll`, `stance`, `case`, `bigQuestion`, `decisionScenario`, `dilemma` |
 | **Contributes to progress** | Ya |
 | **Max per page** | 1 |
+
+**Variants:**
+- `poll` — siswa pilih satu dari beberapa opsi
+- `stance` — siswa posisikan diri setuju/tidak pada pernyataan
+- `case` — siswa baca kasus lalu refleksi singkat
+- `bigQuestion` — pertanyaan terbuka yang memancing rasa ingin tahu sepanjang pembelajaran
+- `decisionScenario` — siswa hadapi skenario dan ambil keputusan dari beberapa pilihan
+- `dilemma` — dilema dengan dua sisi sama-sama kuat, siswa pertimbangkan trade-off
+
+**Catatan:** `dialog`/`rolePlay` boleh ditambah di masa depan (future
+variant), tetapi kontrak saat ini sudah tidak sempit — mencakup poll, stance,
+case, bigQuestion, decisionScenario, dilemma.
 
 **Reserved runtime fields:** `selectedOptionId`, `isAnswered`.
 
@@ -177,10 +201,16 @@ di-set oleh guru. Diisi oleh runtime berdasarkan progress siswa.
 | Field | Nilai |
 |---|---|
 | **Tujuan pembelajaran** | Penghubung antar scene yang menjelaskan transisi — "kamu sudah selesai X, sekarang kita lanjut ke Y karena Z". Mencegah lompatan mendadak. |
-| **Applicable roles** | `starter`, `material`, `activity`, `quiz`, `reflection` |
+| **Applicable roles** | `starter`, `material`, `activity`, `quiz`, `reflection`, `learningObjectives`, `closing` |
 | **Variants** | `transition`, `recap`, `preview` |
 | **Contributes to progress** | Ya |
 | **Max per page** | 1 |
+
+**Applicable roles note (LXC-01 Patch-1):**
+- `learningObjectives` ditambahkan — jembatan di halaman tujuan pembelajaran
+  bisa pakai variant `recap` (sebelumnya) + `preview` (hari ini/berikutnya).
+- `closing` ditambahkan — jembatan di halaman penutup bisa pakai variant
+  `preview` untuk memberi preview materi selanjutnya di pertemuan berikut.
 
 ---
 
