@@ -1,8 +1,8 @@
 /**
- * PagePanel — daftar halaman sebagai alur pembelajaran (UX-01 redesign).
+ * PagePanel — daftar halaman sebagai alur pembelajaran (UX-01 + UX-02).
  *
  * Layer: editor
- * Allowed imports: react, ../store/editor-store, ../core/types, ./mpi-standard-roles
+ * Allowed imports: react, ../store/editor-store, ../core/types, ./mpi-standard-roles, ./mpi-page-status
  *
  * Kontrak (UX-01 Scope C):
  *   - Bukan "list halaman teknis" — tapi "alur pembelajaran" yang guru baca.
@@ -14,12 +14,28 @@
  *   - Tombol rename/duplikat/hapus tetap ada (kontrak M3, title attribute
  *     harus tetap 'Ganti nama halaman' / 'Duplikat halaman' / 'Hapus halaman'
  *     supaya scope-lock test pass).
+ *
+ * Kontrak (UX-02 Scope B + C — Learning Flow Status):
+ *   - Header PagePanel menampilkan ringkasan Cek Standar (X lengkap, Y warning, Z error).
+ *   - Setiap page item punya badge status (✓/⚠/✗) di sebelah judul.
+ *   - Tooltip badge menampilkan daftar masalah.
+ *   - Saat halaman aktif (selected) dan punya masalah, tampilkan inline warning
+ *     list di bawah meta — guru bisa langsung baca tanpa harus klik Export.
+ *   - Tetap hanya tampilan UI — tidak menambah/mengubah contract checkMpiStandard.
  */
 
 import { useState } from 'react';
 import { useEditorStore } from '../store/editor-store';
 import type { SimplePage } from '../core/types';
 import { MPI_PHASE_LABELS, getRoleInfo } from './mpi-standard-roles';
+import {
+  computeAllPageStatuses,
+  computeLearningFlowSummary,
+  statusIcon,
+  statusLabel,
+  type PageStatus,
+  type PageStatusLevel,
+} from './mpi-page-status';
 
 const LAYOUT_LABELS: Record<string, string> = {
   blank: 'Bebas',
@@ -42,10 +58,98 @@ function buildSections(pages: SimplePage[]): Section[] {
     const info = getRoleInfo(page.role);
     out[info.phase].pages.push(page);
   });
-  // Hide empty sections
   return (['pembukaan', 'inti', 'penutup'] as const)
     .map((phase) => out[phase])
     .filter((s) => s.pages.length > 0);
+}
+
+function StatusBadge({ status }: { status: PageStatus }) {
+  if (status.level === 'ok') {
+    return (
+      <span
+        className="page-status-badge page-status-badge--ok"
+        title="Halaman lengkap sesuai standar perannya."
+        data-testid={`page-status-badge-${status.pageId}`}
+        data-level="ok"
+      >
+        ✓
+      </span>
+    );
+  }
+  const tooltipLines = status.issues.map((i) => `${i.level === 'error' ? '✗' : '⚠'} ${i.message}`);
+  const tooltip = tooltipLines.join('\n');
+  return (
+    <span
+      className={`page-status-badge page-status-badge--${status.level}`}
+      title={tooltip}
+      data-testid={`page-status-badge-${status.pageId}`}
+      data-level={status.level}
+      data-issue-count={status.issues.length}
+    >
+      {statusIcon(status.level)}
+      {status.issues.length > 1 && (
+        <span className="page-status-badge__count">{status.issues.length}</span>
+      )}
+    </span>
+  );
+}
+
+function StatusSummary({
+  summary,
+}: {
+  summary: ReturnType<typeof computeLearningFlowSummary>;
+}) {
+  if (summary.total === 0) return null;
+  return (
+    <div
+      className={`page-panel__summary${summary.allOk ? ' is-all-ok' : ''}`}
+      data-testid="page-panel-summary"
+      data-ok={summary.ok}
+      data-warning={summary.warning}
+      data-error={summary.error}
+    >
+      <span className="page-panel__summary-title">Cek Standar:</span>
+      <span className="page-panel__summary-count page-panel__summary-count--ok">
+        ✓ {summary.ok}
+      </span>
+      {summary.warning > 0 && (
+        <span className="page-panel__summary-count page-panel__summary-count--warning">
+          ⚠ {summary.warning}
+        </span>
+      )}
+      {summary.error > 0 && (
+        <span className="page-panel__summary-count page-panel__summary-count--error">
+          ✗ {summary.error}
+        </span>
+      )}
+      {summary.allOk && (
+        <span className="page-panel__summary-all-ok">Semua lengkap</span>
+      )}
+    </div>
+  );
+}
+
+function InlineIssueList({ status }: { status: PageStatus }) {
+  if (status.issues.length === 0) return null;
+  return (
+    <ul
+      className="page-item__issues"
+      data-testid={`page-issues-${status.pageId}`}
+    >
+      {status.issues.map((issue, idx) => (
+        <li
+          key={idx}
+          className={`page-item__issue page-item__issue--${issue.level}`}
+          data-level={issue.level}
+        >
+          <span className="page-item__issue-icon" aria-hidden>
+            {issue.level === 'error' ? '✗' : '⚠'}
+          </span>
+          <span className="page-item__issue-text">{issue.message}</span>
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 export function PagePanel() {
@@ -58,12 +162,14 @@ export function PagePanel() {
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState('');
+  // UX-02: allow user to expand/collapse inline issues per page (default expanded
+  // for active page so issues are visible up close).
+  const [collapsedIssues, setCollapsedIssues] = useState<Set<string>>(new Set());
 
   const startRename = (pageId: string, currentTitle: string) => {
     setEditingId(pageId);
     setEditingValue(currentTitle);
   };
-
   const commitRename = () => {
     if (editingId && editingValue.trim()) {
       renamePage(editingId, editingValue.trim());
@@ -71,7 +177,6 @@ export function PagePanel() {
     setEditingId(null);
     setEditingValue('');
   };
-
   const cancelRename = () => {
     setEditingId(null);
     setEditingValue('');
@@ -79,24 +184,40 @@ export function PagePanel() {
 
   const sections = buildSections(project.pages);
   const canDeleteAny = project.pages.length > 1;
+  // UX-02: compute per-page status + aggregate summary
+  const pageStatuses = computeAllPageStatuses(project.pages);
+  const summary = computeLearningFlowSummary(pageStatuses);
 
-  const renderPageItem = (
-    page: SimplePage,
-    stepNumber: number,
-  ) => {
+  const toggleIssues = (pageId: string) => {
+    setCollapsedIssues((prev) => {
+      const next = new Set(prev);
+      if (next.has(pageId)) {
+        next.delete(pageId);
+      } else {
+        next.add(pageId);
+      }
+      return next;
+    });
+  };
+
+  const renderPageItem = (page: SimplePage, stepNumber: number) => {
     const isActive = page.id === project.currentPageId;
     const isEditing = editingId === page.id;
     const canDelete = canDeleteAny;
     const info = getRoleInfo(page.role);
     const isStandard = page.role !== 'free';
+    const status = pageStatuses[page.id];
+    const hasIssues = status && status.issues.length > 0;
+    const issuesCollapsed = collapsedIssues.has(page.id);
 
     return (
       <div
         key={page.id}
-        className={`page-item${isActive ? ' is-active' : ''}${isStandard ? '' : ' is-free'}`}
+        className={`page-item${isActive ? ' is-active' : ''}${isStandard ? '' : ' is-free'}${hasIssues ? ` has-issues has-issues--${status.level}` : ''}`}
         onClick={() => selectPage(page.id)}
         data-testid={`page-item-${page.id}`}
         data-role={page.role}
+        data-status={status?.level}
       >
         <span className="page-item__step" aria-hidden>{stepNumber}</span>
         <span className="page-item__icon" aria-hidden title={info.label}>{info.icon}</span>
@@ -117,20 +238,50 @@ export function PagePanel() {
               data-testid={`page-rename-input-${page.id}`}
             />
           ) : (
-            <span
-              className="page-item__title"
-              onDoubleClick={(e) => {
-                e.stopPropagation();
-                startRename(page.id, page.title);
-              }}
-              title="Klik dua kali untuk ganti nama"
-            >
-              {page.title}
-            </span>
+            <div className="page-item__title-row">
+              <span
+                className="page-item__title"
+                onDoubleClick={(e) => {
+                  e.stopPropagation();
+                  startRename(page.id, page.title);
+                }}
+                title="Klik dua kali untuk ganti nama"
+              >
+                {page.title}
+              </span>
+              {status && <StatusBadge status={status} />}
+              {hasIssues && (
+                <button
+                  type="button"
+                  className="page-item__issue-toggle"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleIssues(page.id);
+                  }}
+                  title={issuesCollapsed ? 'Tampilkan detail masalah' : 'Sembunyikan detail masalah'}
+                  data-testid={`page-issue-toggle-${page.id}`}
+                  aria-expanded={!issuesCollapsed}
+                >
+                  {issuesCollapsed ? '▸' : '▾'}
+                </button>
+              )}
+            </div>
           )}
           <span className="page-item__meta">
             {info.label} · {LAYOUT_LABELS[page.layoutId] ?? page.layoutId}
+            {hasIssues && (
+              <span className="page-item__meta-status">
+                {' · '}
+                <span className={`page-item__meta-status-text page-item__meta-status-text--${status.level}`}>
+                  {statusLabel(status.level as PageStatusLevel)}
+                </span>
+              </span>
+            )}
           </span>
+          {/* UX-02: inline warning list — visible by default on active page with issues. */}
+          {hasIssues && !issuesCollapsed && (isActive || !isEditing) && (
+            <InlineIssueList status={status} />
+          )}
         </div>
         <div className="page-item__actions">
           <button
@@ -185,6 +336,7 @@ export function PagePanel() {
           {project.pages.length} halaman
         </span>
       </div>
+      <StatusSummary summary={summary} />
       <div className="page-panel__list">
         {sections.map((section) => {
           const sectionLabel = MPI_PHASE_LABELS[section.phase];
