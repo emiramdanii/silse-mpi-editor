@@ -9,9 +9,15 @@
  *   Dialog menampilkan katalog topik (dikelompokkan per mapel).
  *   Guru pilih topik → klik "Generate" → engine generate 10 halaman
  *   + quality report → guru lihat skor + warning → klik "Terapkan" atau "Batal".
+ *
+ * GUIDED-FLOW-MANUAL-VERIFY-01 Patch:
+ *   - Tambah confirm sebelum apply jika project lama akan diganti.
+ *   - Tambah role="dialog" + aria-modal + aria-label untuk accessibility.
+ *   - Tambah aria-label="Tutup" di close button.
+ *   - Tambah Esc key handler untuk tutup dialog.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useEditorStore } from '../store/editor-store';
 import {
   MPI_TOPIC_CATALOG,
@@ -22,11 +28,21 @@ import { generateMpiFromTopic, type GeneratedMpiResult } from '../core/guided-fl
 
 export function GuidedFlowDialog({ onClose }: { onClose: () => void }) {
   const setProject = useEditorStore((s) => s.setProject);
+  const currentProject = useEditorStore((s) => s.project);
   const [selectedTopic, setSelectedTopic] = useState<MpiTopic | null>(null);
   const [generated, setGenerated] = useState<GeneratedMpiResult | null>(null);
   const [generating, setGenerating] = useState(false);
 
   const mapelList = getUniqueMapelList();
+
+  // GUIDED-FLOW-MANUAL-VERIFY-01: Esc key handler to close dialog.
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
 
   const handleGenerate = () => {
     if (!selectedTopic) return;
@@ -46,6 +62,19 @@ export function GuidedFlowDialog({ onClose }: { onClose: () => void }) {
       window.alert('Draft MPI memiliki error layout. Perbaiki dulu sebelum menerapkan.');
       return;
     }
+    // GUIDED-FLOW-MANUAL-VERIFY-01: Confirm before replacing existing project.
+    // Jangan konfirmasi kalau project masih default (MPI Baru kosong, 1 halaman).
+    const isDefaultProject =
+      currentProject.title === 'MPI Baru' &&
+      currentProject.pages.length === 1 &&
+      currentProject.pages[0].role === 'cover' &&
+      currentProject.pages[0].components.length <= 1;
+    if (!isDefaultProject) {
+      const proceed = window.confirm(
+        'Paket MPI ini akan mengganti project yang sedang dibuka. Lanjutkan?',
+      );
+      if (!proceed) return;
+    }
     setProject(generated.project);
     onClose();
   };
@@ -60,6 +89,9 @@ export function GuidedFlowDialog({ onClose }: { onClose: () => void }) {
       className="guided-flow-overlay"
       onClick={onClose}
       data-testid="guided-flow-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Paket MPI dari Topik"
     >
       <div
         className="guided-flow-modal"
@@ -67,7 +99,14 @@ export function GuidedFlowDialog({ onClose }: { onClose: () => void }) {
       >
         <div className="guided-flow-modal__head">
           <strong>🎯 Paket MPI dari Topik</strong>
-          <button onClick={onClose} title="Tutup">✕</button>
+          <button
+            onClick={onClose}
+            title="Tutup"
+            aria-label="Tutup"
+            data-testid="guided-flow-close"
+          >
+            ✕
+          </button>
         </div>
 
         {!generated ? (
