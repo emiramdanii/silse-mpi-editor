@@ -990,7 +990,7 @@ export const CONTENT_PATTERNS: readonly ContentPattern[] = [
         variant: 'transition',
         title: 'Lanjut ke Bagian Berikutnya',
         message: 'Kamu sudah selesai dengan bagian ini. Sekarang kita lanjut ke bagian berikutnya yang masih berkaitan.',
-        nextButtonLabel: 'Lanjut →',
+        nextButtonLabel: 'Siap lanjut',
         x: 200, y: 250, width: 880, height: 200,
       }),
       createNavigationComponent('Lanjut →', 'next', {
@@ -1011,7 +1011,7 @@ export const CONTENT_PATTERNS: readonly ContentPattern[] = [
         variant: 'recap',
         title: 'Apa yang Sudah Kita Pelajari?',
         message: 'Sebelum lanjut, mari kita ingat sekilas:\n\n• Poin pertama yang dipelajari\n• Poin kedua yang dipelajari\n• Poin ketiga yang dipelajari\n\nApakah kamu sudah paham ketiganya? Kalau ya, kita lanjut.',
-        nextButtonLabel: 'Saya Sudah Paham →',
+        nextButtonLabel: 'Saya sudah paham',
         x: 200, y: 220, width: 880, height: 260,
       }),
       createNavigationComponent('Lanjut →', 'next', {
@@ -1032,7 +1032,7 @@ export const CONTENT_PATTERNS: readonly ContentPattern[] = [
         variant: 'preview',
         title: 'Selanjutnya Kita Akan...',
         message: 'Di bagian berikutnya, kita akan mempelajari:\n\n• Hal baru yang menarik\n• Hubungannya dengan yang baru dipelajari\n• Latihan untuk menguji pemahaman\n\nSiap? Yuk lanjut!',
-        nextButtonLabel: 'Lanjut →',
+        nextButtonLabel: 'Siap melanjutkan',
         x: 200, y: 220, width: 880, height: 260,
       }),
       createNavigationComponent('Lanjut →', 'next', {

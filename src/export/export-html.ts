@@ -960,13 +960,13 @@ function generateJS(renderModelJson: string): string {
 
       var bBtnWrap = document.createElement('div');
       bBtnWrap.style.cssText = 'display:flex;justify-content:flex-end;margin-top:auto;';
-      var bBtn = document.createElement('button');
-      bBtn.type = 'button';
-      bBtn.style.cssText = 'padding:10px 20px;font-size:14px;font-weight:600;border:2px solid #2563eb;border-radius:8px;background:#2563eb;color:#ffffff;cursor:pointer;white-space:normal;overflow-wrap:anywhere;min-height:44px;display:inline-flex;align-items:center;gap:6px;';
-      bBtn.textContent = comp.bridgeNextButtonLabel || 'Lanjut →';
-      // LXC-03: bridge "next" button is visual-only — does not trigger navigation.
+      // LXC-03 Patch-1: NON-INTERACTIVE CTA chip — NOT a <button>.
+      // Tidak ada cursor:pointer, tidak ada data-action.
       // Real navigation comes from a separate NavigationComponent.
-      bBtnWrap.appendChild(bBtn);
+      var bChip = document.createElement('div');
+      bChip.style.cssText = 'padding:8px 16px;font-size:13px;font-weight:600;border:1px solid #2563eb;border-radius:999px;background:#eff6ff;color:#2563eb;cursor:default;white-space:normal;overflow-wrap:anywhere;display:inline-flex;align-items:center;gap:6px;min-height:36px;';
+      bChip.textContent = (comp.bridgeNextButtonLabel || 'Siap lanjut') + ' →';
+      bBtnWrap.appendChild(bChip);
       el.appendChild(bBtnWrap);
       return el;
     }

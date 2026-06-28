@@ -519,3 +519,148 @@ describe('LXC-03 — regression', () => {
     expect(container.textContent ?? '').not.toMatch(/\bblock\b/i);
   });
 });
+
+// =========================================================================
+// LXC-03 Patch-1 — No Dead Bridge Button
+// =========================================================================
+
+describe('LXC-03 Patch-1 — No dead bridge button', () => {
+
+  it('LearningBridgeComponentView does NOT render <button> element for CTA', () => {
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const content = fs.readFileSync(path.resolve(__dirname, '../components/LearningBridgeComponentView.tsx'), 'utf8');
+    // Remove comments first, then check for <button tag
+    const withoutComments = content.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+    expect(withoutComments).not.toMatch(/<button/);
+  });
+
+  it('LearningBridgeComponentView does NOT have data-action="bridge-next"', () => {
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const content = fs.readFileSync(path.resolve(__dirname, '../components/LearningBridgeComponentView.tsx'), 'utf8');
+    expect(content).not.toMatch(/bridge-next/);
+  });
+
+  it('LearningBridgeComponentView uses cursor default (not pointer) for CTA', () => {
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const content = fs.readFileSync(path.resolve(__dirname, '../components/LearningBridgeComponentView.tsx'), 'utf8');
+    // CTA chip should have cursor: 'default'
+    expect(content).toMatch(/cursor:\s*'default'/);
+  });
+
+  it('export-html bridge does NOT create <button> element in DOM render', () => {
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const content = fs.readFileSync(path.resolve(__dirname, '../export/export-html.ts'), 'utf8');
+    // Find the DOM render block — search for "silse-learning-bridge" class which is only in DOM render
+    const bridgeStart = content.indexOf("'silse-learning-bridge'");
+    expect(bridgeStart).toBeGreaterThan(0);
+    // Find return el; after that
+    const returnIdx = content.indexOf('return el;', bridgeStart);
+    const bridgeBlock = content.substring(bridgeStart, returnIdx + 10);
+    // Should NOT create a button element in the bridge DOM render block
+    expect(bridgeBlock).not.toMatch(/createElement\('button'\)/);
+  });
+
+  it('export-html bridge uses cursor default (not pointer) for CTA in DOM render', () => {
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const content = fs.readFileSync(path.resolve(__dirname, '../export/export-html.ts'), 'utf8');
+    const bridgeStart = content.indexOf("'silse-learning-bridge'");
+    const returnIdx = content.indexOf('return el;', bridgeStart);
+    let bridgeBlock = content.substring(bridgeStart, returnIdx + 10);
+    // Strip comments before checking
+    bridgeBlock = bridgeBlock.replace(/\/\/.*$/gm, '');
+    // CTA chip should have cursor:default, NOT cursor:pointer
+    expect(bridgeBlock).not.toMatch(/cursor:pointer/);
+    expect(bridgeBlock).toMatch(/cursor:default/);
+  });
+
+  it('Inspector uses "Label ajakan" not "Label tombol"', () => {
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const content = fs.readFileSync(path.resolve(__dirname, '../editor/Inspector.tsx'), 'utf8');
+    expect(content).toMatch(/Label ajakan/);
+    expect(content).not.toMatch(/Label tombol/);
+  });
+
+  it('bridge-transisi pattern: bridge label differs from navigation label', () => {
+    const project = createSamplePpknProject();
+    const page: SimplePage = {
+      id: createPageId(),
+      title: 'Test',
+      role: 'material',
+      layoutId: 'blank',
+      background: { type: 'color', color: '#fff' },
+      components: [],
+    };
+    const proj = { ...project, currentPageId: page.id, pages: [page] };
+    const pattern = getPatternById('bridge-transisi')!;
+    const components = pattern.buildComponents({ project: proj, page });
+    const bridge = components.find((c) => c.type === 'learning-bridge') as LearningBridgeComponent;
+    const nav = components.find((c) => c.type === 'navigation') as { label: string };
+    expect(bridge).toBeDefined();
+    expect(nav).toBeDefined();
+    // Labels must differ to avoid confusion
+    expect(bridge.nextButtonLabel).not.toBe(nav.label);
+  });
+
+  it('bridge-recap pattern: bridge label differs from navigation label', () => {
+    const project = createSamplePpknProject();
+    const page: SimplePage = {
+      id: createPageId(),
+      title: 'Test',
+      role: 'material',
+      layoutId: 'blank',
+      background: { type: 'color', color: '#fff' },
+      components: [],
+    };
+    const proj = { ...project, currentPageId: page.id, pages: [page] };
+    const pattern = getPatternById('bridge-recap')!;
+    const components = pattern.buildComponents({ project: proj, page });
+    const bridge = components.find((c) => c.type === 'learning-bridge') as LearningBridgeComponent;
+    const nav = components.find((c) => c.type === 'navigation') as { label: string };
+    expect(bridge.nextButtonLabel).not.toBe(nav.label);
+  });
+
+  it('bridge-preview pattern: bridge label differs from navigation label', () => {
+    const project = createSamplePpknProject();
+    const page: SimplePage = {
+      id: createPageId(),
+      title: 'Test',
+      role: 'material',
+      layoutId: 'blank',
+      background: { type: 'color', color: '#fff' },
+      components: [],
+    };
+    const proj = { ...project, currentPageId: page.id, pages: [page] };
+    const pattern = getPatternById('bridge-preview')!;
+    const components = pattern.buildComponents({ project: proj, page });
+    const bridge = components.find((c) => c.type === 'learning-bridge') as LearningBridgeComponent;
+    const nav = components.find((c) => c.type === 'navigation') as { label: string };
+    expect(bridge.nextButtonLabel).not.toBe(nav.label);
+  });
+
+  it('all 3 bridge patterns include NavigationComponent as real navigation', () => {
+    const project = createSamplePpknProject();
+    const page: SimplePage = {
+      id: createPageId(),
+      title: 'Test',
+      role: 'material',
+      layoutId: 'blank',
+      background: { type: 'color', color: '#fff' },
+      components: [],
+    };
+    const proj = { ...project, currentPageId: page.id, pages: [page] };
+    for (const patternId of ['bridge-transisi', 'bridge-recap', 'bridge-preview']) {
+      const pattern = getPatternById(patternId)!;
+      const components = pattern.buildComponents({ project: proj, page });
+      expect(
+        components.some((c) => c.type === 'navigation'),
+        `${patternId} should include NavigationComponent`,
+      ).toBe(true);
+    }
+  });
+});

@@ -1427,7 +1427,7 @@ function LearningBridgeComponentEditor({
             placeholder="Tulis pesan transisi / recap / preview di sini..."
           />
         </Field>
-        <Field label="Label tombol lanjut">
+        <Field label="Label ajakan">
           <input
             type="text"
             data-field="nextButtonLabel"

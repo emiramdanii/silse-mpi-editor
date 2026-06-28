@@ -4,19 +4,21 @@
  * Layer: components
  * Allowed imports: react, ../core/types, ../core/style/resolveComponentStyle
  *
- * Kontrak (LXC-03 — render contract honesty):
+ * Kontrak (LXC-03 Patch-1 — No Dead Bridge Button):
  *   Preview and export follow the same render contract and resolved style
  *   model, but renderer runtime is different (React vs standalone JS DOM).
  *   NOT a single shared React renderer.
  *
  *   Bridge adalah komponen STATIS — tidak ada runtime state.
- *     - variant 'transition': pesan transisi sederhana + tombol next.
- *     - variant 'recap': ringkasan apa yang baru dipelajari + tombol next.
- *     - variant 'preview': preview apa yang akan datang + tombol next.
+ *   Tombol "next" label dirender sebagai NON-INTERACTIVE CTA chip (div/span),
+ *   BUKAN <button>. Tidak ada cursor:pointer, tidak ada data-action, tidak
+ *   ada onClick yang memberi kesan navigasi. Real navigation tetap lewat
+ *   NavigationComponent terpisah yang guru tambahkan ke halaman.
  *
- *   Tombol "next" bersifat visual di editor; di preview/export tombol juga
- *   visual only (tidak memicu navigasi otomatis — guru bisa tambahkan
- *   NavigationComponent terpisah kalau butuh navigasi nyata).
+ *   Variants:
+ *     - 'transition': pesan transisi sederhana + CTA chip.
+ *     - 'recap': ringkasan apa yang baru dipelajari + CTA chip.
+ *     - 'preview': preview apa yang akan datang + CTA chip.
  *
  *   No clipping: white-space normal, overflow-wrap anywhere.
  *   Tidak ada "block" di user-facing text.
@@ -34,8 +36,8 @@ export type LearningBridgeComponentViewProps = {
   positionMode?: 'absolute' | 'fill';
   /**
    * Bridge bersifat statis. `interactive` hanya menandakan mode (preview vs
-   * editor). Di implementasi ini, tombol "next" tidak memicu navigasi
-   * otomatis — bridge adalah penghubung visual antar scene.
+   * editor). Tombol "next" TIDAK memicu navigasi — bridge adalah penghubung
+   * visual antar scene.
    */
   interactive?: boolean;
 };
@@ -58,7 +60,7 @@ export function LearningBridgeComponentView({
   selected,
   onSelect,
   positionMode = 'absolute',
-  interactive = false,
+  interactive: _interactive = false,
 }: LearningBridgeComponentViewProps) {
   const isFill = positionMode === 'fill';
 
@@ -100,13 +102,6 @@ export function LearningBridgeComponentView({
 
   const handleContainerClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onSelect?.(component.id);
-  };
-
-  const handleNextClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    // Bridge "next" button is visual-only in this implementation.
-    // Real navigation should come from a separate NavigationComponent.
     onSelect?.(component.id);
   };
 
@@ -163,6 +158,9 @@ export function LearningBridgeComponentView({
         {component.message}
       </div>
 
+      {/* LXC-03 Patch-1: NON-INTERACTIVE CTA chip — NOT a <button>.
+          Tidak ada cursor:pointer, tidak ada data-action, tidak ada onClick
+          yang memberi kesan navigasi. Real navigation lewat NavigationComponent. */}
       <div
         style={{
           display: 'flex',
@@ -170,30 +168,28 @@ export function LearningBridgeComponentView({
           marginTop: 'auto',
         }}
       >
-        <button
-          type="button"
-          onClick={handleNextClick}
-          data-testid="learning-bridge-next-button"
-          data-action="bridge-next"
+        <div
+          data-testid="learning-bridge-cta-chip"
           style={{
-            padding: '10px 20px',
-            fontSize: 14,
+            padding: '8px 16px',
+            fontSize: 13,
             fontWeight: 600,
-            border: '2px solid #2563eb',
-            borderRadius: 8,
-            background: '#2563eb',
-            color: '#ffffff',
-            cursor: interactive ? 'pointer' : 'default',
+            border: '1px solid #2563eb',
+            borderRadius: 999,
+            background: '#eff6ff',
+            color: '#2563eb',
+            cursor: 'default',
             whiteSpace: 'normal',
             overflowWrap: 'anywhere',
-            minHeight: 44,
             display: 'inline-flex',
             alignItems: 'center',
             gap: 6,
+            minHeight: 36,
           }}
         >
           <span>{component.nextButtonLabel}</span>
-        </button>
+          <span aria-hidden style={{ fontSize: 14 }}>→</span>
+        </div>
       </div>
     </div>
   );
