@@ -3,7 +3,7 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { render } from '@testing-library/react';
+import { render, fireEvent } from '@testing-library/react';
 import React from 'react';
 import { Toolbar } from '../editor/Toolbar';
 import { createQuestionComponent } from '../core/component-factory';
@@ -257,24 +257,32 @@ describe('M10 — answer option UX lock (no clipping)', () => {
 // =========================================================================
 
 describe('M10 — UI checks', () => {
-  it('Toolbar has + Pertanyaan button (UX-01: rendered label, source has action spec)', () => {
+  it('Toolbar has + Pertanyaan button (UX-01 Patch-2: inside Tambah Elemen dropdown)', () => {
     const content = readFileSync(resolve(SRC_DIR, 'editor/Toolbar.tsx'), 'utf8');
     // UX-01: button spec is centralized — verify the action 'add-question' is declared.
     expect(content).toMatch(/action:\s*['"]add-question['"]/);
-    // UX-01: label is rendered via spec — verify rendered output too.
+    // UX-01 Patch-2: button is inside a dropdown — open it first, then check.
     useEditorStore.getState().newProject();
-    useEditorStore.getState().addPage(); // free page so button is enabled
+    useEditorStore.getState().addPage(); // free page so dropdown is enabled
     const { container } = render(React.createElement(Toolbar));
+    const addToggle = container.querySelector('[data-testid="toolbar-add"]') as HTMLButtonElement;
+    expect(addToggle).not.toBeNull();
+    fireEvent.click(addToggle);
     const btn = container.querySelector('[data-action="add-question"]');
     expect(btn).not.toBeNull();
     expect(btn?.textContent ?? '').toMatch(/Pertanyaan/);
   });
 
-  it('Toolbar + Pertanyaan disabled on cover (UX-01: capability check via can())', () => {
+  it('Toolbar + Pertanyaan hidden on cover (UX-01 Patch-2: capability denied → button filtered out)', () => {
     const content = readFileSync(resolve(SRC_DIR, 'editor/Toolbar.tsx'), 'utf8');
-    // UX-01: capability check is done via can('question') in renderAddButton.
-    // Verify the source has the question capability check.
-    expect(content).toMatch(/can\('question'\)|canQuestion/);
+    // UX-01 Patch-2: capability check is done via canAddComponent(role, spec.capability)
+    // in the filter. Disallowed buttons are not rendered at all.
+    expect(content).toMatch(/canAddComponent/);
+    // Verify on cover: + Tambah Elemen toggle is disabled (cover is guided).
+    useEditorStore.getState().newProject();
+    const { container } = render(React.createElement(Toolbar));
+    const addToggle = container.querySelector('[data-testid="toolbar-add"]') as HTMLButtonElement;
+    expect(addToggle.disabled).toBe(true);
   });
 
   it('UI does NOT contain "block"', () => {

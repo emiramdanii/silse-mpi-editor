@@ -23,7 +23,7 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { render } from '@testing-library/react';
+import { render, fireEvent } from '@testing-library/react';
 import { Toolbar } from '../editor/Toolbar';
 import { Topbar } from '../editor/Topbar';
 import { PagePanel } from '../editor/PagePanel';
@@ -33,6 +33,15 @@ import { TEXT_COMPONENT_VARIANTS } from '../core/types';
 
 function queryByAction(container: HTMLElement, action: string): HTMLElement | null {
   return container.querySelector(`[data-action="${action}"]`);
+}
+
+/**
+ * Helper: open the "+ Tambah Elemen" dropdown so add-* buttons become visible.
+ * UX-01 Patch-2 collapsed berderet add buttons into a single dropdown.
+ */
+function openAddMenu(container: HTMLElement): void {
+  const toggle = container.querySelector('[data-testid="toolbar-add"]') as HTMLButtonElement | null;
+  if (toggle) fireEvent.click(toggle);
 }
 
 /**
@@ -57,45 +66,75 @@ describe('scope-lock M4 — Toolbar: + Teks/+ Gambar/+ Kartu by capability', () 
     useEditorStore.getState().newProject();
   });
 
-  // ---- Cover page (all add disabled) ----
-  it('on cover: + Teks, + Gambar, + Kartu all DISABLED', () => {
+  // UX-01 Patch-2 contract: add buttons live inside a "+ Tambah Elemen"
+  // dropdown. On guided pages (cover), the toggle is DISABLED and the
+  // dropdown does not open. On free pages, the toggle is ENABLED and the
+  // dropdown shows only the allowed buttons.
+
+  // ---- Cover page (guided — toggle disabled, no add buttons visible) ----
+  it('on cover: + Tambah Elemen toggle is DISABLED (guided page)', () => {
     const { container } = render(<Toolbar />);
-    expect((queryByAction(container, 'add-text') as HTMLButtonElement).disabled).toBe(true);
-    expect((queryByAction(container, 'add-image') as HTMLButtonElement).disabled).toBe(true);
-    expect((queryByAction(container, 'add-card') as HTMLButtonElement).disabled).toBe(true);
+    const toggle = container.querySelector('[data-testid="toolbar-add"]') as HTMLButtonElement;
+    expect(toggle).not.toBeNull();
+    expect(toggle.disabled).toBe(true);
+  });
+
+  it('on cover: add-text/add-image/add-card buttons are NOT in DOM (filtered out)', () => {
+    const { container } = render(<Toolbar />);
+    // Even after opening the dropdown (which won't open because toggle is disabled),
+    // the add buttons should not be present.
+    openAddMenu(container);
+    expect(container.querySelector('[data-action="add-text"]')).toBeNull();
+    expect(container.querySelector('[data-action="add-image"]')).toBeNull();
+    expect(container.querySelector('[data-action="add-card"]')).toBeNull();
   });
 
   // ---- Free page (all add enabled) ----
-  it('on free: + Teks, + Gambar, + Kartu all ENABLED', () => {
+  it('on free: + Tambah Elemen toggle is ENABLED', () => {
     useEditorStore.getState().addPage(); // free
     const { container } = render(<Toolbar />);
+    const toggle = container.querySelector('[data-testid="toolbar-add"]') as HTMLButtonElement;
+    expect(toggle.disabled).toBe(false);
+  });
+
+  it('on free: opening dropdown shows add-text/add-image/add-card (all enabled)', () => {
+    useEditorStore.getState().addPage(); // free
+    const { container } = render(<Toolbar />);
+    openAddMenu(container);
     expect((queryByAction(container, 'add-text') as HTMLButtonElement).disabled).toBe(false);
     expect((queryByAction(container, 'add-image') as HTMLButtonElement).disabled).toBe(false);
     expect((queryByAction(container, 'add-card') as HTMLButtonElement).disabled).toBe(false);
   });
 
   // ---- Material page (all add enabled) ----
-  it('on material: + Teks, + Gambar, + Kartu all ENABLED', () => {
+  it('on material: opening dropdown shows add-text/add-image/add-card (all enabled)', () => {
     useEditorStore.getState().addPage({ role: 'material' });
     const { container } = render(<Toolbar />);
+    openAddMenu(container);
     expect((queryByAction(container, 'add-text') as HTMLButtonElement).disabled).toBe(false);
     expect((queryByAction(container, 'add-image') as HTMLButtonElement).disabled).toBe(false);
     expect((queryByAction(container, 'add-card') as HTMLButtonElement).disabled).toBe(false);
   });
 
   // ---- Reflection page (text + card enabled, image disabled) ----
-  it('on reflection: + Teks ENABLED, + Gambar DISABLED, + Kartu ENABLED', () => {
+  // UX-01 Patch-2: disallowed buttons are HIDDEN (not shown disabled).
+  it('on reflection: dropdown shows add-text + add-card, but NOT add-image', () => {
     useEditorStore.getState().addPage({ role: 'reflection' });
     const { container } = render(<Toolbar />);
+    openAddMenu(container);
+    expect(queryByAction(container, 'add-text')).not.toBeNull();
     expect((queryByAction(container, 'add-text') as HTMLButtonElement).disabled).toBe(false);
-    expect((queryByAction(container, 'add-image') as HTMLButtonElement).disabled).toBe(true);
+    expect(queryByAction(container, 'add-card')).not.toBeNull();
     expect((queryByAction(container, 'add-card') as HTMLButtonElement).disabled).toBe(false);
+    // add-image is filtered out (reflection doesn't allow image)
+    expect(queryByAction(container, 'add-image')).toBeNull();
   });
 
   // ---- + Tambah Kartu click works on free ----
   it('"+ Kartu" click on free page adds card component', () => {
     useEditorStore.getState().addPage();
     const { container } = render(<Toolbar />);
+    openAddMenu(container);
     const btn = queryByAction(container, 'add-card') as HTMLButtonElement;
     btn.click();
     const { project, selectedComponentId } = useEditorStore.getState();
@@ -105,25 +144,26 @@ describe('scope-lock M4 — Toolbar: + Teks/+ Gambar/+ Kartu by capability', () 
     expect(selectedComponentId).toBe(page.components[0].id);
   });
 
-  // ---- + Navigasi ENABLED by capability (M5 active) ----
-  it('on cover: + Navigasi DISABLED (capability denied)', () => {
+  // ---- + Navigasi capability check (M5 active) ----
+  it('on cover: add-navigation is NOT in DOM (guided page, dropdown disabled)', () => {
     const { container } = render(<Toolbar />);
-    const btn = queryByAction(container, 'add-navigation');
-    expect(btn).not.toBeNull();
-    expect((btn as HTMLButtonElement).disabled).toBe(true);
+    openAddMenu(container); // won't open since toggle disabled
+    expect(queryByAction(container, 'add-navigation')).toBeNull();
   });
 
-  it('on free: + Navigasi ENABLED (M5 active)', () => {
+  it('on free: opening dropdown shows add-navigation (enabled)', () => {
     useEditorStore.getState().addPage();
     const { container } = render(<Toolbar />);
+    openAddMenu(container);
     const btn = queryByAction(container, 'add-navigation');
     expect(btn).not.toBeNull();
     expect((btn as HTMLButtonElement).disabled).toBe(false);
   });
 
-  it('on material: + Navigasi ENABLED (M5 active)', () => {
+  it('on material: opening dropdown shows add-navigation (enabled)', () => {
     useEditorStore.getState().addPage({ role: 'material' });
     const { container } = render(<Toolbar />);
+    openAddMenu(container);
     const btn = queryByAction(container, 'add-navigation');
     expect((btn as HTMLButtonElement).disabled).toBe(false);
   });

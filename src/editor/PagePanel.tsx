@@ -162,9 +162,11 @@ export function PagePanel() {
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState('');
-  // UX-02: allow user to expand/collapse inline issues per page (default expanded
-  // for active page so issues are visible up close).
-  const [collapsedIssues, setCollapsedIssues] = useState<Set<string>>(new Set());
+  // UX-02 Patch (UX-01 Patch-2 polish): track explicit issue expansion per page.
+  // - undefined → default (active page expanded, inactive collapsed)
+  // - true      → force expanded (user clicked toggle on inactive page)
+  // - false     → force collapsed (user clicked toggle on active page)
+  const [issueOverrides, setIssueOverrides] = useState<Record<string, boolean>>({});
 
   const startRename = (pageId: string, currentTitle: string) => {
     setEditingId(pageId);
@@ -188,16 +190,23 @@ export function PagePanel() {
   const pageStatuses = computeAllPageStatuses(project.pages);
   const summary = computeLearningFlowSummary(pageStatuses);
 
-  const toggleIssues = (pageId: string) => {
-    setCollapsedIssues((prev) => {
-      const next = new Set(prev);
-      if (next.has(pageId)) {
-        next.delete(pageId);
-      } else {
-        next.add(pageId);
-      }
-      return next;
-    });
+  /**
+   * Determine if a page's inline issue list should be expanded.
+   * Default: active page expanded, inactive pages collapsed.
+   * User can override per-page via toggleIssues().
+   */
+  const isIssueExpanded = (pageId: string, isActive: boolean): boolean => {
+    const override = issueOverrides[pageId];
+    if (override !== undefined) return override;
+    return isActive; // default
+  };
+
+  const toggleIssues = (pageId: string, isActive: boolean) => {
+    const current = isIssueExpanded(pageId, isActive);
+    setIssueOverrides((prev) => ({
+      ...prev,
+      [pageId]: !current,
+    }));
   };
 
   const renderPageItem = (page: SimplePage, stepNumber: number) => {
@@ -208,7 +217,7 @@ export function PagePanel() {
     const isStandard = page.role !== 'free';
     const status = pageStatuses[page.id];
     const hasIssues = status && status.issues.length > 0;
-    const issuesCollapsed = collapsedIssues.has(page.id);
+    const issuesExpanded = isIssueExpanded(page.id, isActive);
 
     return (
       <div
@@ -256,13 +265,13 @@ export function PagePanel() {
                   className="page-item__issue-toggle"
                   onClick={(e) => {
                     e.stopPropagation();
-                    toggleIssues(page.id);
+                    toggleIssues(page.id, isActive);
                   }}
-                  title={issuesCollapsed ? 'Tampilkan detail masalah' : 'Sembunyikan detail masalah'}
+                  title={issuesExpanded ? 'Sembunyikan detail masalah' : 'Tampilkan detail masalah'}
                   data-testid={`page-issue-toggle-${page.id}`}
-                  aria-expanded={!issuesCollapsed}
+                  aria-expanded={issuesExpanded}
                 >
-                  {issuesCollapsed ? '▸' : '▾'}
+                  {issuesExpanded ? '▾' : '▸'}
                 </button>
               )}
             </div>
@@ -278,8 +287,11 @@ export function PagePanel() {
               </span>
             )}
           </span>
-          {/* UX-02: inline warning list — visible by default on active page with issues. */}
-          {hasIssues && !issuesCollapsed && (isActive || !isEditing) && (
+          {/* UX-02 Patch (UX-01 Patch-2 polish): inline issue list default expanded
+              ONLY for the active page. Other pages show badge + tooltip only —
+              keeps the panel visually clean. User can still toggle to expand
+              any page's issues manually (override stored in issueOverrides). */}
+          {hasIssues && issuesExpanded && !isEditing && (
             <InlineIssueList status={status} />
           )}
         </div>

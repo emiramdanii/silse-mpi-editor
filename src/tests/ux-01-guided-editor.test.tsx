@@ -287,10 +287,10 @@ describe('UX-01 — EditorToolbar contextual', () => {
     useEditorStore.getState().newProject();
   });
 
-  it('renders contextual header "Tambah elemen di [role]"', () => {
+  it('renders contextual header with "Halaman [role]" (UX-01 Patch-2: wording simplified)', () => {
     const { container } = render(React.createElement(Toolbar));
     const ctx = container.querySelector('[data-testid="editor-toolbar-context"]');
-    expect(ctx?.textContent ?? '').toMatch(/Tambah elemen di/);
+    expect(ctx?.textContent ?? '').toMatch(/Halaman/);
   });
 
   it('on cover: contextual header shows "Halaman Cover"', () => {
@@ -306,20 +306,30 @@ describe('UX-01 — EditorToolbar contextual', () => {
     expect(role?.textContent ?? '').toMatch(/Bebas/i);
   });
 
-  it('renders grouped sections: Konten, Interaksi, Berkas', () => {
+  it('renders "+ Tambah Elemen" + "Lainnya" dropdowns (UX-01 Patch-2: clean toolbar)', () => {
     const { container } = render(React.createElement(Toolbar));
+    // UX-01 Patch-2: toolbar only has 2 visible buttons now.
+    expect(container.querySelector('[data-testid="toolbar-add"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="toolbar-more"]')).not.toBeNull();
+    // The old group-konten wrapper is now the add-wrap (still has the testid
+    // for backward compat, but contains only the toggle button + dropdown).
     expect(container.querySelector('[data-testid="editor-toolbar-group-konten"]')).not.toBeNull();
-    expect(container.querySelector('[data-testid="editor-toolbar-group-interaksi"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="editor-toolbar-group-berkas"]')).not.toBeNull();
+    // Konten/Interaksi groupings are inside the dropdown, not visible by default.
+    expect(container.querySelector('[data-testid="editor-toolbar-add-section-konten"]')).toBeNull();
+    expect(container.querySelector('[data-testid="editor-toolbar-add-section-interaksi"]')).toBeNull();
   });
 
-  it('add buttons have icon + label + hint', () => {
-    useEditorStore.getState().addPage(); // free so buttons are enabled
+  it('add buttons have icon + label + hint (UX-01 Patch-2: visible after opening dropdown)', () => {
+    useEditorStore.getState().addPage(); // free so dropdown is enabled
     const { container } = render(React.createElement(Toolbar));
+    // Open the "+ Tambah Elemen" dropdown
+    const addToggle = container.querySelector('[data-testid="toolbar-add"]') as HTMLButtonElement;
+    fireEvent.click(addToggle);
     const textBtn = container.querySelector('[data-action="add-text"]') as HTMLElement | null;
     expect(textBtn).not.toBeNull();
-    // Should have icon, label "+ Teks", and hint text
-    expect(textBtn!.querySelector('.editor-toolbar__add-icon')).not.toBeNull();
+    // Should have icon, label "Teks", and hint text
+    expect(textBtn!.querySelector('.editor-toolbar__add-menu-icon')).not.toBeNull();
     expect(textBtn!.textContent ?? '').toMatch(/Teks/);
   });
 

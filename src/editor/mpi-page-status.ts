@@ -202,7 +202,7 @@ export function computePageStatus(page: SimplePage): PageStatus {
       if (!hasGame) {
         issues.push({
           level: 'error',
-          message: 'Aktivitas belum punya Game component.',
+          message: 'Aktivitas belum punya game atau misi interaktif.',
         });
       }
       const hasNav = page.components.some((c) => c.type === 'navigation');

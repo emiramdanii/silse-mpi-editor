@@ -36,17 +36,18 @@ describe('UX-01 Patch — Scope A: Toolbar Lainnya menu', () => {
     useEditorStore.getState().newProject();
   });
 
-  it('Toolbar renders only Konten + Interaksi + Lainnya groups (no Berkas group label)', () => {
+  it('Toolbar renders only "+ Tambah Elemen" + "Lainnya" (UX-01 Patch-2: clean toolbar)', () => {
     const { container } = render(React.createElement(Toolbar));
-    // Konten and Interaksi group labels still present
-    expect(container.querySelector('[data-testid="editor-toolbar-group-konten"]')).not.toBeNull();
-    expect(container.querySelector('[data-testid="editor-toolbar-group-interaksi"]')).not.toBeNull();
-    // Berkas group wrapper is now just a "Lainnya" button (no group-label "Berkas")
-    expect(container.querySelector('[data-testid="editor-toolbar-group-berkas"]')).not.toBeNull();
-    // There must NOT be a group-label saying "Berkas" anymore
+    // UX-01 Patch-2: only 2 visible action buttons in toolbar row.
+    expect(container.querySelector('[data-testid="toolbar-add"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="toolbar-more"]')).not.toBeNull();
+    // No "Berkas" group-label visible (it's now just the Lainnya button).
     const groupLabels = Array.from(container.querySelectorAll('.editor-toolbar__group-label'))
       .map((el) => el.textContent ?? '');
     expect(groupLabels).not.toContain('Berkas');
+    // No "Konten"/"Interaksi" group-labels visible either (they're inside the dropdown).
+    expect(groupLabels).not.toContain('Konten');
+    expect(groupLabels).not.toContain('Interaksi');
   });
 
   it('Lainnya button is rendered with text "⋯ Lainnya"', () => {
@@ -107,14 +108,25 @@ describe('UX-01 Patch — Scope A: Toolbar Lainnya menu', () => {
     expect(moreBtn.getAttribute('aria-expanded')).toBe('false');
   });
 
-  it('click-away overlay closes the menu', () => {
+  it('click-away (mousedown outside) closes the menu (UX-01 Patch-2: document listener)', () => {
     const { container } = render(React.createElement(Toolbar));
     const moreBtn = container.querySelector('[data-testid="toolbar-more"]') as HTMLButtonElement;
     fireEvent.click(moreBtn);
-    const clickaway = container.querySelector('[data-testid="toolbar-more-clickaway"]');
-    expect(clickaway).not.toBeNull();
-    fireEvent.click(clickaway!);
+    expect(container.querySelector('[data-testid="toolbar-more-menu"]')).not.toBeNull();
+    // UX-01 Patch-2: replaced click-away overlay with a document mousedown listener.
+    // Simulate a mousedown outside both dropdown wrap regions.
+    fireEvent.mouseDown(document.body);
     expect(container.querySelector('[data-testid="toolbar-more-menu"]')).toBeNull();
+  });
+
+  it('click inside Lainnya menu does NOT close it (mousedown inside wrap)', () => {
+    const { container } = render(React.createElement(Toolbar));
+    const moreBtn = container.querySelector('[data-testid="toolbar-more"]') as HTMLButtonElement;
+    fireEvent.click(moreBtn);
+    const menu = container.querySelector('[data-testid="toolbar-more-menu"]')!;
+    // mousedown inside the menu should not close it.
+    fireEvent.mouseDown(menu);
+    expect(container.querySelector('[data-testid="toolbar-more-menu"]')).not.toBeNull();
   });
 });
 

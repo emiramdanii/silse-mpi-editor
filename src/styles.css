@@ -1109,55 +1109,149 @@ textarea {
   font-size: 11px;
 }
 
-.editor-toolbar__add-btn {
+/* =========================================================================
+   UX-01 Patch-2 — "+ Tambah Elemen" dropdown (replaces berderet add buttons)
+   ========================================================================= */
+
+.editor-toolbar__add-wrap {
+  position: relative;
+}
+
+.editor-toolbar__add-toggle {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 10px;
-  border: 1px solid var(--color-border);
-  background: var(--color-panel);
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid var(--color-accent);
+  background: var(--color-accent);
+  color: white;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.12s;
-  text-align: left;
+  transition: background 0.12s;
 }
 
-.editor-toolbar__add-btn:hover:not(:disabled) {
-  background: var(--color-accent-soft);
-  border-color: var(--color-accent);
+.editor-toolbar__add-toggle:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
 }
 
-.editor-toolbar__add-btn:disabled {
-  opacity: 0.4;
+.editor-toolbar__add-toggle:disabled {
+  background: var(--color-panel-soft);
+  color: var(--color-muted);
+  border-color: var(--color-border);
   cursor: not-allowed;
 }
 
-.editor-toolbar__add-icon {
-  font-size: 14px;
-  line-height: 1;
+.editor-toolbar__add-toggle[aria-expanded="true"] {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
 }
 
-.editor-toolbar__add-body {
+.editor-toolbar__add-chevron {
+  font-size: 10px;
+  opacity: 0.85;
+}
+
+.editor-toolbar__add-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 260px;
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 6px;
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 6px;
+  z-index: 100;
 }
 
-.editor-toolbar__add-label {
+.editor-toolbar__add-menu--empty {
+  min-width: 240px;
+  padding: 12px;
+}
+
+.editor-toolbar__add-menu-guidance {
   font-size: 12px;
-  font-weight: 600;
-  color: var(--color-text);
-  line-height: 1.2;
+  color: var(--color-muted);
+  font-style: italic;
+  line-height: 1.5;
+  text-align: center;
 }
 
-.editor-toolbar__add-btn:hover:not(:disabled) .editor-toolbar__add-label {
+.editor-toolbar__add-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.editor-toolbar__add-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-muted);
+  padding: 2px 8px;
+}
+
+.editor-toolbar__add-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  padding: 7px 10px;
+  font-size: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--color-text);
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.editor-toolbar__add-menu-item:hover {
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
   color: var(--color-accent);
 }
 
-.editor-toolbar__add-hint {
+.editor-toolbar__add-menu-icon {
+  font-size: 14px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.editor-toolbar__add-menu-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.editor-toolbar__add-menu-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: inherit;
+  line-height: 1.2;
+}
+
+.editor-toolbar__add-menu-hint {
   font-size: 10px;
   color: var(--color-muted);
   line-height: 1.2;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.editor-toolbar__add-menu-item:hover .editor-toolbar__add-menu-hint {
+  color: var(--color-accent);
+  opacity: 0.85;
 }
 
 /* =========================================================================

@@ -3,7 +3,7 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { render } from '@testing-library/react';
+import { render, fireEvent } from '@testing-library/react';
 import React from 'react';
 import { Toolbar } from '../editor/Toolbar';
 import { createGameComponent, createGameMission } from '../core/component-factory';
@@ -227,12 +227,16 @@ describe('M11A — no page-spam', () => {
 // =========================================================================
 
 describe('M11A — UI checks', () => {
-  it('Toolbar has + Game button (UX-01: rendered label, source has action spec)', () => {
+  it('Toolbar has + Game button (UX-01 Patch-2: inside Tambah Elemen dropdown)', () => {
     const content = readFileSync(resolve(SRC_DIR, 'editor/Toolbar.tsx'), 'utf8');
-    // UX-01: button spec is centralized — verify the action 'add-game' is declared.
+    // Verify the action 'add-game' is declared in the spec.
     expect(content).toMatch(/action:\s*['"]add-game['"]/);
-    // UX-01: label is rendered via spec, so check the rendered output too.
+    // UX-01 Patch-2: button is inside a dropdown — open it first, then check.
     const { container: tbContainer } = renderToolbarWithFreePage();
+    const addToggle = tbContainer.querySelector('[data-testid="toolbar-add"]') as HTMLButtonElement;
+    expect(addToggle).not.toBeNull();
+    // Click to open dropdown (use fireEvent for React synthetic event)
+    fireEvent.click(addToggle);
     const gameBtn = tbContainer.querySelector('[data-action="add-game"]');
     expect(gameBtn).not.toBeNull();
     expect(gameBtn?.textContent ?? '').toMatch(/Game/);

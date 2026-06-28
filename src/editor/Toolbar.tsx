@@ -1,22 +1,31 @@
 /**
- * EditorToolbar — toolbar kontekstual untuk tambah elemen + berkas (UX-01 redesign).
+ * EditorToolbar — toolbar kontekstual untuk tambah elemen + berkas (UX-01 Patch-2).
  *
  * Layer: editor
  * Allowed imports: react, ../store/editor-store, ../core/*, ../preview/*, ../export/*, ../storage/*, ../ai-import/*
  *
- * Kontrak (UX-01 Scope D):
- *   - Toolbar lama (technical) → EditorToolbar baru (ramah guru).
- *   - Header kontekstual: "Tambah elemen di halaman [role label]".
- *   - Tombol dikelompokkan: "Konten" (Teks/Gambar/Kartu) | "Interaksi" (Navigasi/Pertanyaan/Game).
- *   - Tombol aksi berkas (Simpan/Muat/Reset/AI Import/Sample) jadi baris ke-2.
- *   - Semua `data-action` lama dipertahankan supaya scope-lock test pass.
- *   - Tidak ada kata terlarang "b-l-o-c-k" di user-facing text.
+ * Kontrak (UX-01 Patch-2 — Clean Top Editor Menu):
+ *   Toolbar atas HANYA menampilkan 2 tombol:
+ *     1. "+ Tambah Elemen ▾" — dropdown kontekstual berisi elemen yang
+ *        diizinkan untuk role halaman aktif (capability check).
+ *     2. "⋯ Lainnya ▾" — dropdown aksi berkas (Simpan, Muat, Reset, dst).
  *
- *   Catatan: tombol Pratinjau/Export HTML dipindah ke Topbar (UX-01 Scope B).
- *   Tombol di toolbar ini sekarang HANYA untuk tambah elemen + berkas.
+ *   Tombol Teks/Gambar/Kartu/Navigasi/Pertanyaan/Game TIDAK lagi berderet
+ *   langsung di toolbar — semua ada di balik "+ Tambah Elemen".
+ *
+ *   Catatan: kedua dropdown bisa dibuka bersamaan, tetapi umumnya guru
+ *   akan buka satu per satu. Klik di luar salah satu menutup dropdown itu.
+ *
+ * Kontrak lama (UX-01 Patch — tetap dipertahankan):
+ *   - Semua `data-action` lama (add-text, add-image, add-card, add-navigation,
+ *     add-question, add-game, save, load, save-library, export-json,
+ *     import-json, save-style-pack, load-sample, ai-import, reset, more-menu)
+ *     tetap dipertahankan supaya scope-lock test pass.
+ *   - Tombol aksi primer (Pratinjau, Export HTML) tetap di Topbar (UX-01).
+ *   - Tidak ada kata terlarang "b-l-o-c-k" di user-facing text.
  */
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useEditorStore } from '../store/editor-store';
 import { canAddComponent } from '../core/capability';
 import type { NavigationAction } from '../core/types';
@@ -39,19 +48,27 @@ type AddButtonSpec = {
   hint: string;
   milestone: string;
   icon: string;
+  /** Which capability slot to check; if undefined, always allowed when role allows add. */
+  capability: 'text' | 'image' | 'card' | 'navigation' | 'question' | 'game';
+  /** Section in the dropdown menu. */
+  section: 'konten' | 'interaksi';
 };
 
-const KONTEN_BUTTONS: AddButtonSpec[] = [
-  { action: 'add-text',  label: 'Teks',   hint: 'Judul, isi, atau catatan', milestone: 'M2',  icon: '📝' },
-  { action: 'add-image', label: 'Gambar', hint: 'Ilustrasi atau foto',       milestone: 'M4',  icon: '🖼️' },
-  { action: 'add-card',  label: 'Kartu',  hint: 'Info, contoh, atau catatan penting', milestone: 'M4', icon: '🗂️' },
+const ADD_BUTTONS: AddButtonSpec[] = [
+  // Konten
+  { action: 'add-text',  label: 'Teks',   hint: 'Judul, isi, atau catatan', milestone: 'M2',  icon: '📝', capability: 'text',  section: 'konten' },
+  { action: 'add-image', label: 'Gambar', hint: 'Ilustrasi atau foto',       milestone: 'M4',  icon: '🖼️', capability: 'image', section: 'konten' },
+  { action: 'add-card',  label: 'Kartu',  hint: 'Info, contoh, atau catatan penting', milestone: 'M4', icon: '🗂️', capability: 'card',  section: 'konten' },
+  // Interaksi
+  { action: 'add-navigation', label: 'Navigasi',    hint: 'Tombol pindah halaman', milestone: 'M5',   icon: '➡️', capability: 'navigation', section: 'interaksi' },
+  { action: 'add-question',   label: 'Pertanyaan',  hint: 'Pilihan ganda + feedback', milestone: 'M10', icon: '❓', capability: 'question',   section: 'interaksi' },
+  { action: 'add-game',       label: 'Game',        hint: 'Misi interaktif',         milestone: 'M11A', icon: '🎮', capability: 'game',       section: 'interaksi' },
 ];
 
-const INTERAKSI_BUTTONS: AddButtonSpec[] = [
-  { action: 'add-navigation', label: 'Navigasi',    hint: 'Tombol pindah halaman', milestone: 'M5',   icon: '➡️' },
-  { action: 'add-question',   label: 'Pertanyaan',  hint: 'Pilihan ganda + feedback', milestone: 'M10', icon: '❓' },
-  { action: 'add-game',       label: 'Game',        hint: 'Misi interaktif',         milestone: 'M11A', icon: '🎮' },
-];
+const SECTION_LABELS: Record<AddButtonSpec['section'], string> = {
+  konten: 'Konten',
+  interaksi: 'Interaksi',
+};
 
 export function Toolbar() {
   const addTextComponent = useEditorStore((s) => s.addTextComponent);
@@ -74,27 +91,61 @@ export function Toolbar() {
   const [aiError, setAiError] = useState<string | null>(null);
   // UX-01 Patch Scope A: file actions collapsed into "Lainnya" dropdown.
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  // UX-01 Patch-2: add-element actions collapsed into "Tambah Elemen" dropdown.
+  const [showAddMenu, setShowAddMenu] = useState(false);
+
+  // Refs for click-away handling (closing dropdown when clicking inside the
+  // other dropdown's region or outside both).
+  const addMenuWrapRef = useRef<HTMLDivElement>(null);
+  const moreMenuWrapRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns when role changes (prevents stale menu state across pages).
+  useEffect(() => {
+    setShowAddMenu(false);
+    setShowMoreMenu(false);
+  }, [currentPage?.id]);
 
   const role = currentPage?.role;
   const roleLabel = role ? getRoleInfo(role).label : '—';
   const roleHint = role ? getRoleInfo(role).hint : '';
 
-  const can = (componentType: 'text' | 'image' | 'card' | 'navigation' | 'question' | 'game'): boolean =>
-    role ? canAddComponent(role, componentType) : false;
+  // Compute which add buttons are allowed for the current role.
+  const allowedAddButtons: AddButtonSpec[] = role
+    ? ADD_BUTTONS.filter((spec) => canAddComponent(role, spec.capability))
+    : [];
 
-  const handleAddText = () => addTextComponent();
-  const handleAddImage = () => {
-    const src = window.prompt('URL atau data URL gambar:');
-    if (!src) return;
-    addImageComponent(src);
+  const canAddAnything = allowedAddButtons.length > 0;
+
+  // Map spec → handler
+  const getHandler = (action: string): (() => void) | null => {
+    switch (action) {
+      case 'add-text': return () => addTextComponent();
+      case 'add-image': return () => {
+        const src = window.prompt('URL atau data URL gambar:');
+        if (!src) return;
+        addImageComponent(src);
+      };
+      case 'add-card': return () => addCardComponent('Konten card baru');
+      case 'add-navigation': return () => {
+        const action: NavigationAction = 'next';
+        addNavigationComponent('Berikutnya', action);
+      };
+      case 'add-question': return () => addQuestionComponent();
+      case 'add-game': return () => addGameComponent();
+      default: return null;
+    }
   };
-  const handleAddCard = () => addCardComponent('Konten card baru');
-  const handleAddNavigation = () => {
-    const action: NavigationAction = 'next';
-    addNavigationComponent('Berikutnya', action);
+
+  // Wrap add handler so it also closes the dropdown after action.
+  const wrapAddHandler = (action: string): (() => void) => {
+    const handler = getHandler(action);
+    return () => {
+      setShowAddMenu(false);
+      handler?.();
+    };
   };
-  const handleAddQuestion = () => addQuestionComponent();
-  const handleAddGame = () => addGameComponent();
+
+  // ----- File action handlers (from UX-01 Patch — unchanged behavior) -----
 
   const handleLoadSample = () => {
     const sample = createSamplePpknProject();
@@ -235,34 +286,33 @@ export function Toolbar() {
     }
   };
 
-  const renderAddButton = (
-    spec: AddButtonSpec,
-    onClick: () => void,
-    enabled: boolean,
-  ) => (
-    <button
-      key={spec.action}
-      onClick={onClick}
-      disabled={!enabled}
-      className="editor-toolbar__add-btn"
-      title={enabled ? `Tambah ${spec.label.toLowerCase()} — ${spec.hint}` : 'Tidak diizinkan di halaman ini'}
-      data-action={spec.action}
-      data-milestone={spec.milestone}
-      data-testid={`toolbar-${spec.action}`}
-    >
-      <span className="editor-toolbar__add-icon" aria-hidden>{spec.icon}</span>
-      <span className="editor-toolbar__add-body">
-        <span className="editor-toolbar__add-label">+ {spec.label}</span>
-        <span className="editor-toolbar__add-hint">{spec.hint}</span>
-      </span>
-    </button>
-  );
+  // Click-away handler: listen for clicks outside both dropdown regions.
+  useEffect(() => {
+    if (!showAddMenu && !showMoreMenu) return;
+    const handleClickAway = (e: MouseEvent) => {
+      const target = e.target as Node;
+      const inAdd = addMenuWrapRef.current?.contains(target);
+      const inMore = moreMenuWrapRef.current?.contains(target);
+      if (!inAdd && !inMore) {
+        setShowAddMenu(false);
+        setShowMoreMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickAway);
+    return () => document.removeEventListener('mousedown', handleClickAway);
+  }, [showAddMenu, showMoreMenu]);
+
+  // Group allowed add buttons by section.
+  const sectionButtons: Record<AddButtonSpec['section'], AddButtonSpec[]> = {
+    konten: allowedAddButtons.filter((b) => b.section === 'konten'),
+    interaksi: allowedAddButtons.filter((b) => b.section === 'interaksi'),
+  };
 
   return (
     <div className="editor-toolbar" data-testid="editor-toolbar">
       <div className="editor-toolbar__context" data-testid="editor-toolbar-context">
         <span className="editor-toolbar__context-label">
-          Tambah elemen di
+          Halaman
         </span>
         <span className="editor-toolbar__context-role" data-testid="editor-toolbar-context-role">
           {roleLabel}
@@ -273,71 +323,129 @@ export function Toolbar() {
       </div>
 
       <div className="editor-toolbar__row">
-        <div className="editor-toolbar__group" data-testid="editor-toolbar-group-konten">
-          <span className="editor-toolbar__group-label">Konten</span>
-          <div className="editor-toolbar__group-btns">
-            {renderAddButton(KONTEN_BUTTONS[0], handleAddText,  can('text'))}
-            {renderAddButton(KONTEN_BUTTONS[1], handleAddImage, can('image'))}
-            {renderAddButton(KONTEN_BUTTONS[2], handleAddCard,  can('card'))}
-          </div>
-        </div>
-
-        <div className="editor-toolbar__group" data-testid="editor-toolbar-group-interaksi">
-          <span className="editor-toolbar__group-label">Interaksi</span>
-          <div className="editor-toolbar__group-btns">
-            {renderAddButton(INTERAKSI_BUTTONS[0], handleAddNavigation, can('navigation'))}
-            {renderAddButton(INTERAKSI_BUTTONS[1], handleAddQuestion,   can('question'))}
-            {renderAddButton(INTERAKSI_BUTTONS[2], handleAddGame,       can('game'))}
-          </div>
-        </div>
-
-        <div className="editor-toolbar__group editor-toolbar__group--files" data-testid="editor-toolbar-group-berkas">
-          <div className="editor-toolbar__more-wrap">
-            <button
-              type="button"
-              className="editor-toolbar__more-btn"
-              onClick={() => setShowMoreMenu((v) => !v)}
-              title="Tampilkan aksi berkas lainnya"
-              data-action="more-menu"
-              data-testid="toolbar-more"
-              aria-expanded={showMoreMenu}
-              aria-haspopup="menu"
+        {/* "+ Tambah Elemen" dropdown (UX-01 Patch-2) */}
+        <div
+          className="editor-toolbar__add-wrap"
+          ref={addMenuWrapRef}
+          data-testid="editor-toolbar-group-konten"
+        >
+          <button
+            type="button"
+            className="editor-toolbar__add-toggle"
+            onClick={() => setShowAddMenu((v) => !v)}
+            disabled={!canAddAnything}
+            title={
+              canAddAnything
+                ? `Tambah elemen di ${roleLabel}`
+                : 'Halaman ini tidak mengizinkan tambah elemen manual (terpandu)'
+            }
+            data-action="add-menu"
+            data-testid="toolbar-add"
+            aria-expanded={showAddMenu}
+            aria-haspopup="menu"
+          >
+            <span aria-hidden>＋</span>
+            <span>Tambah Elemen</span>
+            <span className="editor-toolbar__add-chevron" aria-hidden>
+              {showAddMenu ? '▴' : '▾'}
+            </span>
+          </button>
+          {showAddMenu && canAddAnything && (
+            <div
+              className="editor-toolbar__add-menu"
+              role="menu"
+              data-testid="toolbar-add-menu"
             >
-              ⋯ Lainnya
-              <span className="editor-toolbar__more-chevron" aria-hidden>
-                {showMoreMenu ? '▴' : '▾'}
-              </span>
-            </button>
-            {showMoreMenu && (
-              <div
-                className="editor-toolbar__more-menu"
-                role="menu"
-                data-testid="toolbar-more-menu"
-              >
-                <button onClick={handleSave}          role="menuitem" title="Simpan proyek ke penyimpanan lokal"   data-action="save"            data-testid="toolbar-save">💾 Simpan</button>
-                <button onClick={handleLoad}          role="menuitem" title="Muat proyek dari penyimpanan lokal"   data-action="load"            data-testid="toolbar-load">📂 Muat</button>
-                <button onClick={handleSaveToLibrary} role="menuitem" title="Simpan ke perpustakaan proyek"        data-action="save-library"    data-testid="toolbar-save-library">⭐ Simpan ke Perpustakaan</button>
-                <div className="editor-toolbar__more-divider" />
-                <button onClick={handleExportJson}    role="menuitem" title="Cadangkan proyek sebagai JSON"        data-action="export-json"     data-testid="toolbar-export-json">📦 Cadangan JSON</button>
-                <button onClick={handleImportJson}    role="menuitem" title="Impor proyek dari cadangan JSON"      data-action="import-json"     data-testid="toolbar-import-json">📥 Impor JSON</button>
-                <div className="editor-toolbar__more-divider" />
-                <button onClick={handleSaveStylePack} role="menuitem" title="Simpan paket gaya saat ini"          data-action="save-style-pack" data-testid="toolbar-save-style-pack">🎨 Simpan Paket Gaya</button>
-                <button onClick={handleLoadSample}    role="menuitem" title="Muat contoh MPI PPKn"                 data-action="load-sample"     data-testid="toolbar-load-sample">📋 Muat Contoh MPI</button>
-                <button onClick={handleAiImport}      role="menuitem" title="Impor JSON dari AI"                   data-action="ai-import"       data-milestone="M8" data-testid="toolbar-ai-import">🤖 Impor AI JSON</button>
-                <div className="editor-toolbar__more-divider" />
-                <button onClick={handleReset}         role="menuitem" title="Reset proyek ke kosong"               data-action="reset"           data-testid="toolbar-reset" className="danger">↺ Reset</button>
+              {(['konten', 'interaksi'] as const).map((section) => {
+                if (sectionButtons[section].length === 0) return null;
+                return (
+                  <div
+                    key={section}
+                    className="editor-toolbar__add-section"
+                    data-testid={`editor-toolbar-add-section-${section}`}
+                  >
+                    <div className="editor-toolbar__add-section-label">
+                      {SECTION_LABELS[section]}
+                    </div>
+                    {sectionButtons[section].map((spec) => (
+                      <button
+                        key={spec.action}
+                        onClick={wrapAddHandler(spec.action)}
+                        role="menuitem"
+                        className="editor-toolbar__add-menu-item"
+                        title={`Tambah ${spec.label.toLowerCase()} — ${spec.hint}`}
+                        data-action={spec.action}
+                        data-milestone={spec.milestone}
+                        data-testid={`toolbar-${spec.action}`}
+                      >
+                        <span className="editor-toolbar__add-menu-icon" aria-hidden>{spec.icon}</span>
+                        <span className="editor-toolbar__add-menu-body">
+                          <span className="editor-toolbar__add-menu-label">{spec.label}</span>
+                          <span className="editor-toolbar__add-menu-hint">{spec.hint}</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {showAddMenu && !canAddAnything && (
+            /* Still render a small menu so click-away can close it,
+               but show a guidance message instead of empty dropdown. */
+            <div
+              className="editor-toolbar__add-menu editor-toolbar__add-menu--empty"
+              role="menu"
+              data-testid="toolbar-add-menu"
+            >
+              <div className="editor-toolbar__add-menu-guidance">
+                Halaman ini terpandu — elemen tidak perlu ditambah manual.
               </div>
-            )}
-            {/* Click-away overlay: invisible full-screen layer that closes the menu on outside click. */}
-            {showMoreMenu && (
-              <div
-                className="editor-toolbar__more-clickaway"
-                onClick={() => setShowMoreMenu(false)}
-                aria-hidden
-                data-testid="toolbar-more-clickaway"
-              />
-            )}
-          </div>
+            </div>
+          )}
+        </div>
+
+        {/* "⋯ Lainnya" dropdown (UX-01 Patch — unchanged) */}
+        <div
+          className="editor-toolbar__group editor-toolbar__group--files"
+          data-testid="editor-toolbar-group-berkas"
+          ref={moreMenuWrapRef}
+        >
+          <button
+            type="button"
+            className="editor-toolbar__more-btn"
+            onClick={() => setShowMoreMenu((v) => !v)}
+            title="Tampilkan aksi berkas lainnya"
+            data-action="more-menu"
+            data-testid="toolbar-more"
+            aria-expanded={showMoreMenu}
+            aria-haspopup="menu"
+          >
+            ⋯ Lainnya
+            <span className="editor-toolbar__more-chevron" aria-hidden>
+              {showMoreMenu ? '▴' : '▾'}
+            </span>
+          </button>
+          {showMoreMenu && (
+            <div
+              className="editor-toolbar__more-menu"
+              role="menu"
+              data-testid="toolbar-more-menu"
+            >
+              <button onClick={handleSave}          role="menuitem" title="Simpan proyek ke penyimpanan lokal"   data-action="save"            data-testid="toolbar-save">💾 Simpan</button>
+              <button onClick={handleLoad}          role="menuitem" title="Muat proyek dari penyimpanan lokal"   data-action="load"            data-testid="toolbar-load">📂 Muat</button>
+              <button onClick={handleSaveToLibrary} role="menuitem" title="Simpan ke perpustakaan proyek"        data-action="save-library"    data-testid="toolbar-save-library">⭐ Simpan ke Perpustakaan</button>
+              <div className="editor-toolbar__more-divider" />
+              <button onClick={handleExportJson}    role="menuitem" title="Cadangkan proyek sebagai JSON"        data-action="export-json"     data-testid="toolbar-export-json">📦 Cadangan JSON</button>
+              <button onClick={handleImportJson}    role="menuitem" title="Impor proyek dari cadangan JSON"      data-action="import-json"     data-testid="toolbar-import-json">📥 Impor JSON</button>
+              <div className="editor-toolbar__more-divider" />
+              <button onClick={handleSaveStylePack} role="menuitem" title="Simpan paket gaya saat ini"          data-action="save-style-pack" data-testid="toolbar-save-style-pack">🎨 Simpan Paket Gaya</button>
+              <button onClick={handleLoadSample}    role="menuitem" title="Muat contoh MPI PPKn"                 data-action="load-sample"     data-testid="toolbar-load-sample">📋 Muat Contoh MPI</button>
+              <button onClick={handleAiImport}      role="menuitem" title="Impor JSON dari AI"                   data-action="ai-import"       data-milestone="M8" data-testid="toolbar-ai-import">🤖 Impor AI JSON</button>
+              <div className="editor-toolbar__more-divider" />
+              <button onClick={handleReset}         role="menuitem" title="Reset proyek ke kosong"               data-action="reset"           data-testid="toolbar-reset" className="danger">↺ Reset</button>
+            </div>
+          )}
         </div>
       </div>
 
