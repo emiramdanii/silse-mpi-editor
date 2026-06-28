@@ -78,8 +78,8 @@ function makeCtx(project: SimpleProject): PatternContext {
 // =========================================================================
 
 describe('UX-03 — Content Patterns library', () => {
-  it('has exactly 26 predefined patterns (UX-03 Patch-1: 12 → 26)', () => {
-    expect(CONTENT_PATTERNS).toHaveLength(26);
+  it('has exactly 27 predefined patterns (LXC-02: 26 → 27, +tujuan-berlapis)', () => {
+    expect(CONTENT_PATTERNS).toHaveLength(27);
   });
 
   it('each pattern has id, name, description, icon, applicableRoles, pedagogicalReason, buildComponents', () => {

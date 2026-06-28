@@ -77,6 +77,11 @@ type ExportRenderComponent = {
   gameTitle?: string;
   gameInstruction?: string;
   missions?: { id: string; title: string; prompt: string; choices: { id: string; text: string }[]; correctChoiceIndex: number; feedbackCorrect: string; feedbackWrong: string; points: number }[];
+  // Layered-info-specific (LXC-02)
+  layeredTitle?: string;
+  layeredVariant?: string;
+  layers?: { id: string; title: string; body: string; icon?: string }[];
+  defaultOpenIndex?: number | null;
   // Pre-computed resolved style from resolver
   resolvedStyle: {
     inlineStyle: Record<string, string | number>;
@@ -160,6 +165,11 @@ function buildExportRenderComponent(
     base.gameInstruction = component.instruction;
     base.missions = component.missions;
     base.scoringStyle = component.scoringStyle;
+  } else if (component.type === 'layered-info') {
+    base.layeredTitle = component.title;
+    base.layeredVariant = component.variant;
+    base.layers = component.layers;
+    base.defaultOpenIndex = component.defaultOpenIndex;
   }
 
   return base;
@@ -355,6 +365,7 @@ function generateJS(renderModelJson: string): string {
   var questionAnswers = {};
   var totalScore = 0;
   var gameStates = {};
+  var layeredInfoStates = {};
 
   var canvas = document.getElementById('silse-canvas');
   var prevBtn = document.getElementById('silse-nav-prev');
@@ -693,6 +704,220 @@ function generateJS(renderModelJson: string): string {
           });
           el.appendChild(finishBtn);
         }
+      }
+
+      return el;
+    }
+
+    if (comp.type === 'layered-info') {
+      el = document.createElement('div');
+      el.className = 'silse-layered-info';
+      el.style.cssText = style + 'box-sizing:border-box;display:flex;flex-direction:column;gap:8px;overflow:auto;padding:12px;';
+
+      if (comp.layeredTitle) {
+        var liTitle = document.createElement('strong');
+        liTitle.style.cssText = 'font-size:16px;margin-bottom:4px;white-space:normal;overflow-wrap:anywhere;';
+        liTitle.textContent = comp.layeredTitle;
+        el.appendChild(liTitle);
+      }
+
+      var layers = comp.layers || [];
+      if (layers.length === 0) {
+        var liEmpty = document.createElement('div');
+        liEmpty.style.cssText = 'color:#6b7280;font-size:13px;font-style:italic;';
+        liEmpty.textContent = 'Belum ada lapisan.';
+        el.appendChild(liEmpty);
+        return el;
+      }
+
+      // Initialize runtime state for this layered-info
+      if (!(comp.id in layeredInfoStates)) {
+        layeredInfoStates[comp.id] = comp.defaultOpenIndex;
+      }
+      var openIdx = layeredInfoStates[comp.id];
+
+      var variant = comp.layeredVariant;
+
+      if (variant === 'accordion') {
+        var accContainer = document.createElement('div');
+        accContainer.style.cssText = 'display:flex;flex-direction:column;gap:6px;';
+        layers.forEach(function(layer, idx) {
+          var isOpen = openIdx === idx;
+          var accItem = document.createElement('div');
+          accItem.style.cssText = 'border:1px solid ' + (isOpen ? '#2563eb' : '#d1d5db') + ';border-radius:6px;overflow:hidden;';
+          var accHead = document.createElement('div');
+          accHead.style.cssText = 'padding:8px 12px;background:' + (isOpen ? '#eff6ff' : '#f9fafb') + ';cursor:pointer;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:' + (isOpen ? '#2563eb' : '#1f2937') + ';white-space:normal;overflow-wrap:anywhere;';
+          accHead.textContent = (isOpen ? '▾ ' : '▸ ') + layer.title;
+          (function(itemIdx) {
+            accHead.addEventListener('click', function() {
+              layeredInfoStates[comp.id] = (layeredInfoStates[comp.id] === itemIdx) ? null : itemIdx;
+              renderPage(currentPageIdx);
+            });
+          })(idx);
+          accItem.appendChild(accHead);
+          if (isOpen) {
+            var accBody = document.createElement('div');
+            accBody.style.cssText = 'padding:10px 12px;font-size:13px;line-height:1.5;color:#1f2937;white-space:pre-wrap;overflow-wrap:anywhere;';
+            accBody.textContent = layer.body;
+            accItem.appendChild(accBody);
+          }
+          accContainer.appendChild(accItem);
+        });
+        el.appendChild(accContainer);
+      } else if (variant === 'tabs' || variant === 'iconTabs') {
+        // Tabs / iconTabs
+        var safeActive = (openIdx === null || openIdx < 0 || openIdx >= layers.length) ? 0 : openIdx;
+        var tabsBar = document.createElement('div');
+        tabsBar.style.cssText = 'display:flex;gap:4px;border-bottom:2px solid #e3ddcd;flex-wrap:wrap;';
+        layers.forEach(function(layer, idx) {
+          var isActive = safeActive === idx;
+          var tab = document.createElement('button');
+          tab.style.cssText = 'padding:6px 12px;font-size:12px;font-weight:' + (isActive ? '600' : '500') + ';border:none;border-bottom:2px solid ' + (isActive ? '#2563eb' : 'transparent') + ';background:' + (isActive ? '#eff6ff' : 'transparent') + ';color:' + (isActive ? '#2563eb' : '#4a5160') + ';cursor:pointer;margin-bottom:-2px;display:inline-flex;align-items:center;gap:4px;border-radius:4px 4px 0 0;';
+          if (variant === 'iconTabs' && layer.icon) {
+            var iconSpan = document.createElement('span');
+            iconSpan.style.fontSize = '14px';
+            iconSpan.textContent = layer.icon;
+            tab.appendChild(iconSpan);
+          }
+          var tabLabel = document.createElement('span');
+          tabLabel.textContent = layer.title;
+          tab.appendChild(tabLabel);
+          (function(itemIdx) {
+            tab.addEventListener('click', function() {
+              layeredInfoStates[comp.id] = itemIdx;
+              renderPage(currentPageIdx);
+            });
+          })(idx);
+          tabsBar.appendChild(tab);
+        });
+        el.appendChild(tabsBar);
+        var activeLayer = layers[safeActive];
+        if (activeLayer) {
+          var tabBody = document.createElement('div');
+          tabBody.style.cssText = 'padding:10px;font-size:13px;line-height:1.5;color:#1f2937;white-space:pre-wrap;overflow-wrap:anywhere;flex:1;overflow:auto;';
+          tabBody.textContent = activeLayer.body;
+          el.appendChild(tabBody);
+        }
+      } else if (variant === 'stepper') {
+        // Stepper
+        var sSafeActive = (openIdx === null || openIdx < 0 || openIdx >= layers.length) ? 0 : openIdx;
+        var stepBar = document.createElement('div');
+        stepBar.style.cssText = 'display:flex;gap:2px;align-items:center;flex-wrap:wrap;';
+        layers.forEach(function(layer, idx) {
+          var isActive = sSafeActive === idx;
+          var isPast = idx < sSafeActive;
+          var step = document.createElement('button');
+          step.style.cssText = 'width:28px;height:28px;border-radius:50%;border:2px solid ' + (isActive ? '#2563eb' : isPast ? '#2f7d4f' : '#d1d5db') + ';background:' + (isActive ? '#2563eb' : isPast ? '#2f7d4f' : '#fff') + ';color:#fff;font-size:12px;font-weight:700;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;';
+          step.textContent = String(idx + 1);
+          step.title = layer.title;
+          (function(itemIdx) {
+            step.addEventListener('click', function() {
+              layeredInfoStates[comp.id] = itemIdx;
+              renderPage(currentPageIdx);
+            });
+          })(idx);
+          stepBar.appendChild(step);
+          if (idx < layers.length - 1) {
+            var line = document.createElement('div');
+            line.style.cssText = 'width:24px;height:2px;background:' + (isPast ? '#2f7d4f' : '#d1d5db') + ';';
+            stepBar.appendChild(line);
+          }
+        });
+        el.appendChild(stepBar);
+        var stepTitle = document.createElement('div');
+        stepTitle.style.cssText = 'padding:8px 4px;font-size:12px;font-weight:600;color:#2563eb;white-space:normal;overflow-wrap:anywhere;';
+        stepTitle.textContent = layers[sSafeActive] ? layers[sSafeActive].title : '';
+        el.appendChild(stepTitle);
+        if (layers[sSafeActive]) {
+          var stepBody = document.createElement('div');
+          stepBody.style.cssText = 'padding:10px;font-size:13px;line-height:1.5;color:#1f2937;white-space:pre-wrap;overflow-wrap:anywhere;flex:1;overflow:auto;background:#f9fafb;border-radius:6px;';
+          stepBody.textContent = layers[sSafeActive].body;
+          el.appendChild(stepBody);
+        }
+      } else if (variant === 'cardGrid') {
+        // CardGrid
+        var cSafeActive = (openIdx === null || openIdx < 0 || openIdx >= layers.length) ? 0 : openIdx;
+        var grid = document.createElement('div');
+        grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:6px;';
+        layers.forEach(function(layer, idx) {
+          var isActive = cSafeActive === idx;
+          var card = document.createElement('button');
+          card.style.cssText = 'padding:10px 8px;font-size:12px;font-weight:' + (isActive ? '600' : '500') + ';border:1px solid ' + (isActive ? '#2563eb' : '#d1d5db') + ';background:' + (isActive ? '#eff6ff' : '#fff') + ';color:' + (isActive ? '#2563eb' : '#1f2937') + ';border-radius:6px;cursor:pointer;text-align:center;display:flex;flex-direction:column;gap:2px;min-height:60px;';
+          if (layer.icon) {
+            var cIcon = document.createElement('span');
+            cIcon.style.fontSize = '16px';
+            cIcon.textContent = layer.icon;
+            card.appendChild(cIcon);
+          }
+          var cLabel = document.createElement('span');
+          cLabel.style.cssText = 'white-space:normal;overflow-wrap:anywhere;';
+          cLabel.textContent = layer.title;
+          card.appendChild(cLabel);
+          (function(itemIdx) {
+            card.addEventListener('click', function() {
+              layeredInfoStates[comp.id] = itemIdx;
+              renderPage(currentPageIdx);
+            });
+          })(idx);
+          grid.appendChild(card);
+        });
+        el.appendChild(grid);
+        if (layers[cSafeActive]) {
+          var cBody = document.createElement('div');
+          cBody.style.cssText = 'padding:10px;font-size:13px;line-height:1.5;color:#1f2937;white-space:pre-wrap;overflow-wrap:anywhere;background:#f9fafb;border-radius:6px;border:1px solid #e3ddcd;';
+          cBody.textContent = layers[cSafeActive].body;
+          el.appendChild(cBody);
+        }
+      } else if (variant === 'timeline') {
+        // Timeline
+        var tSafeActive = (openIdx === null || openIdx < 0 || openIdx >= layers.length) ? 0 : openIdx;
+        var tl = document.createElement('div');
+        tl.style.cssText = 'display:flex;flex-direction:column;gap:0;';
+        layers.forEach(function(layer, idx) {
+          var isActive = tSafeActive === idx;
+          var isPast = idx < tSafeActive;
+          var tlRow = document.createElement('div');
+          tlRow.style.cssText = 'display:flex;gap:10px;align-items:flex-start;';
+          var tlCol = document.createElement('div');
+          tlCol.style.cssText = 'display:flex;flex-direction:column;align-items:center;flex-shrink:0;';
+          var tlDot = document.createElement('button');
+          tlDot.style.cssText = 'width:20px;height:20px;border-radius:50%;border:2px solid ' + (isActive ? '#2563eb' : isPast ? '#2f7d4f' : '#d1d5db') + ';background:' + (isActive ? '#2563eb' : isPast ? '#2f7d4f' : '#fff') + ';color:#fff;font-size:10px;font-weight:700;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;';
+          tlDot.textContent = String(idx + 1);
+          (function(itemIdx) {
+            tlDot.addEventListener('click', function() {
+              layeredInfoStates[comp.id] = itemIdx;
+              renderPage(currentPageIdx);
+            });
+          })(idx);
+          tlCol.appendChild(tlDot);
+          if (idx < layers.length - 1) {
+            var tlLine = document.createElement('div');
+            tlLine.style.cssText = 'width:2px;height:24px;background:' + (isPast ? '#2f7d4f' : '#d1d5db') + ';';
+            tlCol.appendChild(tlLine);
+          }
+          tlRow.appendChild(tlCol);
+          var tlContent = document.createElement('div');
+          tlContent.style.cssText = 'flex:1;padding-bottom:12px;';
+          var tlTitleBtn = document.createElement('button');
+          tlTitleBtn.style.cssText = 'border:none;background:transparent;padding:0;font-size:12px;font-weight:' + (isActive ? '700' : '500') + ';color:' + (isActive ? '#2563eb' : '#1f2937') + ';cursor:pointer;text-align:left;display:block;margin-bottom:2px;';
+          tlTitleBtn.textContent = layer.title;
+          (function(itemIdx) {
+            tlTitleBtn.addEventListener('click', function() {
+              layeredInfoStates[comp.id] = itemIdx;
+              renderPage(currentPageIdx);
+            });
+          })(idx);
+          tlContent.appendChild(tlTitleBtn);
+          if (isActive) {
+            var tlBody = document.createElement('div');
+            tlBody.style.cssText = 'font-size:12px;line-height:1.5;color:#1f2937;white-space:pre-wrap;overflow-wrap:anywhere;';
+            tlBody.textContent = layer.body;
+            tlContent.appendChild(tlBody);
+          }
+          tlRow.appendChild(tlContent);
+          tl.appendChild(tlRow);
+        });
+        el.appendChild(tl);
       }
 
       return el;

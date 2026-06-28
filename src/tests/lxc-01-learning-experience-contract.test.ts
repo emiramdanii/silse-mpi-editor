@@ -408,15 +408,15 @@ describe('LXC-01 — Contract file is pure spec (no runtime leak)', () => {
     expect(content).not.toMatch(/createElement\(/);
   });
 
-  it('contract file does NOT add to COMPONENT_TYPES (that comes in LXC-02+)', () => {
+  it('LXC-02 added layered-info to COMPONENT_TYPES (now 7 types)', () => {
     const path = resolve(__dirname, '../core/types.ts');
     const content = readFileSync(path, 'utf8');
-    // COMPONENT_TYPES should still be the original 6 (text, image, card, navigation, question, game)
-    // LXC-01 does NOT add new types yet
+    // LXC-02: layered-info is now an official component type.
+    // Original 6 + layered-info = 7.
     const match = content.match(/export const COMPONENT_TYPES = \[([^\]]+)\]/);
     expect(match).not.toBeNull();
     const types = match![1].split(',').map((t) => t.trim().replace(/['"]/g, ''));
-    expect(types).toEqual(['text', 'image', 'card', 'navigation', 'question', 'game']);
+    expect(types).toEqual(['text', 'image', 'card', 'navigation', 'question', 'game', 'layered-info']);
   });
 });
 
@@ -568,14 +568,14 @@ describe('LXC-01 Patch-1 — Contract Alignment (layered-info, interactive-start
   // ----- Cross-cutting guards -----
 
   describe('Patch-1 cross-cutting guards', () => {
-    it('COMPONENT_TYPES still unchanged (still 6 original, no runtime yet)', () => {
-      // Re-verify: LXC-01 Patch-1 is still CONTRACT ONLY — no new types added
+    it('LXC-02 added layered-info to COMPONENT_TYPES (now 7 types)', () => {
+      // LXC-02 implemented layered-info as official component type.
       const path = resolve(__dirname, '../core/types.ts');
       const content = readFileSync(path, 'utf8');
       const match = content.match(/export const COMPONENT_TYPES = \[([^\]]+)\]/);
       expect(match).not.toBeNull();
       const types = match![1].split(',').map((t) => t.trim().replace(/['"]/g, ''));
-      expect(types).toEqual(['text', 'image', 'card', 'navigation', 'question', 'game']);
+      expect(types).toEqual(['text', 'image', 'card', 'navigation', 'question', 'game', 'layered-info']);
     });
 
     it('no runtime implementation added (contract file still pure spec)', () => {

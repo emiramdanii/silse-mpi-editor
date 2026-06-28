@@ -19,6 +19,7 @@ import {
   GAME_TYPES,
   IMAGE_COMPONENT_VARIANTS,
   LAYOUT_IDS,
+  LAYERED_INFO_VARIANTS,
   NAVIGATION_ACTIONS,
   NAVIGATION_COMPONENT_VARIANTS,
   PAGE_ROLES,
@@ -30,6 +31,7 @@ import {
   type ComponentType,
   type GameType,
   type ImageComponentVariant,
+  type LayeredInfoVariant,
   type LayoutId,
   type NavigationAction,
   type NavigationComponentVariant,
@@ -96,6 +98,9 @@ export function validateComponent(component: unknown): ValidationResult {
   }
   if (component.type === 'game') {
     return validateGameComponent(component);
+  }
+  if (component.type === 'layered-info') {
+    return validateLayeredInfoComponent(component);
   }
   return { ok: true };
 }
@@ -619,4 +624,66 @@ export function isValidProject(project: unknown): project is SimpleProject {
  */
 export function isValidComponent(component: unknown): component is PageComponent {
   return validateComponent(component).ok;
+}
+
+/**
+ * Validate a layered-info component (LXC-02).
+ *
+ * Kontrak:
+ *   - field `variant` wajib, harus salah satu dari LAYERED_INFO_VARIANTS
+ *   - field `title` wajib, string (boleh kosong)
+ *   - field `layers` wajib, array (boleh kosong tapi harus array)
+ *   - setiap layer harus punya id (string), title (string), body (string)
+ *   - layer.icon opsional, string
+ *   - field `defaultOpenIndex` wajib, number atau null
+ */
+function validateLayeredInfoComponent(component: Record<string, unknown>): ValidationResult {
+  if (!isString(component.variant)) {
+    return fail('layered-info component.variant is required (must be a string)');
+  }
+  if (!LAYERED_INFO_VARIANTS.includes(component.variant as LayeredInfoVariant)) {
+    return fail(
+      `layered-info component.variant must be one of: ${LAYERED_INFO_VARIANTS.join(', ')} (got "${component.variant}")`,
+    );
+  }
+  if (!isString(component.title)) {
+    return fail('layered-info component.title must be a string');
+  }
+  if (!Array.isArray(component.layers)) {
+    return fail('layered-info component.layers must be an array');
+  }
+  for (let i = 0; i < component.layers.length; i++) {
+    const layer = component.layers[i];
+    if (!isObject(layer)) {
+      return fail(`layered-info component.layers[${i}] must be an object`);
+    }
+    if (!isString(layer.id) || layer.id.length === 0) {
+      return fail(`layered-info component.layers[${i}].id must be a non-empty string`);
+    }
+    if (!isString(layer.title)) {
+      return fail(`layered-info component.layers[${i}].title must be a string`);
+    }
+    if (!isString(layer.body)) {
+      return fail(`layered-info component.layers[${i}].body must be a string`);
+    }
+    if (layer.icon !== undefined && !isString(layer.icon)) {
+      return fail(`layered-info component.layers[${i}].icon must be a string if present`);
+    }
+  }
+  // defaultOpenIndex: number atau null
+  if (component.defaultOpenIndex !== null && !isNumber(component.defaultOpenIndex)) {
+    return fail('layered-info component.defaultOpenIndex must be a number or null');
+  }
+  if (isNumber(component.defaultOpenIndex) && component.defaultOpenIndex < 0) {
+    return fail('layered-info component.defaultOpenIndex must be >= 0');
+  }
+  if (
+    isNumber(component.defaultOpenIndex) &&
+    Array.isArray(component.layers) &&
+    component.layers.length > 0 &&
+    component.defaultOpenIndex >= component.layers.length
+  ) {
+    return fail('layered-info component.defaultOpenIndex must be < layers.length');
+  }
+  return { ok: true };
 }

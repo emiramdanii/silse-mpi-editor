@@ -272,13 +272,14 @@ export type PageComponent =
   | CardComponent
   | NavigationComponent
   | QuestionComponent
-  | GameComponent;
+  | GameComponent
+  | LayeredInfoComponent;
 
 // ---------------------------------------------------------------------------
 // Component type literals — exported as constants for runtime guards
 // ---------------------------------------------------------------------------
 
-export const COMPONENT_TYPES = ['text', 'image', 'card', 'navigation', 'question', 'game'] as const;
+export const COMPONENT_TYPES = ['text', 'image', 'card', 'navigation', 'question', 'game', 'layered-info'] as const;
 export type ComponentType = (typeof COMPONENT_TYPES)[number];
 
 // ---------------------------------------------------------------------------
@@ -306,6 +307,48 @@ export type GameComponent = BaseComponent & {
   instruction: string;
   missions: GameMission[];
   scoringStyle: ScoringStyle;
+};
+
+// ---------------------------------------------------------------------------
+// Layered Info Component (LXC-02)
+//
+// Komponen resmi baru dari Learning Experience Contract (LXC-01).
+// Sajikan materi dalam lapisan progressive disclosure — siswa buka layer
+// demi layer supaya tidak kewalahan dengan info sekaligus.
+//
+// Applicable roles: material, guide, menu, learningObjectives.
+// Variants: accordion, tabs, iconTabs, stepper, cardGrid, timeline.
+//
+// Runtime state: layer yang terbuka (defaultOpenIndex). Editor hanya edit
+// layer aktif, bukan menampilkan semua isi panjang sekaligus.
+// ---------------------------------------------------------------------------
+
+export type LayeredInfoLayer = {
+  id: string;
+  title: string;
+  body: string;
+  /** Ikon opsional (untuk variant iconTabs). */
+  icon?: string;
+};
+
+export const LAYERED_INFO_VARIANTS = [
+  'accordion',
+  'tabs',
+  'iconTabs',
+  'stepper',
+  'cardGrid',
+  'timeline',
+] as const;
+
+export type LayeredInfoVariant = (typeof LAYERED_INFO_VARIANTS)[number];
+
+export type LayeredInfoComponent = BaseComponent & {
+  type: 'layered-info';
+  variant: LayeredInfoVariant;
+  title: string;
+  layers: LayeredInfoLayer[];
+  /** Index layer yang terbuka by default. null = semua tertutup (untuk accordion). */
+  defaultOpenIndex: number | null;
 };
 
 // ---------------------------------------------------------------------------

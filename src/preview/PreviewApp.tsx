@@ -10,13 +10,14 @@
 
 import { useEditorStore } from '../store/editor-store';
 import { usePreviewStore } from './preview-store';
-import { isCardComponent, isGameComponent, isImageComponent, isNavigationComponent, isQuestionComponent, isTextComponent } from '../components/component-utils';
+import { isCardComponent, isGameComponent, isImageComponent, isLayeredInfoComponent, isNavigationComponent, isQuestionComponent, isTextComponent } from '../components/component-utils';
 import { TextComponentView } from '../components/TextComponentView';
 import { ImageComponentView } from '../components/ImageComponentView';
 import { CardComponentView } from '../components/CardComponentView';
 import { NavigationComponentView } from '../components/NavigationComponentView';
 import { QuestionComponentView } from '../components/QuestionComponentView';
 import { GameComponentView } from '../components/GameComponentView';
+import { LayeredInfoComponentView } from '../components/LayeredInfoComponentView';
 import { getResolvedComponentStyle } from '../core/style/resolveComponentStyle';
 import type { GameComponent, NavigationComponent, QuestionComponent } from '../core/types';
 
@@ -165,6 +166,16 @@ export function PreviewApp() {
                   onNextMission={() => nextGameMission(gc.id, gc.missions.length)}
                   onRetry={() => resetGame(gc.id)}
                   gameState={gs}
+                />
+              );
+            }
+            if (isLayeredInfoComponent(component)) {
+              return (
+                <LayeredInfoComponentView
+                  key={component.id}
+                  component={component}
+                  resolvedStyle={resolvedStyle}
+                  interactive={true}
                 />
               );
             }

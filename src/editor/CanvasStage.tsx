@@ -16,13 +16,14 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useEditorStore } from '../store/editor-store';
-import { isCardComponent, isGameComponent, isImageComponent, isNavigationComponent, isQuestionComponent, isTextComponent } from '../components/component-utils';
+import { isCardComponent, isGameComponent, isImageComponent, isLayeredInfoComponent, isNavigationComponent, isQuestionComponent, isTextComponent } from '../components/component-utils';
 import { TextComponentView } from '../components/TextComponentView';
 import { ImageComponentView } from '../components/ImageComponentView';
 import { CardComponentView } from '../components/CardComponentView';
 import { NavigationComponentView } from '../components/NavigationComponentView';
 import { QuestionComponentView } from '../components/QuestionComponentView';
 import { GameComponentView } from '../components/GameComponentView';
+import { LayeredInfoComponentView } from '../components/LayeredInfoComponentView';
 import { getCapability } from '../core/capability';
 import { getResolvedComponentStyle } from '../core/style/resolveComponentStyle';
 import { snapToGrid, clampRectToCanvas, CANVAS_WIDTH, CANVAS_HEIGHT, type Rect } from '../core/geometry';
@@ -262,6 +263,16 @@ export function CanvasStage() {
                   selected={isSelected}
                   onSelect={selectComponent}
                   positionMode="fill"
+                />
+              )}
+              {isLayeredInfoComponent(component) && (
+                <LayeredInfoComponentView
+                  component={component}
+                  resolvedStyle={resolvedStyle}
+                  selected={isSelected}
+                  onSelect={selectComponent}
+                  positionMode="fill"
+                  interactive={false}
                 />
               )}
 

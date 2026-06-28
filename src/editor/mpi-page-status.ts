@@ -128,7 +128,7 @@ export function computePageStatus(page: SimplePage): PageStatus {
     }
     case 'guide': {
       const hasContent = page.components.some(
-        (c) => c.type === 'text' || c.type === 'card',
+        (c) => c.type === 'text' || c.type === 'card' || c.type === 'layered-info',
       );
       if (!hasContent) {
         issues.push({
@@ -139,7 +139,10 @@ export function computePageStatus(page: SimplePage): PageStatus {
       break;
     }
     case 'learningObjectives': {
-      const hasText = page.components.some((c) => c.type === 'text');
+      // LXC-02: layered-info juga hitung sebagai konten (Tujuan Lengkap Berlapis)
+      const hasText = page.components.some(
+        (c) => c.type === 'text' || c.type === 'layered-info',
+      );
       if (!hasText) {
         issues.push({
           level: 'error',
@@ -150,7 +153,7 @@ export function computePageStatus(page: SimplePage): PageStatus {
     }
     case 'menu': {
       const hasContent = page.components.some(
-        (c) => c.type === 'text' || c.type === 'card',
+        (c) => c.type === 'text' || c.type === 'card' || c.type === 'layered-info',
       );
       if (!hasContent) {
         issues.push({
@@ -180,7 +183,8 @@ export function computePageStatus(page: SimplePage): PageStatus {
         (c) =>
           c.type === 'text' ||
           c.type === 'image' ||
-          c.type === 'card',
+          c.type === 'card' ||
+          c.type === 'layered-info',
       );
       if (!hasContent) {
         issues.push({

@@ -89,8 +89,8 @@ describe('UX-03 Patch-1 — Acceptance #1: Material has 7+ patterns', () => {
     expect(ids).toContain('penutup-ajakan');
   });
 
-  it('total patterns is 26 (was 12 in UX-03, +14 in Patch-1)', () => {
-    expect(CONTENT_PATTERNS).toHaveLength(26);
+  it('total patterns is 27 (LXC-02: 26 → 27, +tujuan-berlapis)', () => {
+    expect(CONTENT_PATTERNS).toHaveLength(27);
   });
 });
 
@@ -100,7 +100,7 @@ describe('UX-03 Patch-1 — Acceptance #1: Material has 7+ patterns', () => {
 
 describe('UX-03 Patch-1 — Acceptance #2: no rogue component types', () => {
   it('all pattern components use only known types (text/image/card/navigation/question/game)', () => {
-    const knownTypes = new Set(['text', 'image', 'card', 'navigation', 'question', 'game']);
+    const knownTypes = new Set(['text', 'image', 'card', 'navigation', 'question', 'game', 'layered-info']);
     const roles: SimplePage['role'][] = [
       'cover', 'guide', 'learningObjectives', 'menu',
       'starter', 'material', 'quiz', 'activity', 'reflection', 'closing',
@@ -235,10 +235,10 @@ describe('UX-03 Patch-1 — Acceptance #5: pedagogical reasons', () => {
 // =========================================================================
 
 describe('UX-03 Patch-1 — Acceptance #6: unique pattern IDs', () => {
-  it('all 26 pattern IDs are unique', () => {
+  it('all 27 pattern IDs are unique', () => {
     const ids = CONTENT_PATTERNS.map((p) => p.id);
     expect(new Set(ids).size).toBe(ids.length);
-    expect(ids.length).toBe(26);
+    expect(ids.length).toBe(27);
   });
 
   it('all pattern IDs match snake-case format (lowercase, hyphens)', () => {

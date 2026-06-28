@@ -31,6 +31,8 @@ import {
   createQuestionComponent,
   createGameComponent,
   createGameMission,
+  createLayeredInfoComponent,
+  createLayeredInfoLayer,
 } from '../core/component-factory';
 
 /**
@@ -171,6 +173,52 @@ export const CONTENT_PATTERNS: readonly ContentPattern[] = [
           variant: 'body',
           text: objText,
           x: 80, y: POS.bodyY, width: POS.fullWidth, height: 300,
+        }),
+        createNavigationComponent('Lanjut →', 'next', {
+          variant: 'primaryAction',
+          x: POS.navX, y: POS.navY, width: POS.navW, height: POS.navH,
+        }),
+      ];
+    },
+  },
+
+  // ===== LEARNING OBJECTIVES (2) =====
+  // LXC-02 Patch: tambah pola "Tujuan Lengkap Berlapis" yang pakai
+  // komponen resmi baru layered-info. Cocok untuk halaman Tujuan yang
+  // berisi CP/ATP/TP + posisi pertemuan + alur belajar dalam satu
+  // komponen berlapis (bukan teks lepas panjang).
+  {
+    id: 'tujuan-berlapis',
+    name: 'Tujuan Lengkap Berlapis',
+    description: 'Komponen Info Berlapis dengan 3 lapisan (Sebelumnya / Hari Ini / Berikutnya) + tombol lanjut.',
+    icon: '📚',
+    applicableRoles: ['learningObjectives'],
+    pedagogicalReason: 'Sajikan tujuan pembelajaran dalam lapisan progressive disclosure — siswa fokus pada satu lapisan sekaligus (sebelumnya/hari ini/berikutnya), bukan kewalahan dengan teks panjang. Cocok untuk halaman Tujuan yang berisi CP/ATP/TP + alur belajar.',
+    buildComponents: (ctx) => {
+      const objectives = ctx.project.curriculum?.objectives ?? [];
+      const objText = objectives.length > 0
+        ? objectives.map((o, i) => `${i + 1}. ${o.text}`).join('\n')
+        : '1. Tujuan pembelajaran pertama.\n2. Tujuan pembelajaran kedua.\n3. Tujuan pembelajaran ketiga.';
+      return [
+        createLayeredInfoComponent({
+          variant: 'accordion',
+          title: 'Tujuan Pembelajaran',
+          defaultOpenIndex: 1, // "Hari Ini" terbuka by default
+          layers: [
+            createLayeredInfoLayer({
+              title: 'Sebelumnya',
+              body: 'Pertemuan sebelumnya kita sudah mempelajari...\n\n( rangkum singkat materi sebelumnya )',
+            }),
+            createLayeredInfoLayer({
+              title: 'Hari Ini',
+              body: `Pertemuan hari ini tujuan pembelajaran:\n\n${objText}`,
+            }),
+            createLayeredInfoLayer({
+              title: 'Berikutnya',
+              body: 'Pertemuan berikutnya kita akan melanjutkan ke...\n\n( preview singkat materi berikutnya )',
+            }),
+          ],
+          x: 80, y: 120, width: POS.fullWidth, height: 460,
         }),
         createNavigationComponent('Lanjut →', 'next', {
           variant: 'primaryAction',

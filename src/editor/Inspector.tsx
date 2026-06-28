@@ -26,6 +26,8 @@ import type {
   GameComponent,
   GameMission,
   ImageComponent,
+  LayeredInfoComponent,
+  LayeredInfoLayer,
   NavigationAction,
   NavigationComponent,
   NavigationComponentVariant,
@@ -39,6 +41,7 @@ import type {
   CardComponentEditable,
   GameComponentEditable,
   ImageComponentEditable,
+  LayeredInfoComponentEditable,
   NavigationComponentEditable,
   QuestionComponentEditable,
   TextComponentEditable,
@@ -47,6 +50,7 @@ import {
   CARD_COMPONENT_VARIANTS,
   GAME_TYPES,
   IMAGE_COMPONENT_VARIANTS,
+  LAYERED_INFO_VARIANTS,
   NAVIGATION_ACTIONS,
   NAVIGATION_COMPONENT_VARIANTS,
   QUESTION_COMPONENT_VARIANTS,
@@ -54,6 +58,7 @@ import {
   TEXT_COMPONENT_VARIANTS,
   type CardComponentVariant,
   type ImageComponentVariant,
+  type LayeredInfoVariant,
   type TextComponentVariant,
 } from '../core/types';
 import { getCapability } from '../core/capability';
@@ -112,6 +117,15 @@ const SCORING_STYLE_LABELS: Record<string, string> = {
   badge: 'Lencana',
 };
 
+const LAYERED_INFO_VARIANT_LABELS: Record<LayeredInfoVariant, string> = {
+  accordion: 'Accordion (lipat)',
+  tabs: 'Tab',
+  iconTabs: 'Tab Ikon',
+  stepper: 'Stepper (langkah)',
+  cardGrid: 'Kartu Grid',
+  timeline: 'Linimasa',
+};
+
 const LAYOUT_LABELS: Record<string, string> = {
   blank: 'Bebas (manual)',
   coverCentered: 'Cover terpusat',
@@ -162,6 +176,9 @@ function friendlyElementName(component: PageComponent): string {
   }
   if (component.type === 'question') return 'Pertanyaan';
   if (component.type === 'game') return 'Game Misi';
+  if (component.type === 'layered-info') {
+    return 'Info Berlapis';
+  }
   return 'Elemen';
 }
 
@@ -181,6 +198,7 @@ export function Inspector() {
   const updateNavigationComponent = useEditorStore((s) => s.updateNavigationComponent);
   const updateQuestionComponent = useEditorStore((s) => s.updateQuestionComponent);
   const updateGameComponent = useEditorStore((s) => s.updateGameComponent);
+  const updateLayeredInfoComponent = useEditorStore((s) => s.updateLayeredInfoComponent);
   const project = useEditorStore((s) => s.project);
 
   return (
@@ -207,6 +225,7 @@ export function Inspector() {
             onUpdateNavigation={updateNavigationComponent}
             onUpdateQuestion={updateQuestionComponent}
             onUpdateGame={updateGameComponent}
+            onUpdateLayeredInfo={updateLayeredInfoComponent}
             pages={project.pages}
           />
         )}
@@ -307,6 +326,7 @@ function ComponentEditor({
   onUpdateNavigation,
   onUpdateQuestion,
   onUpdateGame,
+  onUpdateLayeredInfo,
   pages,
 }: {
   component: PageComponent;
@@ -316,6 +336,7 @@ function ComponentEditor({
   onUpdateNavigation: (id: string, patch: Partial<NavigationComponentEditable>) => void;
   onUpdateQuestion: (id: string, patch: Partial<QuestionComponentEditable>) => void;
   onUpdateGame: (id: string, patch: Partial<GameComponentEditable>) => void;
+  onUpdateLayeredInfo: (id: string, patch: Partial<LayeredInfoComponentEditable>) => void;
   pages: SimplePage[];
 }) {
   if (component.type === 'text') {
@@ -341,6 +362,9 @@ function ComponentEditor({
   }
   if (component.type === 'game') {
     return <GameComponentEditor component={component} onChange={(p) => onUpdateGame(component.id, p)} />;
+  }
+  if (component.type === 'layered-info') {
+    return <LayeredInfoComponentEditor component={component} onChange={(p) => onUpdateLayeredInfo(component.id, p)} />;
   }
   return (
     <div className="inspector-placeholder">
@@ -1107,6 +1131,230 @@ function GameComponentEditor({
         >
           + Tambah misi
         </button>
+      </Section>
+
+      <Section title="Posisi & Ukuran">
+        <GeometryFields component={component} onChange={onChange} />
+      </Section>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Layered Info Component Editor (LXC-02)
+//
+// Kontrak: editor hanya edit layer AKTIF, bukan menampilkan semua isi
+// panjang sekaligus. Guru pilih layer dari daftar, lalu edit judul + body
+// layer itu saja. Tambah/hapus layer via tombol.
+// ---------------------------------------------------------------------------
+
+function LayeredInfoComponentEditor({
+  component,
+  onChange,
+}: {
+  component: LayeredInfoComponent;
+  onChange: (patch: Partial<LayeredInfoComponentEditable>) => void;
+}) {
+  // Active layer index — local state supaya guru bisa pilih layer mana
+  // yang sedang diedit. Default = defaultOpenIndex atau 0.
+  const [activeLayerIdx, setActiveLayerIdx] = useState<number>(
+    component.defaultOpenIndex ?? 0,
+  );
+
+  const safeActiveIdx =
+    activeLayerIdx >= 0 && activeLayerIdx < component.layers.length
+      ? activeLayerIdx
+      : 0;
+  const activeLayer = component.layers[safeActiveIdx];
+
+  const updateLayer = (idx: number, patch: Partial<LayeredInfoLayer>) => {
+    const newLayers = component.layers.map((l, i) =>
+      i === idx ? { ...l, ...patch } : l,
+    );
+    onChange({ layers: newLayers });
+  };
+
+  const addLayer = () => {
+    const newLayer: LayeredInfoLayer = {
+      id: createComponentId(),
+      title: `Lapisan ${component.layers.length + 1}`,
+      body: 'Tulis isi lapisan di sini.',
+    };
+    const newLayers = [...component.layers, newLayer];
+    onChange({ layers: newLayers });
+    setActiveLayerIdx(newLayers.length - 1);
+  };
+
+  const removeLayer = (idx: number) => {
+    if (component.layers.length <= 1) {
+      window.alert('Minimal harus ada 1 lapisan.');
+      return;
+    }
+    const newLayers = component.layers.filter((_, i) => i !== idx);
+    onChange({ layers: newLayers });
+    // Adjust active index + defaultOpenIndex
+    let newActive = safeActiveIdx;
+    if (idx === safeActiveIdx) {
+      newActive = Math.max(0, idx - 1);
+    } else if (idx < safeActiveIdx) {
+      newActive = safeActiveIdx - 1;
+    }
+    setActiveLayerIdx(newActive);
+    let newDefault = component.defaultOpenIndex;
+    if (newDefault !== null) {
+      if (idx === newDefault) {
+        newDefault = 0;
+      } else if (idx < newDefault) {
+        newDefault = newDefault - 1;
+      }
+      if (newDefault >= newLayers.length) newDefault = 0;
+    }
+    onChange({ defaultOpenIndex: newDefault });
+  };
+
+  return (
+    <div className="component-editor" data-testid="component-editor-layered-info">
+      <div className="component-editor__head">
+        <span className="component-editor__type">{friendlyElementName(component)}</span>
+      </div>
+
+      <Section title="Isi">
+        <Field label="Judul komponen">
+          <input
+            type="text"
+            data-field="title"
+            value={component.title}
+            onChange={(e) => onChange({ title: e.target.value })}
+            placeholder="Contoh: Tujuan Pembelajaran"
+          />
+        </Field>
+      </Section>
+
+      <Section title="Tampilan">
+        <Field label="Jenis tampilan">
+          <select
+            data-field="variant"
+            value={component.variant}
+            onChange={(e) => onChange({ variant: e.target.value as LayeredInfoVariant })}
+          >
+            {LAYERED_INFO_VARIANTS.map((v) => (
+              <option key={v} value={v}>
+                {LAYERED_INFO_VARIANT_LABELS[v]}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <div className="component-editor__hint">
+          Pilih cara lapisan ditampilkan: lipat, tab, tab ikon, langkah, kartu grid, atau linimasa.
+        </div>
+      </Section>
+
+      <Section title={`Lapisan (${component.layers.length})`}>
+        {/* Daftar layer — guru pilih layer mana yang mau diedit */}
+        <div className="layered-info-layers" data-testid="layered-info-layers">
+          {component.layers.map((layer, idx) => {
+            const isActive = safeActiveIdx === idx;
+            return (
+              <div
+                key={layer.id}
+                className={`layered-info-layer${isActive ? ' is-active' : ''}`}
+                onClick={() => setActiveLayerIdx(idx)}
+                data-testid={`layered-info-layer-${idx}`}
+                data-active={isActive ? 'true' : 'false'}
+              >
+                <span className="layered-info-layer__num">{idx + 1}</span>
+                <span className="layered-info-layer__title">
+                  {layer.title || '(tanpa judul)'}
+                </span>
+                <button
+                  type="button"
+                  className="layered-info-layer__remove"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeLayer(idx);
+                  }}
+                  title="Hapus lapisan ini"
+                  data-testid={`layered-info-layer-remove-${idx}`}
+                >
+                  ×
+                </button>
+              </div>
+            );
+          })}
+          <button
+            type="button"
+            className="layered-info-layer__add"
+            onClick={addLayer}
+            title="Tambah lapisan baru"
+            data-action="add-layer"
+            data-testid="layered-info-add-layer"
+          >
+            + Tambah Lapisan
+          </button>
+        </div>
+      </Section>
+
+      {/* Edit layer AKTIF saja — bukan semua layer sekaligus */}
+      {activeLayer && (
+        <Section title={`Edit Lapisan ${safeActiveIdx + 1}`}>
+          <Field label="Judul lapisan">
+            <input
+              type="text"
+              value={activeLayer.title}
+              onChange={(e) => updateLayer(safeActiveIdx, { title: e.target.value })}
+              placeholder="Contoh: Sebelumnya"
+              data-field={`layer-title-${safeActiveIdx}`}
+              data-testid={`layered-info-layer-title-${safeActiveIdx}`}
+            />
+          </Field>
+          {component.variant === 'iconTabs' && (
+            <Field label="Ikon lapisan (emoji, opsional)">
+              <input
+                type="text"
+                value={activeLayer.icon ?? ''}
+                onChange={(e) =>
+                  updateLayer(safeActiveIdx, { icon: e.target.value })
+                }
+                placeholder="Contoh: 📚"
+                data-field={`layer-icon-${safeActiveIdx}`}
+              />
+            </Field>
+          )}
+          <Field label="Isi lapisan">
+            <textarea
+              value={activeLayer.body}
+              onChange={(e) => updateLayer(safeActiveIdx, { body: e.target.value })}
+              rows={6}
+              style={{ width: '100%', resize: 'vertical' }}
+              placeholder="Tulis isi lapisan di sini..."
+              data-field={`layer-body-${safeActiveIdx}`}
+              data-testid={`layered-info-layer-body-${safeActiveIdx}`}
+            />
+          </Field>
+        </Section>
+      )}
+
+      <Section title="Lapisan Terbuka Default">
+        <Field label="Index lapisan yang terbuka saat halaman dimuat">
+          <select
+            data-field="defaultOpenIndex"
+            value={component.defaultOpenIndex ?? ''}
+            onChange={(e) => {
+              const val = e.target.value === '' ? null : Number(e.target.value);
+              onChange({ defaultOpenIndex: val });
+            }}
+          >
+            <option value="">— Semua tertutup —</option>
+            {component.layers.map((layer, idx) => (
+              <option key={layer.id} value={idx}>
+                {idx + 1}. {layer.title || '(tanpa judul)'}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <div className="component-editor__hint">
+          Lapisan yang otomatis terbuka saat siswa pertama kali lihat halaman. Untuk accordion, pilih "Semua tertutup" supaya siswa klik sendiri.
+        </div>
       </Section>
 
       <Section title="Posisi & Ukuran">

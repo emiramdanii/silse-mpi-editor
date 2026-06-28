@@ -49,7 +49,7 @@ type AddButtonSpec = {
   milestone: string;
   icon: string;
   /** Which capability slot to check; if undefined, always allowed when role allows add. */
-  capability: 'text' | 'image' | 'card' | 'navigation' | 'question' | 'game';
+  capability: 'text' | 'image' | 'card' | 'navigation' | 'question' | 'game' | 'layered-info';
   /** Section in the dropdown menu. */
   section: 'konten' | 'interaksi';
 };
@@ -59,6 +59,7 @@ const ADD_BUTTONS: AddButtonSpec[] = [
   { action: 'add-text',  label: 'Teks',   hint: 'Judul, isi, atau catatan', milestone: 'M2',  icon: '📝', capability: 'text',  section: 'konten' },
   { action: 'add-image', label: 'Gambar', hint: 'Ilustrasi atau foto',       milestone: 'M4',  icon: '🖼️', capability: 'image', section: 'konten' },
   { action: 'add-card',  label: 'Kartu',  hint: 'Info, contoh, atau catatan penting', milestone: 'M4', icon: '🗂️', capability: 'card',  section: 'konten' },
+  { action: 'add-layered-info', label: 'Info Berlapis', hint: 'Materi berlapis (tab, accordion, stepper, dll)', milestone: 'LXC-02', icon: '📚', capability: 'layered-info', section: 'konten' },
   // Interaksi
   { action: 'add-navigation', label: 'Navigasi',    hint: 'Tombol pindah halaman', milestone: 'M5',   icon: '➡️', capability: 'navigation', section: 'interaksi' },
   { action: 'add-question',   label: 'Pertanyaan',  hint: 'Pilihan ganda + feedback', milestone: 'M10', icon: '❓', capability: 'question',   section: 'interaksi' },
@@ -77,6 +78,7 @@ export function Toolbar() {
   const addNavigationComponent = useEditorStore((s) => s.addNavigationComponent);
   const addQuestionComponent = useEditorStore((s) => s.addQuestionComponent);
   const addGameComponent = useEditorStore((s) => s.addGameComponent);
+  const addLayeredInfoComponent = useEditorStore((s) => s.addLayeredInfoComponent);
   const saveCurrent = useEditorStore((s) => s.saveCurrent);
   const loadCurrent = useEditorStore((s) => s.loadCurrent);
   const resetProject = useEditorStore((s) => s.resetProject);
@@ -132,6 +134,7 @@ export function Toolbar() {
       };
       case 'add-question': return () => addQuestionComponent();
       case 'add-game': return () => addGameComponent();
+      case 'add-layered-info': return () => addLayeredInfoComponent();
       default: return null;
     }
   };

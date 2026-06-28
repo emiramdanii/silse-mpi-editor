@@ -37,6 +37,8 @@ import type {
   GameComponent,
   ImageComponent,
   ImageComponentVariant,
+  LayeredInfoComponent,
+  LayeredInfoVariant,
   NavigationAction,
   NavigationComponent,
   NavigationComponentVariant,
@@ -53,6 +55,7 @@ import {
   CARD_COMPONENT_VARIANTS,
   GAME_TYPES,
   IMAGE_COMPONENT_VARIANTS,
+  LAYERED_INFO_VARIANTS,
   NAVIGATION_ACTIONS,
   NAVIGATION_COMPONENT_VARIANTS,
   QUESTION_COMPONENT_VARIANTS,
@@ -64,12 +67,14 @@ import {
   createCardComponent,
   createGameComponent,
   createImageComponent,
+  createLayeredInfoComponent,
   createNavigationComponent,
   createQuestionComponent,
   createTextComponent,
   type CardComponentEditable,
   type GameComponentEditable,
   type ImageComponentEditable,
+  type LayeredInfoComponentEditable,
   type NavigationComponentEditable,
   type QuestionComponentEditable,
   type TextComponentEditable,
@@ -113,6 +118,7 @@ export type EditorState = {
   ) => string | null;
   addQuestionComponent: (overrides?: Partial<QuestionComponentEditable>) => string | null;
   addGameComponent: (overrides?: Partial<GameComponentEditable>) => string | null;
+  addLayeredInfoComponent: (overrides?: Partial<LayeredInfoComponentEditable>) => string | null;
   selectComponent: (componentId: string | null) => void;
   updateTextComponent: (componentId: string, patch: Partial<TextComponentEditable>) => void;
   updateImageComponent: (componentId: string, patch: Partial<ImageComponentEditable>) => void;
@@ -120,6 +126,7 @@ export type EditorState = {
   updateNavigationComponent: (componentId: string, patch: Partial<NavigationComponentEditable>) => void;
   updateQuestionComponent: (componentId: string, patch: Partial<QuestionComponentEditable>) => void;
   updateGameComponent: (componentId: string, patch: Partial<GameComponentEditable>) => void;
+  updateLayeredInfoComponent: (componentId: string, patch: Partial<LayeredInfoComponentEditable>) => void;
   updateComponentGeometry: (componentId: string, rect: Rect) => void;
   removeComponent: (componentId: string) => void;
   getSelectedComponent: () => PageComponent | null;
@@ -242,6 +249,24 @@ function sanitizeGamePatch(
   if (clean.scoringStyle !== undefined) {
     if (!SCORING_STYLES.includes(clean.scoringStyle as GameComponent['scoringStyle'])) {
       delete clean.scoringStyle;
+    }
+  }
+  return clean;
+}
+
+function sanitizeLayeredInfoPatch(
+  patch: Partial<LayeredInfoComponentEditable>,
+): Partial<LayeredInfoComponentEditable> {
+  const clean: Partial<LayeredInfoComponentEditable> = { ...patch };
+  if (clean.variant !== undefined) {
+    if (!LAYERED_INFO_VARIANTS.includes(clean.variant as LayeredInfoVariant)) {
+      delete clean.variant;
+    }
+  }
+  // defaultOpenIndex: allow number or null
+  if (clean.defaultOpenIndex !== undefined && clean.defaultOpenIndex !== null) {
+    if (typeof clean.defaultOpenIndex !== 'number' || !Number.isFinite(clean.defaultOpenIndex)) {
+      delete clean.defaultOpenIndex;
     }
   }
   return clean;
@@ -582,6 +607,19 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     return component.id;
   },
 
+  addLayeredInfoComponent: (overrides) => {
+    const state = get();
+    const currentPage = state.project.pages.find(
+      (p) => p.id === state.project.currentPageId,
+    );
+    if (!currentPage) return null;
+    if (!canAddComponent(currentPage.role, 'layered-info')) return null;
+
+    const component = createLayeredInfoComponent(overrides);
+    set((s) => addComponentToCurrentPage(s, component));
+    return component.id;
+  },
+
   // ----- Selection + update -----
 
   selectComponent: (componentId) => {
@@ -717,6 +755,28 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           components: p.components.map((c) => {
             if (c.id !== componentId || c.type !== 'game') return c;
             return { ...c, ...cleanPatch, type: 'game' } as GameComponent;
+          }),
+        };
+      });
+      return { project: { ...state.project, pages } };
+    });
+  },
+
+  updateLayeredInfoComponent: (componentId, patch) => {
+    const cleanPatch = sanitizeLayeredInfoPatch(patch);
+    set((state) => {
+      const page = state.project.pages.find((p) => p.id === state.project.currentPageId);
+      if (!page) return state;
+      const exists = page.components.some((c) => c.id === componentId && c.type === 'layered-info');
+      if (!exists) return state;
+
+      const pages = state.project.pages.map((p) => {
+        if (p.id !== state.project.currentPageId) return p;
+        return {
+          ...p,
+          components: p.components.map((c) => {
+            if (c.id !== componentId || c.type !== 'layered-info') return c;
+            return { ...c, ...cleanPatch, type: 'layered-info' } as LayeredInfoComponent;
           }),
         };
       });

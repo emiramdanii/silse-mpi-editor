@@ -22,6 +22,9 @@ import type {
   GameType,
   ImageComponent,
   ImageComponentVariant,
+  LayeredInfoComponent,
+  LayeredInfoLayer,
+  LayeredInfoVariant,
   NavigationAction,
   NavigationComponent,
   NavigationComponentVariant,
@@ -272,6 +275,64 @@ export function createGameComponent(overrides: Partial<GameComponentEditable> = 
     missions: overrides.missions ?? [createGameMission()],
     scoringStyle: overrides.scoringStyle ?? DEFAULT_SCORING_STYLE,
     ...DEFAULT_GAME_COMPONENT,
+    ...overrides,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Layered Info Component (LXC-02)
+//
+// Komponen resmi baru dari Learning Experience Contract (LXC-01).
+// Sajikan materi dalam lapisan progressive disclosure.
+// Applicable roles: material, guide, menu, learningObjectives.
+// Variants: accordion, tabs, iconTabs, stepper, cardGrid, timeline.
+// ---------------------------------------------------------------------------
+
+export type LayeredInfoComponentEditable = Omit<LayeredInfoComponent, 'id' | 'type'>;
+
+export const DEFAULT_LAYERED_INFO_VARIANT: LayeredInfoVariant = 'accordion';
+
+/** Buat satu layer baru dengan fresh ID. */
+export function createLayeredInfoLayer(
+  overrides: Partial<Omit<LayeredInfoLayer, 'id'>> = {},
+): LayeredInfoLayer {
+  return {
+    id: createComponentId(),
+    title: overrides.title ?? 'Lapisan Baru',
+    body: overrides.body ?? 'Tulis isi lapisan di sini.',
+    ...(overrides.icon !== undefined ? { icon: overrides.icon } : {}),
+  };
+}
+
+export const DEFAULT_LAYERED_INFO_COMPONENT: Omit<LayeredInfoComponentEditable, 'variant' | 'title' | 'layers'> = {
+  defaultOpenIndex: 0,
+  x: 80,
+  y: 120,
+  width: 1120,
+  height: 480,
+};
+
+/**
+ * Create a new layered-info component.
+ * Default variant = 'accordion'.
+ * Default layers = 3 contoh lapisan (sesuai use case Tujuan Pembelajaran:
+ * Sebelumnya / Hari Ini / Berikutnya).
+ */
+export function createLayeredInfoComponent(
+  overrides: Partial<LayeredInfoComponentEditable> = {},
+): LayeredInfoComponent {
+  const defaultLayers: LayeredInfoLayer[] = [
+    createLayeredInfoLayer({ title: 'Sebelumnya', body: 'Apa yang sudah kita pelajari sebelumnya?' }),
+    createLayeredInfoLayer({ title: 'Hari Ini', body: 'Apa yang akan kita pelajari hari ini?' }),
+    createLayeredInfoLayer({ title: 'Berikutnya', body: 'Apa yang akan datang setelah ini?' }),
+  ];
+  return {
+    id: createComponentId(),
+    type: 'layered-info',
+    variant: overrides.variant ?? DEFAULT_LAYERED_INFO_VARIANT,
+    title: overrides.title ?? 'Info Berlapis',
+    layers: overrides.layers ?? defaultLayers,
+    ...DEFAULT_LAYERED_INFO_COMPONENT,
     ...overrides,
   };
 }

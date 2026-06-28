@@ -73,13 +73,15 @@ export const PAGE_ROLE_CAPABILITIES: Record<PageRole, PageRoleCapability> = {
   },
   guide: {
     role: 'guide',
-    allowedComponents: ['text', 'card', 'navigation'],
+    // LXC-02: add 'layered-info' for panduan berlapis (langkah-langkah dll).
+    allowedComponents: ['text', 'card', 'navigation', 'layered-info'],
     allowAddComponent: true,
     description: 'Panduan / petunjuk penggunaan MPI',
   },
   menu: {
     role: 'menu',
-    allowedComponents: ['text', 'card', 'navigation'],
+    // LXC-02: add 'layered-info' for menu berlapis (kategori materi dll).
+    allowedComponents: ['text', 'card', 'navigation', 'layered-info'],
     allowAddComponent: true,
     description: 'Menu / peta materi MPI',
   },
@@ -87,7 +89,9 @@ export const PAGE_ROLE_CAPABILITIES: Record<PageRole, PageRoleCapability> = {
     role: 'learningObjectives',
     // UX-03 Patch-1: add 'navigation' so patterns can add "Lanjut →" button.
     // Aligns with "bebas jalan bantu" principle — every scene needs a way out.
-    allowedComponents: ['text', 'navigation'],
+    // LXC-02: add 'layered-info' for Tujuan Pembelajaran berlapis
+    // (sebelumnya/hari ini/berikutnya, CP/ATP/TP, dll).
+    allowedComponents: ['text', 'navigation', 'layered-info'],
     allowAddComponent: true,
     description: 'Tujuan pembelajaran',
   },
@@ -99,7 +103,8 @@ export const PAGE_ROLE_CAPABILITIES: Record<PageRole, PageRoleCapability> = {
   },
   material: {
     role: 'material',
-    allowedComponents: ['text', 'image', 'card', 'navigation'],
+    // LXC-02: add 'layered-info' for materi berlapis (progressive disclosure).
+    allowedComponents: ['text', 'image', 'card', 'navigation', 'layered-info'],
     allowAddComponent: true,
     description: 'Materi utama',
   },
