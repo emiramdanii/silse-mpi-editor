@@ -137,65 +137,57 @@ describe('PAGE-THUMBNAIL-SIDEBAR-V1 — PagePanel toggle', () => {
     expect(container.querySelector('[data-testid="page-panel-view-toggle"]')).not.toBeNull();
   });
 
-  it('default view mode is list (no thumbnails visible)', () => {
+  it('default view mode is thumbnail (CONTENT-VISUAL-CONTRACT-AUDIT-01)', () => {
     const { container } = render(React.createElement(PagePanel));
+    expect(container.querySelector('[data-testid="page-panel-thumbnails"]')).not.toBeNull();
+  });
+
+  it('clicking toggle switches to list view', () => {
+    const { container } = render(React.createElement(PagePanel));
+    const toggle = container.querySelector('[data-testid="page-panel-view-toggle"]') as HTMLButtonElement;
+    fireEvent.click(toggle);
+    // Now in list view — thumbnails hidden, page items visible
     expect(container.querySelector('[data-testid="page-panel-thumbnails"]')).toBeNull();
-    // List view should have page items
     expect(container.querySelectorAll('.page-item').length).toBeGreaterThan(0);
   });
 
-  it('clicking toggle switches to thumbnail view', () => {
-    const { container } = render(React.createElement(PagePanel));
-    const toggle = container.querySelector('[data-testid="page-panel-view-toggle"]') as HTMLButtonElement;
-    fireEvent.click(toggle);
-    expect(container.querySelector('[data-testid="page-panel-thumbnails"]')).not.toBeNull();
-    // Thumbnails should be rendered
-    expect(container.querySelectorAll('.page-thumbnail').length).toBeGreaterThan(0);
-  });
-
-  it('thumbnail view shows all pages', () => {
+  it('list view shows all pages', () => {
     useEditorStore.getState().setProject(createSamplePpknProject());
     const { container } = render(React.createElement(PagePanel));
     const toggle = container.querySelector('[data-testid="page-panel-view-toggle"]') as HTMLButtonElement;
-    fireEvent.click(toggle);
-    // Sample PPKn has 10 pages
-    expect(container.querySelectorAll('.page-thumbnail').length).toBe(10);
+    fireEvent.click(toggle); // Switch to list
+    // List view should have page items
+    expect(container.querySelectorAll('.page-item').length).toBe(10);
   });
 
   it('clicking a thumbnail selects the page', () => {
     useEditorStore.getState().setProject(createSamplePpknProject());
     const { container } = render(React.createElement(PagePanel));
-    const toggle = container.querySelector('[data-testid="page-panel-view-toggle"]') as HTMLButtonElement;
-    fireEvent.click(toggle);
-    // Click second thumbnail
+    // Default is thumbnail view — no need to toggle
     const thumbnails = container.querySelectorAll('.page-thumbnail');
     expect(thumbnails.length).toBeGreaterThan(1);
     fireEvent.click(thumbnails[1]);
-    // Check that current page changed
     const state = useEditorStore.getState();
     const currentPage = state.project.pages.find((p) => p.id === state.project.currentPageId);
-    // Should be the second page (not the first/cover)
     expect(currentPage?.id).not.toBe(state.project.pages[0].id);
   });
 
   it('active page thumbnail has is-active class', () => {
     const { container } = render(React.createElement(PagePanel));
-    const toggle = container.querySelector('[data-testid="page-panel-view-toggle"]') as HTMLButtonElement;
-    fireEvent.click(toggle);
+    // Default is thumbnail view
     const activeThumb = container.querySelector('.page-thumbnail.is-active');
     expect(activeThumb).not.toBeNull();
   });
 
-  it('toggling back to list view hides thumbnails', () => {
+  it('toggling back to thumbnail view after list works', () => {
     const { container } = render(React.createElement(PagePanel));
     const toggle = container.querySelector('[data-testid="page-panel-view-toggle"]') as HTMLButtonElement;
-    // Switch to thumbnail
-    fireEvent.click(toggle);
-    expect(container.querySelector('[data-testid="page-panel-thumbnails"]')).not.toBeNull();
-    // Switch back to list
+    // Default is thumbnail → switch to list
     fireEvent.click(toggle);
     expect(container.querySelector('[data-testid="page-panel-thumbnails"]')).toBeNull();
-    expect(container.querySelectorAll('.page-item').length).toBeGreaterThan(0);
+    // Switch back to thumbnail
+    fireEvent.click(toggle);
+    expect(container.querySelector('[data-testid="page-panel-thumbnails"]')).not.toBeNull();
   });
 });
 
@@ -212,6 +204,9 @@ describe('PAGE-THUMBNAIL-SIDEBAR-V1 — regression', () => {
     useEditorStore.getState().addPage();
     useEditorStore.getState().selectPage(useEditorStore.getState().project.pages[0].id);
     const { container } = render(React.createElement(PagePanel));
+    // Switch to list view (default is thumbnail)
+    const toggle = container.querySelector('[data-testid="page-panel-view-toggle"]') as HTMLButtonElement;
+    fireEvent.click(toggle);
     expect(container.querySelectorAll('[title="Ganti nama halaman"]').length).toBeGreaterThan(0);
     expect(container.querySelectorAll('[title="Duplikat halaman"]').length).toBeGreaterThan(0);
   });

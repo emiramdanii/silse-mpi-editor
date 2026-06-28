@@ -323,7 +323,7 @@ describe('UX-01 Patch-2 — Scope C: UX-02 minor polish', () => {
     const quiz1Id = useEditorStore.getState().project.pages[1].id;
     useEditorStore.getState().selectPage(quiz1Id);
 
-    const { container } = render(React.createElement(PagePanel));
+    const { container } = render(React.createElement(PagePanel)); const _toggle = container.querySelector("[data-testid=\"page-panel-view-toggle\"]"); if (_toggle) fireEvent.click(_toggle);
     const quizItems = container.querySelectorAll('[data-role="quiz"]');
     expect(quizItems.length).toBe(2);
     // Active quiz (quiz 1) should have inline issue list visible
@@ -351,7 +351,7 @@ describe('UX-01 Patch-2 — Scope C: UX-02 minor polish', () => {
     const quiz1Id = useEditorStore.getState().project.pages[1].id;
     useEditorStore.getState().selectPage(quiz1Id);
 
-    const { container } = render(React.createElement(PagePanel));
+    const { container } = render(React.createElement(PagePanel)); const _toggle = container.querySelector("[data-testid=\"page-panel-view-toggle\"]"); if (_toggle) fireEvent.click(_toggle);
     const quiz2Item = container.querySelector(`[data-testid="page-item-${quiz2Id}"]`);
     // Issues not visible by default
     expect(quiz2Item?.querySelector('[class*="page-item__issues"]')).toBeNull();

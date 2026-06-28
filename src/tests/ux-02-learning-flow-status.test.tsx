@@ -396,7 +396,7 @@ describe('UX-02 — PagePanel rendering', () => {
   });
 
   it('renders Cek Standar summary header (always visible)', () => {
-    const { container } = render(React.createElement(PagePanel));
+    const { container } = render(React.createElement(PagePanel)); const _toggle = container.querySelector("[data-testid=\"page-panel-view-toggle\"]"); if (_toggle) fireEvent.click(_toggle);
     const summary = container.querySelector('[data-testid="page-panel-summary"]');
     expect(summary).not.toBeNull();
     // Should have ok count, warning count (if any), error count (if any)
@@ -404,7 +404,7 @@ describe('UX-02 — PagePanel rendering', () => {
   });
 
   it('summary shows correct counts: 1 ok (cover has text) for new project', () => {
-    const { container } = render(React.createElement(PagePanel));
+    const { container } = render(React.createElement(PagePanel)); const _toggle = container.querySelector("[data-testid=\"page-panel-view-toggle\"]"); if (_toggle) fireEvent.click(_toggle);
     const summary = container.querySelector('[data-testid="page-panel-summary"]');
     // newProject creates a cover page with text title → 1 ok
     expect(summary?.getAttribute('data-ok')).toBe('1');
@@ -413,14 +413,14 @@ describe('UX-02 — PagePanel rendering', () => {
   });
 
   it('summary shows "Semua lengkap" when allOk', () => {
-    const { container } = render(React.createElement(PagePanel));
+    const { container } = render(React.createElement(PagePanel)); const _toggle = container.querySelector("[data-testid=\"page-panel-view-toggle\"]"); if (_toggle) fireEvent.click(_toggle);
     const allOk = container.querySelector('.page-panel__summary-all-ok');
     expect(allOk).not.toBeNull();
     expect(allOk?.textContent).toMatch(/Semua lengkap/);
   });
 
   it('each page item has a status badge', () => {
-    const { container } = render(React.createElement(PagePanel));
+    const { container } = render(React.createElement(PagePanel)); const _toggle = container.querySelector("[data-testid=\"page-panel-view-toggle\"]"); if (_toggle) fireEvent.click(_toggle);
     const badges = container.querySelectorAll('.page-status-badge');
     expect(badges.length).toBeGreaterThan(0);
     // Cover (with text) should have ok badge
@@ -431,7 +431,7 @@ describe('UX-02 — PagePanel rendering', () => {
 
   it('page with warning shows ⚠ badge with data-level=warning', () => {
     useEditorStore.getState().addPage({ role: 'material' }); // empty material → warning + error
-    const { container } = render(React.createElement(PagePanel));
+    const { container } = render(React.createElement(PagePanel)); const _toggle = container.querySelector("[data-testid=\"page-panel-view-toggle\"]"); if (_toggle) fireEvent.click(_toggle);
     const materialItem = container.querySelector('[data-role="material"]');
     const badge = materialItem?.querySelector('.page-status-badge');
     expect(badge).not.toBeNull();
@@ -441,7 +441,7 @@ describe('UX-02 — PagePanel rendering', () => {
 
   it('page with error shows ✗ badge with data-level=error', () => {
     useEditorStore.getState().addPage({ role: 'quiz' }); // empty quiz → error (no question)
-    const { container } = render(React.createElement(PagePanel));
+    const { container } = render(React.createElement(PagePanel)); const _toggle = container.querySelector("[data-testid=\"page-panel-view-toggle\"]"); if (_toggle) fireEvent.click(_toggle);
     const quizItem = container.querySelector('[data-role="quiz"]');
     const badge = quizItem?.querySelector('.page-status-badge');
     expect(badge?.getAttribute('data-level')).toBe('error');
@@ -449,7 +449,7 @@ describe('UX-02 — PagePanel rendering', () => {
 
   it('page item data-status attribute reflects status level', () => {
     useEditorStore.getState().addPage({ role: 'quiz' }); // empty quiz → error
-    const { container } = render(React.createElement(PagePanel));
+    const { container } = render(React.createElement(PagePanel)); const _toggle = container.querySelector("[data-testid=\"page-panel-view-toggle\"]"); if (_toggle) fireEvent.click(_toggle);
     const quizItem = container.querySelector('[data-role="quiz"]');
     expect(quizItem?.getAttribute('data-status')).toBe('error');
   });
@@ -457,7 +457,7 @@ describe('UX-02 — PagePanel rendering', () => {
   it('active page with issues shows inline issue list by default', () => {
     useEditorStore.getState().addPage({ role: 'quiz' }); // empty quiz → error
     // Now active page is the quiz page
-    const { container } = render(React.createElement(PagePanel));
+    const { container } = render(React.createElement(PagePanel)); const _toggle = container.querySelector("[data-testid=\"page-panel-view-toggle\"]"); if (_toggle) fireEvent.click(_toggle);
     const quizItem = container.querySelector('[data-role="quiz"]')!;
     const issueList = quizItem.querySelector('[class*="page-item__issues"]');
     // Should render inline issues (not collapsed by default on active page)
@@ -466,7 +466,7 @@ describe('UX-02 — PagePanel rendering', () => {
 
   it('issue toggle button allows collapse/expand', () => {
     useEditorStore.getState().addPage({ role: 'quiz' }); // has issues
-    const { container } = render(React.createElement(PagePanel));
+    const { container } = render(React.createElement(PagePanel)); const _toggle = container.querySelector("[data-testid=\"page-panel-view-toggle\"]"); if (_toggle) fireEvent.click(_toggle);
     const quizItem = container.querySelector('[data-role="quiz"]')!;
     const toggle = quizItem.querySelector('[data-testid^="page-issue-toggle-"]') as HTMLButtonElement;
     expect(toggle).not.toBeNull();
@@ -479,7 +479,7 @@ describe('UX-02 — PagePanel rendering', () => {
 
   it('badge tooltip contains issue messages (title attr)', () => {
     useEditorStore.getState().addPage({ role: 'quiz' }); // empty quiz → error
-    const { container } = render(React.createElement(PagePanel));
+    const { container } = render(React.createElement(PagePanel)); const _toggle = container.querySelector("[data-testid=\"page-panel-view-toggle\"]"); if (_toggle) fireEvent.click(_toggle);
     const quizItem = container.querySelector('[data-role="quiz"]')!;
     const badge = quizItem.querySelector('.page-status-badge') as HTMLElement;
     const tooltip = badge.getAttribute('title') ?? '';
@@ -489,7 +489,7 @@ describe('UX-02 — PagePanel rendering', () => {
   it('badge shows count when more than 1 issue', () => {
     // Material page with no content AND no nav → 1 error + 1 warning = 2 issues
     useEditorStore.getState().addPage({ role: 'material' });
-    const { container } = render(React.createElement(PagePanel));
+    const { container } = render(React.createElement(PagePanel)); const _toggle = container.querySelector("[data-testid=\"page-panel-view-toggle\"]"); if (_toggle) fireEvent.click(_toggle);
     const materialItem = container.querySelector('[data-role="material"]')!;
     const badge = materialItem.querySelector('.page-status-badge') as HTMLElement;
     expect(badge.getAttribute('data-issue-count')).toBe('2');
@@ -499,7 +499,7 @@ describe('UX-02 — PagePanel rendering', () => {
 
   it('sample PPKn: all 10 pages have ok badge (data-level=ok)', () => {
     useEditorStore.getState().setProject(createSamplePpknProject());
-    const { container } = render(React.createElement(PagePanel));
+    const { container } = render(React.createElement(PagePanel)); const _toggle = container.querySelector("[data-testid=\"page-panel-view-toggle\"]"); if (_toggle) fireEvent.click(_toggle);
     const badges = container.querySelectorAll('.page-status-badge');
     expect(badges.length).toBe(10);
     for (const b of badges) {
@@ -542,25 +542,25 @@ describe('UX-02 — PagePanel regression (no contract break)', () => {
   it('still has rename/duplikat/hapus buttons with correct title attrs', () => {
     useEditorStore.getState().addPage();
     useEditorStore.getState().selectPage(useEditorStore.getState().project.pages[0].id);
-    const { container } = render(React.createElement(PagePanel));
+    const { container } = render(React.createElement(PagePanel)); const _toggle = container.querySelector("[data-testid=\"page-panel-view-toggle\"]"); if (_toggle) fireEvent.click(_toggle);
     expect(container.querySelectorAll('[title="Ganti nama halaman"]').length).toBeGreaterThan(0);
     expect(container.querySelectorAll('[title="Duplikat halaman"]').length).toBeGreaterThan(0);
     expect(container.querySelectorAll('[title="Hapus halaman"]').length).toBeGreaterThan(0);
   });
 
   it('still has + Tambah Halaman button', () => {
-    const { container } = render(React.createElement(PagePanel));
+    const { container } = render(React.createElement(PagePanel)); const _toggle = container.querySelector("[data-testid=\"page-panel-view-toggle\"]"); if (_toggle) fireEvent.click(_toggle);
     expect(container.querySelectorAll('[title="Tambah halaman"]').length).toBe(1);
   });
 
   it('does NOT contain "block" in user-facing text', () => {
-    const { container } = render(React.createElement(PagePanel));
+    const { container } = render(React.createElement(PagePanel)); const _toggle = container.querySelector("[data-testid=\"page-panel-view-toggle\"]"); if (_toggle) fireEvent.click(_toggle);
     expect(container.textContent ?? '').not.toMatch(/\bblock\b/i);
   });
 
   it('still shows section labels Pembukaan/Inti/Penutup for sample PPKn', () => {
     useEditorStore.getState().setProject(createSamplePpknProject());
-    const { container } = render(React.createElement(PagePanel));
+    const { container } = render(React.createElement(PagePanel)); const _toggle = container.querySelector("[data-testid=\"page-panel-view-toggle\"]"); if (_toggle) fireEvent.click(_toggle);
     expect(container.querySelector('[data-testid="page-panel-section-pembukaan"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="page-panel-section-inti"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="page-panel-section-penutup"]')).not.toBeNull();

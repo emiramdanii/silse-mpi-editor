@@ -193,24 +193,33 @@ describe('scope-lock M4 — PagePanel: HAS M3 controls (rename/duplicate/delete)
     useEditorStore.getState().selectPage(useEditorStore.getState().project.pages[0].id);
   });
 
-  it('PagePanel renders a rename button (M3 active)', () => {
+  it('PagePanel renders a rename button (M3 active, in list view)', () => {
     const { container } = render(<PagePanel />);
+    // Switch to list view (default is thumbnail)
+    const toggle = container.querySelector('[data-testid="page-panel-view-toggle"]') as HTMLButtonElement;
+    fireEvent.click(toggle);
     expect(container.querySelectorAll('[title="Ganti nama halaman"]').length).toBeGreaterThan(0);
   });
 
-  it('PagePanel renders a duplicate button (M3 active)', () => {
+  it('PagePanel renders a duplicate button (M3 active, in list view)', () => {
     const { container } = render(<PagePanel />);
+    const toggle = container.querySelector('[data-testid="page-panel-view-toggle"]') as HTMLButtonElement;
+    fireEvent.click(toggle);
     expect(container.querySelectorAll('[title="Duplikat halaman"]').length).toBeGreaterThan(0);
   });
 
-  it('PagePanel renders a delete button when more than 1 page (M3 active)', () => {
+  it('PagePanel renders a delete button when more than 1 page (M3 active, in list view)', () => {
     const { container } = render(<PagePanel />);
+    const toggle = container.querySelector('[data-testid="page-panel-view-toggle"]') as HTMLButtonElement;
+    fireEvent.click(toggle);
     expect(container.querySelectorAll('[title="Hapus halaman"]').length).toBeGreaterThan(0);
   });
 
-  it('PagePanel hides delete button on last page (safety)', () => {
+  it('PagePanel hides delete button on last page (safety, in list view)', () => {
     useEditorStore.getState().newProject(); // back to single page
     const { container } = render(<PagePanel />);
+    const toggle = container.querySelector('[data-testid="page-panel-view-toggle"]') as HTMLButtonElement;
+    fireEvent.click(toggle);
     expect(container.querySelectorAll('[title="Hapus halaman"]').length).toBe(0);
   });
 

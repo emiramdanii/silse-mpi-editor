@@ -237,20 +237,20 @@ describe('UX-01 — PagePanel alur pembelajaran', () => {
   });
 
   it('header says "Alur Pembelajaran" (not just "Halaman")', () => {
-    const { container } = render(React.createElement(PagePanel));
+    const { container } = render(React.createElement(PagePanel)); const _toggle = container.querySelector("[data-testid=\"page-panel-view-toggle\"]"); if (_toggle) fireEvent.click(_toggle);
     expect(container.textContent ?? '').toMatch(/Alur Pembelajaran/);
   });
 
   it('sample project: renders 3 sections (Pembukaan, Inti, Penutup)', () => {
     useEditorStore.getState().setProject(createSamplePpknProject());
-    const { container } = render(React.createElement(PagePanel));
+    const { container } = render(React.createElement(PagePanel)); const _toggle = container.querySelector("[data-testid=\"page-panel-view-toggle\"]"); if (_toggle) fireEvent.click(_toggle);
     expect(container.querySelector('[data-testid="page-panel-section-pembukaan"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="page-panel-section-inti"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="page-panel-section-penutup"]')).not.toBeNull();
   });
 
   it('page item shows role icon (emoji)', () => {
-    const { container } = render(React.createElement(PagePanel));
+    const { container } = render(React.createElement(PagePanel)); const _toggle = container.querySelector("[data-testid=\"page-panel-view-toggle\"]"); if (_toggle) fireEvent.click(_toggle);
     const items = container.querySelectorAll('.page-item');
     expect(items.length).toBeGreaterThan(0);
     const firstItem = items[0];
@@ -260,20 +260,20 @@ describe('UX-01 — PagePanel alur pembelajaran', () => {
 
   it('page item shows friendly role label (not raw role key)', () => {
     useEditorStore.getState().setProject(createSamplePpknProject());
-    const { container } = render(React.createElement(PagePanel));
+    const { container } = render(React.createElement(PagePanel)); const _toggle = container.querySelector("[data-testid=\"page-panel-view-toggle\"]"); if (_toggle) fireEvent.click(_toggle);
     // cover page should show "Halaman Cover" not "cover"
     const coverItem = container.querySelector('[data-role="cover"]');
     expect(coverItem?.textContent ?? '').toMatch(/Cover/i);
   });
 
   it('+ Tambah Halaman button is present with correct title attr', () => {
-    const { container } = render(React.createElement(PagePanel));
+    const { container } = render(React.createElement(PagePanel)); const _toggle = container.querySelector("[data-testid=\"page-panel-view-toggle\"]"); if (_toggle) fireEvent.click(_toggle);
     const addBtn = container.querySelector('[title="Tambah halaman"]');
     expect(addBtn).not.toBeNull();
   });
 
   it('does not contain "block" in user-facing text', () => {
-    const { container } = render(React.createElement(PagePanel));
+    const { container } = render(React.createElement(PagePanel)); const _toggle = container.querySelector("[data-testid=\"page-panel-view-toggle\"]"); if (_toggle) fireEvent.click(_toggle);
     expect(container.textContent ?? '').not.toMatch(/\bblock\b/i);
   });
 });

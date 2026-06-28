@@ -87,12 +87,14 @@ export function checkMpiStandard(project: SimpleProject): QualityCheckResult {
     warnings.push('Belum ada halaman Menu Materi.');
   }
 
-  // 8. Ada kuis/evaluasi — WARNING
+  // 8. Ada cek pemahaman ringan atau aktivitas interaktif — WARNING
+  // CONTENT-VISUAL-CONTRACT-AUDIT-01: wording tidak ujian-sentris.
+  // MPI adalah media pembelajaran, bukan ujian. Quiz/game opsional.
   const hasQuiz = roles.includes('quiz') || project.pages.some((p) =>
     p.components.some((c) => c.type === 'question'),
   );
   if (!hasQuiz) {
-    warnings.push('Belum ada halaman Kuis atau Question component.');
+    warnings.push('Belum ada cek pemahaman ringan (kuis/pertanyaan). Pertimbangkan menambahkan satu untuk membantu siswa menguji pemahaman.');
   }
 
   // 9. Ada penutup — WARNING
@@ -100,20 +102,22 @@ export function checkMpiStandard(project: SimpleProject): QualityCheckResult {
     warnings.push('Belum ada halaman Penutup.');
   }
 
-  // 10. Ada minimal 1 question — WARNING
+  // 10. Ada minimal 1 question — WARNING (opsional, bukan wajib)
+  // CONTENT-VISUAL-CONTRACT-AUDIT-01: wording tidak ujian-sentris.
   const hasQuestion = project.pages.some((p) =>
     p.components.some((c) => c.type === 'question'),
   );
   if (!hasQuestion) {
-    warnings.push('Belum ada Question component di project ini.');
+    warnings.push('Belum ada pertanyaan untuk cek pemahaman. Pertimbangkan menambahkan satu agar siswa bisa mengecek diri.');
   }
 
-  // 11. Ada minimal 1 game/interaksi aktif — WARNING
+  // 11. Ada minimal 1 game/interaksi aktif — WARNING (opsional, bukan wajib)
+  // CONTENT-VISUAL-CONTRACT-AUDIT-01: wording tidak ujian-sentris.
   const hasGame = project.pages.some((p) =>
     p.components.some((c) => c.type === 'game'),
   );
   if (!hasGame) {
-    warnings.push('Belum ada Game component di project ini.');
+    warnings.push('Belum ada aktivitas interaktif (game/latihan). Pertimbangkan menambahkan satu untuk membuat belajar lebih menarik.');
   }
 
   // 12. Feedback question/game tidak kosong — WARNING

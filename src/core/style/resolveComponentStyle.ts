@@ -36,6 +36,7 @@ import type {
   StyleShadow,
 } from '../style-types';
 import { getStylePack } from '../style-presets';
+import { getReadableTextColor, getReadableMutedTextColor } from '../design/contrast';
 
 // ---------------------------------------------------------------------------
 // Resolved style types
@@ -626,7 +627,7 @@ export function getResolvedComponentStyle(
   const stylePack = stylePackId ? getStylePack(stylePackId) : undefined;
   const interactionRecipes = stylePack?.interactionRecipes;
 
-  return resolveComponentStyleWithInteractions(
+  const base = resolveComponentStyleWithInteractions(
     {
       tokens,
       componentType: component.type as 'text' | 'image' | 'card' | 'navigation' | 'question' | 'game' | 'layered-info' | 'learning-bridge',
@@ -636,4 +637,38 @@ export function getResolvedComponentStyle(
     },
     interactionRecipes,
   );
+
+  // CONTENT-VISUAL-CONTRACT-AUDIT-01 Scope 4:
+  // Background-aware text color for cover/closing.
+  // If page is cover/closing with a color background, override text colors
+  // to be readable against the background.
+  if (
+    component.type === 'text' &&
+    (page.role === 'cover' || page.role === 'closing') &&
+    page.background.type === 'color'
+  ) {
+    const bg = page.background.color;
+    const variant = (component as { variant?: string }).variant;
+    const readable = getReadableTextColor(bg);
+    const readableMuted = getReadableMutedTextColor(bg);
+
+    const override: Record<string, string | number> = {};
+    // title, body, questionPrompt → main readable color
+    if (variant === 'title' || variant === 'body' || variant === 'questionPrompt' || variant === 'instruction') {
+      override.color = readable;
+    }
+    // subtitle → muted readable color
+    if (variant === 'subtitle') {
+      override.color = readableMuted;
+    }
+
+    if (Object.keys(override).length > 0) {
+      return {
+        ...base,
+        inlineStyle: { ...base.inlineStyle, ...override },
+      };
+    }
+  }
+
+  return base;
 }

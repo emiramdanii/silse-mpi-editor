@@ -2,7 +2,7 @@
  * Per-page MPI status computation (UX-02 — Learning Flow Status).
  *
  * Layer: editor
- * Allowed imports: ../core/types (type-only)
+ * Allowed imports: ../core/types (type-only), ../core/design/contrast
  *
  * Kontrak (UX-02 Scope A):
  *   Hitung status per halaman berdasarkan peran + isi komponen.
@@ -43,6 +43,7 @@
  */
 
 import type { SimplePage } from '../core/types';
+import { isDarkColor, getReadableTextColor, getContrastRatio } from '../core/design/contrast';
 
 export type PageStatusLevel = 'ok' | 'warning' | 'error';
 
@@ -123,6 +124,18 @@ export function computePageStatus(page: SimplePage): PageStatus {
           level: 'error',
           message: 'Cover belum punya teks judul.',
         });
+      }
+      // CONTENT-VISUAL-CONTRACT-AUDIT-01 Scope 6: visual readability check.
+      // If background is dark, verify the readable text color has adequate contrast.
+      if (page.background.type === 'color' && isDarkColor(page.background.color)) {
+        const readable = getReadableTextColor(page.background.color);
+        const ratio = getContrastRatio(readable, page.background.color);
+        if (ratio < 4.5) {
+          issues.push({
+            level: 'warning',
+            message: `Background cover terlalu gelap untuk kontras teks yang baik (${ratio.toFixed(1)}:1, minimum 4.5:1). Pertimbangkan latar lebih terang.`,
+          });
+        }
       }
       break;
     }
@@ -259,6 +272,17 @@ export function computePageStatus(page: SimplePage): PageStatus {
           level: 'warning',
           message: 'Penutup belum punya teks penutup.',
         });
+      }
+      // CONTENT-VISUAL-CONTRACT-AUDIT-01 Scope 6: visual readability check.
+      if (page.background.type === 'color' && isDarkColor(page.background.color)) {
+        const readable = getReadableTextColor(page.background.color);
+        const ratio = getContrastRatio(readable, page.background.color);
+        if (ratio < 4.5) {
+          issues.push({
+            level: 'warning',
+            message: `Background penutup terlalu gelap untuk kontras teks yang baik (${ratio.toFixed(1)}:1, minimum 4.5:1). Pertimbangkan latar lebih terang.`,
+          });
+        }
       }
       break;
     }

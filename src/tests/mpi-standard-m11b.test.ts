@@ -132,7 +132,7 @@ describe('M11B PATCH — MPI quality check', () => {
       })),
     };
     const qc = checkMpiStandard(broken);
-    expect(qc.warnings.join('; ')).toMatch(/question/i);
+    expect(qc.warnings.join('; ')).toMatch(/pertanyaan|question/i);
   });
 
   it('quality check warns about missing game', () => {

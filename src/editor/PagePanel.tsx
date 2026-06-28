@@ -163,8 +163,9 @@ export function PagePanel() {
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState('');
-  // PAGE-THUMBNAIL-SIDEBAR-V1: toggle between list view and thumbnail view
-  const [viewMode, setViewMode] = useState<'list' | 'thumbnail'>('list');
+  // PAGE-THUMBNAIL-SIDEBAR-V1: default thumbnail view
+  // CONTENT-VISUAL-CONTRACT-AUDIT-01 Scope 7: default thumbnail for quick overview
+  const [viewMode, setViewMode] = useState<'list' | 'thumbnail'>('thumbnail');
   // UX-02 Patch (UX-01 Patch-2 polish): track explicit issue expansion per page.
   // - undefined → default (active page expanded, inactive collapsed)
   // - true      → force expanded (user clicked toggle on inactive page)
