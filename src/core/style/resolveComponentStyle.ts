@@ -18,6 +18,7 @@
 import type {
   CardComponentVariant,
   ImageComponentVariant,
+  LayeredInfoVariant,
   NavigationComponentVariant,
   PageComponent,
   PageRole,
@@ -72,8 +73,8 @@ export type ResolvedInteractionStyle = {
 export type ResolveStyleInput = {
   /** Project style tokens (from project.style). */
   tokens: ProjectStyle['tokens'];
-  /** Component type: text/image/card/navigation. */
-  componentType: 'text' | 'image' | 'card' | 'navigation' | 'question' | 'game';
+  /** Component type: text/image/card/navigation/question/game/layered-info. */
+  componentType: 'text' | 'image' | 'card' | 'navigation' | 'question' | 'game' | 'layered-info';
   /** Component variant (per type). */
   variant: string;
   /** Page role (context for default style). */
@@ -403,6 +404,58 @@ function resolveNavigationStyle(
 }
 
 // ---------------------------------------------------------------------------
+// Layered Info component style resolver (LXC-02 Patch-1)
+// ---------------------------------------------------------------------------
+
+function resolveLayeredInfoStyle(
+  variant: LayeredInfoVariant,
+  tokens: ProjectStyle['tokens'],
+): ResolvedComponentStyle {
+  const { colors, radius, spacing, shadow, typography } = tokens;
+
+  // Base style: surface background, text color, border, radius, padding, shadow.
+  // Semua variants share base; per-variant tweak minimal.
+  const baseInline: Record<string, string | number> = {
+    backgroundColor: colors.surface,
+    color: colors.text,
+    border: `1px solid ${colors.border}`,
+    borderRadius: `${radius.medium}px`,
+    padding: `${spacing.cardPadding}px`,
+    boxShadow: shadow.soft,
+    fontSize: `${typography.bodySize}px`,
+  };
+
+  const variantMap: Record<LayeredInfoVariant, ResolvedComponentStyle> = {
+    accordion: {
+      inlineStyle: baseInline,
+      className: 'silse-layered-accordion',
+    },
+    tabs: {
+      inlineStyle: { ...baseInline, borderRadius: `${radius.large}px` },
+      className: 'silse-layered-tabs',
+    },
+    iconTabs: {
+      inlineStyle: { ...baseInline, borderRadius: `${radius.large}px` },
+      className: 'silse-layered-icon-tabs',
+    },
+    stepper: {
+      inlineStyle: { ...baseInline, backgroundColor: colors.background },
+      className: 'silse-layered-stepper',
+    },
+    cardGrid: {
+      inlineStyle: { ...baseInline, border: 'none', boxShadow: 'none' },
+      className: 'silse-layered-card-grid',
+    },
+    timeline: {
+      inlineStyle: { ...baseInline, border: 'none', boxShadow: 'none', backgroundColor: 'transparent' },
+      className: 'silse-layered-timeline',
+    },
+  };
+
+  return variantMap[variant] ?? variantMap.accordion;
+}
+
+// ---------------------------------------------------------------------------
 // Main resolver
 // ---------------------------------------------------------------------------
 
@@ -439,6 +492,12 @@ export function resolveComponentStyle(input: ResolveStyleInput): ResolvedCompone
         // can merge interactionRecipes separately if available.
         // This keeps resolver pure and decoupled from StylePack structure.
         undefined,
+      );
+
+    case 'layered-info':
+      return resolveLayeredInfoStyle(
+        variant as LayeredInfoVariant,
+        tokens,
       );
 
     default:
@@ -503,7 +562,7 @@ export function getResolvedComponentStyle(
   return resolveComponentStyleWithInteractions(
     {
       tokens,
-      componentType: component.type as 'text' | 'image' | 'card' | 'navigation' | 'question' | 'game',
+      componentType: component.type as 'text' | 'image' | 'card' | 'navigation' | 'question' | 'game' | 'layered-info',
       variant: (component as { variant?: string }).variant ?? 'default',
       pageRole: page.role,
       layoutId: page.layoutId,

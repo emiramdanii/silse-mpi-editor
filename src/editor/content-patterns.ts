@@ -183,17 +183,18 @@ export const CONTENT_PATTERNS: readonly ContentPattern[] = [
   },
 
   // ===== LEARNING OBJECTIVES (2) =====
-  // LXC-02 Patch: tambah pola "Tujuan Lengkap Berlapis" yang pakai
-  // komponen resmi baru layered-info. Cocok untuk halaman Tujuan yang
-  // berisi CP/ATP/TP + posisi pertemuan + alur belajar dalam satu
+  // LXC-02 Patch-1: pola "Tujuan Lengkap Berlapis" pakai komponen resmi
+  // baru layered-info dengan variant iconTabs + 5 lapisan (CP/ATP/Pertemuan/
+  // Tujuan/Alur Belajar) sesuai diskusi produk. Cocok untuk halaman Tujuan
+  // yang berisi CP/ATP/TP + posisi pertemuan + alur belajar dalam satu
   // komponen berlapis (bukan teks lepas panjang).
   {
     id: 'tujuan-berlapis',
     name: 'Tujuan Lengkap Berlapis',
-    description: 'Komponen Info Berlapis dengan 3 lapisan (Sebelumnya / Hari Ini / Berikutnya) + tombol lanjut.',
+    description: 'Komponen Info Berlapis (iconTabs) dengan 5 lapisan: CP, ATP, Pertemuan, Tujuan, Alur Belajar + tombol lanjut.',
     icon: '📚',
     applicableRoles: ['learningObjectives'],
-    pedagogicalReason: 'Sajikan tujuan pembelajaran dalam lapisan progressive disclosure — siswa fokus pada satu lapisan sekaligus (sebelumnya/hari ini/berikutnya), bukan kewalahan dengan teks panjang. Cocok untuk halaman Tujuan yang berisi CP/ATP/TP + alur belajar.',
+    pedagogicalReason: 'Sajikan tujuan pembelajaran dalam lapisan progressive disclosure — siswa fokus pada satu lapisan sekaligus (CP/ATP/Pertemuan/Tujuan/Alur), bukan kewalahan dengan teks panjang. Cocok untuk halaman Tujuan yang berisi CP/ATP/TP + alur belajar.',
     buildComponents: (ctx) => {
       const objectives = ctx.project.curriculum?.objectives ?? [];
       const objText = objectives.length > 0
@@ -201,21 +202,34 @@ export const CONTENT_PATTERNS: readonly ContentPattern[] = [
         : '1. Tujuan pembelajaran pertama.\n2. Tujuan pembelajaran kedua.\n3. Tujuan pembelajaran ketiga.';
       return [
         createLayeredInfoComponent({
-          variant: 'accordion',
+          variant: 'iconTabs',
           title: 'Tujuan Pembelajaran',
-          defaultOpenIndex: 1, // "Hari Ini" terbuka by default
+          defaultOpenIndex: 3, // "Tujuan" terbuka by default
           layers: [
             createLayeredInfoLayer({
-              title: 'Sebelumnya',
-              body: 'Pertemuan sebelumnya kita sudah mempelajari...\n\n( rangkum singkat materi sebelumnya )',
+              title: 'CP',
+              icon: '📘',
+              body: 'Capaian Pembelajaran (CP):\n\n( Tulis CP dari kurikulum merdeka untuk fase ini )',
             }),
             createLayeredInfoLayer({
-              title: 'Hari Ini',
-              body: `Pertemuan hari ini tujuan pembelajaran:\n\n${objText}`,
+              title: 'ATP',
+              icon: '🧭',
+              body: 'Alur Tujuan Pembelajaran (ATP):\n\n( Tulis ATP — turunan CP menjadi tujuan per pertemuan )',
             }),
             createLayeredInfoLayer({
-              title: 'Berikutnya',
-              body: 'Pertemuan berikutnya kita akan melanjutkan ke...\n\n( preview singkat materi berikutnya )',
+              title: 'Pertemuan',
+              icon: '📍',
+              body: 'Pertemuan ke-...\n\nTanggal: ...\nAlokasi waktu: ... menit',
+            }),
+            createLayeredInfoLayer({
+              title: 'Tujuan',
+              icon: '🎯',
+              body: `Tujuan Pembelajaran pertemuan ini:\n\n${objText}`,
+            }),
+            createLayeredInfoLayer({
+              title: 'Alur Belajar',
+              icon: '🗺️',
+              body: 'Alur belajar pertemuan ini:\n\n1. Pemantik\n2. Materi\n3. Kuis\n4. Game\n5. Refleksi',
             }),
           ],
           x: 80, y: 120, width: POS.fullWidth, height: 460,

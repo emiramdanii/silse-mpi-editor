@@ -376,6 +376,25 @@ function deepCopyComponentWithNewId(c: PageComponent): PageComponent {
       height: gc.height,
     } as GameComponent;
   }
+  // LXC-02 Patch-1: deep-copy layered-info with fresh layer IDs.
+  if (c.type === 'layered-info') {
+    const lc = c as LayeredInfoComponent;
+    return {
+      id: newId,
+      type: 'layered-info',
+      variant: lc.variant,
+      title: lc.title,
+      layers: lc.layers.map((layer) => ({
+        ...layer,
+        id: createComponentId(),
+      })),
+      defaultOpenIndex: lc.defaultOpenIndex,
+      x: lc.x,
+      y: lc.y,
+      width: lc.width,
+      height: lc.height,
+    } as LayeredInfoComponent;
+  }
   // Unknown type — copy with new id (shouldn't occur).
   return { ...(c as Record<string, unknown>), id: newId } as PageComponent;
 }

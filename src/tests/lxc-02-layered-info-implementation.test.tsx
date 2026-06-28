@@ -30,9 +30,15 @@ import { validateComponent, isValidComponent } from '../core/validation';
 import { canAddComponent, PAGE_ROLE_CAPABILITIES } from '../core/capability';
 import { isLayeredInfoComponent } from '../components/component-utils';
 import { COMPONENT_TYPES, LAYERED_INFO_VARIANTS } from '../core/types';
+import {
+  resolveComponentStyle,
+  getResolvedComponentStyle,
+} from '../core/style/resolveComponentStyle';
+import { DEFAULT_STYLE_PACK, stylePackToProjectStyle } from '../core/style-presets';
 import { getPatternById, getPatternsForRole } from '../editor/content-patterns';
 import { computePageStatus } from '../editor/mpi-page-status';
 import { createProject } from '../core/project-factory';
+import { createSamplePpknProject } from '../core/sample-project';
 import type { SimplePage, LayeredInfoComponent } from '../core/types';
 import { createPageId } from '../core/ids';
 
@@ -271,15 +277,24 @@ describe('LXC-02 — LayeredInfoComponentView shared renderer', () => {
     expect(content).toMatch(/layeredInfoStates/);
   });
 
-  it('preview = export (single renderer, not two)', () => {
-    // Verify the same LayeredInfoComponentView is used in both CanvasStage and PreviewApp
+  it('preview and export follow the same render contract (NOT single React renderer)', () => {
+    // LXC-02 Patch-1: export does NOT carry React — it uses inline JS DOM.
+    // Both renderers follow the same visual contract (6 variants, same style
+    // from resolveComponentStyle, same interaction model) but are separate
+    // implementations. This test verifies the contract, not "single renderer".
     const fs = require('node:fs');
     const path = require('node:path');
     const canvasContent = fs.readFileSync(path.resolve(__dirname, '../editor/CanvasStage.tsx'), 'utf8');
     const previewContent = fs.readFileSync(path.resolve(__dirname, '../preview/PreviewApp.tsx'), 'utf8');
-    // Both should import from the same path
+    const exportContent = fs.readFileSync(path.resolve(__dirname, '../export/export-html.ts'), 'utf8');
+    // Preview/editor: React LayeredInfoComponentView
     expect(canvasContent).toMatch(/from '\.\.\/components\/LayeredInfoComponentView'/);
     expect(previewContent).toMatch(/from '\.\.\/components\/LayeredInfoComponentView'/);
+    // Export: inline JS DOM (NOT React)
+    expect(exportContent).toMatch(/layered-info/);
+    expect(exportContent).toMatch(/layeredInfoStates/);
+    // Export does NOT import LayeredInfoComponentView (it's standalone JS)
+    expect(exportContent).not.toMatch(/LayeredInfoComponentView/);
   });
 });
 
@@ -533,7 +548,7 @@ describe('LXC-02 — Pattern "Tujuan Lengkap Berlapis"', () => {
     expect(components[1].type).toBe('navigation');
   });
 
-  it('pattern layered-info has 3 layers (Sebelumnya / Hari Ini / Berikutnya)', () => {
+  it('pattern layered-info has 5 layers (CP / ATP / Pertemuan / Tujuan / Alur Belajar)', () => {
     const project = createProject();
     const page: SimplePage = {
       id: createPageId(),
@@ -547,13 +562,36 @@ describe('LXC-02 — Pattern "Tujuan Lengkap Berlapis"', () => {
     const pattern = getPatternById('tujuan-berlapis')!;
     const components = pattern.buildComponents({ project: proj, page });
     const layeredInfo = components[0] as LayeredInfoComponent;
-    expect(layeredInfo.layers).toHaveLength(3);
-    expect(layeredInfo.layers[0].title).toBe('Sebelumnya');
-    expect(layeredInfo.layers[1].title).toBe('Hari Ini');
-    expect(layeredInfo.layers[2].title).toBe('Berikutnya');
+    expect(layeredInfo.layers).toHaveLength(5);
+    expect(layeredInfo.layers[0].title).toBe('CP');
+    expect(layeredInfo.layers[1].title).toBe('ATP');
+    expect(layeredInfo.layers[2].title).toBe('Pertemuan');
+    expect(layeredInfo.layers[3].title).toBe('Tujuan');
+    expect(layeredInfo.layers[4].title).toBe('Alur Belajar');
   });
 
-  it('pattern reads curriculum.objectives for "Hari Ini" layer body', () => {
+  it('pattern layers have icons (📘 🧭 📍 🎯 🗺️)', () => {
+    const project = createProject();
+    const page: SimplePage = {
+      id: createPageId(),
+      title: 'Tujuan',
+      role: 'learningObjectives',
+      layoutId: 'blank',
+      background: { type: 'color', color: '#fff' },
+      components: [],
+    };
+    const proj = { ...project, currentPageId: page.id, pages: [page] };
+    const pattern = getPatternById('tujuan-berlapis')!;
+    const components = pattern.buildComponents({ project: proj, page });
+    const layeredInfo = components[0] as LayeredInfoComponent;
+    expect(layeredInfo.layers[0].icon).toBe('📘');
+    expect(layeredInfo.layers[1].icon).toBe('🧭');
+    expect(layeredInfo.layers[2].icon).toBe('📍');
+    expect(layeredInfo.layers[3].icon).toBe('🎯');
+    expect(layeredInfo.layers[4].icon).toBe('🗺️');
+  });
+
+  it('pattern reads curriculum.objectives for "Tujuan" layer body', () => {
     const project = createProject();
     project.curriculum = {
       subject: 'PPKn',
@@ -577,12 +615,13 @@ describe('LXC-02 — Pattern "Tujuan Lengkap Berlapis"', () => {
     const pattern = getPatternById('tujuan-berlapis')!;
     const components = pattern.buildComponents({ project: proj, page });
     const layeredInfo = components[0] as LayeredInfoComponent;
-    const hariIniBody = layeredInfo.layers[1].body;
-    expect(hariIniBody).toMatch(/Pahami norma agama/);
-    expect(hariIniBody).toMatch(/Pahami norma hukum/);
+    // "Tujuan" is layer index 3 (CP=0, ATP=1, Pertemuan=2, Tujuan=3, Alur=4)
+    const tujuanBody = layeredInfo.layers[3].body;
+    expect(tujuanBody).toMatch(/Pahami norma agama/);
+    expect(tujuanBody).toMatch(/Pahami norma hukum/);
   });
 
-  it('pattern uses accordion variant by default', () => {
+  it('pattern uses iconTabs variant (LXC-02 Patch-1: was accordion, now iconTabs)', () => {
     const project = createProject();
     const page: SimplePage = {
       id: createPageId(),
@@ -596,10 +635,10 @@ describe('LXC-02 — Pattern "Tujuan Lengkap Berlapis"', () => {
     const pattern = getPatternById('tujuan-berlapis')!;
     const components = pattern.buildComponents({ project: proj, page });
     const layeredInfo = components[0] as LayeredInfoComponent;
-    expect(layeredInfo.variant).toBe('accordion');
+    expect(layeredInfo.variant).toBe('iconTabs');
   });
 
-  it('pattern defaultOpenIndex = 1 (Hari Ini terbuka by default)', () => {
+  it('pattern defaultOpenIndex = 3 (Tujuan terbuka by default)', () => {
     const project = createProject();
     const page: SimplePage = {
       id: createPageId(),
@@ -613,7 +652,7 @@ describe('LXC-02 — Pattern "Tujuan Lengkap Berlapis"', () => {
     const pattern = getPatternById('tujuan-berlapis')!;
     const components = pattern.buildComponents({ project: proj, page });
     const layeredInfo = components[0] as LayeredInfoComponent;
-    expect(layeredInfo.defaultOpenIndex).toBe(1);
+    expect(layeredInfo.defaultOpenIndex).toBe(3); // Tujuan (index 3) terbuka by default
   });
 });
 
@@ -729,5 +768,183 @@ describe('LXC-02 — regression', () => {
     fireEvent.click(applyBtn);
     const page = useEditorStore.getState().project.pages.find((p) => p.id === pageId)!;
     expect(page.components.some((c) => c.type === 'layered-info')).toBe(true);
+  });
+});
+
+// =========================================================================
+// LXC-02 Patch-1 — Style resolver + deep copy + render contract honesty
+// =========================================================================
+
+describe('LXC-02 Patch-1 — Style resolver supports layered-info', () => {
+  it('resolveComponentStyle for layered-info returns non-empty inlineStyle', () => {
+    
+    
+    const tokens = stylePackToProjectStyle(DEFAULT_STYLE_PACK).tokens;
+    const result = resolveComponentStyle({
+      tokens,
+      componentType: 'layered-info',
+      variant: 'accordion',
+      pageRole: 'learningObjectives',
+      layoutId: 'blank',
+    });
+    expect(Object.keys(result.inlineStyle).length).toBeGreaterThan(0);
+    expect(result.inlineStyle.backgroundColor).toBeDefined();
+    expect(result.inlineStyle.color).toBeDefined();
+    expect(result.inlineStyle.border).toBeDefined();
+    expect(result.inlineStyle.borderRadius).toBeDefined();
+    expect(result.inlineStyle.padding).toBeDefined();
+  });
+
+  it('resolveComponentStyle returns className for layered-info', () => {
+    
+    
+    const tokens = stylePackToProjectStyle(DEFAULT_STYLE_PACK).tokens;
+    const result = resolveComponentStyle({
+      tokens,
+      componentType: 'layered-info',
+      variant: 'accordion',
+      pageRole: 'material',
+      layoutId: 'blank',
+    });
+    expect(result.className).toBeDefined();
+    expect(result.className).toMatch(/silse-layered/);
+  });
+
+  it('resolveComponentStyle returns different className per variant', () => {
+    
+    
+    const tokens = stylePackToProjectStyle(DEFAULT_STYLE_PACK).tokens;
+    const variants = ['accordion', 'tabs', 'iconTabs', 'stepper', 'cardGrid', 'timeline'];
+    const classNames = variants.map((v) =>
+      resolveComponentStyle({
+        tokens,
+        componentType: 'layered-info',
+        variant: v,
+        pageRole: 'material',
+        layoutId: 'blank',
+      }).className,
+    );
+    // All unique
+    expect(new Set(classNames).size).toBe(6);
+  });
+
+  it('getResolvedComponentStyle for layered-info returns non-empty style (not {})', () => {
+    
+    
+    const project = createSamplePpknProject();
+    // Add a layered-info component to a learningObjectives page
+    const loPage = project.pages.find((p) => p.role === 'learningObjectives')!;
+    const layeredInfo = createLayeredInfoComponent();
+    const page = { ...loPage, components: [...loPage.components, layeredInfo] };
+    const result = getResolvedComponentStyle(project, page, layeredInfo);
+    expect(Object.keys(result.inlineStyle).length).toBeGreaterThan(0);
+  });
+});
+
+describe('LXC-02 Patch-1 — duplicatePage deep-copies layered-info layers', () => {
+  beforeEach(() => {
+    useEditorStore.getState().newProject();
+  });
+
+  it('duplicatePage creates new component ID for layered-info', () => {
+    useEditorStore.getState().addPage({ role: 'learningObjectives' });
+    const origId = useEditorStore.getState().addLayeredInfoComponent()!;
+    const state = useEditorStore.getState();
+    const pageId = state.project.currentPageId;
+    useEditorStore.getState().duplicatePage(pageId);
+    const newState = useEditorStore.getState();
+    const newPage = newState.project.pages.find(
+      (p) => p.id !== pageId && p.role === 'learningObjectives',
+    );
+    expect(newPage).toBeDefined();
+    const comp = newPage!.components.find((c) => c.type === 'layered-info')!;
+    expect(comp.id).not.toBe(origId);
+  });
+
+  it('duplicatePage creates fresh layer IDs (not shared reference)', () => {
+    useEditorStore.getState().addPage({ role: 'learningObjectives' });
+    const origId = useEditorStore.getState().addLayeredInfoComponent()!;
+    const state = useEditorStore.getState();
+    const pageId = state.project.currentPageId;
+    const origPage = state.project.pages.find((p) => p.id === pageId)!;
+    const origLayerIds = (origPage.components.find((c) => c.id === origId) as LayeredInfoComponent).layers.map((l) => l.id);
+
+    useEditorStore.getState().duplicatePage(pageId);
+    const newState = useEditorStore.getState();
+    const newPage = newState.project.pages.find(
+      (p) => p.id !== pageId && p.role === 'learningObjectives',
+    )!;
+    const newComp = newPage.components.find((c) => c.type === 'layered-info') as LayeredInfoComponent;
+    const newLayerIds = newComp.layers.map((l) => l.id);
+
+    // Layer IDs must be different (fresh IDs)
+    for (let i = 0; i < origLayerIds.length; i++) {
+      expect(newLayerIds[i]).not.toBe(origLayerIds[i]);
+    }
+  });
+
+  it('duplicatePage preserves layer content (title, body, icon)', () => {
+    useEditorStore.getState().addPage({ role: 'learningObjectives' });
+    useEditorStore.getState().addLayeredInfoComponent({
+      variant: 'iconTabs',
+      layers: [
+        createLayeredInfoLayer({ title: 'CP', body: 'CP body', icon: '📘' }),
+        createLayeredInfoLayer({ title: 'ATP', body: 'ATP body', icon: '🧭' }),
+      ],
+    });
+    const state = useEditorStore.getState();
+    const pageId = state.project.currentPageId;
+    useEditorStore.getState().duplicatePage(pageId);
+    const newState = useEditorStore.getState();
+    const newPage = newState.project.pages.find(
+      (p) => p.id !== pageId && p.role === 'learningObjectives',
+    )!;
+    const newComp = newPage.components.find((c) => c.type === 'layered-info') as LayeredInfoComponent;
+    expect(newComp.layers).toHaveLength(2);
+    expect(newComp.layers[0].title).toBe('CP');
+    expect(newComp.layers[0].body).toBe('CP body');
+    expect(newComp.layers[0].icon).toBe('📘');
+    expect(newComp.layers[1].title).toBe('ATP');
+    expect(newComp.layers[1].body).toBe('ATP body');
+    expect(newComp.layers[1].icon).toBe('🧭');
+  });
+
+  it('duplicatePage layers do not share reference with original', () => {
+    useEditorStore.getState().addPage({ role: 'learningObjectives' });
+    const origId = useEditorStore.getState().addLayeredInfoComponent()!;
+    const state = useEditorStore.getState();
+    const pageId = state.project.currentPageId;
+
+    useEditorStore.getState().duplicatePage(pageId);
+    const newState = useEditorStore.getState();
+    const newPage = newState.project.pages.find(
+      (p) => p.id !== pageId && p.role === 'learningObjectives',
+    )!;
+    const newComp = newPage.components.find((c) => c.type === 'layered-info') as LayeredInfoComponent;
+
+    // Mutate the new component's layer — original should NOT be affected
+    newComp.layers[0].title = 'MUTATED';
+    // Re-read original from store (it should be unchanged)
+    const origFromStore = useEditorStore.getState().project.pages.find((p) => p.id === pageId)!
+      .components.find((c) => c.id === origId) as LayeredInfoComponent;
+    expect(origFromStore.layers[0].title).not.toBe('MUTATED');
+  });
+
+  it('duplicatePage preserves variant + defaultOpenIndex', () => {
+    useEditorStore.getState().addPage({ role: 'learningObjectives' });
+    useEditorStore.getState().addLayeredInfoComponent({
+      variant: 'stepper',
+      defaultOpenIndex: 2,
+    });
+    const state = useEditorStore.getState();
+    const pageId = state.project.currentPageId;
+    useEditorStore.getState().duplicatePage(pageId);
+    const newState = useEditorStore.getState();
+    const newPage = newState.project.pages.find(
+      (p) => p.id !== pageId && p.role === 'learningObjectives',
+    )!;
+    const newComp = newPage.components.find((c) => c.type === 'layered-info') as LayeredInfoComponent;
+    expect(newComp.variant).toBe('stepper');
+    expect(newComp.defaultOpenIndex).toBe(2);
   });
 });

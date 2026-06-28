@@ -1,16 +1,23 @@
 /**
- * LayeredInfoComponentView — shared renderer for LayeredInfoComponent (LXC-02).
+ * LayeredInfoComponentView — React renderer for LayeredInfoComponent (LXC-02).
  *
  * Layer: components
  * Allowed imports: react, ../core/types, ../core/style/resolveComponentStyle
  *
- * Kontrak (LXC-02):
- *   - Shared renderer: preview = export (satu renderer, bukan dua).
- *   - Runtime state (layer yang terbuka) hanya di preview mode.
+ * Kontrak (LXC-02 Patch-1 — render contract honesty):
+ *   Preview and export follow the same render contract and resolved style
+ *   model, but the renderer runtime is different:
+ *     - Preview/editor: this React component (LayeredInfoComponentView)
+ *     - Export: standalone inline JS DOM manipulation in export-html.ts
+ *   This is NOT a "single shared React renderer" — export does not carry
+ *   React. Both renderers follow the same visual contract (6 variants,
+ *   same styling from resolveComponentStyle, same interaction model).
+ *
+ *   Runtime state (layer yang terbuka) hanya di preview mode.
  *     Di editor mode (fill), layer yang terbuka = defaultOpenIndex (read-only).
- *   - 6 variants: accordion, tabs, iconTabs, stepper, cardGrid, timeline.
- *   - Tidak ada clipping (white-space normal, overflow-wrap anywhere).
- *   - Tidak ada "block" di user-facing text.
+ *   6 variants: accordion, tabs, iconTabs, stepper, cardGrid, timeline.
+ *   Tidak ada clipping (white-space normal, overflow-wrap anywhere).
+ *   Tidak ada "block" di user-facing text.
  */
 
 import { useState, type CSSProperties } from 'react';
