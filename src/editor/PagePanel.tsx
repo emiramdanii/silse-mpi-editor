@@ -36,6 +36,7 @@ import {
   type PageStatus,
   type PageStatusLevel,
 } from './mpi-page-status';
+import { PageThumbnail } from './PageThumbnail';
 
 const LAYOUT_LABELS: Record<string, string> = {
   blank: 'Bebas',
@@ -162,6 +163,8 @@ export function PagePanel() {
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState('');
+  // PAGE-THUMBNAIL-SIDEBAR-V1: toggle between list view and thumbnail view
+  const [viewMode, setViewMode] = useState<'list' | 'thumbnail'>('list');
   // UX-02 Patch (UX-01 Patch-2 polish): track explicit issue expansion per page.
   // - undefined → default (active page expanded, inactive collapsed)
   // - true      → force expanded (user clicked toggle on inactive page)
@@ -344,11 +347,36 @@ export function PagePanel() {
     <aside className="page-panel" data-testid="page-panel">
       <div className="page-panel__head">
         <span className="page-panel__head-title">Alur Pembelajaran</span>
-        <span className="page-panel__head-count" data-testid="page-panel-count">
-          {project.pages.length} halaman
-        </span>
+        <div className="page-panel__head-right">
+          <span className="page-panel__head-count" data-testid="page-panel-count">
+            {project.pages.length} halaman
+          </span>
+          {/* PAGE-THUMBNAIL-SIDEBAR-V1: view mode toggle */}
+          <button
+            type="button"
+            className="page-panel__view-toggle"
+            onClick={() => setViewMode((v) => (v === 'list' ? 'thumbnail' : 'list'))}
+            title={viewMode === 'list' ? 'Tampilan thumbnail' : 'Tampilan daftar'}
+            data-testid="page-panel-view-toggle"
+            data-view-mode={viewMode}
+          >
+            {viewMode === 'list' ? '▦' : '☰'}
+          </button>
+        </div>
       </div>
       <StatusSummary summary={summary} />
+      {viewMode === 'thumbnail' ? (
+        <div className="page-panel__thumbnails" data-testid="page-panel-thumbnails">
+          {project.pages.map((page) => (
+            <PageThumbnail
+              key={page.id}
+              page={page}
+              isActive={page.id === project.currentPageId}
+              onClick={() => selectPage(page.id)}
+            />
+          ))}
+        </div>
+      ) : (
       <div className="page-panel__list">
         {sections.map((section) => {
           const sectionLabel = MPI_PHASE_LABELS[section.phase];
@@ -367,6 +395,7 @@ export function PagePanel() {
           );
         })}
       </div>
+      )}
       <div className="page-panel__footer">
         <button
           onClick={() => addPage()}
