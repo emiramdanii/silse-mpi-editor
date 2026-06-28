@@ -98,7 +98,7 @@ export const MPI_TOPIC_CATALOG: readonly MpiTopic[] = [
       'Mengidentifikasi perubahan wujud zat dalam kehidupan sehari-hari.',
       'Melakukan eksperimen sederhana untuk mengamati perubahan wujud zat.',
     ],
-    materialSummary: 'Zat memiliki tiga wujud: padat, cair, dan gas. Zat padat bentuk dan volume tetap. Zat cair bentuk berubah, volume tetap. Gas bentang dan volume berubah. Perubahan wujud: mencair (padat→cair), membeku (cair→padat), menguap (cair→gas), mengembun (gas→cair), menyublim (padat→gas), mengkristal (gas→padat).',
+    materialSummary: 'Zat memiliki tiga wujud: padat, cair, dan gas. Zat padat bentuk dan volume tetap. Zat cair bentuk berubah, volume tetap. Gas bentuk dan volume berubah. Perubahan wujud: mencair (padat→cair), membeku (cair→padat), menguap (cair→gas), mengembun (gas→cair), menyublim (padat→gas), mengkristal (gas→padat).',
     quizPrompt: 'Perubahan wujud dari padat langsung menjadi gas disebut...',
     quizChoices: ['Menguap', 'Menyublim', 'Mengembun', 'Membeku'],
     quizCorrectIndex: 1,

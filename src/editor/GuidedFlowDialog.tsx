@@ -41,6 +41,11 @@ export function GuidedFlowDialog({ onClose }: { onClose: () => void }) {
 
   const handleApply = () => {
     if (!generated) return;
+    // GUIDED-MPI-FLOW-01 Patch-1: Guard — don't apply if quality report has errors
+    if (!generated.qualityReport.ok) {
+      window.alert('Draft MPI memiliki error layout. Perbaiki dulu sebelum menerapkan.');
+      return;
+    }
     setProject(generated.project);
     onClose();
   };
@@ -165,9 +170,11 @@ export function GuidedFlowDialog({ onClose }: { onClose: () => void }) {
               <button
                 onClick={handleApply}
                 className="primary"
+                disabled={!generated.qualityReport.ok}
+                title={generated.qualityReport.ok ? 'Terapkan draft MPI ke editor' : 'Tidak bisa menerapkan — ada error layout'}
                 data-testid="guided-flow-apply"
               >
-                ✓ Terapkan Draft MPI
+                {generated.qualityReport.ok ? '✓ Terapkan Draft MPI' : '✗ Ada Error Layout'}
               </button>
             </div>
           </>

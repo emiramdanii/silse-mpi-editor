@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, it, beforeEach } from 'vitest';
-import { render, fireEvent } from '@testing-library/react';
+import { render, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 import { Topbar } from '../editor/Topbar';
 import { GuidedFlowDialog } from '../editor/GuidedFlowDialog';
@@ -15,6 +15,7 @@ import {
   getUniqueMapelList,
 } from '../core/guided-flow/mpi-topic-catalog';
 import { generateMpiFromTopic } from '../core/guided-flow/generate-mpi-from-topic';
+import { validateLayoutQuality } from '../core/design/layout-quality';
 import { isValidProject } from '../core/validation';
 import { checkMpiStandard } from '../core/mpi-quality-check';
 
@@ -178,7 +179,7 @@ describe('GUIDED-MPI-FLOW-01 — UI', () => {
     expect(container.querySelectorAll('.guided-flow-topic-card').length).toBeGreaterThanOrEqual(4);
   });
 
-  it('selecting topic + clicking Generate produces result with quality score', () => {
+  it('selecting topic + clicking Generate produces result with quality score', async () => {
     const { container } = render(
       React.createElement(GuidedFlowDialog, { onClose: () => {} }),
     );
@@ -188,10 +189,12 @@ describe('GUIDED-MPI-FLOW-01 — UI', () => {
     // Click generate
     const generateBtn = container.querySelector('[data-testid="guided-flow-generate"]') as HTMLButtonElement;
     fireEvent.click(generateBtn);
-    // After generate, quality score should appear (may need to wait for setTimeout)
-    // Since we use setTimeout(100), let's check after a tick
-    // For V1 test, just verify the button was clickable
-    expect(generateBtn).not.toBeNull();
+    // Wait for quality score to appear (setTimeout 100ms)
+    await waitFor(() => {
+      const scoreEl = container.querySelector('[data-testid="guided-flow-quality-score"]');
+      expect(scoreEl).not.toBeNull();
+      expect(scoreEl?.textContent).toMatch(/Skor Kualitas/);
+    });
   });
 
   it('dialog can be closed', () => {
@@ -232,5 +235,83 @@ describe('GUIDED-MPI-FLOW-01 — regression', () => {
       const errors = result.qualityReport.issues.filter((i) => i.code === 'OUT_OF_CANVAS');
       expect(errors, `${topic.id} should have no out-of-canvas errors`).toHaveLength(0);
     }
+  });
+});
+
+// =========================================================================
+// GUIDED-MPI-FLOW-01 Patch-1 — No Overlap + Quality Guard
+// =========================================================================
+
+describe('GUIDED-MPI-FLOW-01 Patch-1 — Quality guard', () => {
+  it('all topics: no OUT_OF_CANVAS errors in quality report', () => {
+    for (const topic of MPI_TOPIC_CATALOG) {
+      const result = generateMpiFromTopic(topic);
+      const oobErrors = result.qualityReport.issues.filter(
+        (i) => i.code === 'OUT_OF_CANVAS',
+      );
+      expect(oobErrors, `${topic.id} should have no OUT_OF_CANVAS`).toHaveLength(0);
+    }
+  });
+
+  it('all topics: no LARGE_OVERLAP warnings in quality report', () => {
+    for (const topic of MPI_TOPIC_CATALOG) {
+      const result = generateMpiFromTopic(topic);
+      const overlapIssues = result.qualityReport.issues.filter(
+        (i) => i.code === 'LARGE_OVERLAP',
+      );
+      expect(overlapIssues, `${topic.id} should have no LARGE_OVERLAP`).toHaveLength(0);
+    }
+  });
+
+  it('all topics: quality score >= 80', () => {
+    for (const topic of MPI_TOPIC_CATALOG) {
+      const result = generateMpiFromTopic(topic);
+      expect(result.qualityReport.score, `${topic.id} score should be >= 80`).toBeGreaterThanOrEqual(80);
+    }
+  });
+
+  it('PPKn material page specifically has no LARGE_OVERLAP', () => {
+    const topic = getTopicById('ppkn-7-norma')!;
+    const result = generateMpiFromTopic(topic);
+    const materialPage = result.project.pages.find((p) => p.role === 'material')!;
+    const quality = validateLayoutQuality(materialPage);
+    const overlapIssues = quality.issues.filter((i) => i.code === 'LARGE_OVERLAP');
+    expect(overlapIssues).toHaveLength(0);
+  });
+
+  it('Apply button is disabled when qualityReport has errors', async () => {
+    const { container } = render(
+      React.createElement(GuidedFlowDialog, { onClose: () => {} }),
+    );
+    // Select topic
+    const topicCard = container.querySelector('[data-testid="guided-flow-topic-ppkn-7-norma"]') as HTMLButtonElement;
+    fireEvent.click(topicCard);
+    // Generate
+    const generateBtn = container.querySelector('[data-testid="guided-flow-generate"]') as HTMLButtonElement;
+    fireEvent.click(generateBtn);
+    // Wait for result
+    await waitFor(() => {
+      expect(container.querySelector('[data-testid="guided-flow-quality-score"]')).not.toBeNull();
+    });
+    // Check apply button state — if qualityReport.ok is true, button should be enabled
+    // If false, button should be disabled
+    const applyBtn = container.querySelector('[data-testid="guided-flow-apply"]') as HTMLButtonElement;
+    expect(applyBtn).not.toBeNull();
+    // For PPKn (which should be ok), button should be enabled
+    const topic = getTopicById('ppkn-7-norma')!;
+    const result = generateMpiFromTopic(topic);
+    if (result.qualityReport.ok) {
+      expect(applyBtn.disabled).toBe(false);
+      expect(applyBtn.textContent).toMatch(/Terapkan/);
+    } else {
+      expect(applyBtn.disabled).toBe(true);
+      expect(applyBtn.textContent).toMatch(/Error/);
+    }
+  });
+
+  it('IPA materialSummary says "bentuk" not "bentang"', () => {
+    const topic = getTopicById('ipa-7-zat')!;
+    expect(topic.materialSummary).not.toMatch(/bentang/);
+    expect(topic.materialSummary).toMatch(/Gas bentuk/);
   });
 });

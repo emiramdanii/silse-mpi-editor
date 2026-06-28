@@ -62,6 +62,7 @@ export function placeComponentInRecipe(
   }
 
   // DIE-V1 Patch-1 Scope 1: First text → titleZone, subsequent → contentZone
+  // GUIDED-MPI-FLOW-01 Patch-1: Global content index for stacking (not per-type)
   if (componentType === 'text') {
     if (isFirstText && recipe.titleZone.width > 0) {
       return {
@@ -71,12 +72,13 @@ export function placeComponentInRecipe(
         height: recipe.titleZone.height,
       };
     }
-    // Subsequent text: stack in content zone
+    // Subsequent text: stack vertically in content zone using global index
+    const yOffset = index * 120;
     return {
       x: contentZone.x,
-      y: contentZone.y + Math.min(index * 100, Math.max(0, contentZone.height - 100)),
+      y: contentZone.y + Math.min(yOffset, Math.max(0, contentZone.height - 120)),
       width: contentZone.width,
-      height: Math.max(60, Math.min(120, contentZone.height - 100)),
+      height: Math.max(60, Math.min(120, contentZone.height - yOffset)),
     };
   }
 
@@ -94,8 +96,6 @@ export function placeComponentInRecipe(
   // DIE-V1 Patch-1 Scope 2: learning-bridge → bottom/small of contentZone
   if (componentType === 'learning-bridge') {
     const bridgeHeight = 180;
-    // If layered-info exists, place bridge below it
-    // Use bottom of contentZone
     return {
       x: contentZone.x,
       y: contentZone.y + contentZone.height - bridgeHeight,
@@ -104,15 +104,24 @@ export function placeComponentInRecipe(
     };
   }
 
-  // Card: half width, stacked vertically in contentZone
+  // GUIDED-MPI-FLOW-01 Patch-1: Card stacking uses global content index.
+  // Each content slot is 120px. Cards pair up horizontally (2 per row).
+  // Card at global index N: row = floor(N/2), but y offset = N * 120
+  // to stack below any preceding text (which also uses 120px slots).
   if (componentType === 'card') {
     const cardW = Math.min((contentZone.width - 20) / 2, 520);
-    const cardH = 160;
+    const cardH = 140;
     const col = index % 2;
+    // Y offset: use index * 120 so card doesn't overlap with preceding text.
+    // But pair up: even index = left col, odd index = right col (same row).
+    // So actual y = contentZone.y + (index - col) * 120 / 2 ... no, simpler:
+    // Group cards in pairs. Card at index 0 and 1 share same y.
     const row = Math.floor(index / 2);
+    // y = contentZone.y + max(row * (cardH + 20), index * 120)
+    const yOffset = Math.max(row * (cardH + 20), index * 120);
     return {
       x: contentZone.x + col * (cardW + 20),
-      y: contentZone.y + row * (cardH + 20),
+      y: contentZone.y + yOffset,
       width: cardW,
       height: cardH,
     };
@@ -141,24 +150,39 @@ export function placeComponentInRecipe(
  * Apply page design recipe to all components.
  * HANYA mengatur geometry (x/y/width/height).
  * TIDAK mengubah isi materi (text, body, layers, choices, dll).
+ *
+ * GUIDED-MPI-FLOW-01 Patch-1: Use GLOBAL content index (not per-type)
+ * to prevent overlap between different component types in the same zone.
+ * Navigation is excluded from content index (goes to actionZone).
+ * First text goes to titleZone (not content).
  */
 export function applyPageDesignRecipe(page: SimplePage): SimplePage {
   const recipe = getDesignRecipeForRole(page.role);
 
-  // Track per-type index for stacking
-  const typeCounters: Record<string, number> = {};
-  let textPlaced = false; // Track if first text already placed in titleZone
+  let textPlaced = false;
+  let contentIndex = 0; // Global index for ALL content components (not per-type)
 
   const newComponents = page.components.map((comp) => {
     const type = comp.type;
-    const idx = typeCounters[type] ?? 0;
-    typeCounters[type] = idx + 1;
 
-    // Determine if this is the first text component
+    // Navigation always goes to actionZone — doesn't consume content index
+    if (type === 'navigation') {
+      const placed = placeComponentInRecipe(type, recipe, 0, false);
+      return { ...comp, x: placed.x, y: placed.y, width: placed.width, height: placed.height } as PageComponent;
+    }
+
+    // First text → titleZone, doesn't consume content index
     const isFirstText = type === 'text' && !textPlaced;
-    if (isFirstText) textPlaced = true;
+    if (isFirstText) {
+      textPlaced = true;
+      const placed = placeComponentInRecipe(type, recipe, 0, true);
+      return { ...comp, x: placed.x, y: placed.y, width: placed.width, height: placed.height } as PageComponent;
+    }
 
-    const placed = placeComponentInRecipe(type, recipe, idx, isFirstText);
+    // All other content components share a global content index
+    const idx = contentIndex;
+    contentIndex++;
+    const placed = placeComponentInRecipe(type, recipe, idx, false);
 
     return {
       ...comp,
