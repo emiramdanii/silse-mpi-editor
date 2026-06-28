@@ -80,7 +80,7 @@ export function LearningBridgeComponentView({
         padding: 16,
         outline: selected ? '2px solid #2563eb' : 'none',
         outlineOffset: 2,
-        cursor: 'pointer',
+        cursor: onSelect ? 'pointer' : 'default',
       }
     : {
         position: 'absolute',
@@ -97,7 +97,7 @@ export function LearningBridgeComponentView({
         padding: 16,
         outline: selected ? '2px solid #2563eb' : 'none',
         outlineOffset: 2,
-        cursor: 'pointer',
+        cursor: onSelect ? 'pointer' : 'default',
       };
 
   const handleContainerClick = (e: React.MouseEvent) => {
