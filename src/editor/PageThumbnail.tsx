@@ -16,6 +16,7 @@
 import type { SimplePage, PageComponent } from '../core/types';
 import { getRoleInfo } from './mpi-standard-roles';
 import { computePageStatus, statusIcon, type PageStatusLevel } from './mpi-page-status';
+import type { SimpleProject } from '../core/types';
 
 const THUMB_W = 220;
 const THUMB_H = 124; // 16:9 ratio
@@ -47,13 +48,15 @@ export function PageThumbnail({
   page,
   isActive,
   onClick,
+  project,
 }: {
   page: SimplePage;
   isActive: boolean;
   onClick: () => void;
+  project?: SimpleProject;
 }) {
   const info = getRoleInfo(page.role);
-  const status = computePageStatus(page);
+  const status = computePageStatus(page, project);
   const bgColor = page.background.type === 'color' ? page.background.color : '#ffffff';
 
   return (

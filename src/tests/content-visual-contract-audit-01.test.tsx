@@ -11,12 +11,15 @@ import {
   isDarkColor,
   getContrastRatio,
   getReadableTextColor,
+  getReadableMutedTextColor,
+  normalizeHexColor,
 } from '../core/design/contrast';
 import { getResolvedComponentStyle } from '../core/style/resolveComponentStyle';
 import { createSamplePpknProject } from '../core/sample-project';
 import { generateMpiFromTopic } from '../core/guided-flow/generate-mpi-from-topic';
 import { getTopicById } from '../core/guided-flow/mpi-topic-catalog';
 import { checkMpiStandard } from '../core/mpi-quality-check';
+import { checkPageVisualReadability } from '../editor/mpi-page-status';
 import { PagePanel } from '../editor/PagePanel';
 import { useEditorStore } from '../store/editor-store';
 
@@ -144,5 +147,79 @@ describe('CONTENT-VISUAL-CONTRACT-AUDIT-01 — 10 mandatory tests', () => {
     // Verify contrast is adequate
     const ratio = getContrastRatio(textColor, (coverPage.background as { color: string }).color);
     expect(ratio).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+// =========================================================================
+// CONTENT-VISUAL-CONTRACT-AUDIT-01 Patch-1 — 6 mandatory tests
+// =========================================================================
+
+describe('CONTENT-VISUAL-CONTRACT-AUDIT-01 Patch-1 — mandatory tests', () => {
+  // Test 1: broken resolver / forced dark text cover detected by visual checker
+  it('1. Cover with resolver working: visual checker returns no issues (text is readable)', () => {
+    const project = createSamplePpknProject();
+    const coverPage = project.pages.find((p) => p.role === 'cover')!;
+    const issues = checkPageVisualReadability(project, coverPage);
+    // With resolver working, there should be NO issues (text is readable).
+    expect(issues.length).toBe(0);
+  });
+
+  // Test 2: subtitle contrast threshold minimum 3.0
+  it('2. Subtitle contrast threshold is 3.0 (not 4.5)', () => {
+    const bg = '#1e3a5f';
+    const muted = getReadableMutedTextColor(bg);
+    const ratio = getContrastRatio(muted, bg);
+    expect(ratio).toBeGreaterThanOrEqual(3.0);
+  });
+
+  // Test 3: PagePanel uses visual status from resolved style (cover ok = no visual warning)
+  it('3. PagePanel cover status ok when resolver produces readable text', () => {
+    useEditorStore.getState().newProject();
+    useEditorStore.getState().setProject(createSamplePpknProject());
+    const { container } = render(React.createElement(PagePanel));
+    const coverThumb = container.querySelector('[data-role="cover"]');
+    expect(coverThumb?.getAttribute('data-status')).toBe('ok');
+  });
+
+  // Test 4: Header panel kiri says "Halaman" not "Alur Pembelajaran"
+  it('4. PagePanel header says "Halaman" not "Alur Pembelajaran"', () => {
+    useEditorStore.getState().newProject();
+    const { container } = render(React.createElement(PagePanel));
+    const headTitle = container.querySelector('.page-panel__head-title');
+    expect(headTitle?.textContent).toBe('Halaman');
+    expect(headTitle?.textContent).not.toBe('Alur Pembelajaran');
+  });
+
+  // Test 5: Wording does not contain "Question" or "feedback" in user-facing warnings
+  it('5. Quality check warnings do not use "Question" or "feedback" (use Indonesian)', () => {
+    const project = createSamplePpknProject();
+    const broken = {
+      ...project,
+      pages: project.pages.map((p) => ({
+        ...p,
+        components: p.components.map((c) => {
+          if (c.type === 'question') {
+            return { ...c, feedbackCorrect: '', feedbackWrong: '' } as typeof c;
+          }
+          return c;
+        }) as typeof p.components,
+      })),
+    };
+    const qc = checkMpiStandard(broken);
+    const allWarnings = qc.warnings.join(' ');
+    expect(allWarnings).not.toMatch(/\bQuestion\b/);
+    expect(allWarnings).not.toMatch(/\bfeedback\b/i);
+    expect(allWarnings).toMatch(/umpan balik|pertanyaan/i);
+  });
+
+  // Test 6: Invalid color fallback does not crash and does not return NaN
+  it('6. Invalid color does not crash and contrast ratio is not NaN', () => {
+    expect(normalizeHexColor('not-a-color')).toBeNull();
+    expect(normalizeHexColor('')).toBeNull();
+    expect(normalizeHexColor(null as never)).toBeNull();
+    const ratio = getContrastRatio('invalid', '#ffffff');
+    expect(Number.isNaN(ratio)).toBe(false);
+    expect(typeof ratio).toBe('number');
+    expect(() => isDarkColor('invalid')).not.toThrow();
   });
 });

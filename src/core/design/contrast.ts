@@ -18,12 +18,29 @@
 // Helpers
 // ---------------------------------------------------------------------------
 
-function parseHex(color: string): { r: number; g: number; b: number } {
-  let hex = color.replace('#', '');
+/**
+ * Normalize a hex color string. Returns '#rrggbb' or null if invalid.
+ * Supports: '#rgb', '#rrggbb', 'rgb', 'rrggbb'.
+ */
+export function normalizeHexColor(color: string): string | null {
+  if (!color || typeof color !== 'string') return null;
+  let hex = color.trim().replace('#', '');
   if (hex.length === 3) {
     hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
   }
-  const num = parseInt(hex, 16);
+  if (hex.length !== 6 || !/^[0-9a-fA-F]{6}$/.test(hex)) {
+    return null;
+  }
+  return '#' + hex.toLowerCase();
+}
+
+function parseHex(color: string): { r: number; g: number; b: number } {
+  const normalized = normalizeHexColor(color);
+  if (!normalized) {
+    // Fallback to black for invalid input
+    return { r: 0, g: 0, b: 0 };
+  }
+  const num = parseInt(normalized.replace('#', ''), 16);
   return {
     r: (num >> 16) & 0xff,
     g: (num >> 8) & 0xff,

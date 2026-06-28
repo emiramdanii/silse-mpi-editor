@@ -280,7 +280,7 @@ describe('UX-02 — computePageStatus feedback rules', () => {
       navComponent(),
     ]);
     const status = computePageStatus(page);
-    expect(status.issues.some((i) => i.message.match(/feedback benar/i))).toBe(true);
+    expect(status.issues.some((i) => i.message.match(/umpan balik benar/i))).toBe(true);
     expect(status.level).toBe('warning');
   });
 
@@ -290,7 +290,7 @@ describe('UX-02 — computePageStatus feedback rules', () => {
       navComponent(),
     ]);
     const status = computePageStatus(page);
-    expect(status.issues.some((i) => i.message.match(/feedback salah/i))).toBe(true);
+    expect(status.issues.some((i) => i.message.match(/umpan balik salah/i))).toBe(true);
     expect(status.level).toBe('warning');
   });
 
@@ -300,8 +300,8 @@ describe('UX-02 — computePageStatus feedback rules', () => {
       navComponent(),
     ]);
     const status = computePageStatus(page);
-    expect(status.issues.some((i) => i.message.match(/feedback benar terlalu pendek/i))).toBe(true);
-    expect(status.issues.some((i) => i.message.match(/feedback salah terlalu pendek/i))).toBe(true);
+    expect(status.issues.some((i) => i.message.match(/umpan balik benar terlalu pendek/i))).toBe(true);
+    expect(status.issues.some((i) => i.message.match(/umpan balik salah terlalu pendek/i))).toBe(true);
     expect(status.level).toBe('warning');
   });
 

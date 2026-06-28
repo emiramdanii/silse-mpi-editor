@@ -191,7 +191,7 @@ export function PagePanel() {
   const sections = buildSections(project.pages);
   const canDeleteAny = project.pages.length > 1;
   // UX-02: compute per-page status + aggregate summary
-  const pageStatuses = computeAllPageStatuses(project.pages);
+  const pageStatuses = computeAllPageStatuses(project.pages, project);
   const summary = computeLearningFlowSummary(pageStatuses);
 
   /**
@@ -347,7 +347,7 @@ export function PagePanel() {
   return (
     <aside className="page-panel" data-testid="page-panel">
       <div className="page-panel__head">
-        <span className="page-panel__head-title">Alur Pembelajaran</span>
+        <span className="page-panel__head-title">Halaman</span>
         <div className="page-panel__head-right">
           <span className="page-panel__head-count" data-testid="page-panel-count">
             {project.pages.length} halaman
@@ -374,6 +374,7 @@ export function PagePanel() {
               page={page}
               isActive={page.id === project.currentPageId}
               onClick={() => selectPage(page.id)}
+              project={project}
             />
           ))}
         </div>

@@ -42,8 +42,9 @@
  *   untuk export guard.
  */
 
-import type { SimplePage } from '../core/types';
-import { isDarkColor, getReadableTextColor, getContrastRatio } from '../core/design/contrast';
+import type { SimplePage, SimpleProject } from '../core/types';
+import { getContrastRatio } from '../core/design/contrast';
+import { getResolvedComponentStyle } from '../core/style/resolveComponentStyle';
 
 export type PageStatusLevel = 'ok' | 'warning' | 'error';
 
@@ -59,9 +60,68 @@ export type PageStatus = {
 };
 
 /**
- * Hitung status satu halaman.
+ * Check visual readability of a page using ACTUAL resolved colors.
+ * CONTENT-VISUAL-CONTRACT-AUDIT-01 Patch-1 Scope 1.
+ *
+ * For cover/closing with color background:
+ * - Resolve text component style via getResolvedComponentStyle
+ * - Get actual inlineStyle.color
+ * - Check contrast ratio against background
+ * - title/body < 4.5 → warning
+ * - subtitle < 3.0 → warning
  */
-export function computePageStatus(page: SimplePage): PageStatus {
+export function checkPageVisualReadability(
+  project: SimpleProject,
+  page: SimplePage,
+): PageIssue[] {
+  const issues: PageIssue[] = [];
+
+  if (page.background.type !== 'color') return issues;
+  const bg = page.background.color;
+
+  // Only check cover/closing (V1 scope)
+  if (page.role !== 'cover' && page.role !== 'closing') return issues;
+
+  const textComps = page.components.filter((c) => c.type === 'text');
+  let warnedThisPage = false;
+
+  for (const tc of textComps) {
+    if (warnedThisPage) break;
+
+    const resolved = getResolvedComponentStyle(project, page, tc);
+    const textColor = (resolved.inlineStyle.color as string) || '#000000';
+    const ratio = getContrastRatio(textColor, bg);
+    const variant = (tc as { variant?: string }).variant ?? '';
+
+    // title/body/questionPrompt/instruction → minimum 4.5
+    if (['title', 'body', 'questionPrompt', 'instruction'].includes(variant)) {
+      if (ratio < 4.5) {
+        issues.push({
+          level: 'warning',
+          message: `Teks ${variant} di ${page.role} kontras rendah (${ratio.toFixed(1)}:1, minimum 4.5:1).`,
+        });
+        warnedThisPage = true;
+      }
+    }
+
+    // subtitle → minimum 3.0
+    if (variant === 'subtitle' && ratio < 3.0) {
+      issues.push({
+        level: 'warning',
+        message: `Teks subtitle di ${page.role} kontras rendah (${ratio.toFixed(1)}:1, minimum 3.0:1).`,
+      });
+      warnedThisPage = true;
+    }
+  }
+
+  return issues;
+}
+
+/**
+ * Hitung status satu halaman.
+ * Jika project diberikan, cek juga visual readability dengan resolved color aktual.
+ */
+export function computePageStatus(page: SimplePage, project?: SimpleProject): PageStatus {
   const issues: PageIssue[] = [];
 
   // Aturan tambahan: feedback question/game
@@ -77,13 +137,13 @@ export function computePageStatus(page: SimplePage): PageStatus {
       if (!q.feedbackCorrect || q.feedbackCorrect.trim().length === 0) {
         issues.push({
           level: 'warning',
-          message: `Question "${label}" belum punya feedback benar.`,
+          message: `Pertanyaan cek pemahaman "${label}" belum punya umpan balik benar.`,
         });
       }
       if (!q.feedbackWrong || q.feedbackWrong.trim().length === 0) {
         issues.push({
           level: 'warning',
-          message: `Question "${label}" belum punya feedback salah.`,
+          message: `Pertanyaan cek pemahaman "${label}" belum punya umpan balik salah.`,
         });
       }
     }
@@ -101,13 +161,13 @@ export function computePageStatus(page: SimplePage): PageStatus {
         if (!m.feedbackCorrect || m.feedbackCorrect.trim().length < 3) {
           issues.push({
             level: 'warning',
-            message: `Misi "${label}" feedback benar terlalu pendek.`,
+            message: `Misi "${label}" umpan balik benar terlalu pendek.`,
           });
         }
         if (!m.feedbackWrong || m.feedbackWrong.trim().length < 3) {
           issues.push({
             level: 'warning',
-            message: `Misi "${label}" feedback salah terlalu pendek.`,
+            message: `Misi "${label}" umpan balik salah terlalu pendek.`,
           });
         }
       }
@@ -125,17 +185,9 @@ export function computePageStatus(page: SimplePage): PageStatus {
           message: 'Cover belum punya teks judul.',
         });
       }
-      // CONTENT-VISUAL-CONTRACT-AUDIT-01 Scope 6: visual readability check.
-      // If background is dark, verify the readable text color has adequate contrast.
-      if (page.background.type === 'color' && isDarkColor(page.background.color)) {
-        const readable = getReadableTextColor(page.background.color);
-        const ratio = getContrastRatio(readable, page.background.color);
-        if (ratio < 4.5) {
-          issues.push({
-            level: 'warning',
-            message: `Background cover terlalu gelap untuk kontras teks yang baik (${ratio.toFixed(1)}:1, minimum 4.5:1). Pertimbangkan latar lebih terang.`,
-          });
-        }
+      // CONTENT-VISUAL-CONTRACT-AUDIT-01 Patch-1: real visual check using resolved color.
+      if (project) {
+        issues.push(...checkPageVisualReadability(project, page));
       }
       break;
     }
@@ -273,16 +325,9 @@ export function computePageStatus(page: SimplePage): PageStatus {
           message: 'Penutup belum punya teks penutup.',
         });
       }
-      // CONTENT-VISUAL-CONTRACT-AUDIT-01 Scope 6: visual readability check.
-      if (page.background.type === 'color' && isDarkColor(page.background.color)) {
-        const readable = getReadableTextColor(page.background.color);
-        const ratio = getContrastRatio(readable, page.background.color);
-        if (ratio < 4.5) {
-          issues.push({
-            level: 'warning',
-            message: `Background penutup terlalu gelap untuk kontras teks yang baik (${ratio.toFixed(1)}:1, minimum 4.5:1). Pertimbangkan latar lebih terang.`,
-          });
-        }
+      // CONTENT-VISUAL-CONTRACT-AUDIT-01 Patch-1: real visual check using resolved color.
+      if (project) {
+        issues.push(...checkPageVisualReadability(project, page));
       }
       break;
     }
@@ -313,10 +358,11 @@ export function computePageStatus(page: SimplePage): PageStatus {
  */
 export function computeAllPageStatuses(
   pages: SimplePage[],
+  project?: SimpleProject,
 ): Record<string, PageStatus> {
   const result: Record<string, PageStatus> = {};
   for (const page of pages) {
-    result[page.id] = computePageStatus(page);
+    result[page.id] = computePageStatus(page, project);
   }
   return result;
 }

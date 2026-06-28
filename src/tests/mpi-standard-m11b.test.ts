@@ -163,7 +163,7 @@ describe('M11B PATCH — MPI quality check', () => {
       })),
     };
     const qc = checkMpiStandard(broken);
-    expect(qc.warnings.join('; ')).toMatch(/feedback/i);
+    expect(qc.warnings.join('; ')).toMatch(/umpan balik|feedback/i);
   });
 });
 

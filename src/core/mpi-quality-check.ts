@@ -126,20 +126,20 @@ export function checkMpiStandard(project: SimpleProject): QualityCheckResult {
       if (comp.type === 'question') {
         const q = comp as { feedbackCorrect: string; feedbackWrong: string };
         if (!q.feedbackCorrect || q.feedbackCorrect.trim().length === 0) {
-          warnings.push(`Question "${(comp as { prompt?: string }).prompt ?? ''}" belum punya feedback benar.`);
+          warnings.push(`Pertanyaan cek pemahaman "${(comp as { prompt?: string }).prompt ?? ''}" belum punya umpan balik benar.`);
         }
         if (!q.feedbackWrong || q.feedbackWrong.trim().length === 0) {
-          warnings.push(`Question "${(comp as { prompt?: string }).prompt ?? ''}" belum punya feedback salah.`);
+          warnings.push(`Pertanyaan cek pemahaman "${(comp as { prompt?: string }).prompt ?? ''}" belum punya umpan balik salah.`);
         }
       }
       if (comp.type === 'game') {
         const g = comp as { missions: { feedbackCorrect: string; feedbackWrong: string; prompt: string }[] };
         for (const m of g.missions) {
           if (!m.feedbackCorrect || m.feedbackCorrect.trim().length < 3) {
-            warnings.push(`Game mission "${m.prompt}" feedback benar terlalu lemah.`);
+            warnings.push(`Game mission "${m.prompt}" umpan balik benar terlalu lemah.`);
           }
           if (!m.feedbackWrong || m.feedbackWrong.trim().length < 3) {
-            warnings.push(`Game mission "${m.prompt}" feedback salah terlalu lemah.`);
+            warnings.push(`Game mission "${m.prompt}" umpan balik salah terlalu lemah.`);
           }
         }
       }

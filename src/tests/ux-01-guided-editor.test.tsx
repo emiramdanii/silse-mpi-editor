@@ -236,9 +236,9 @@ describe('UX-01 — PagePanel alur pembelajaran', () => {
     useEditorStore.getState().newProject();
   });
 
-  it('header says "Alur Pembelajaran" (not just "Halaman")', () => {
+  it('header says "Halaman" (CONTENT-VISUAL-CONTRACT-AUDIT-01 Patch-1)', () => {
     const { container } = render(React.createElement(PagePanel)); const _toggle = container.querySelector("[data-testid=\"page-panel-view-toggle\"]"); if (_toggle) fireEvent.click(_toggle);
-    expect(container.textContent ?? '').toMatch(/Alur Pembelajaran/);
+    expect(container.textContent ?? '').toMatch(/Halaman/);
   });
 
   it('sample project: renders 3 sections (Pembukaan, Inti, Penutup)', () => {
