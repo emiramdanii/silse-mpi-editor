@@ -21,7 +21,7 @@ import { MpiProgressStrip } from './MpiProgressStrip';
 import { usePreviewStore } from '../preview/preview-store';
 import { exportProjectToHtml } from '../export/export-html';
 import { downloadHtmlFile } from '../export/export-download';
-import { checkMpiStandard } from '../core/mpi-quality-check';
+import { checkExportQuality, formatExportQualityMessage } from '../core/export-quality-gate';
 import { GuidedFlowDialog } from './GuidedFlowDialog';
 
 export function Topbar() {
@@ -50,16 +50,12 @@ export function Topbar() {
 
   const handleExport = () => {
     const current = useEditorStore.getState().project;
-    const qc = checkMpiStandard(current);
-    if (!qc.pass || qc.warnings.length > 0) {
-      const msgs = [
-        ...qc.errors.map((e) => '❌ ' + e),
-        ...qc.warnings.map((w) => '⚠️ ' + w),
-      ];
-      const proceed = window.confirm(
-        'Cek Standar MPI:\n\n' + msgs.join('\n') +
-        '\n\nApakah Anda tetap ingin export?',
-      );
+    // EXPORT-QUALITY-GATE-01: Aggregate all quality checks (MPI standard + layout + alignment + visual).
+    // Warning/confirm dulu, bukan blokir brutal. Healthy project → no confirm, langsung export.
+    const report = checkExportQuality(current);
+    if (!report.isClean) {
+      const message = formatExportQualityMessage(report);
+      const proceed = window.confirm(message);
       if (!proceed) return;
     }
     const html = exportProjectToHtml(current);

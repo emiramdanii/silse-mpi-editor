@@ -172,13 +172,15 @@ describe('M11B PATCH — MPI quality check', () => {
 // =========================================================================
 
 describe('M11B PATCH — export guard', () => {
-  it('Topbar handleExport calls checkMpiStandard (UX-01: export moved to Topbar)', () => {
+  it('Topbar handleExport calls checkExportQuality (EXPORT-QUALITY-GATE-01: aggregated gate)', () => {
     const fs = require('node:fs');
     const path = require('node:path');
     // UX-01: Export HTML button moved from Toolbar to Topbar (primary action).
-    // Verify the guard is wired into the new Topbar location.
+    // EXPORT-QUALITY-GATE-01: Topbar now uses checkExportQuality (aggregates MPI standard + layout + alignment + visual).
+    // checkExportQuality internally calls checkMpiStandard, so the guard is still wired.
     const topbarContent = fs.readFileSync(path.resolve(__dirname, '../editor/Topbar.tsx'), 'utf8');
-    expect(topbarContent).toMatch(/checkMpiStandard/);
+    expect(topbarContent).toMatch(/checkExportQuality/);
+    expect(topbarContent).toMatch(/formatExportQualityMessage/);
     expect(topbarContent).toMatch(/confirm/);
   });
 });
@@ -276,13 +278,14 @@ describe('M11B PATCH-2 — sample navigation completion', () => {
     expect(wouldShowDialog).toBe(false);
   });
 
-  it('Toolbar handleExport uses checkMpiStandard guard before export (UX-01: now in Topbar)', () => {
+  it('Toolbar handleExport uses checkExportQuality guard (EXPORT-QUALITY-GATE-01: now in Topbar)', () => {
     const fs = require('node:fs');
     const path = require('node:path');
     // UX-01: Export HTML button moved to Topbar — guard should be in Topbar now.
+    // EXPORT-QUALITY-GATE-01: Topbar now uses checkExportQuality + formatExportQualityMessage.
     const topbarContent = fs.readFileSync(path.resolve(__dirname, '../editor/Topbar.tsx'), 'utf8');
-    expect(topbarContent).toMatch(/checkMpiStandard/);
-    expect(topbarContent).toMatch(/!qc\.pass\s*\|\|\s*qc\.warnings\.length/);
+    expect(topbarContent).toMatch(/checkExportQuality/);
+    expect(topbarContent).toMatch(/!report\.isClean/);
   });
 });
 
