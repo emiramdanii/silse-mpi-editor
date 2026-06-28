@@ -4,24 +4,15 @@
  * Layer: components
  * Allowed imports: react, ../core/types, ../core/style/resolveComponentStyle
  *
- * Kontrak (LXC-03 Patch-1 — No Dead Bridge Button):
- *   Preview and export follow the same render contract and resolved style
- *   model, but renderer runtime is different (React vs standalone JS DOM).
- *   NOT a single shared React renderer.
+ * Kontrak (DIE-V1 Scope 5 — Bridge Color Cleanup):
+ *   Bridge TIDAK lagi hardcode warna internal (#2563eb, #eff6ff, #6b7280).
+ *   Warna diambil dari CSS variables yang di-set oleh style resolver:
+ *     --silse-bridge-muted, --silse-bridge-cta-bg,
+ *     --silse-bridge-cta-color, --silse-bridge-cta-border
+ *   React view dan export HTML memakai variable yang sama.
  *
- *   Bridge adalah komponen STATIS — tidak ada runtime state.
- *   Tombol "next" label dirender sebagai NON-INTERACTIVE CTA chip (div/span),
- *   BUKAN <button>. Tidak ada cursor:pointer, tidak ada data-action, tidak
- *   ada onClick yang memberi kesan navigasi. Real navigation tetap lewat
- *   NavigationComponent terpisah yang guru tambahkan ke halaman.
- *
- *   Variants:
- *     - 'transition': pesan transisi sederhana + CTA chip.
- *     - 'recap': ringkasan apa yang baru dipelajari + CTA chip.
- *     - 'preview': preview apa yang akan datang + CTA chip.
- *
- *   No clipping: white-space normal, overflow-wrap anywhere.
- *   Tidak ada "block" di user-facing text.
+ *   CTA chip NON-INTERACTIVE (div, bukan button). cursor:default.
+ *   Real navigation lewat NavigationComponent terpisah.
  */
 
 import type { CSSProperties } from 'react';
@@ -34,11 +25,6 @@ export type LearningBridgeComponentViewProps = {
   selected?: boolean;
   onSelect?: (componentId: string) => void;
   positionMode?: 'absolute' | 'fill';
-  /**
-   * Bridge bersifat statis. `interactive` hanya menandakan mode (preview vs
-   * editor). Tombol "next" TIDAK memicu navigasi — bridge adalah penghubung
-   * visual antar scene.
-   */
   interactive?: boolean;
 };
 
@@ -78,7 +64,7 @@ export function LearningBridgeComponentView({
         gap: 10,
         overflow: 'hidden',
         padding: 16,
-        outline: selected ? '2px solid #2563eb' : 'none',
+        outline: selected ? '2px solid var(--silse-bridge-cta-color, currentColor)' : 'none',
         outlineOffset: 2,
         cursor: onSelect ? 'pointer' : 'default',
       }
@@ -95,7 +81,7 @@ export function LearningBridgeComponentView({
         gap: 10,
         overflow: 'hidden',
         padding: 16,
-        outline: selected ? '2px solid #2563eb' : 'none',
+        outline: selected ? '2px solid var(--silse-bridge-cta-color, currentColor)' : 'none',
         outlineOffset: 2,
         cursor: onSelect ? 'pointer' : 'default',
       };
@@ -123,7 +109,7 @@ export function LearningBridgeComponentView({
           fontWeight: 700,
           letterSpacing: 0.5,
           textTransform: 'uppercase',
-          color: '#6b7280',
+          color: 'var(--silse-bridge-muted, inherit)',
           whiteSpace: 'normal',
           overflowWrap: 'anywhere',
         }}
@@ -158,9 +144,7 @@ export function LearningBridgeComponentView({
         {component.message}
       </div>
 
-      {/* LXC-03 Patch-1: NON-INTERACTIVE CTA chip — NOT a <button>.
-          Tidak ada cursor:pointer, tidak ada data-action, tidak ada onClick
-          yang memberi kesan navigasi. Real navigation lewat NavigationComponent. */}
+      {/* NON-INTERACTIVE CTA chip — NOT a <button>. CSS variables for color. */}
       <div
         style={{
           display: 'flex',
@@ -174,10 +158,10 @@ export function LearningBridgeComponentView({
             padding: '8px 16px',
             fontSize: 13,
             fontWeight: 600,
-            border: '1px solid #2563eb',
+            border: '1px solid var(--silse-bridge-cta-border, currentColor)',
             borderRadius: 999,
-            background: '#eff6ff',
-            color: '#2563eb',
+            background: 'var(--silse-bridge-cta-bg, transparent)',
+            color: 'var(--silse-bridge-cta-color, inherit)',
             cursor: 'default',
             whiteSpace: 'normal',
             overflowWrap: 'anywhere',

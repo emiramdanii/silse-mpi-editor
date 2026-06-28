@@ -457,8 +457,20 @@ function resolveLayeredInfoStyle(
 }
 
 // ---------------------------------------------------------------------------
-// Learning Bridge component style resolver (LXC-03)
+// Learning Bridge component style resolver (LXC-03 + DIE-V1 Scope 5)
 // ---------------------------------------------------------------------------
+
+/** Mix two hex colors by ratio for bridge CTA background derivation. */
+function mixHexForBridge(a: string, b: string, ratio: number): string {
+  const pa = parseInt(a.replace('#', ''), 16);
+  const pb = parseInt(b.replace('#', ''), 16);
+  const ar = (pa >> 16) & 0xff, ag = (pa >> 8) & 0xff, ab = pa & 0xff;
+  const br = (pb >> 16) & 0xff, bg = (pb >> 8) & 0xff, bb = pb & 0xff;
+  const r = Math.round(ar + (br - ar) * ratio);
+  const g = Math.round(ag + (bg - ag) * ratio);
+  const bl = Math.round(ab + (bb - ab) * ratio);
+  return `#${((1 << 24) + (r << 16) + (g << 8) + bl).toString(16).slice(1)}`;
+}
 
 function resolveLearningBridgeStyle(
   variant: LearningBridgeVariant,
@@ -466,8 +478,17 @@ function resolveLearningBridgeStyle(
 ): ResolvedComponentStyle {
   const { colors, radius, spacing, shadow, typography } = tokens;
 
-  // Base style: surface background, text color, border, radius, padding, shadow.
+  // DIE-V1 Scope 5: CSS variables for bridge internal colors.
+  // View and export both reference these variables — no hardcoded hex.
+  const bridgeVars: Record<string, string> = {
+    '--silse-bridge-muted': colors.mutedText,
+    '--silse-bridge-cta-bg': mixHexForBridge(colors.surface, colors.primary, 0.15),
+    '--silse-bridge-cta-color': colors.primary,
+    '--silse-bridge-cta-border': colors.primary,
+  };
+
   const baseInline: Record<string, string | number> = {
+    ...bridgeVars,
     backgroundColor: colors.surface,
     color: colors.text,
     border: `1px solid ${colors.border}`,
@@ -477,7 +498,6 @@ function resolveLearningBridgeStyle(
     fontSize: `${typography.bodySize}px`,
   };
 
-  // Per-variant: transition = base, recap = success border, preview = primary border.
   const variantMap: Record<LearningBridgeVariant, ResolvedComponentStyle> = {
     transition: {
       inlineStyle: baseInline,

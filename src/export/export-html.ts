@@ -942,7 +942,7 @@ function generateJS(renderModelJson: string): string {
       var bridgeVariantLabel = { transition: 'Transisi', recap: 'Recap', preview: 'Preview' }[comp.bridgeVariant] || comp.bridgeVariant;
 
       var bridgeBadge = document.createElement('div');
-      bridgeBadge.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#6b7280;white-space:normal;overflow-wrap:anywhere;';
+      bridgeBadge.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--silse-bridge-muted, #6b7280);white-space:normal;overflow-wrap:anywhere;';
       bridgeBadge.textContent = bridgeVariantIcon + ' ' + bridgeVariantLabel;
       el.appendChild(bridgeBadge);
 
@@ -960,11 +960,9 @@ function generateJS(renderModelJson: string): string {
 
       var bBtnWrap = document.createElement('div');
       bBtnWrap.style.cssText = 'display:flex;justify-content:flex-end;margin-top:auto;';
-      // LXC-03 Patch-1: NON-INTERACTIVE CTA chip — NOT a <button>.
-      // Tidak ada cursor:pointer, tidak ada data-action.
-      // Real navigation comes from a separate NavigationComponent.
+      // DIE-V1 Scope 5: CTA chip uses CSS variables, no hardcoded hex.
       var bChip = document.createElement('div');
-      bChip.style.cssText = 'padding:8px 16px;font-size:13px;font-weight:600;border:1px solid #2563eb;border-radius:999px;background:#eff6ff;color:#2563eb;cursor:default;white-space:normal;overflow-wrap:anywhere;display:inline-flex;align-items:center;gap:6px;min-height:36px;';
+      bChip.style.cssText = 'padding:8px 16px;font-size:13px;font-weight:600;border:1px solid var(--silse-bridge-cta-border, #2563eb);border-radius:999px;background:var(--silse-bridge-cta-bg, #eff6ff);color:var(--silse-bridge-cta-color, #2563eb);cursor:default;white-space:normal;overflow-wrap:anywhere;display:inline-flex;align-items:center;gap:6px;min-height:36px;';
       bChip.textContent = (comp.bridgeNextButtonLabel || 'Siap lanjut') + ' →';
       bBtnWrap.appendChild(bChip);
       el.appendChild(bBtnWrap);
