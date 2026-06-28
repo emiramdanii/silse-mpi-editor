@@ -296,3 +296,118 @@ describe('DIE-V1 — Docs', () => {
     expect(content).toMatch(/bridge color/i);
   });
 });
+
+// =========================================================================
+// DIE-V1 Patch-1 — Recipe Placement + Quality Guard Tightening
+// =========================================================================
+
+describe('DIE-V1 Patch-1 — Guard tests', () => {
+
+  // Test 1: first text placed in titleZone
+  it('first text component is placed in titleZone', () => {
+    const recipe = getDesignRecipeForRole('material');
+    const placed = placeComponentInRecipe('text', recipe, 0, true);
+    expect(placed.x).toBe(recipe.titleZone.x);
+    expect(placed.y).toBe(recipe.titleZone.y);
+    expect(placed.width).toBe(recipe.titleZone.width);
+    expect(placed.height).toBe(recipe.titleZone.height);
+  });
+
+  // Test 2: second text placed in contentZone
+  it('second text component is placed in contentZone (not titleZone)', () => {
+    const recipe = getDesignRecipeForRole('material');
+    const placed = placeComponentInRecipe('text', recipe, 1, false);
+    expect(placed.x).toBe(recipe.contentZone.x);
+    // y should be in content zone (not title zone y)
+    expect(placed.y).not.toBe(recipe.titleZone.y);
+  });
+
+  // Test 3: layered-info and learning-bridge do NOT overlap totally
+  it('layered-info and learning-bridge are placed in different parts of contentZone', () => {
+    const recipe = getDesignRecipeForRole('material');
+    const li = placeComponentInRecipe('layered-info', recipe, 0, false);
+    const bridge = placeComponentInRecipe('learning-bridge', recipe, 0, false);
+    // layered-info should be in top portion, bridge in bottom portion
+    // Check they don't have the exact same y
+    expect(li.y).not.toBe(bridge.y);
+    // bridge should be below layered-info
+    expect(bridge.y).toBeGreaterThan(li.y);
+  });
+
+  // Test 4: quality checker detects bottom edge too close
+  it('validateLayoutQuality detects component too close to bottom edge', () => {
+    const page: SimplePage = {
+      id: createPageId(),
+      title: 'Test',
+      role: 'material',
+      layoutId: 'blank',
+      background: { type: 'color', color: '#fff' },
+      components: [
+        { ...createTextComponent('material'), x: 80, y: 690, width: 400, height: 20 } as never,
+      ],
+    };
+    const result = validateLayoutQuality(page);
+    expect(result.issues.some((i) => i.code === 'TOO_CLOSE_EDGE')).toBe(true);
+  });
+
+  // Test 5: quality checker uses recipe maxContentDensity
+  it('quiz page with >2 components triggers TOO_DENSE (maxContentDensity=2)', () => {
+    const page: SimplePage = {
+      id: createPageId(),
+      title: 'Quiz',
+      role: 'quiz',
+      layoutId: 'blank',
+      background: { type: 'color', color: '#fff' },
+      components: [
+        { ...createTextComponent('quiz'), x: 80, y: 40, width: 600, height: 60 } as never,
+        { ...createTextComponent('quiz'), x: 80, y: 120, width: 600, height: 60 } as never,
+        { ...createTextComponent('quiz'), x: 80, y: 200, width: 600, height: 60 } as never,
+      ],
+    };
+    const result = validateLayoutQuality(page);
+    expect(result.issues.some((i) => i.code === 'TOO_DENSE')).toBe(true);
+  });
+
+  // Test 6: export bridge block does NOT contain hardcoded hex in fallbacks
+  it('export bridge block does not contain #2563eb/#eff6ff/#6b7280 in var() fallbacks', () => {
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const content = fs.readFileSync(path.resolve(__dirname, '../export/export-html.ts'), 'utf8');
+    const bridgeStart = content.indexOf("'silse-learning-bridge'");
+    const returnIdx = content.indexOf('return el;', bridgeStart);
+    const bridgeBlock = content.substring(bridgeStart, returnIdx + 10);
+    // Strip comments
+    const withoutComments = bridgeBlock.replace(/\/\/.*$/gm, '');
+    // Should NOT contain these hex values anywhere (including fallbacks)
+    expect(withoutComments).not.toMatch(/#2563eb/);
+    expect(withoutComments).not.toMatch(/#eff6ff/);
+    expect(withoutComments).not.toMatch(/#6b7280/);
+  });
+
+  // Test 7: applyPageDesignRecipe does not change content
+  it('applyPageDesignRecipe preserves text content of all components', () => {
+    const page: SimplePage = {
+      id: createPageId(),
+      title: 'Test',
+      role: 'material',
+      layoutId: 'blank',
+      background: { type: 'color', color: '#fff' },
+      components: [
+        createTextComponent('material', { text: 'TITLE TEXT' }),
+        createTextComponent('material', { text: 'BODY TEXT' }),
+        createCardComponent('Card body'),
+        createNavigationComponent('Next', 'next'),
+      ],
+    };
+    const result = applyPageDesignRecipe(page);
+    const texts = result.components.filter((c) => c.type === 'text') as { text: string }[];
+    expect(texts[0].text).toBe('TITLE TEXT');
+    expect(texts[1].text).toBe('BODY TEXT');
+    const card = result.components.find((c) => c.type === 'card') as { body: string };
+    expect(card.body).toBe('Card body');
+    const nav = result.components.find((c) => c.type === 'navigation') as { label: string };
+    expect(nav.label).toBe('Next');
+    // Geometry should differ from original
+    expect(result.components[0].x).not.toBe(page.components[0].x);
+  });
+});

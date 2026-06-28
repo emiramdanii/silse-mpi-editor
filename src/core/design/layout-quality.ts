@@ -13,6 +13,7 @@
 
 import type { SimplePage } from '../types';
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from './design-tokens';
+import { getLayoutRecipeForRole } from './layout-recipes';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -40,7 +41,6 @@ const MIN_COMPONENT_WIDTH = 80;
 const MIN_COMPONENT_HEIGHT = 40;
 const EDGE_MARGIN = 40;
 const OVERLAP_THRESHOLD = 0.3;
-const MAX_COMPONENTS_PER_PAGE = 12;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -114,6 +114,14 @@ export function validateLayoutQuality(page: SimplePage): LayoutQualityResult {
         message: `Komponen "${(c as { title?: string }).title ?? c.type}" terlalu mepet tepi kanan.`,
       });
     }
+    // DIE-V1 Patch-1 Scope 3: bottom edge check for ALL components
+    if (c.y + c.height > CANVAS_HEIGHT - EDGE_MARGIN && c.y + c.height < CANVAS_HEIGHT) {
+      issues.push({
+        severity: 'warning',
+        code: 'TOO_CLOSE_EDGE',
+        message: `Komponen "${(c as { title?: string }).title ?? c.type}" terlalu mepet tepi bawah.`,
+      });
+    }
   }
 
   // 3. Width/height terlalu kecil
@@ -170,12 +178,14 @@ export function validateLayoutQuality(page: SimplePage): LayoutQualityResult {
     }
   }
 
-  // 6. Halaman terlalu padat
-  if (comps.length > MAX_COMPONENTS_PER_PAGE) {
+  // 6. Halaman terlalu padat — use recipe maxContentDensity (DIE-V1 Patch-1 Scope 4)
+  const recipe = getLayoutRecipeForRole(page.role);
+  const maxDensity = recipe.maxContentDensity;
+  if (comps.length > maxDensity) {
     issues.push({
       severity: 'warning',
       code: 'TOO_DENSE',
-      message: `Halaman punya ${comps.length} komponen (maksimal disarankan ${MAX_COMPONENTS_PER_PAGE}). Pertimbangkan pecah ke halaman lain.`,
+      message: `Halaman punya ${comps.length} komponen (maksimal disarankan ${maxDensity} untuk role ${page.role}). Pertimbangkan pecah ke halaman lain.`,
     });
   }
 
