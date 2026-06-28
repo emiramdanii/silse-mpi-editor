@@ -180,6 +180,31 @@ export function checkLearningGoalAlignment(project: SimpleProject): ProjectAlign
   }
 
   const objectives = project.curriculum.objectives;
+
+  // Patch-2: OBJECTIVE_DUPLICATE_ID — guard data integrity.
+  // Set will silently hide duplicate IDs, which can make coverage look correct
+  // when it is actually broken (one objective covered twice, another not at all).
+  // We detect duplicates BEFORE constructing the Set, and push an error per
+  // duplicate ID. Duplicate IDs make ok=false (errors block ok).
+  const seenObjectiveIds = new Set<string>();
+  const reportedDuplicateIds = new Set<string>();
+  for (const obj of objectives) {
+    if (seenObjectiveIds.has(obj.id)) {
+      // Only report each duplicate ID once (not once per extra occurrence).
+      if (!reportedDuplicateIds.has(obj.id)) {
+        issues.push({
+          severity: 'error',
+          code: 'OBJECTIVE_DUPLICATE_ID',
+          message: `Ada ID tujuan pembelajaran yang duplikat (id: "${obj.id}"). Setiap tujuan wajib punya ID unik agar coverage checker tidak salah hitung.`,
+          objectiveId: obj.id,
+        });
+        reportedDuplicateIds.add(obj.id);
+      }
+    } else {
+      seenObjectiveIds.add(obj.id);
+    }
+  }
+
   const objectiveIds = new Set(objectives.map((o) => o.id));
   const coveredObjectiveIds = new Set<string>();
 

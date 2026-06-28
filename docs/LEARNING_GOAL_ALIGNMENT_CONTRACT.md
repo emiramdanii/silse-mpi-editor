@@ -19,6 +19,10 @@ Yang V1 **Patch-1** lakukan (hardening contract + checker + test guard, UI tetap
 - Tambah check `OBJECTIVE_TOO_SHORT` (warning) untuk objective yang tidak bisa diuji text-match.
 - Test guard hardening: image.alt, navigation tidak dihitung, layered-info multi-layer, learning-bridge, OBJECTIVE_TOO_SHORT, score 100, determinism, pure function.
 
+Yang V1 **Patch-2** lakukan (data integrity guard):
+- Tambah check `OBJECTIVE_DUPLICATE_ID` (error) — deteksi objective.id duplikat sebelum `Set` menyembunyikannya.
+- Test guard: duplicate fires, severity error, ok=false, score turun, Set tidak menyembunyikan duplicate, unique tidak fire.
+
 Yang V1 **tidak** lakukan:
 - Tidak menambah field `objectiveRefs` ke component schema (itu V2).
 - Tidak mengubah UI editor (integrasi di batch berikutnya).
@@ -102,6 +106,16 @@ V1 menggunakan text-match sederhana: untuk setiap komponen, kumpulkan semua teks
 | Objective terlalu pendek | warning | `OBJECTIVE_TOO_SHORT` | objective tidak punya ≥1 kata signifikan (panjang > 3), sehingga tidak bisa dicek oleh heuristik text-match |
 
 Tujuan: kalau sebuah objective hanya berisi kata-kata pendek (mis. "IPA kelas 7"), heuristik text-match tidak akan pernah match. Warning ini memberi sinyal ke guru untuk menulis ulang objective dengan lebih spesifik.
+
+### Check Tambahan (Patch-2)
+
+| Check | Severity | Code | Kondisi |
+|---|---|---|---|
+| Objective ID duplikat | error | `OBJECTIVE_DUPLICATE_ID` | ada ≥2 objective dengan `id` yang sama di `curriculum.objectives` |
+
+Tujuan: `Set` di internal checker akan menyembunyikan ID duplikat, sehingga coverage bisa terlihat benar padahal salah (satu objective di-cover dua kali, objective lain tidak di-cover sama sekali). Guard ini mendeteksi duplikat **sebelum** `Set` dibuat, dan menutup celah data integrity. Duplicate ID adalah error (menjadikan `ok=false`), karena data project tidak boleh dipakai untuk export/preview sampai di-fix.
+
+Setiap ID duplikat dilaporkan **satu kali** (bukan sekali per kemunculan ekstra), supaya pesan error tidak berisik.
 
 V2 akan menggunakan field `objectiveRefs` eksplisit di component schema, sehingga guru bisa men-tag komponen ke objective secara manual.
 

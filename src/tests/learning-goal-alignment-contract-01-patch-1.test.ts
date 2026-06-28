@@ -58,6 +58,29 @@ function buildProjectWithObjectives(
   };
 }
 
+/**
+ * Patch-2 helper: build a project with explicit objective IDs (so tests can
+ * construct duplicate-ID scenarios that buildProjectWithObjectives cannot).
+ */
+function buildProjectWithObjectiveIds(
+  objectives: Array<{ id: string; text: string }>,
+  pages: SimplePage[],
+): SimpleProject {
+  const project = createProject();
+  return {
+    ...project,
+    curriculum: {
+      subject: 'Test',
+      grade: '7',
+      phase: 'D',
+      topic: 'Test Topic',
+      objectives,
+    },
+    pages,
+    currentPageId: pages[0]?.id ?? project.currentPageId,
+  };
+}
+
 function buildPage(
   role: SimplePage['role'],
   components: PageComponent[],
@@ -491,5 +514,167 @@ describe('LGA-01 Patch-1 — no runtime leak', () => {
 
   it('existsSync check: contract source file exists', () => {
     expect(existsSync(resolve(__dirname, '../core/learning-goal-alignment.ts'))).toBe(true);
+  });
+});
+
+// =========================================================================
+// 14. Patch-2 — OBJECTIVE_DUPLICATE_ID guard (6 mandatory tests)
+// =========================================================================
+
+describe('LGA-01 Patch-2 — OBJECTIVE_DUPLICATE_ID guard', () => {
+  // Test 1: duplicate objective id menghasilkan OBJECTIVE_DUPLICATE_ID
+  it('1. Duplicate objective id produces OBJECTIVE_DUPLICATE_ID issue', () => {
+    const pages = [buildPage('material', [textComp('Pengertian norma.'), navComp('Lanjut')])];
+    const project = buildProjectWithObjectiveIds(
+      [
+        { id: 'obj-1', text: 'Menjelaskan pengertian norma' },
+        { id: 'obj-1', text: 'Mengidentifikasi jenis norma' }, // duplicate id
+      ],
+      pages,
+    );
+    const result = checkLearningGoalAlignment(project);
+    expect(result.issues.some((i) => i.code === 'OBJECTIVE_DUPLICATE_ID')).toBe(true);
+  });
+
+  // Test 2: severity = error
+  it('2. OBJECTIVE_DUPLICATE_ID severity is error', () => {
+    const pages = [buildPage('material', [textComp('Pengertian norma.'), navComp('Lanjut')])];
+    const project = buildProjectWithObjectiveIds(
+      [
+        { id: 'obj-1', text: 'Menjelaskan pengertian norma' },
+        { id: 'obj-1', text: 'Mengidentifikasi jenis norma' },
+      ],
+      pages,
+    );
+    const result = checkLearningGoalAlignment(project);
+    const dup = result.issues.find((i) => i.code === 'OBJECTIVE_DUPLICATE_ID');
+    expect(dup).toBeDefined();
+    expect(dup?.severity).toBe('error');
+  });
+
+  // Test 3: ok=false when duplicate id present
+  it('3. ok=false when duplicate objective id present', () => {
+    const pages = [buildPage('material', [textComp('Pengertian norma.'), navComp('Lanjut')])];
+    const project = buildProjectWithObjectiveIds(
+      [
+        { id: 'obj-1', text: 'Menjelaskan pengertian norma' },
+        { id: 'obj-1', text: 'Mengidentifikasi jenis norma' },
+      ],
+      pages,
+    );
+    const result = checkLearningGoalAlignment(project);
+    expect(result.ok).toBe(false);
+  });
+
+  // Test 4: score turun dibanding project sehat dengan objective unik
+  it('4. Score with duplicate id is lower than equivalent project with unique ids', () => {
+    // Unique version: 2 objectives, both covered by material → score should be 100.
+    // Dup version: same 2 objective texts but SAME id → Set coverage collapses both
+    // into one covered id, AND OBJECTIVE_DUPLICATE_ID error fires → score < 100.
+    const pages = [
+      buildPage('material', [
+        textComp('Pengertian norma jelas. Jenis norma beragam.'),
+        navComp('Lanjut'),
+      ]),
+    ];
+    const projectDup = buildProjectWithObjectiveIds(
+      [
+        { id: 'obj-1', text: 'Menjelaskan pengertian norma' },
+        { id: 'obj-1', text: 'Mengidentifikasi jenis norma' },
+      ],
+      pages,
+    );
+    const projectUnique = buildProjectWithObjectiveIds(
+      [
+        { id: 'obj-1', text: 'Menjelaskan pengertian norma' },
+        { id: 'obj-2', text: 'Mengidentifikasi jenis norma' },
+      ],
+      pages,
+    );
+    const resultDup = checkLearningGoalAlignment(projectDup);
+    const resultUnique = checkLearningGoalAlignment(projectUnique);
+    // Sanity: unique version reaches max score (no errors, no warnings, all covered)
+    expect(resultUnique.score).toBe(100);
+    expect(resultUnique.ok).toBe(true);
+    // Duplicate version: Set collapses 2 objectives into 1 covered id →
+    // coveredObjectives = 1, totalObjectives = 2 (array length), coverage = 35,
+    // plus OBJECTIVE_DUPLICATE_ID error → issue = 20, score = 55 < 100.
+    expect(resultDup.score).toBeLessThan(resultUnique.score);
+    expect(resultDup.ok).toBe(false);
+  });
+
+  // Test 5: duplicate id tidak disembunyikan oleh Set coverage
+  // Critical: Set would normally dedupe silently. With the guard, the duplicate
+  // is still detected AND reported, even when one copy is "covered".
+  it('5. Duplicate id is reported even when one copy is covered (Set does not hide it)', () => {
+    const pages = [buildPage('material', [textComp('Pengertian norma.'), navComp('Lanjut')])];
+    const project = buildProjectWithObjectiveIds(
+      [
+        { id: 'obj-1', text: 'Menjelaskan pengertian norma' },
+        { id: 'obj-1', text: 'Menjelaskan pengertian norma' }, // exact duplicate
+      ],
+      pages,
+    );
+    const result = checkLearningGoalAlignment(project);
+    // Duplicate IS reported
+    const dupIssues = result.issues.filter((i) => i.code === 'OBJECTIVE_DUPLICATE_ID');
+    expect(dupIssues.length).toBe(1); // reported once per id, not twice
+    // ok still false (error present)
+    expect(result.ok).toBe(false);
+  });
+
+  // Test 6: objective id unik tidak menghasilkan OBJECTIVE_DUPLICATE_ID issue
+  it('6. Unique objective ids do NOT produce OBJECTIVE_DUPLICATE_ID issue', () => {
+    const pages = [buildPage('material', [textComp('Pengertian norma. Jenis norma.'), navComp('Lanjut')])];
+    const project = buildProjectWithObjectiveIds(
+      [
+        { id: 'obj-1', text: 'Menjelaskan pengertian norma' },
+        { id: 'obj-2', text: 'Mengidentifikasi jenis norma' },
+      ],
+      pages,
+    );
+    const result = checkLearningGoalAlignment(project);
+    expect(result.issues.some((i) => i.code === 'OBJECTIVE_DUPLICATE_ID')).toBe(false);
+  });
+
+  // Bonus: triple duplicate still reported only once (not 2x, not 3x)
+  it('7. Triple duplicate (same id 3x) reported exactly once', () => {
+    const pages = [buildPage('material', [textComp('Pengertian norma.'), navComp('Lanjut')])];
+    const project = buildProjectWithObjectiveIds(
+      [
+        { id: 'obj-1', text: 'Menjelaskan pengertian norma' },
+        { id: 'obj-1', text: 'Mengidentifikasi jenis norma' },
+        { id: 'obj-1', text: 'Menunjukkan sikap tertib' },
+      ],
+      pages,
+    );
+    const result = checkLearningGoalAlignment(project);
+    const dupIssues = result.issues.filter((i) => i.code === 'OBJECTIVE_DUPLICATE_ID');
+    expect(dupIssues.length).toBe(1);
+  });
+
+  // Bonus: two different duplicate ids → two issues
+  it('8. Two different duplicate ids → two OBJECTIVE_DUPLICATE_ID issues', () => {
+    const pages = [buildPage('material', [textComp('Pengertian norma.'), navComp('Lanjut')])];
+    const project = buildProjectWithObjectiveIds(
+      [
+        { id: 'obj-1', text: 'Menjelaskan pengertian norma' },
+        { id: 'obj-1', text: 'Dup satu' },
+        { id: 'obj-2', text: 'Mengidentifikasi jenis norma' },
+        { id: 'obj-2', text: 'Dup dua' },
+      ],
+      pages,
+    );
+    const result = checkLearningGoalAlignment(project);
+    const dupIssues = result.issues.filter((i) => i.code === 'OBJECTIVE_DUPLICATE_ID');
+    expect(dupIssues.length).toBe(2);
+    expect(dupIssues.some((i) => i.objectiveId === 'obj-1')).toBe(true);
+    expect(dupIssues.some((i) => i.objectiveId === 'obj-2')).toBe(true);
+  });
+
+  // Bonus: docs mention OBJECTIVE_DUPLICATE_ID
+  it('9. docs/LEARNING_GOAL_ALIGNMENT_CONTRACT.md mentions OBJECTIVE_DUPLICATE_ID', () => {
+    const content = readFileSync(join(DOCS_DIR, 'LEARNING_GOAL_ALIGNMENT_CONTRACT.md'), 'utf8');
+    expect(content).toMatch(/OBJECTIVE_DUPLICATE_ID/);
   });
 });
