@@ -88,6 +88,15 @@ export const LAYOUT_IDS = [
   'blank',
   'coverCentered',
   'singleColumn',
+  // LAYOUT-PRESET-SYSTEM-V1: 8 layout presets (non-breaking addition)
+  'cover-centered',
+  'cover-split',
+  'material-two-column',
+  'material-card-stack',
+  'quiz-focus',
+  'reflection-calm',
+  'mission-map',
+  'closing-centered',
 ] as const;
 
 export type LayoutId = (typeof LAYOUT_IDS)[number];

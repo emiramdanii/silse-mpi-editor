@@ -99,8 +99,11 @@ const SINGLE_COLUMN_RECIPE: LayoutRecipe = {
 
 /**
  * Registry of built-in layout recipes.
+ * LAYOUT-PRESET-SYSTEM-V1: Changed to Partial<Record> so new layout preset IDs
+ * in LAYOUT_IDS don't require entries here. New presets are handled by
+ * src/core/layout-presets/ instead.
  */
-export const LAYOUT_RECIPES: Record<LayoutId, LayoutRecipe> = {
+export const LAYOUT_RECIPES: Partial<Record<LayoutId, LayoutRecipe>> = {
   blank: BLANK_RECIPE,
   coverCentered: COVER_CENTERED_RECIPE,
   singleColumn: SINGLE_COLUMN_RECIPE,

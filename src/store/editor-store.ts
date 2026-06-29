@@ -68,6 +68,7 @@ import {
 import { createEmptyPage, createProject } from '../core/project-factory';
 import { stylePackToProjectStyle } from '../core/style-presets';
 import { resolveStylePackV1, getProjectStylePackIdV1 } from '../core/style-packs/style-pack-registry';
+import { applyLayoutPresetToPage } from '../core/layout-presets/apply-layout-preset';
 import {
   createCardComponent,
   createGameComponent,
@@ -107,6 +108,8 @@ export type EditorState = {
   setProjectTitle: (title: string) => void;
   // STYLE-PACK-SYSTEM-V1: change project style pack (visual only, no content mutation)
   setStylePack: (stylePackId: string) => void;
+  // LAYOUT-PRESET-SYSTEM-V1: apply layout preset to a page (geometry only, no content mutation)
+  applyLayoutPreset: (pageId: string, presetId: string) => void;
 
   // Page operations (M1 + M3)
   addPage: (opts?: { title?: string; role?: PageRole }) => string;
@@ -509,6 +512,27 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         style: projectStyle,
       },
     }));
+  },
+
+  // LAYOUT-PRESET-SYSTEM-V1: Apply layout preset to a page (geometry only).
+  // Updates page.layoutId + component geometry. Does NOT touch content.
+  applyLayoutPreset: (pageId, presetId) => {
+    set((state) => {
+      const page = state.project.pages.find((p) => p.id === pageId);
+      if (!page) return state;
+
+      // applyLayoutPresetToPage is pure — returns new page with updated geometry.
+      const newPage = applyLayoutPresetToPage(page, presetId);
+
+      return {
+        project: {
+          ...state.project,
+          pages: state.project.pages.map((p) =>
+            p.id === pageId ? newPage : p,
+          ),
+        },
+      };
+    });
   },
 
   addPage: (opts) => {

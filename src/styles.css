@@ -2992,3 +2992,56 @@ textarea {
 .style-pack-option__name {
   font-weight: 500;
 }
+
+/* =========================================================================
+   LAYOUT-PRESET-SYSTEM-V1 — layout preset picker
+   ========================================================================= */
+
+.layout-preset-picker {
+  margin-top: 16px;
+  padding: 12px;
+  background: var(--color-surface, #f9fafb);
+  border-radius: 8px;
+}
+
+.layout-preset-picker__label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-muted, #6b7280);
+  margin-bottom: 8px;
+}
+
+.layout-preset-picker__options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.layout-preset-option {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border, #d1d5db);
+  border-radius: 6px;
+  background: var(--color-bg, #ffffff);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  text-align: left;
+  font-size: 13px;
+}
+
+.layout-preset-option:hover {
+  border-color: var(--color-primary, #2563eb);
+}
+
+.layout-preset-option.is-selected {
+  border-color: var(--color-primary, #2563eb);
+  background: rgba(59, 130, 246, 0.08);
+  font-weight: 600;
+}
+
+.layout-preset-option__name {
+  font-weight: inherit;
+}

@@ -17,22 +17,26 @@ import {
 import { LAYOUT_IDS, type LayoutId } from '../core/types';
 
 describe('layout recipes registry', () => {
-  it('has recipe for each LAYOUT_IDS', () => {
-    for (const id of LAYOUT_IDS) {
+  it('has recipe for each legacy LAYOUT_IDS (blank, coverCentered, singleColumn)', () => {
+    // LAYOUT-PRESET-SYSTEM-V1: New preset IDs don't have entries in LAYOUT_RECIPES.
+    // They are handled by src/core/layout-presets/ instead. Only check legacy IDs.
+    const legacyIds: LayoutId[] = ['blank', 'coverCentered', 'singleColumn'];
+    for (const id of legacyIds) {
       expect(LAYOUT_RECIPES[id]).toBeDefined();
-      expect(LAYOUT_RECIPES[id].id).toBe(id);
+      expect(LAYOUT_RECIPES[id]!.id).toBe(id);
     }
   });
 
-  it('exactly 3 recipes', () => {
-    expect(LAYOUT_IDS).toHaveLength(3);
+  it('exactly 3 legacy recipes (LAYOUT-PRESET-SYSTEM-V1: new presets handled separately)', () => {
+    const legacyIds: LayoutId[] = ['blank', 'coverCentered', 'singleColumn'];
+    expect(legacyIds).toHaveLength(3);
     expect(getAllLayoutRecipeIds()).toHaveLength(3);
   });
 });
 
 describe('recipe structure', () => {
   it('blank recipe has safeArea but no slots', () => {
-    const r = LAYOUT_RECIPES.blank;
+    const r = LAYOUT_RECIPES.blank!;
     expect(r.id).toBe('blank');
     expect(r.name).toBeDefined();
     expect(r.description).toBeDefined();
@@ -43,7 +47,7 @@ describe('recipe structure', () => {
   });
 
   it('coverCentered recipe has title slot', () => {
-    const r = LAYOUT_RECIPES.coverCentered;
+    const r = LAYOUT_RECIPES.coverCentered!;
     expect(r.id).toBe('coverCentered');
     expect(r.slots).toBeDefined();
     expect(r.slots!.length).toBeGreaterThan(0);
@@ -53,7 +57,7 @@ describe('recipe structure', () => {
   });
 
   it('singleColumn recipe has body slot', () => {
-    const r = LAYOUT_RECIPES.singleColumn;
+    const r = LAYOUT_RECIPES.singleColumn!;
     expect(r.id).toBe('singleColumn');
     expect(r.slots).toBeDefined();
     const bodySlot = r.slots!.find((s) => s.id === 'body');
@@ -63,6 +67,9 @@ describe('recipe structure', () => {
   it('all safeAreas are within canvas 1280x720', () => {
     for (const id of LAYOUT_IDS) {
       const r = LAYOUT_RECIPES[id];
+      // LAYOUT-PRESET-SYSTEM-V1: new preset IDs don't have entries in LAYOUT_RECIPES.
+      // They are handled by src/core/layout-presets/ instead. Skip undefined.
+      if (!r) continue;
       expect(r.safeArea.x).toBeGreaterThanOrEqual(0);
       expect(r.safeArea.y).toBeGreaterThanOrEqual(0);
       expect(r.safeArea.x + r.safeArea.width).toBeLessThanOrEqual(1280);
@@ -89,6 +96,8 @@ describe('recipe serializability', () => {
   it('all recipes survive JSON round-trip', () => {
     for (const id of LAYOUT_IDS) {
       const r = LAYOUT_RECIPES[id];
+      // LAYOUT-PRESET-SYSTEM-V1: skip new preset IDs without entries.
+      if (!r) continue;
       const json = JSON.stringify(r);
       const parsed = JSON.parse(json);
       expect(parsed.id).toBe(r.id);
@@ -100,6 +109,8 @@ describe('recipe serializability', () => {
   it('no function/class in recipes', () => {
     for (const id of LAYOUT_IDS) {
       const r = LAYOUT_RECIPES[id];
+      // LAYOUT-PRESET-SYSTEM-V1: skip new preset IDs without entries.
+      if (!r) continue;
       const json = JSON.stringify(r);
       expect(json).not.toMatch(/function/i);
       expect(json).not.toMatch(/class /i);
