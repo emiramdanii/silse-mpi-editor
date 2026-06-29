@@ -1,10 +1,10 @@
 /**
- * Component Skin (COMPONENT-SKIN-V2).
+ * Component Skin (COMPONENT-SKIN-V2 + V3).
  *
  * Layer: core/style-packs (pure function, no React/DOM)
  * Allowed imports: ./style-pack-registry
  *
- * Kontrak (COMPONENT-SKIN-V2):
+ * Kontrak (COMPONENT-SKIN-V2 + V3):
  *   Pure helper yang mengembalikan CSS class names untuk skin komponen
  *   berdasarkan style pack. Memanfaatkan componentTone dari StylePackV1.
  *
@@ -15,11 +15,15 @@
  *     - Unknown style pack → fallback modern-clean.
  *
  *   Skin classes (defined in styles.css + export HTML <style>):
+ *     V2:
  *     - skin-card-{flat|soft|bold}
  *     - skin-button-{clean|rounded|mission}
  *     - skin-quiz-{calm|playful|mission}
  *     - skin-bridge-{subtle|strong}
  *     - skin-game-{calm|playful|mission}
+ *     V3:
+ *     - skin-layered-{clean|soft|bold}
+ *     - skin-text-{clean|soft|bold}
  */
 
 import { getStylePackV1, type StylePackIdV1 } from './style-pack-registry';
@@ -39,6 +43,10 @@ export type ComponentSkinTone = {
   bridgeClass: string;
   /** CSS class for game components. */
   gameClass: string;
+  /** V3: CSS class for layered-info components. */
+  layeredClass: string;
+  /** V3: CSS class for text components. */
+  textClass: string;
 };
 
 // ---------------------------------------------------------------------------
@@ -52,6 +60,8 @@ const SKIN_MAP: Record<StylePackIdV1, ComponentSkinTone> = {
     quizClass: 'skin-quiz-calm',
     bridgeClass: 'skin-bridge-subtle',
     gameClass: 'skin-game-calm',
+    layeredClass: 'skin-layered-clean',
+    textClass: 'skin-text-clean',
   },
   'soft-classroom': {
     cardClass: 'skin-card-soft',
@@ -59,6 +69,8 @@ const SKIN_MAP: Record<StylePackIdV1, ComponentSkinTone> = {
     quizClass: 'skin-quiz-playful',
     bridgeClass: 'skin-bridge-subtle',
     gameClass: 'skin-game-playful',
+    layeredClass: 'skin-layered-soft',
+    textClass: 'skin-text-soft',
   },
   'mission-dark': {
     cardClass: 'skin-card-bold',
@@ -66,6 +78,8 @@ const SKIN_MAP: Record<StylePackIdV1, ComponentSkinTone> = {
     quizClass: 'skin-quiz-mission',
     bridgeClass: 'skin-bridge-strong',
     gameClass: 'skin-game-mission',
+    layeredClass: 'skin-layered-bold',
+    textClass: 'skin-text-bold',
   },
 };
 
@@ -92,7 +106,7 @@ export function getComponentSkinForStylePack(stylePackId?: string): ComponentSki
  * Returns empty string if component type doesn't have a skin class.
  */
 export function getSkinClassForComponent(
-  componentType: 'card' | 'navigation' | 'question' | 'game' | 'learning-bridge' | string,
+  componentType: 'card' | 'navigation' | 'question' | 'game' | 'learning-bridge' | 'layered-info' | 'text' | 'image' | string,
   stylePackId?: string,
 ): string {
   const skin = getComponentSkinForStylePack(stylePackId);
@@ -107,6 +121,10 @@ export function getSkinClassForComponent(
       return skin.gameClass;
     case 'learning-bridge':
       return skin.bridgeClass;
+    case 'layered-info':
+      return skin.layeredClass;
+    case 'text':
+      return skin.textClass;
     default:
       return '';
   }
@@ -122,7 +140,15 @@ export function getSkinClassForComponent(
 export function getAllSkinClassNames(): string[] {
   const allClasses: string[] = [];
   for (const skin of Object.values(SKIN_MAP)) {
-    allClasses.push(skin.cardClass, skin.buttonClass, skin.quizClass, skin.bridgeClass, skin.gameClass);
+    allClasses.push(
+      skin.cardClass,
+      skin.buttonClass,
+      skin.quizClass,
+      skin.bridgeClass,
+      skin.gameClass,
+      skin.layeredClass,
+      skin.textClass,
+    );
   }
   return [...new Set(allClasses)];
 }

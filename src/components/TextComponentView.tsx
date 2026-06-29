@@ -5,6 +5,7 @@
  *   'absolute' (default): position absolute dengan component.x/y/width/height.
  *   'fill': position relative, width/height 100%, untuk dipasang di dalam
  *           wrapper CanvasStage yang sudah punya absolute positioning.
+ * COMPONENT-SKIN-V3: skinClass prop for visual skin based on style pack.
  */
 
 import type { CSSProperties } from 'react';
@@ -17,6 +18,8 @@ export type TextComponentViewProps = {
   selected?: boolean;
   onSelect?: (componentId: string) => void;
   positionMode?: 'absolute' | 'fill';
+  /** COMPONENT-SKIN-V3: CSS class for visual skin (e.g. skin-text-clean). */
+  skinClass?: string;
 };
 
 export function TextComponentView({
@@ -25,6 +28,7 @@ export function TextComponentView({
   selected,
   onSelect,
   positionMode = 'absolute',
+  skinClass,
 }: TextComponentViewProps) {
   const isFill = positionMode === 'fill';
 
@@ -80,6 +84,7 @@ export function TextComponentView({
       data-component-id={component.id}
       data-component-type="text"
       data-variant={component.variant}
+      className={skinClass}
       onClick={(e) => {
         e.stopPropagation();
         onSelect?.(component.id);

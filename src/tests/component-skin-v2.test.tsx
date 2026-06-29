@@ -67,10 +67,12 @@ describe('COMPONENT-SKIN-V2 — helper', () => {
     const strong = getSkinClassForComponent('learning-bridge', 'mission-dark');
     expect(subtle).not.toBe(strong);
   });
-  it('8b. getAllSkinClassNames returns 14 unique classes (bridge-subtle shared)', () => {
+  it('8b. getAllSkinClassNames returns 20 unique classes (V2: 14 + V3: 6 layered+text)', () => {
     const all = getAllSkinClassNames();
-    // 3 card + 3 button + 3 quiz + 2 bridge (subtle shared by modern-clean + soft-classroom) + 3 game = 14
-    expect(all.length).toBe(14);
+    // V2: 3 card + 3 button + 3 quiz + 2 bridge + 3 game = 14
+    // V3: 3 layered + 3 text = 6
+    // Total: 20
+    expect(all.length).toBe(20);
   });
 });
 

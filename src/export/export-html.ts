@@ -380,6 +380,12 @@ body {
 .skin-game-calm { border:1px solid var(--silse-color-border); border-radius:10px; background:var(--silse-color-surface); }
 .skin-game-playful { border:2px solid rgba(34,197,94,0.3); border-radius:16px; background:linear-gradient(135deg,rgba(220,252,231,0.5) 0%,rgba(255,255,255,0.8) 100%); }
 .skin-game-mission { border:2px solid var(--silse-color-primary); border-radius:8px; background:var(--silse-color-surface); box-shadow:0 0 20px rgba(59,130,246,0.3); }
+.skin-layered-clean { border:1px solid var(--silse-color-border); border-radius:10px; background:var(--silse-color-surface); }
+.skin-layered-soft { border:2px solid rgba(255,200,200,0.3); border-radius:16px; background:linear-gradient(135deg,var(--silse-color-surface) 0%,rgba(255,255,255,0.7) 100%); }
+.skin-layered-bold { border:2px solid var(--silse-color-primary); border-radius:8px; background:var(--silse-color-surface); box-shadow:0 0 16px rgba(59,130,246,0.15); }
+.skin-text-clean { text-shadow:none; }
+.skin-text-soft { text-shadow:0 1px 2px rgba(0,0,0,0.03); }
+.skin-text-bold { text-shadow:0 0 8px rgba(59,130,246,0.2); font-weight:500; }
 `.trim();
 }
 
@@ -454,6 +460,7 @@ function generateJS(renderModelJson: string): string {
 
     if (comp.type === 'text') {
       el = document.createElement('div');
+      el.className = comp.skinClass || '';
       el.style.cssText = style + 'display:flex;align-items:center;overflow:hidden;white-space:pre-wrap;word-break:break-word;box-sizing:border-box;';
       el.textContent = comp.text || '';
       return el;
@@ -743,7 +750,7 @@ function generateJS(renderModelJson: string): string {
 
     if (comp.type === 'layered-info') {
       el = document.createElement('div');
-      el.className = 'silse-layered-info';
+      el.className = 'silse-layered-info ' + (comp.skinClass || '');
       el.style.cssText = style + 'box-sizing:border-box;display:flex;flex-direction:column;gap:8px;overflow:auto;padding:12px;';
 
       if (comp.layeredTitle) {

@@ -119,7 +119,7 @@ export function PreviewApp() {
             const resolvedStyle = getResolvedComponentStyle(project, currentPage, component);
 
             if (isTextComponent(component)) {
-              return <TextComponentView key={component.id} component={component} resolvedStyle={resolvedStyle} />;
+              return <TextComponentView key={component.id} component={component} resolvedStyle={resolvedStyle} skinClass={getSkinClassForComponent('text', project.stylePackId)} />;
             }
             if (isImageComponent(component)) {
               return <ImageComponentView key={component.id} component={component} resolvedStyle={resolvedStyle} />;
@@ -181,6 +181,7 @@ export function PreviewApp() {
                   component={component}
                   resolvedStyle={resolvedStyle}
                   interactive={true}
+                  skinClass={getSkinClassForComponent('layered-info', project.stylePackId)}
                 />
               );
             }

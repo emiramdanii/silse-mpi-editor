@@ -220,6 +220,7 @@ export function CanvasStage() {
                   selected={isSelected}
                   onSelect={selectComponent}
                   positionMode="fill"
+                  skinClass={getSkinClassForComponent('text', project.stylePackId)}
                 />
               )}
               {isImageComponent(component) && (
@@ -279,6 +280,7 @@ export function CanvasStage() {
                   onSelect={selectComponent}
                   positionMode="fill"
                   interactive={false}
+                  skinClass={getSkinClassForComponent('layered-info', project.stylePackId)}
                 />
               )}
               {isLearningBridgeComponent(component) && (

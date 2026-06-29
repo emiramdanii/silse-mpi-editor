@@ -4,6 +4,8 @@
  * Layer: components
  * Allowed imports: react, ../core/types, ../core/style/resolveComponentStyle
  *
+ * COMPONENT-SKIN-V3: skinClass prop for visual skin based on style pack.
+ *
  * Kontrak (LXC-02 Patch-1 — render contract honesty):
  *   Preview and export follow the same render contract and resolved style
  *   model, but the renderer runtime is different:
@@ -35,6 +37,8 @@ export type LayeredInfoComponentViewProps = {
    * Preview mode = true. Editor mode = false (read-only, pakai defaultOpenIndex).
    */
   interactive?: boolean;
+  /** COMPONENT-SKIN-V3: CSS class for visual skin (e.g. skin-layered-clean). */
+  skinClass?: string;
 };
 
 export function LayeredInfoComponentView({
@@ -44,6 +48,7 @@ export function LayeredInfoComponentView({
   onSelect,
   positionMode = 'absolute',
   interactive = false,
+  skinClass,
 }: LayeredInfoComponentViewProps) {
   const isFill = positionMode === 'fill';
   const [openIndex, setOpenIndex] = useState<number | null>(
@@ -104,6 +109,7 @@ export function LayeredInfoComponentView({
       data-component-id={component.id}
       data-component-type="layered-info"
       data-variant={component.variant}
+      className={skinClass}
       onClick={(e) => {
         e.stopPropagation();
         onSelect?.(component.id);
