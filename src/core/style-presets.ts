@@ -289,6 +289,10 @@ export const DEFAULT_STYLE_PACK: StylePack = CLEAN_CLASSROOM_PACK;
  * Get a built-in style pack by id. Returns undefined if not found.
  */
 export function getStylePack(id: string): StylePack | undefined {
+  // V1 style pack IDs map to base packs for interaction recipes.
+  if (id === 'modern-clean') return BUILTIN_STYLE_PACKS['cleanClassroom'];
+  if (id === 'soft-classroom') return BUILTIN_STYLE_PACKS['brightKids'];
+  if (id === 'mission-dark') return BUILTIN_STYLE_PACKS['cleanClassroom'];
   return BUILTIN_STYLE_PACKS[id as VisualPresetId];
 }
 

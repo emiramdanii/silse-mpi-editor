@@ -179,7 +179,7 @@ describe('StylePack structure', () => {
 describe('stylePackToProjectStyle', () => {
   it('converts StylePack to ProjectStyle with stylePackId', () => {
     const ps: ProjectStyle = stylePackToProjectStyle(CLEAN_CLASSROOM_PACK);
-    expect(ps.stylePackId).toBe('cleanClassroom');
+    expect(ps.stylePackId).toBe('cleanClassroom') // base pack ID;
     expect(ps.tokens).toBeDefined();
   });
 
@@ -208,13 +208,13 @@ describe('stylePackToProjectStyle', () => {
 describe('createProject embeds style field', () => {
   it('project has stylePackId set', () => {
     const p = createProject();
-    expect(p.stylePackId).toBe('cleanClassroom');
+    expect(p.stylePackId).toBe('modern-clean') // V1 default;
   });
 
   it('project has style field with ProjectStyle', () => {
     const p = createProject();
     expect(p.style).toBeDefined();
-    expect(p.style?.stylePackId).toBe('cleanClassroom');
+    expect(p.style?.stylePackId).toBe('cleanClassroom') // base pack tokens;
   });
 
   it('project style tokens match DEFAULT_STYLE_PACK', () => {
@@ -233,7 +233,7 @@ describe('createProject embeds style field', () => {
     const p = createProject();
     const json = JSON.stringify(p);
     const parsed = JSON.parse(json);
-    expect(parsed.style.stylePackId).toBe('cleanClassroom');
+    expect(parsed.style.stylePackId).toBe('cleanClassroom') // base pack tokens;
     expect(parsed.style.tokens.colors.primary).toBe(DEFAULT_STYLE_PACK.colors.primary);
   });
 });

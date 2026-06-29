@@ -37,15 +37,15 @@ describe('createProject', () => {
   });
 
   // Batch 2S: project default punya style field
-  it('has stylePackId set to cleanClassroom (Batch 2S)', () => {
+  it('has stylePackId set to modern-clean (V1 default)', () => {
     const p = createProject();
-    expect(p.stylePackId).toBe('cleanClassroom');
+    expect(p.stylePackId).toBe('modern-clean');
   });
 
   it('has style field with ProjectStyle (Batch 2S)', () => {
     const p = createProject();
     expect(p.style).toBeDefined();
-    expect(p.style?.stylePackId).toBe('cleanClassroom');
+    expect(p.style?.stylePackId).toBe('cleanClassroom'); // style.stylePackId still references base pack
     expect(p.style?.tokens.colors).toBeDefined();
     expect(p.style?.tokens.typography).toBeDefined();
   });
@@ -54,7 +54,7 @@ describe('createProject', () => {
     const p = createProject();
     const json = JSON.stringify(p);
     const parsed = JSON.parse(json);
-    expect(parsed.style.stylePackId).toBe('cleanClassroom');
+    expect(parsed.style.stylePackId).toBe('cleanClassroom'); // style.stylePackId references base pack tokens
     expect(parsed.style.tokens.colors.primary).toBeDefined();
   });
 });

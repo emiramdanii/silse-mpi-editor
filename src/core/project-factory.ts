@@ -90,7 +90,7 @@ export function createProject(title: string = 'MPI Baru'): SimpleProject {
     currentPageId: coverPage.id,
     // Batch 2S: embed default style pack (cleanClassroom) into project.
     // Tokens disnapshot inline supaya project self-contained.
-    stylePackId: DEFAULT_STYLE_PACK.id,
+    stylePackId: 'modern-clean',
     style: stylePackToProjectStyle(DEFAULT_STYLE_PACK),
   };
 }
