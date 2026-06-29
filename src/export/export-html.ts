@@ -20,6 +20,7 @@ import type { SimpleProject, SimplePage, PageComponent } from '../core/types';
 import type { ProjectStyle } from '../core/style-types';
 import { getResolvedComponentStyle } from '../core/style/resolveComponentStyle';
 import { getSkinClassForComponent } from '../core/style-packs/component-skin';
+import { getBackgroundPatternForStylePack } from '../core/style-packs/background-pattern';
 
 const CANVAS_WIDTH = 1280;
 const CANVAS_HEIGHT = 720;
@@ -386,6 +387,15 @@ body {
 .skin-text-clean { text-shadow:none; }
 .skin-text-soft { text-shadow:0 1px 2px rgba(0,0,0,0.03); }
 .skin-text-bold { text-shadow:0 0 8px rgba(59,130,246,0.2); font-weight:500; }
+/* BACKGROUND-PATTERN-SYSTEM-V1: background pattern classes */
+.silse-bg-page-clean::before { content:''; position:absolute; inset:0; background:linear-gradient(180deg,rgba(248,250,252,0.5) 0%,transparent 30%,transparent 70%,rgba(241,245,249,0.3) 100%); pointer-events:none; z-index:0; }
+.silse-bg-page-soft::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(254,243,199,0.15) 0%,rgba(254,226,226,0.1) 50%,rgba(254,215,170,0.08) 100%); pointer-events:none; z-index:0; }
+.silse-bg-page-mission::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 30%,rgba(59,130,246,0.08) 0%,transparent 60%); pointer-events:none; z-index:0; }
+.silse-bg-pattern-subtle-grid::after { content:''; position:absolute; inset:0; background-image:linear-gradient(rgba(37,99,235,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,0.02) 1px,transparent 1px); background-size:40px 40px; pointer-events:none; z-index:0; }
+.silse-bg-pattern-soft-dots::after { content:''; position:absolute; inset:0; background-image:radial-gradient(circle,rgba(245,158,11,0.04) 1.5px,transparent 1.5px); background-size:28px 28px; pointer-events:none; z-index:0; }
+.silse-bg-pattern-mission-glow::after { content:''; position:absolute; inset:0; background-image:linear-gradient(rgba(59,130,246,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,0.03) 1px,transparent 1px); background-size:60px 60px; pointer-events:none; z-index:0; }
+#silse-canvas { position:relative; }
+#silse-canvas > * { position:relative; z-index:1; }
 `.trim();
 }
 
@@ -1072,7 +1082,7 @@ ${css}
     <button id="silse-nav-next">Berikutnya →</button>
     <span id="silse-score" class="silse-score">Skor: 0</span>
   </div>
-  <div id="silse-canvas"></div>
+  <div id="silse-canvas" class="${getBackgroundPatternForStylePack(project.stylePackId).pageClass} ${getBackgroundPatternForStylePack(project.stylePackId).patternClass}"></div>
   <script>
 ${js}
   </script>

@@ -27,6 +27,7 @@ import { LayeredInfoComponentView } from '../components/LayeredInfoComponentView
 import { LearningBridgeComponentView } from '../components/LearningBridgeComponentView';
 import { getCapability } from '../core/capability';
 import { getSkinClassForComponent } from '../core/style-packs/component-skin';
+import { getBackgroundPatternForStylePack } from '../core/style-packs/background-pattern';
 import { getResolvedComponentStyle } from '../core/style/resolveComponentStyle';
 import { snapToGrid, clampRectToCanvas, CANVAS_WIDTH, CANVAS_HEIGHT, type Rect } from '../core/geometry';
 import { Toolbar } from './Toolbar';
@@ -147,6 +148,8 @@ export function CanvasStage() {
           ? `url(${currentPage.background.imageSrc}) center/cover no-repeat`
           : '#ffffff';
 
+  const bgPattern = getBackgroundPatternForStylePack(project.stylePackId);
+
   const capability = currentPage ? getCapability(currentPage.role) : null;
   const canAdd = capability?.allowAddComponent ?? false;
   const roleInfo = currentPage ? getRoleInfo(currentPage.role) : null;
@@ -165,7 +168,8 @@ export function CanvasStage() {
       <div className="canvas-stage__canvas-area">
         <div
           ref={canvasRef}
-          className="canvas-frame"
+          className={`canvas-frame ${bgPattern.pageClass} ${bgPattern.patternClass}`}
+          data-testid="canvas-frame"
           style={{
             width: CANVAS_WIDTH,
             height: CANVAS_HEIGHT,
