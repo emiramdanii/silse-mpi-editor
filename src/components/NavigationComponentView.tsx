@@ -2,6 +2,7 @@
  * NavigationComponentView — renderer for a NavigationComponent.
  *
  * M9 PATCH: positionMode prop untuk menghindari double positioning.
+ * COMPONENT-SKIN-V2: skinClass prop for visual skin based on style pack.
  */
 
 import type { CSSProperties } from 'react';
@@ -15,6 +16,8 @@ export type NavigationComponentViewProps = {
   onSelect?: (componentId: string) => void;
   onNavigate?: () => void;
   positionMode?: 'absolute' | 'fill';
+  /** COMPONENT-SKIN-V2: CSS class for visual skin (e.g. skin-button-clean). */
+  skinClass?: string;
 };
 
 export function NavigationComponentView({
@@ -24,6 +27,7 @@ export function NavigationComponentView({
   onSelect,
   onNavigate,
   positionMode = 'absolute',
+  skinClass,
 }: NavigationComponentViewProps) {
   const isFill = positionMode === 'fill';
 
@@ -77,6 +81,7 @@ export function NavigationComponentView({
       data-component-type="navigation"
       data-variant={component.variant}
       data-action={component.action}
+      className={skinClass}
       onClick={handleClick}
       style={style}
     >

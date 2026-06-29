@@ -2,6 +2,7 @@
  * CardComponentView — read-only renderer for a CardComponent.
  *
  * M9 PATCH: positionMode prop untuk menghindari double positioning.
+ * COMPONENT-SKIN-V2: skinClass prop for visual skin based on style pack.
  */
 
 import type { CSSProperties } from 'react';
@@ -14,6 +15,8 @@ export type CardComponentViewProps = {
   selected?: boolean;
   onSelect?: (componentId: string) => void;
   positionMode?: 'absolute' | 'fill';
+  /** COMPONENT-SKIN-V2: CSS class for visual skin (e.g. skin-card-flat). */
+  skinClass?: string;
 };
 
 export function CardComponentView({
@@ -22,6 +25,7 @@ export function CardComponentView({
   selected,
   onSelect,
   positionMode = 'absolute',
+  skinClass,
 }: CardComponentViewProps) {
   const isFill = positionMode === 'fill';
 
@@ -64,6 +68,7 @@ export function CardComponentView({
       data-component-id={component.id}
       data-component-type="card"
       data-variant={component.variant}
+      className={skinClass}
       onClick={(e) => {
         e.stopPropagation();
         onSelect?.(component.id);

@@ -2,6 +2,7 @@
  * GameComponentView — renderer for GameComponent (missionQuiz).
  *
  * M11A scope: render game with missions, choices, feedback, score, retry.
+ * COMPONENT-SKIN-V2: skinClass prop for visual skin based on style pack.
  *
  * UX Contract: Game answer option text must NOT be clipped.
  *   - No white-space: nowrap
@@ -29,6 +30,8 @@ export type GameComponentViewProps = {
     completed: boolean;
   };
   positionMode?: 'absolute' | 'fill';
+  /** COMPONENT-SKIN-V2: CSS class for visual skin (e.g. skin-game-calm). */
+  skinClass?: string;
 };
 
 export function GameComponentView({
@@ -41,6 +44,7 @@ export function GameComponentView({
   onRetry,
   gameState,
   positionMode = 'absolute',
+  skinClass,
 }: GameComponentViewProps) {
   const isFill = positionMode === 'fill';
   const gs = gameState ?? { currentMissionIndex: 0, selectedChoiceIndex: null, isAnswered: false, score: 0, completed: false };
@@ -71,7 +75,7 @@ export function GameComponentView({
 
   if (gs.completed) {
     return (
-      <div data-component-id={component.id} data-component-type="game" style={containerStyle}
+      <div data-component-id={component.id} data-component-type="game" className={skinClass} style={containerStyle}
         onClick={(e) => { e.stopPropagation(); onSelect?.(component.id); }}>
         <strong style={{ fontSize: 18 }}>Game Selesai!</strong>
         <div style={{ fontSize: 16, marginTop: 8 }}>Skor: {gs.score}</div>
@@ -89,7 +93,7 @@ export function GameComponentView({
   const isSelected = (idx: number) => gs.selectedChoiceIndex === idx;
 
   return (
-    <div data-component-id={component.id} data-component-type="game" style={containerStyle}
+    <div data-component-id={component.id} data-component-type="game" className={skinClass} style={containerStyle}
       onClick={(e) => { e.stopPropagation(); onSelect?.(component.id); }}>
       <strong style={{ fontSize: 16 }}>{component.title}</strong>
       <div style={{ fontSize: 13, color: '#6b7280', whiteSpace: 'normal', overflowWrap: 'anywhere' }}>

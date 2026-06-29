@@ -19,6 +19,7 @@
 import type { SimpleProject, SimplePage, PageComponent } from '../core/types';
 import type { ProjectStyle } from '../core/style-types';
 import { getResolvedComponentStyle } from '../core/style/resolveComponentStyle';
+import { getSkinClassForComponent } from '../core/style-packs/component-skin';
 
 const CANVAS_WIDTH = 1280;
 const CANVAS_HEIGHT = 720;
@@ -53,6 +54,8 @@ type ExportRenderComponent = {
   y: number;
   width: number;
   height: number;
+  // COMPONENT-SKIN-V2: skin class for visual styling
+  skinClass?: string;
   // Component-specific data
   text?: string;
   src?: string;
@@ -134,6 +137,8 @@ function buildExportRenderComponent(
     y: component.y,
     width: component.width,
     height: component.height,
+    // COMPONENT-SKIN-V2: skin class based on style pack + component type.
+    skinClass: getSkinClassForComponent(component.type, project.stylePackId),
     resolvedStyle: {
       inlineStyle: resolved.inlineStyle,
       className: resolved.className,
@@ -359,6 +364,22 @@ body {
   white-space: normal;
   overflow-wrap: anywhere;
 }
+
+/* COMPONENT-SKIN-V2: Component skin classes (3 style packs × 5 component types) */
+.skin-card-flat { border:1px solid var(--silse-color-border); border-radius:8px; background:var(--silse-color-surface); box-shadow:0 1px 3px rgba(0,0,0,0.04); }
+.skin-card-soft { border:1px solid rgba(255,200,200,0.4); border-radius:16px; background:linear-gradient(135deg,var(--silse-color-surface) 0%,rgba(255,255,255,0.6) 100%); box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+.skin-card-bold { border:2px solid var(--silse-color-primary); border-radius:8px; background:var(--silse-color-surface); box-shadow:0 0 0 1px rgba(59,130,246,0.3),0 4px 12px rgba(0,0,0,0.4); }
+.skin-button-clean { border:1px solid var(--silse-color-primary); border-radius:6px; background:var(--silse-color-primary); color:#fff; font-weight:600; box-shadow:0 1px 2px rgba(37,99,235,0.2); }
+.skin-button-rounded { border:none; border-radius:24px; background:linear-gradient(135deg,var(--silse-color-primary) 0%,var(--silse-color-secondary) 100%); color:#fff; font-weight:600; box-shadow:0 2px 6px rgba(245,158,11,0.3); }
+.skin-button-mission { border:2px solid var(--silse-color-primary); border-radius:4px; background:var(--silse-color-surface); color:var(--silse-color-primary); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; box-shadow:0 0 12px rgba(59,130,246,0.4); }
+.skin-quiz-calm { border:1px solid var(--silse-color-border); border-radius:10px; background:var(--silse-color-surface); }
+.skin-quiz-playful { border:2px solid rgba(245,158,11,0.3); border-radius:16px; background:linear-gradient(135deg,rgba(254,243,199,0.5) 0%,rgba(255,255,255,0.8) 100%); }
+.skin-quiz-mission { border:2px solid var(--silse-color-primary); border-radius:8px; background:var(--silse-color-surface); box-shadow:0 0 16px rgba(59,130,246,0.2); }
+.skin-bridge-subtle { border-left:4px solid var(--silse-color-primary); background:rgba(37,99,235,0.04); }
+.skin-bridge-strong { border-left:6px solid var(--silse-color-primary); background:linear-gradient(90deg,rgba(59,130,246,0.15) 0%,transparent 100%); box-shadow:0 0 12px rgba(59,130,246,0.2); }
+.skin-game-calm { border:1px solid var(--silse-color-border); border-radius:10px; background:var(--silse-color-surface); }
+.skin-game-playful { border:2px solid rgba(34,197,94,0.3); border-radius:16px; background:linear-gradient(135deg,rgba(220,252,231,0.5) 0%,rgba(255,255,255,0.8) 100%); }
+.skin-game-mission { border:2px solid var(--silse-color-primary); border-radius:8px; background:var(--silse-color-surface); box-shadow:0 0 20px rgba(59,130,246,0.3); }
 `.trim();
 }
 
@@ -451,6 +472,7 @@ function generateJS(renderModelJson: string): string {
 
     if (comp.type === 'card') {
       el = document.createElement('div');
+      el.className = comp.skinClass || '';
       el.style.cssText = style + 'box-sizing:border-box;display:flex;flex-direction:column;gap:8px;overflow:hidden;';
       if (comp.cardTitle) {
         var title = document.createElement('strong');
@@ -467,7 +489,7 @@ function generateJS(renderModelJson: string): string {
 
     if (comp.type === 'navigation') {
       el = document.createElement('button');
-      el.className = 'silse-nav-btn';
+      el.className = 'silse-nav-btn ' + (comp.skinClass || '');
       el.dataset.action = comp.action;
       el.dataset.target = comp.targetPageId || '';
       el.style.cssText = style + 'cursor:pointer;display:flex;align-items:center;justify-content:center;user-select:none;';
@@ -509,7 +531,7 @@ function generateJS(renderModelJson: string): string {
 
     if (comp.type === 'question') {
       el = document.createElement('div');
-      el.className = 'silse-question';
+      el.className = 'silse-question ' + (comp.skinClass || '');
       el.style.cssText = style + 'box-sizing:border-box;display:flex;flex-direction:column;gap:8px;overflow:auto;padding:12px;';
 
       if (comp.questionTitle) {
@@ -592,7 +614,7 @@ function generateJS(renderModelJson: string): string {
 
     if (comp.type === 'game') {
       el = document.createElement('div');
-      el.className = 'silse-game';
+      el.className = 'silse-game ' + (comp.skinClass || '');
       el.style.cssText = style + 'box-sizing:border-box;display:flex;flex-direction:column;gap:8px;overflow:auto;padding:12px;';
 
       var gameState = gameStates[comp.id] || { currentMissionIndex: 0, selectedChoiceIndex: null, isAnswered: false, score: 0, completed: false };
@@ -935,7 +957,8 @@ function generateJS(renderModelJson: string): string {
 
     if (comp.type === 'learning-bridge') {
       el = document.createElement('div');
-      el.className = 'silse-learning-bridge';
+      var bridgeSkinClass = comp.skinClass || '';
+      el.className = bridgeSkinClass ? 'silse-learning-bridge ' + bridgeSkinClass : 'silse-learning-bridge';
       el.style.cssText = style + 'box-sizing:border-box;display:flex;flex-direction:column;gap:10px;overflow:hidden;padding:16px;';
 
       var bridgeVariantIcon = { transition: '🔀', recap: '✅', preview: '👀' }[comp.bridgeVariant] || '🌉';

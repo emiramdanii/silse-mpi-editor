@@ -26,6 +26,7 @@ import { GameComponentView } from '../components/GameComponentView';
 import { LayeredInfoComponentView } from '../components/LayeredInfoComponentView';
 import { LearningBridgeComponentView } from '../components/LearningBridgeComponentView';
 import { getCapability } from '../core/capability';
+import { getSkinClassForComponent } from '../core/style-packs/component-skin';
 import { getResolvedComponentStyle } from '../core/style/resolveComponentStyle';
 import { snapToGrid, clampRectToCanvas, CANVAS_WIDTH, CANVAS_HEIGHT, type Rect } from '../core/geometry';
 import { Toolbar } from './Toolbar';
@@ -237,6 +238,7 @@ export function CanvasStage() {
                   selected={isSelected}
                   onSelect={selectComponent}
                   positionMode="fill"
+                  skinClass={getSkinClassForComponent('card', project.stylePackId)}
                 />
               )}
               {isNavigationComponent(component) && (
@@ -246,6 +248,7 @@ export function CanvasStage() {
                   selected={isSelected}
                   onSelect={selectComponent}
                   positionMode="fill"
+                  skinClass={getSkinClassForComponent('navigation', project.stylePackId)}
                 />
               )}
               {isQuestionComponent(component) && (
@@ -255,6 +258,7 @@ export function CanvasStage() {
                   selected={isSelected}
                   onSelect={selectComponent}
                   positionMode="fill"
+                  skinClass={getSkinClassForComponent('question', project.stylePackId)}
                 />
               )}
               {isGameComponent(component) && (
@@ -264,6 +268,7 @@ export function CanvasStage() {
                   selected={isSelected}
                   onSelect={selectComponent}
                   positionMode="fill"
+                  skinClass={getSkinClassForComponent('game', project.stylePackId)}
                 />
               )}
               {isLayeredInfoComponent(component) && (
@@ -284,6 +289,7 @@ export function CanvasStage() {
                   onSelect={selectComponent}
                   positionMode="fill"
                   interactive={false}
+                  skinClass={getSkinClassForComponent('learning-bridge', project.stylePackId)}
                 />
               )}
 

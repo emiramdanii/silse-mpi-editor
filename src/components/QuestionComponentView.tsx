@@ -2,6 +2,7 @@
  * QuestionComponentView — renderer for a QuestionComponent.
  *
  * M10 scope: render question with choices, feedback, and scoring.
+ * COMPONENT-SKIN-V2: skinClass prop for visual skin based on style pack.
  *
  * UX Contract: Answer option text must NOT be clipped.
  *   - No white-space: nowrap
@@ -23,6 +24,8 @@ export type QuestionComponentViewProps = {
   selectedChoiceIndex?: number | null;
   isAnswered?: boolean;
   positionMode?: 'absolute' | 'fill';
+  /** COMPONENT-SKIN-V2: CSS class for visual skin (e.g. skin-quiz-calm). */
+  skinClass?: string;
 };
 
 export function QuestionComponentView({
@@ -34,6 +37,7 @@ export function QuestionComponentView({
   selectedChoiceIndex,
   isAnswered,
   positionMode = 'absolute',
+  skinClass,
 }: QuestionComponentViewProps) {
   const isFill = positionMode === 'fill';
 
@@ -98,6 +102,7 @@ export function QuestionComponentView({
       data-component-id={component.id}
       data-component-type="question"
       data-variant={component.variant}
+      className={skinClass}
       onClick={(e) => {
         e.stopPropagation();
         onSelect?.(component.id);

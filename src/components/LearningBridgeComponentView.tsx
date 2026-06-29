@@ -4,6 +4,8 @@
  * Layer: components
  * Allowed imports: react, ../core/types, ../core/style/resolveComponentStyle
  *
+ * COMPONENT-SKIN-V2: skinClass prop for visual skin based on style pack.
+ *
  * Kontrak (DIE-V1 Scope 5 — Bridge Color Cleanup):
  *   Bridge TIDAK lagi hardcode warna internal (#2563eb, #eff6ff, #6b7280).
  *   Warna diambil dari CSS variables yang di-set oleh style resolver:
@@ -26,6 +28,8 @@ export type LearningBridgeComponentViewProps = {
   onSelect?: (componentId: string) => void;
   positionMode?: 'absolute' | 'fill';
   interactive?: boolean;
+  /** COMPONENT-SKIN-V2: CSS class for visual skin (e.g. skin-bridge-subtle). */
+  skinClass?: string;
 };
 
 const VARIANT_ICON: Record<LearningBridgeVariant, string> = {
@@ -47,6 +51,7 @@ export function LearningBridgeComponentView({
   onSelect,
   positionMode = 'absolute',
   interactive: _interactive = false,
+  skinClass,
 }: LearningBridgeComponentViewProps) {
   const isFill = positionMode === 'fill';
 
@@ -97,6 +102,7 @@ export function LearningBridgeComponentView({
       data-component-type="learning-bridge"
       data-variant={component.variant}
       data-testid="learning-bridge-component"
+      className={skinClass}
       onClick={handleContainerClick}
       style={containerStyle}
     >

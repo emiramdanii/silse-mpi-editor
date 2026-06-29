@@ -20,6 +20,7 @@ import { GameComponentView } from '../components/GameComponentView';
 import { LayeredInfoComponentView } from '../components/LayeredInfoComponentView';
 import { LearningBridgeComponentView } from '../components/LearningBridgeComponentView';
 import { getResolvedComponentStyle } from '../core/style/resolveComponentStyle';
+import { getSkinClassForComponent } from '../core/style-packs/component-skin';
 import type { GameComponent, NavigationComponent, QuestionComponent } from '../core/types';
 
 const CANVAS_WIDTH = 1280;
@@ -124,7 +125,7 @@ export function PreviewApp() {
               return <ImageComponentView key={component.id} component={component} resolvedStyle={resolvedStyle} />;
             }
             if (isCardComponent(component)) {
-              return <CardComponentView key={component.id} component={component} resolvedStyle={resolvedStyle} />;
+              return <CardComponentView key={component.id} component={component} resolvedStyle={resolvedStyle} skinClass={getSkinClassForComponent('card', project.stylePackId)} />;
             }
             if (isNavigationComponent(component)) {
               return (
@@ -133,6 +134,7 @@ export function PreviewApp() {
                   component={component}
                   resolvedStyle={resolvedStyle}
                   onNavigate={() => handleNavigationClick(component as NavigationComponent)}
+                  skinClass={getSkinClassForComponent('navigation', project.stylePackId)}
                 />
               );
             }
@@ -147,6 +149,7 @@ export function PreviewApp() {
                   onAnswer={(choiceIndex) => answerQuestion(qc.id, choiceIndex, qc.correctChoiceIndex, qc.points)}
                   selectedChoiceIndex={qa.selectedChoiceIndex}
                   isAnswered={qa.isAnswered}
+                  skinClass={getSkinClassForComponent('question', project.stylePackId)}
                 />
               );
             }
@@ -167,6 +170,7 @@ export function PreviewApp() {
                   onNextMission={() => nextGameMission(gc.id, gc.missions.length)}
                   onRetry={() => resetGame(gc.id)}
                   gameState={gs}
+                  skinClass={getSkinClassForComponent('game', project.stylePackId)}
                 />
               );
             }
@@ -186,6 +190,7 @@ export function PreviewApp() {
                   key={component.id}
                   component={component}
                   resolvedStyle={resolvedStyle}
+                  skinClass={getSkinClassForComponent('learning-bridge', project.stylePackId)}
                 />
               );
             }
