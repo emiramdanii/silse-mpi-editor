@@ -165,11 +165,11 @@ export function Topbar() {
         <button
           onClick={() => setShowGuidedFlow(true)}
           className="editor-topbar__action editor-topbar__action--guided"
-          title="Buat paket MPI lengkap dari topik"
+          title="Buat MPI lengkap dari topik pembelajaran"
           data-action="guided-flow"
           data-testid="topbar-guided-flow"
         >
-          🎯 Paket MPI dari Topik
+          🎯 Buat MPI dari Topik
         </button>
         <button
           onClick={() => {

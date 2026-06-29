@@ -2883,3 +2883,37 @@ textarea {
   background: rgba(239, 68, 68, 0.15);
   color: #991b1b;
 }
+
+/* =========================================================================
+   TEACHER-MAIN-FLOW-POLISH-01 — empty state hint + dialog guidance
+   ========================================================================= */
+
+.page-panel__empty-hint {
+  margin: 4px 12px 8px;
+  padding: 10px 12px;
+  background: rgba(59, 130, 246, 0.08);
+  border-left: 3px solid var(--color-primary, #3b82f6);
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--color-text);
+}
+
+.page-panel__empty-hint strong {
+  color: var(--color-primary, #3b82f6);
+}
+
+.guided-flow-modal__guidance {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  background: rgba(34, 197, 94, 0.08);
+  border-left: 3px solid #22c55e;
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--color-text);
+}
+
+.guided-flow-modal__guidance strong {
+  color: #166534;
+}

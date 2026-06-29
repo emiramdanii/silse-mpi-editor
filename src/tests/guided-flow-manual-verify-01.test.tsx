@@ -67,7 +67,9 @@ describe('GUIDED-FLOW-MANUAL-VERIFY-01 — dialog content', () => {
     const dialog = container.querySelector('[data-testid="guided-flow-dialog"]');
     expect(dialog?.getAttribute('role')).toBe('dialog');
     expect(dialog?.getAttribute('aria-modal')).toBe('true');
-    expect(dialog?.getAttribute('aria-label')).toBe('Paket MPI dari Topik');
+    expect(dialog?.getAttribute('aria-label')).toBe('Paket MPI dari Topik'); // aria-label unchanged (internal name)
+    // TEACHER-MAIN-FLOW-POLISH-01: button label changed to "Buat MPI dari Topik"
+    // but dialog aria-label stays "Paket MPI dari Topik" (internal identifier).
   });
 
   it('1c. Close button has aria-label="Tutup"', () => {

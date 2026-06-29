@@ -160,7 +160,7 @@ describe('GUIDED-MPI-FLOW-01 — UI', () => {
     useEditorStore.getState().newProject();
   });
 
-  it('Topbar has "Paket MPI dari Topik" button', () => {
+  it('Topbar has "Buat MPI dari Topik" button (TEACHER-MAIN-FLOW-POLISH-01: renamed from "Paket MPI dari Topik")', () => {
     const { container } = render(React.createElement(Topbar));
     expect(container.querySelector('[data-testid="topbar-guided-flow"]')).not.toBeNull();
   });

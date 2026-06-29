@@ -232,6 +232,12 @@ export function PagePanel() {
   const alignment = useLearningGoalAlignment();
   // Build map: pageId → PageAlignment (for badge lookup).
   const pageAlignmentMap = new Map(alignment.pages.map((pa) => [pa.pageId, pa]));
+  // TEACHER-MAIN-FLOW-POLISH-01: detect default/empty project for hint.
+  const isDefaultProject =
+    project.title === 'MPI Baru' &&
+    project.pages.length === 1 &&
+    project.pages[0].role === 'cover' &&
+    project.pages[0].components.length <= 1;
 
   /**
    * Determine if a page's inline issue list should be expanded.
@@ -412,6 +418,15 @@ export function PagePanel() {
       </div>
       <StatusSummary summary={summary} />
       <AlignmentSummary />
+      {/* TEACHER-MAIN-FLOW-POLISH-01: empty state hint for default project */}
+      {isDefaultProject && (
+        <div
+          className="page-panel__empty-hint"
+          data-testid="page-panel-empty-hint"
+        >
+          Mulai cepat: klik <strong>“Buat MPI dari Topik”</strong> untuk membuat draft media pembelajaran.
+        </div>
+      )}
       {viewMode === 'thumbnail' ? (
         <div className="page-panel__thumbnails" data-testid="page-panel-thumbnails">
           {project.pages.map((page) => (

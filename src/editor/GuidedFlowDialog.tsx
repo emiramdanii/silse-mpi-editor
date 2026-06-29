@@ -112,7 +112,7 @@ export function GuidedFlowDialog({ onClose }: { onClose: () => void }) {
         {!generated ? (
           <>
             <p className="guided-flow-modal__hint">
-              Pilih topik pembelajaran. SILSE akan membuat draft MPI lengkap (10 halaman) dengan layout cerdas dan kualitas yang sudah dicek.
+              Pilih topik, lalu SILSE akan membuat draft MPI lengkap berisi tujuan, materi, aktivitas, kuis, refleksi, dan penutup.
             </p>
 
             <div className="guided-flow-topics">
@@ -204,6 +204,10 @@ export function GuidedFlowDialog({ onClose }: { onClose: () => void }) {
               </div>
             </div>
 
+            <p className="guided-flow-modal__guidance" data-testid="guided-flow-guidance">
+              Draft sudah dibuat. Periksa ringkasan kualitas, lalu klik <strong>Terapkan ke Editor</strong>.
+            </p>
+
             <div className="guided-flow-modal__actions">
               <button onClick={handleBack}>← Pilih Topik Lain</button>
               <button
@@ -213,7 +217,7 @@ export function GuidedFlowDialog({ onClose }: { onClose: () => void }) {
                 title={generated.qualityReport.ok ? 'Terapkan draft MPI ke editor' : 'Tidak bisa menerapkan — ada error layout'}
                 data-testid="guided-flow-apply"
               >
-                {generated.qualityReport.ok ? '✓ Terapkan Draft MPI' : '✗ Ada Error Layout'}
+                {generated.qualityReport.ok ? '✓ Terapkan ke Editor' : '✗ Ada Error Layout'}
               </button>
             </div>
           </>
