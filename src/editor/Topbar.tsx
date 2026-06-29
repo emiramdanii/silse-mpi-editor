@@ -155,7 +155,7 @@ export function Topbar() {
         <button
           onClick={handleExport}
           className="editor-topbar__action editor-topbar__action--primary"
-          title="Export HTML standalone"
+          title="Unduh HTML — bisa dibuka tanpa internet"
           data-action="export-html"
           data-milestone="M6"
           data-testid="topbar-export"

@@ -62,14 +62,14 @@ export type LayoutPreset = {
 export const LAYOUT_PRESETS: readonly LayoutPreset[] = [
   {
     id: 'cover-centered',
-    name: 'Cover Tengah',
+    name: 'Sampul Tengah',
     description: 'Judul dan subjudul di tengah halaman. Cocok untuk cover sederhana.',
     supportedRoles: ['cover'],
     intent: 'cover',
   },
   {
     id: 'cover-split',
-    name: 'Cover Dua Kolom',
+    name: 'Sampul Dua Sisi',
     description: 'Judul di kiri, visual (gambar/kartu) di kanan. Cocok untuk cover dengan ilustrasi.',
     supportedRoles: ['cover'],
     intent: 'cover',
@@ -90,7 +90,7 @@ export const LAYOUT_PRESETS: readonly LayoutPreset[] = [
   },
   {
     id: 'quiz-focus',
-    name: 'Kuis Fokus',
+    name: 'Fokus Kuis',
     description: 'Pertanyaan besar di tengah. Navigasi di kanan bawah.',
     supportedRoles: ['quiz', 'starter'],
     intent: 'quiz',
@@ -112,7 +112,7 @@ export const LAYOUT_PRESETS: readonly LayoutPreset[] = [
   {
     id: 'closing-centered',
     name: 'Penutup Tengah',
-    description: 'Rangkuman/ucapan terima kasih di tengah.',
+    description: 'Rangkuman dan ucapan terima kasih di tengah halaman.',
     supportedRoles: ['closing'],
     intent: 'closing',
   },

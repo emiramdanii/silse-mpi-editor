@@ -41,7 +41,7 @@ describe('STYLE-LAYOUT-UX-UNIFICATION-01 — UI section', () => {
     useEditorStore.getState().setProject(project);
     const { container } = render(React.createElement(VisualSection));
     const hint = container.querySelector('.inspector-visual-section__hint');
-    expect(hint?.textContent).toContain('tanpa mengubah isi materi');
+    expect(hint?.textContent).toContain('tetap aman');
   });
 
   it('3. Section contains StylePackPicker', () => {
@@ -101,7 +101,7 @@ describe('STYLE-LAYOUT-UX-UNIFICATION-01 — UI section', () => {
     const safety = container.querySelector('[data-testid="visual-section-safety"]');
     expect(safety).not.toBeNull();
     expect(safety?.textContent).toContain('Aman dicoba');
-    expect(safety?.textContent).toContain('tidak berubah');
+    expect(safety?.textContent).toContain('tidak mengubah isi');
   });
 });
 

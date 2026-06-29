@@ -424,7 +424,7 @@ export function PagePanel() {
           className="page-panel__empty-hint"
           data-testid="page-panel-empty-hint"
         >
-          Mulai cepat: klik <strong>“Buat MPI dari Topik”</strong> untuk membuat draft media pembelajaran.
+          Mulai cepat: klik <strong>“Buat MPI dari Topik”</strong> untuk membuat media pembelajaran lengkap dalam sekali klik.
         </div>
       )}
       {viewMode === 'thumbnail' ? (

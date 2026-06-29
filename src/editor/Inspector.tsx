@@ -224,7 +224,7 @@ export function Inspector() {
       <div className="inspector__body">
         {!currentPage ? (
           <div className="inspector-placeholder">
-            <p>Tidak ada halaman terpilih.</p>
+            <p>Tidak ada halaman terpilih. Pilih halaman di panel kiri untuk mengatur tampilannya.</p>
           </div>
         ) : !selectedComponent ? (
           <>

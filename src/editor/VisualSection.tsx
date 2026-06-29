@@ -32,10 +32,10 @@ export function VisualSection() {
       <div className="inspector-visual-section__header">
         <div className="inspector-visual-section__title">Atur Tampilan Media</div>
         <p className="inspector-visual-section__hint">
-          Ubah tampilan dan susunan tanpa mengubah isi materi.
+          Ganti gaya visual kapan saja. Materi, kuis, dan jawaban tetap aman.
         </p>
         <p className="inspector-visual-section__safety" data-testid="visual-section-safety">
-          Aman dicoba: isi materi, kuis, dan tujuan tidak berubah.
+          Aman dicoba — perubahan tampilan tidak mengubah isi materi.
         </p>
       </div>
 
