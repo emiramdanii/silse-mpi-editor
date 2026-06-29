@@ -192,6 +192,9 @@ export function applyLayoutPresetToPage(
   let textPlaced = false;
   let cardIndex = 0;
 
+  // Pre-count cards on this page to decide card layout strategy.
+  const totalCards = page.components.filter((c) => c.type === 'card').length;
+
   const newComponents = page.components.map((comp) => {
     const isFirstText = comp.type === 'text' && !textPlaced;
     const layoutRole = classifyComponent(comp, isFirstText);
@@ -223,9 +226,26 @@ export function applyLayoutPresetToPage(
 
     if (layoutRole === 'card') {
       // For card-stack: stack cards vertically in cardSlot.
+      // If >2 cards, use 2-column grid to fit without overflow.
       if (slots.cardSlot) {
-        const cardH = 140;
         const gap = 20;
+        if (totalCards > 2 && slots.cardSlot.width > 600) {
+          // 2-column grid layout.
+          const gridCardW = (slots.cardSlot.width - gap) / 2;
+          const gridCardH = Math.min(140, (slots.cardSlot.height - gap) / Math.ceil(totalCards / 2));
+          const col = cardIndex % 2;
+          const row = Math.floor(cardIndex / 2);
+          const slot: Slot = {
+            x: slots.cardSlot.x + col * (gridCardW + gap),
+            y: slots.cardSlot.y + row * (gridCardH + gap),
+            width: gridCardW,
+            height: gridCardH,
+          };
+          cardIndex++;
+          return placeComponent(comp, slot);
+        }
+        // Single column stack.
+        const cardH = Math.min(140, totalCards > 0 ? (slots.cardSlot.height - (totalCards - 1) * gap) / totalCards : 140);
         const slot: Slot = {
           x: slots.cardSlot.x,
           y: slots.cardSlot.y + cardIndex * (cardH + gap),
@@ -235,9 +255,21 @@ export function applyLayoutPresetToPage(
         cardIndex++;
         return placeComponent(comp, slot);
       }
-      // For two-column: place in visualRight slot.
+      // For two-column: place cards in a 2×2 grid in visualRight slot
+      // to prevent overlap when there are multiple cards (e.g. Menu page).
       if (slots.visualRight) {
-        return placeComponent(comp, slots.visualRight);
+        const cardW = Math.min((slots.visualRight.width - 16) / 2, 252);
+        const cardH = Math.min((slots.visualRight.height - 16) / 2, 212);
+        const col = cardIndex % 2;
+        const row = Math.floor(cardIndex / 2);
+        const slot: Slot = {
+          x: slots.visualRight.x + col * (cardW + 16),
+          y: slots.visualRight.y + row * (cardH + 16),
+          width: cardW,
+          height: cardH,
+        };
+        cardIndex++;
+        return placeComponent(comp, slot);
       }
     }
 
