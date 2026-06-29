@@ -66,6 +66,8 @@ import {
   TEXT_COMPONENT_VARIANTS,
 } from '../core/types';
 import { createEmptyPage, createProject } from '../core/project-factory';
+import { stylePackToProjectStyle } from '../core/style-presets';
+import { resolveStylePackV1, getProjectStylePackIdV1 } from '../core/style-packs/style-pack-registry';
 import {
   createCardComponent,
   createGameComponent,
@@ -103,6 +105,8 @@ export type EditorState = {
   setProject: (project: SimpleProject) => void;
   // UX-01: rename project title from topbar inline editor
   setProjectTitle: (title: string) => void;
+  // STYLE-PACK-SYSTEM-V1: change project style pack (visual only, no content mutation)
+  setStylePack: (stylePackId: string) => void;
 
   // Page operations (M1 + M3)
   addPage: (opts?: { title?: string; role?: PageRole }) => string;
@@ -488,6 +492,22 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     if (!trimmed) return;
     set((state) => ({
       project: { ...state.project, title: trimmed },
+    }));
+  },
+
+  // STYLE-PACK-SYSTEM-V1: Change project style pack (visual only).
+  // Updates stylePackId + style.tokens. Does NOT touch pages/components/objectives.
+  setStylePack: (stylePackId) => {
+    const resolvedId = getProjectStylePackIdV1(stylePackId);
+    const pack = resolveStylePackV1(resolvedId);
+    const projectStyle = stylePackToProjectStyle(pack);
+
+    set((state) => ({
+      project: {
+        ...state.project,
+        stylePackId: resolvedId,
+        style: projectStyle,
+      },
     }));
   },
 

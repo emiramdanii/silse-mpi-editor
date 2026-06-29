@@ -2917,3 +2917,78 @@ textarea {
 .guided-flow-modal__guidance strong {
   color: #166534;
 }
+
+/* =========================================================================
+   STYLE-PACK-SYSTEM-V1 — style pack picker
+   ========================================================================= */
+
+.style-pack-picker {
+  margin-top: 16px;
+  padding: 12px;
+  background: var(--color-surface, #f9fafb);
+  border-radius: 8px;
+}
+
+.style-pack-picker__label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-muted, #6b7280);
+  margin-bottom: 8px;
+}
+
+.style-pack-picker__options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.style-pack-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border, #d1d5db);
+  border-radius: 6px;
+  background: var(--color-bg, #ffffff);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  text-align: left;
+  font-size: 13px;
+}
+
+.style-pack-option:hover {
+  border-color: var(--color-primary, #2563eb);
+}
+
+.style-pack-option.is-selected {
+  border-color: var(--color-primary, #2563eb);
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.style-pack-option__swatch {
+  flex: 0 0 auto;
+}
+
+.style-pack-swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  width: 36px;
+  height: 24px;
+  border: 1px solid;
+  border-radius: 4px;
+  padding: 3px;
+  box-sizing: border-box;
+}
+
+.style-pack-swatch__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.style-pack-option__name {
+  font-weight: 500;
+}

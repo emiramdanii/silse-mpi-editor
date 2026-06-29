@@ -69,6 +69,7 @@ import { getCapability } from '../core/capability';
 import { getRoleInfo } from './mpi-standard-roles';
 import { createComponentId } from '../core/ids';
 import { PatternLibraryPanel } from './PatternLibraryPanel';
+import { StylePackPicker } from './StylePackPicker';
 
 const TEXT_VARIANT_LABELS: Record<TextComponentVariant, string> = {
   title: 'Judul',
@@ -229,6 +230,7 @@ export function Inspector() {
           <>
             <PageInfo currentPage={currentPage} />
             <PatternLibraryPanel currentPage={currentPage} project={project} />
+            <StylePackPicker />
           </>
         ) : (
           <ComponentEditor
