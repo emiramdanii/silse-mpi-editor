@@ -54,6 +54,63 @@ describe('BACKGROUND-PATTERN-SYSTEM-V1 — helper', () => {
   it('5b. getAllBackgroundPatternClassNames returns 6 classes', () => {
     expect(getAllBackgroundPatternClassNames().length).toBe(6);
   });
+
+  // Tests 6-12: Editor/preview/export render background class.
+  it('6. CanvasStage renders background class modern-clean (via source audit)', () => {
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const content = fs.readFileSync(path.resolve(__dirname, '../editor/CanvasStage.tsx'), 'utf8');
+    expect(content).toMatch(/getBackgroundPatternForStylePack/);
+    expect(content).toMatch(/bgPattern\.pageClass/);
+    expect(content).toMatch(/bgPattern\.patternClass/);
+  });
+
+  it('7. CanvasStage source contains soft-classroom pattern lookup (via helper)', () => {
+    // Verify helper returns soft-classroom classes — CanvasStage calls this helper.
+    const p = getBackgroundPatternForStylePack('soft-classroom');
+    expect(p.pageClass).toBe('silse-bg-page-soft');
+    expect(p.patternClass).toBe('silse-bg-pattern-soft-dots');
+  });
+
+  it('8. CanvasStage source contains mission-dark pattern lookup (via helper)', () => {
+    const p = getBackgroundPatternForStylePack('mission-dark');
+    expect(p.pageClass).toBe('silse-bg-page-mission');
+    expect(p.patternClass).toBe('silse-bg-pattern-mission-glow');
+  });
+
+  it('9. PreviewApp renders background class (via source audit)', () => {
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const content = fs.readFileSync(path.resolve(__dirname, '../preview/PreviewApp.tsx'), 'utf8');
+    expect(content).toMatch(/getBackgroundPatternForStylePack/);
+    expect(content).toMatch(/bgPattern/);
+  });
+
+  it('10. export HTML contains background class', () => {
+    const topic = getTopicById('ppkn-7-norma')!;
+    const { project } = generateMpiFromTopic(topic);
+    const styled = applyStylePack(project, 'modern-clean');
+    const html = exportProjectToHtml(styled);
+    expect(html).toContain('silse-bg-page-clean');
+    expect(html).toContain('silse-bg-pattern-subtle-grid');
+  });
+
+  it('11. export HTML contains CSS background pattern rules', () => {
+    const topic = getTopicById('ppkn-7-norma')!;
+    const { project } = generateMpiFromTopic(topic);
+    const html = exportProjectToHtml(applyStylePack(project, 'modern-clean'));
+    expect(html).toContain('.silse-bg-page-clean::before');
+    expect(html).toContain('.silse-bg-pattern-subtle-grid::after');
+  });
+
+  it('12. changing style pack changes background class', () => {
+    const clean = getBackgroundClassForStylePack('modern-clean');
+    const dark = getBackgroundClassForStylePack('mission-dark');
+    const soft = getBackgroundClassForStylePack('soft-classroom');
+    expect(clean).not.toBe(dark);
+    expect(clean).not.toBe(soft);
+    expect(dark).not.toBe(soft);
+  });
 });
 
 // === Content safety ===
