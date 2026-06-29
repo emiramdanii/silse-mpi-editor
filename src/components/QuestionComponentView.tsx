@@ -118,14 +118,16 @@ export function QuestionComponentView({
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {component.choices.map((choice, idx) => {
           let bg = '#ffffff';
-          if (isAnswered && isCorrect(idx)) bg = '#d1fae5';
-          else if (isAnswered && isSelected(idx) && !isCorrect(idx)) bg = '#fee2e2';
-          else if (isSelected(idx)) bg = '#dbeafe';
+          let stateClass = 'silse-choice-default';
+          if (isAnswered && isCorrect(idx)) { bg = '#d1fae5'; stateClass = 'silse-choice-correct'; }
+          else if (isAnswered && isSelected(idx) && !isCorrect(idx)) { bg = '#fee2e2'; stateClass = 'silse-choice-wrong'; }
+          else if (isSelected(idx)) { bg = '#dbeafe'; stateClass = 'silse-choice-selected'; }
 
           return (
             <div
               key={choice.id}
               data-choice-index={idx}
+              className={`silse-question-choice ${stateClass}`}
               onClick={(e) => {
                 e.stopPropagation();
                 onAnswer?.(idx);
@@ -143,7 +145,9 @@ export function QuestionComponentView({
         })}
       </div>
       {isAnswered && (
-        <div style={{
+        <div
+          className={`silse-question-feedback ${selectedChoiceIndex === component.correctChoiceIndex ? 'silse-feedback-correct' : 'silse-feedback-wrong'}`}
+          style={{
           marginTop: 8,
           padding: '8px 12px',
           borderRadius: 6,

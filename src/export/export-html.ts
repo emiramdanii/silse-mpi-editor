@@ -411,6 +411,21 @@ body {
 .silse-cover-mission::before { background:radial-gradient(ellipse at 50% 40%,rgba(59,130,246,0.12) 0%,transparent 50%,rgba(59,130,246,0.06) 100%) !important; }
 .silse-cover-mission [data-variant="title"] { text-shadow:0 0 16px rgba(59,130,246,0.3); letter-spacing:-0.5px; font-weight:600; }
 .silse-cover-mission [data-variant="subtitle"] { letter-spacing:1px; opacity:0.75; text-transform:uppercase; font-size:0.85em; }
+/* QUIZ-GAME-VISUAL-POLISH-01: quiz/game visual polish */
+.silse-choice-default { border-left:3px solid transparent; transition:border-color 0.15s,background-color 0.15s; }
+.silse-choice-default:hover { border-left-color:var(--silse-color-primary,#2563eb); }
+.silse-choice-selected { border-left:3px solid var(--silse-color-primary,#2563eb); box-shadow:inset 0 0 0 1px rgba(37,99,235,0.2); }
+.silse-choice-correct { border-left:4px solid #16a34a; box-shadow:inset 0 0 0 1px rgba(22,163,74,0.2); }
+.silse-choice-wrong { border-left:4px solid #dc2626; box-shadow:inset 0 0 0 1px rgba(220,38,38,0.15); }
+.silse-feedback-correct { border-left:4px solid #16a34a; font-weight:500; }
+.silse-feedback-wrong { border-left:4px solid #dc2626; font-weight:500; }
+.silse-score { font-weight:600; padding:4px 12px; border-radius:12px; background:rgba(255,255,255,0.15); }
+.silse-quiz-mission .silse-question-choice, .silse-game-mission .silse-game-choice { border-radius:4px; letter-spacing:0.3px; }
+.silse-quiz-mission .silse-choice-correct, .silse-game-mission .silse-choice-correct { box-shadow:0 0 8px rgba(34,197,94,0.3); }
+.silse-quiz-mission .silse-choice-wrong, .silse-game-mission .silse-choice-wrong { box-shadow:0 0 8px rgba(239,68,68,0.3); }
+.silse-quiz-playful .silse-question-choice, .silse-game-playful .silse-game-choice { border-radius:12px; }
+.silse-quiz-playful .silse-feedback-correct, .silse-game-playful .silse-feedback-correct { border-radius:10px; }
+.silse-quiz-playful .silse-feedback-wrong, .silse-game-playful .silse-feedback-wrong { border-radius:10px; }
 `.trim();
 }
 
@@ -598,14 +613,14 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       for (var ci = 0; ci < comp.choices.length; ci++) {
         (function(choiceIdx, choice, compId, correctIdx, pts, fbCorrect, fbWrong) {
           var choiceEl = document.createElement('div');
-          choiceEl.className = 'silse-question-choice';
-          choiceEl.dataset.choiceIndex = String(choiceIdx);
-
           var bg = '#ffffff';
+          var choiceStateClass = 'silse-choice-default';
           if (existingAnswer && existingAnswer.isAnswered) {
-            if (choiceIdx === correctIdx) bg = '#d1fae5';
-            else if (choiceIdx === existingAnswer.selectedChoiceIndex) bg = '#fee2e2';
+            if (choiceIdx === correctIdx) { bg = '#d1fae5'; choiceStateClass = 'silse-choice-correct'; }
+            else if (choiceIdx === existingAnswer.selectedChoiceIndex) { bg = '#fee2e2'; choiceStateClass = 'silse-choice-wrong'; }
           }
+          choiceEl.className = 'silse-question-choice ' + choiceStateClass;
+          choiceEl.dataset.choiceIndex = String(choiceIdx);
           choiceEl.style.backgroundColor = bg;
 
           var letter = document.createElement('span');
@@ -645,8 +660,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       // Show feedback if answered
       if (existingAnswer && existingAnswer.isAnswered) {
         var feedback = document.createElement('div');
-        feedback.className = 'silse-question-feedback';
         var isCorrectAnswer = existingAnswer.selectedChoiceIndex === comp.correctChoiceIndex;
+        feedback.className = 'silse-question-feedback ' + (isCorrectAnswer ? 'silse-feedback-correct' : 'silse-feedback-wrong');
         feedback.style.backgroundColor = isCorrectAnswer ? '#d1fae5' : '#fee2e2';
         feedback.style.color = isCorrectAnswer ? '#065f46' : '#991b1b';
         feedback.textContent = isCorrectAnswer ? comp.feedbackCorrect : comp.feedbackWrong;
