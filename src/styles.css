@@ -3045,3 +3045,75 @@ textarea {
 .layout-preset-option__name {
   font-weight: inherit;
 }
+
+/* =========================================================================
+   STYLE-LAYOUT-UX-UNIFICATION-01 — visual section wrapper
+   ========================================================================= */
+
+.inspector-visual-section {
+  margin-top: 16px;
+  padding: 14px;
+  background: var(--color-surface, #f9fafb);
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 10px;
+}
+
+.inspector-visual-section__header {
+  margin-bottom: 12px;
+}
+
+.inspector-visual-section__title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text, #1f2937);
+  margin-bottom: 4px;
+}
+
+.inspector-visual-section__hint {
+  font-size: 12px;
+  color: var(--color-muted, #6b7280);
+  margin: 0 0 4px;
+  line-height: 1.4;
+}
+
+.inspector-visual-section__safety {
+  font-size: 11px;
+  color: #166534;
+  background: rgba(34, 197, 94, 0.10);
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin: 6px 0 0;
+  line-height: 1.4;
+}
+
+.inspector-visual-section__pickers {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.inspector-visual-section__picker-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inspector-visual-section__picker-hint {
+  font-size: 11px;
+  color: var(--color-muted, #6b7280);
+  margin: 0;
+  line-height: 1.4;
+  font-style: italic;
+}
+
+/* Override: when inside visual section, pickers don't need their own
+   outer padding/bg since the section provides it. */
+.inspector-visual-section .style-pack-picker,
+.inspector-visual-section .layout-preset-picker {
+  margin-top: 0;
+  padding: 8px;
+  background: var(--color-bg, #ffffff);
+  border: 1px solid var(--color-border, #e5e7eb);
+}
