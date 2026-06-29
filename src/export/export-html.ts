@@ -21,6 +21,7 @@ import type { ProjectStyle } from '../core/style-types';
 import { getResolvedComponentStyle } from '../core/style/resolveComponentStyle';
 import { getSkinClassForComponent } from '../core/style-packs/component-skin';
 import { getBackgroundPatternForStylePack } from '../core/style-packs/background-pattern';
+import { getCoverClassForStylePack, getAllCoverClassNames } from '../core/style-packs/cover-decoration';
 
 const CANVAS_WIDTH = 1280;
 const CANVAS_HEIGHT = 720;
@@ -400,6 +401,16 @@ body {
 .silse-bg-page-clean { --silse-shadow-feel:0 1px 3px rgba(0,0,0,0.04); --silse-radius-feel:8px; }
 .silse-bg-page-soft { --silse-shadow-feel:0 2px 8px rgba(0,0,0,0.06); --silse-radius-feel:16px; }
 .silse-bg-page-mission { --silse-shadow-feel:0 0 16px rgba(59,130,246,0.15); --silse-radius-feel:6px; }
+/* COVER-PREMIUM-POLISH-01: cover decoration per style pack */
+.silse-cover-clean::before { background:linear-gradient(180deg,rgba(37,99,235,0.06) 0%,transparent 40%,transparent 60%,rgba(37,99,235,0.04) 100%) !important; }
+.silse-cover-clean [data-variant="title"] { text-shadow:0 2px 8px rgba(0,0,0,0.08); letter-spacing:-0.5px; }
+.silse-cover-clean [data-variant="subtitle"] { letter-spacing:0.5px; opacity:0.85; }
+.silse-cover-soft::before { background:linear-gradient(135deg,rgba(254,243,199,0.2) 0%,rgba(254,226,226,0.12) 50%,rgba(254,215,170,0.1) 100%) !important; }
+.silse-cover-soft [data-variant="title"] { text-shadow:0 2px 6px rgba(245,158,11,0.1); letter-spacing:-0.3px; }
+.silse-cover-soft [data-variant="subtitle"] { letter-spacing:0.3px; opacity:0.8; }
+.silse-cover-mission::before { background:radial-gradient(ellipse at 50% 40%,rgba(59,130,246,0.12) 0%,transparent 50%,rgba(59,130,246,0.06) 100%) !important; }
+.silse-cover-mission [data-variant="title"] { text-shadow:0 0 16px rgba(59,130,246,0.3); letter-spacing:-0.5px; font-weight:600; }
+.silse-cover-mission [data-variant="subtitle"] { letter-spacing:1px; opacity:0.75; text-transform:uppercase; font-size:0.85em; }
 `.trim();
 }
 
@@ -407,7 +418,9 @@ body {
 // JS generation — reads from render model, NO style switch
 // ---------------------------------------------------------------------------
 
-function generateJS(renderModelJson: string): string {
+function generateJS(renderModelJson: string, coverClassForProject: string, allCoverClasses: string[]): string {
+  const coverClassJson = JSON.stringify(coverClassForProject);
+  const allCoverClassesJson = JSON.stringify(allCoverClasses);
   return `
 (function() {
   var MODEL = ${renderModelJson};
@@ -433,6 +446,16 @@ function generateJS(renderModelJson: string): string {
     currentPageIdx = idx;
     var page = pages[idx];
     canvas.innerHTML = '';
+
+    // COVER-PREMIUM-POLISH-01: Add/remove cover decoration class.
+    var coverClasses = ${allCoverClassesJson};
+    for (var ci = 0; ci < coverClasses.length; ci++) {
+      canvas.classList.remove(coverClasses[ci]);
+    }
+    if (page.role === 'cover') {
+      var coverClass = ${coverClassJson};
+      if (coverClass) canvas.classList.add(coverClass);
+    }
 
     // Set background
     if (page.background.type === 'color') {
@@ -1067,7 +1090,7 @@ export function exportProjectToHtml(project: SimpleProject): string {
   const renderModel = buildExportRenderModel(project);
   const renderModelJson = serializeRenderModel(renderModel);
   const css = generateCSS(renderModel.cssVariables);
-  const js = generateJS(renderModelJson);
+  const js = generateJS(renderModelJson, getCoverClassForStylePack(project.stylePackId), getAllCoverClassNames());
 
   return `<!doctype html>
 <html lang="id">

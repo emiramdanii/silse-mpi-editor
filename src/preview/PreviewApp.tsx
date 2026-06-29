@@ -22,6 +22,7 @@ import { LearningBridgeComponentView } from '../components/LearningBridgeCompone
 import { getResolvedComponentStyle } from '../core/style/resolveComponentStyle';
 import { getSkinClassForComponent } from '../core/style-packs/component-skin';
 import { getBackgroundPatternForStylePack } from '../core/style-packs/background-pattern';
+import { getCoverClassForStylePack } from '../core/style-packs/cover-decoration';
 import type { GameComponent, NavigationComponent, QuestionComponent } from '../core/types';
 
 const CANVAS_WIDTH = 1280;
@@ -68,6 +69,7 @@ export function PreviewApp() {
           : '#ffffff';
 
   const bgPattern = getBackgroundPatternForStylePack(project.stylePackId);
+  const coverClass = currentPage.role === 'cover' ? getCoverClassForStylePack(project.stylePackId) : '';
 
   const currentIdx = project.pages.findIndex((p) => p.id === currentPageId);
   const isFirst = currentIdx === 0;
@@ -110,7 +112,7 @@ export function PreviewApp() {
       </div>
       <div className="preview-canvas-wrap">
         <div
-          className={`canvas-frame preview-canvas ${bgPattern.pageClass} ${bgPattern.patternClass}`}
+          className={`canvas-frame preview-canvas ${bgPattern.pageClass} ${bgPattern.patternClass} ${coverClass}`.trim()}
           style={{
             width: CANVAS_WIDTH,
             height: CANVAS_HEIGHT,
