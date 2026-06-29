@@ -53,60 +53,68 @@ type Slot = { x: number; y: number; width: number; height: number };
  */
 function getSlotsForPreset(presetId: LayoutPresetId): Record<string, Slot> {
   switch (presetId) {
+    // PREMIUM-LAYOUT-POLISH-01: Hero title lebih kuat, subtitle punya ruang, body tidak terlalu bawah.
     case 'cover-centered':
       return {
-        title: { x: 140, y: 260, width: 1000, height: 140 },
-        subtitle: { x: 340, y: 420, width: 600, height: 80 },
-        body: { x: 200, y: 520, width: 880, height: 120 },
+        title: { x: 120, y: 240, width: 1040, height: 160 },
+        subtitle: { x: 320, y: 420, width: 640, height: 70 },
+        body: { x: 200, y: 500, width: 880, height: 120 },
       };
 
+    // PREMIUM-LAYOUT-POLISH-01: Left text lebih lega, visual lebih balance.
     case 'cover-split':
       return {
-        title: { x: SA, y: 220, width: 560, height: 140 },
-        subtitle: { x: SA, y: 380, width: 560, height: 80 },
-        body: { x: SA, y: 480, width: 560, height: 160 },
-        visual: { x: 680, y: 180, width: 520, height: 400 },
+        title: { x: SA, y: 200, width: 600, height: 160 },
+        subtitle: { x: SA, y: 380, width: 600, height: 70 },
+        body: { x: SA, y: 470, width: 600, height: 170 },
+        visual: { x: 660, y: 160, width: 540, height: 420 },
       };
 
+    // PREMIUM-LAYOUT-POLISH-01: textLeft lebih tinggi, visualRight lebih rapi.
     case 'material-two-column':
       return {
         title: { x: SA, y: 40, width: CANVAS_WIDTH - 2 * SA, height: 60 },
-        textLeft: { x: SA, y: 120, width: 560, height: 440 },
-        visualRight: { x: 680, y: 120, width: 520, height: 440 },
+        textLeft: { x: SA, y: 120, width: 560, height: 460 },
+        visualRight: { x: 680, y: 120, width: 500, height: 440 },
         nav: { x: NAV_X, y: NAV_Y, width: NAV_W, height: NAV_H },
       };
 
+    // PREMIUM-LAYOUT-POLISH-01: body lebih proporsional, cardSlot lebih tinggi.
     case 'material-card-stack':
       return {
         title: { x: SA, y: 40, width: CANVAS_WIDTH - 2 * SA, height: 60 },
-        body: { x: SA, y: 120, width: CANVAS_WIDTH - 2 * SA, height: 120 },
-        cardSlot: { x: SA, y: 260, width: CANVAS_WIDTH - 2 * SA, height: 300 },
+        body: { x: SA, y: 120, width: CANVAS_WIDTH - 2 * SA, height: 100 },
+        cardSlot: { x: SA, y: 240, width: CANVAS_WIDTH - 2 * SA, height: 320 },
         nav: { x: NAV_X, y: NAV_Y, width: NAV_W, height: NAV_H },
       };
 
+    // PREMIUM-LAYOUT-POLISH-01: Question lebih centered, height lebih fokus.
     case 'quiz-focus':
       return {
-        question: { x: 140, y: 60, width: 1000, height: 480 },
+        question: { x: 120, y: 50, width: 1040, height: 460 },
         nav: { x: NAV_X, y: NAV_Y, width: NAV_W, height: NAV_H },
       };
 
+    // PREMIUM-LAYOUT-POLISH-01: Reflection lebih proporsional, tenang.
     case 'reflection-calm':
       return {
-        reflection: { x: 150, y: 140, width: 980, height: 380 },
+        reflection: { x: 160, y: 130, width: 960, height: 400 },
         nav: { x: NAV_X, y: NAV_Y, width: NAV_W, height: NAV_H },
       };
 
+    // PREMIUM-LAYOUT-POLISH-01: Game lebih fokus, nav tetap aman.
     case 'mission-map':
       return {
-        game: { x: 100, y: 40, width: 1080, height: 540 },
+        game: { x: 100, y: 40, width: 1080, height: 520 },
         nav: { x: NAV_X, y: NAV_Y, width: NAV_W, height: NAV_H },
       };
 
+    // PREMIUM-LAYOUT-POLISH-01: Title/subtitle/body lebih seimbang.
     case 'closing-centered':
       return {
-        title: { x: 240, y: 260, width: 800, height: 100 },
-        subtitle: { x: 240, y: 380, width: 800, height: 80 },
-        body: { x: 200, y: 480, width: 880, height: 140 },
+        title: { x: 220, y: 240, width: 840, height: 100 },
+        subtitle: { x: 220, y: 360, width: 840, height: 70 },
+        body: { x: 200, y: 450, width: 880, height: 130 },
       };
 
     default:
