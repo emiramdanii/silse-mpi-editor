@@ -262,7 +262,7 @@ describe('STYLE-PACK-SYSTEM-V1 — UI picker', () => {
       const text = name.textContent ?? '';
       // Should display friendly names, not raw IDs with hyphens.
       expect(text).not.toMatch(/^(modern-clean|soft-classroom|mission-dark)$/);
-      expect(text).toMatch(/Modern Clean|Soft Classroom|Mission Dark/);
+      expect(text).toMatch(/Modern Clean|Soft Classroom|Mission Dark|Rapi|Hangat|Misi/);
     }
   });
 });

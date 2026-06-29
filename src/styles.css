@@ -3342,3 +3342,42 @@ textarea {
   pointer-events: none;
   z-index: 0;
 }
+
+/* =========================================================================
+   PREMIUM-STYLE-PACK-V2 — visual personality polish per style pack
+   ========================================================================= */
+
+/* Modern Clean: minimal shadow, medium radius, clean focus ring */
+.silse-bg-page-clean .canvas-frame,
+.silse-bg-page-clean.canvas-frame {
+  --silse-shadow-feel: 0 1px 3px rgba(0,0,0,0.04);
+  --silse-radius-feel: 8px;
+}
+
+/* Soft Classroom: soft shadow, larger radius, warm focus */
+.silse-bg-page-soft .canvas-frame,
+.silse-bg-page-soft.canvas-frame {
+  --silse-shadow-feel: 0 2px 8px rgba(0,0,0,0.06);
+  --silse-radius-feel: 16px;
+}
+
+/* Mission Dark: glow shadow, tegas radius, mission focus */
+.silse-bg-page-mission .canvas-frame,
+.silse-bg-page-mission.canvas-frame {
+  --silse-shadow-feel: 0 0 16px rgba(59,130,246,0.15);
+  --silse-radius-feel: 6px;
+}
+
+/* Focus ring polish per style pack */
+.silse-bg-page-clean [data-component-type]:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.6);
+  outline-offset: 2px;
+}
+.silse-bg-page-soft [data-component-type]:focus-visible {
+  outline: 2px solid rgba(245, 158, 11, 0.5);
+  outline-offset: 2px;
+}
+.silse-bg-page-mission [data-component-type]:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.6);
+  outline-offset: 2px;
+}

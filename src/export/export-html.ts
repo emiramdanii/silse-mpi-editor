@@ -396,6 +396,10 @@ body {
 .silse-bg-pattern-mission-glow::after { content:''; position:absolute; inset:0; background-image:linear-gradient(rgba(59,130,246,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,0.03) 1px,transparent 1px); background-size:60px 60px; pointer-events:none; z-index:0; }
 #silse-canvas { position:relative; }
 #silse-canvas > * { position:relative; z-index:1; }
+/* PREMIUM-STYLE-PACK-V2: visual personality polish */
+.silse-bg-page-clean { --silse-shadow-feel:0 1px 3px rgba(0,0,0,0.04); --silse-radius-feel:8px; }
+.silse-bg-page-soft { --silse-shadow-feel:0 2px 8px rgba(0,0,0,0.06); --silse-radius-feel:16px; }
+.silse-bg-page-mission { --silse-shadow-feel:0 0 16px rgba(59,130,246,0.15); --silse-radius-feel:6px; }
 `.trim();
 }
 

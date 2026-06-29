@@ -58,8 +58,8 @@ export type StylePackV1 = {
 export const STYLE_PACKS_V1: readonly StylePackV1[] = [
   {
     id: 'modern-clean',
-    name: 'Modern Clean',
-    description: 'Putih bersih, biru profesional, kontras tinggi. Cocok untuk semua mapel.',
+    name: 'Rapi & Profesional',
+    description: 'Putih bersih, biru profesional, kontras tinggi. Cocok untuk semua mapel dan presentasi formal.',
     mood: 'clean',
     baseStylePackId: 'cleanClassroom',
     componentTone: {
@@ -71,8 +71,8 @@ export const STYLE_PACKS_V1: readonly StylePackV1[] = [
   },
   {
     id: 'soft-classroom',
-    name: 'Soft Classroom',
-    description: 'Hangat, ramah, pastel lembut. Cocok untuk SD/SMP kelas rendah.',
+    name: 'Hangat & Ramah',
+    description: 'Pastel hangat, ramah, lembut. Cocok untuk SMP kelas rendah dan suasana belajar yang nyaman.',
     mood: 'soft',
     baseStylePackId: 'brightKids',
     componentTone: {
@@ -84,8 +84,8 @@ export const STYLE_PACKS_V1: readonly StylePackV1[] = [
   },
   {
     id: 'mission-dark',
-    name: 'Mission Dark',
-    description: 'Gelap, tegas, berani. Cocok untuk game/petualangan tema.',
+    name: 'Misi Interaktif',
+    description: 'Gelap, tegas, berani. Cocok untuk game, petualangan, dan misi edukatif yang serius tapi menarik.',
     mood: 'mission',
     baseStylePackId: 'cleanClassroom',
     tokenOverrides: {

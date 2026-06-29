@@ -91,7 +91,7 @@ describe('STYLE-LAYOUT-UX-UNIFICATION-01 — UI section', () => {
     expect(allText).not.toMatch(/\bmission-dark\b/);
     expect(allText).not.toMatch(/\bmaterial-two-column\b/);
     // Should contain friendly names.
-    expect(allText).toMatch(/Modern Clean|Soft Classroom|Mission Dark/);
+    expect(allText).toMatch(/Modern Clean|Soft Classroom|Mission Dark|Rapi|Hangat|Misi/);
   });
 
   it('11b. Section displays safety hint about isi materi/kuis/tujuan tidak berubah', () => {
