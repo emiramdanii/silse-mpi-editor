@@ -3602,3 +3602,113 @@ textarea {
     animation: none !important;
   }
 }
+
+/* =========================================================================
+   CELEBRATION-EFFECT-V1 — CSS-only celebration on correct answer
+   ========================================================================= */
+
+/* Success burst keyframes — 800ms, one-shot */
+@keyframes silse-celebrate-burst-ring {
+  0% { opacity: 0.8; transform: scale(0.5); }
+  100% { opacity: 0; transform: scale(1.4); }
+}
+@keyframes silse-celebrate-sparkle {
+  0%, 100% { opacity: 0; }
+  30% { opacity: 1; }
+  60% { opacity: 0.5; }
+}
+
+/* Modern Clean celebration */
+.silse-celebrate-success-clean {
+  position: relative;
+  overflow: visible;
+}
+.silse-celebrate-burst-clean::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border: 2px solid rgba(22, 163, 74, 0.4);
+  border-radius: 8px;
+  animation: silse-celebrate-burst-ring 800ms ease-out;
+  pointer-events: none;
+}
+.silse-celebrate-particle-clean::before,
+.silse-celebrate-particle-clean::after {
+  content: '✦';
+  position: absolute;
+  font-size: 10px;
+  color: rgba(22, 163, 74, 0.6);
+  animation: silse-celebrate-sparkle 800ms ease-out;
+  pointer-events: none;
+}
+.silse-celebrate-particle-clean::before { top: -4px; right: 8px; }
+.silse-celebrate-particle-clean::after { top: -2px; right: 24px; animation-delay: 150ms; }
+
+/* Soft Classroom celebration */
+.silse-celebrate-success-soft {
+  position: relative;
+  overflow: visible;
+}
+.silse-celebrate-burst-soft::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border: 2px solid rgba(245, 158, 11, 0.4);
+  border-radius: 12px;
+  animation: silse-celebrate-burst-ring 900ms ease-out;
+  pointer-events: none;
+}
+.silse-celebrate-particle-soft::before,
+.silse-celebrate-particle-soft::after {
+  content: '★';
+  position: absolute;
+  font-size: 11px;
+  color: rgba(245, 158, 11, 0.6);
+  animation: silse-celebrate-sparkle 900ms ease-out;
+  pointer-events: none;
+}
+.silse-celebrate-particle-soft::before { top: -4px; right: 8px; }
+.silse-celebrate-particle-soft::after { top: -2px; right: 24px; animation-delay: 150ms; }
+
+/* Mission Dark celebration */
+.silse-celebrate-success-mission {
+  position: relative;
+  overflow: visible;
+}
+.silse-celebrate-burst-mission::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border: 2px solid rgba(59, 130, 246, 0.5);
+  border-radius: 6px;
+  animation: silse-celebrate-burst-ring 700ms ease-out;
+  pointer-events: none;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
+}
+.silse-celebrate-particle-mission::before,
+.silse-celebrate-particle-mission::after {
+  content: '◆';
+  position: absolute;
+  font-size: 10px;
+  color: rgba(59, 130, 246, 0.7);
+  animation: silse-celebrate-sparkle 700ms ease-out;
+  pointer-events: none;
+}
+.silse-celebrate-particle-mission::before { top: -4px; right: 8px; }
+.silse-celebrate-particle-mission::after { top: -2px; right: 24px; animation-delay: 120ms; }
+
+/* prefers-reduced-motion: disable celebration */
+@media (prefers-reduced-motion: reduce) {
+  .silse-celebrate-burst-clean::before,
+  .silse-celebrate-burst-soft::before,
+  .silse-celebrate-burst-mission::before,
+  .silse-celebrate-particle-clean::before,
+  .silse-celebrate-particle-clean::after,
+  .silse-celebrate-particle-soft::before,
+  .silse-celebrate-particle-soft::after,
+  .silse-celebrate-particle-mission::before,
+  .silse-celebrate-particle-mission::after {
+    animation: none !important;
+    display: none !important;
+  }
+}

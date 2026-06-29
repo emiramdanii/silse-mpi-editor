@@ -14,6 +14,7 @@
 import type { CSSProperties } from 'react';
 import type { QuestionComponent } from '../core/types';
 import type { ResolvedComponentStyle } from '../core/style/resolveComponentStyle';
+import { getCelebrationEffectForStylePack } from '../core/style-packs/celebration-effect';
 
 export type QuestionComponentViewProps = {
   component: QuestionComponent;
@@ -26,6 +27,8 @@ export type QuestionComponentViewProps = {
   positionMode?: 'absolute' | 'fill';
   /** COMPONENT-SKIN-V2: CSS class for visual skin (e.g. skin-quiz-calm). */
   skinClass?: string;
+  /** CELEBRATION-EFFECT-V1: style pack ID for celebration effect. */
+  stylePackId?: string;
 };
 
 export function QuestionComponentView({
@@ -38,6 +41,7 @@ export function QuestionComponentView({
   isAnswered,
   positionMode = 'absolute',
   skinClass,
+  stylePackId,
 }: QuestionComponentViewProps) {
   const isFill = positionMode === 'fill';
 
@@ -144,24 +148,29 @@ export function QuestionComponentView({
           );
         })}
       </div>
-      {isAnswered && (
+      {isAnswered && (() => {
+        const isCorrectAnswer = selectedChoiceIndex === component.correctChoiceIndex;
+        const celebration = getCelebrationEffectForStylePack(stylePackId);
+        const celebrationClass = isCorrectAnswer ? ` ${celebration.successClass} ${celebration.burstClass}` : '';
+        return (
         <div
-          className={`silse-question-feedback ${selectedChoiceIndex === component.correctChoiceIndex ? 'silse-feedback-correct' : 'silse-feedback-wrong'}`}
+          className={`silse-question-feedback ${isCorrectAnswer ? 'silse-feedback-correct' : 'silse-feedback-wrong'}${celebrationClass}`}
           style={{
           marginTop: 8,
           padding: '8px 12px',
           borderRadius: 6,
           fontSize: 13,
-          backgroundColor: selectedChoiceIndex === component.correctChoiceIndex ? '#d1fae5' : '#fee2e2',
-          color: selectedChoiceIndex === component.correctChoiceIndex ? '#065f46' : '#991b1b',
+          backgroundColor: isCorrectAnswer ? '#d1fae5' : '#fee2e2',
+          color: isCorrectAnswer ? '#065f46' : '#991b1b',
           whiteSpace: 'normal',
           overflowWrap: 'anywhere',
+          position: 'relative',
         }}>
-          {selectedChoiceIndex === component.correctChoiceIndex
-            ? component.feedbackCorrect
-            : component.feedbackWrong}
+          {isCorrectAnswer && <span className={celebration.particleClass} aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }} />}
+          {isCorrectAnswer ? component.feedbackCorrect : component.feedbackWrong}
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

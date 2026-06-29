@@ -157,6 +157,7 @@ export function PreviewApp() {
                   selectedChoiceIndex={qa.selectedChoiceIndex}
                   isAnswered={qa.isAnswered}
                   skinClass={getSkinClassForComponent('question', project.stylePackId)}
+                  stylePackId={project.stylePackId}
                 />
               );
             }

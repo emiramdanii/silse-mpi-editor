@@ -243,13 +243,18 @@ describe('MICRO-ANIMATION-SYSTEM-V1 — render + quality', () => {
       expect(styleMatch[1]).not.toMatch(/url\((?!data:)/);
     }
   });
-  it('31. transition duration <= 300ms for majority', () => {
+  it('31. transition duration <= 300ms for micro-animation classes (not celebration)', () => {
     const topic = getTopicById('ppkn-7-norma')!;
     const { project } = generateMpiFromTopic(topic);
     const html = exportProjectToHtml(applyStylePack(project, 'modern-clean'));
     const styleMatch = html.match(/<style>([\s\S]*?)<\/style>/);
     if (styleMatch) {
-      const animDurations = styleMatch[1].match(/(\d+)ms/g);
+      // Only check silse-anim-* classes, not silse-celebrate-* (which can be up to 900ms).
+      const animSection = styleMatch[1].substring(
+        styleMatch[1].indexOf('MICRO-ANIMATION'),
+        styleMatch[1].indexOf('CELEBRATION-EFFECT'),
+      );
+      const animDurations = animSection.match(/(\d+)ms/g);
       if (animDurations) {
         const maxDur = Math.max(...animDurations.map(d => parseInt(d)));
         expect(maxDur).toBeLessThanOrEqual(300);

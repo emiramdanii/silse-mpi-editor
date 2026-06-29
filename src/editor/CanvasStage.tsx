@@ -268,6 +268,7 @@ export function CanvasStage() {
                   onSelect={selectComponent}
                   positionMode="fill"
                   skinClass={getSkinClassForComponent('question', project.stylePackId)}
+                  stylePackId={project.stylePackId}
                 />
               )}
               {isGameComponent(component) && (

@@ -23,6 +23,7 @@ import { getSkinClassForComponent } from '../core/style-packs/component-skin';
 import { getBackgroundPatternForStylePack } from '../core/style-packs/background-pattern';
 import { getCoverClassForStylePack, getAllCoverClassNames } from '../core/style-packs/cover-decoration';
 import { getMicroAnimationForStylePack } from '../core/style-packs/micro-animation';
+import { getCelebrationEffectForStylePack } from '../core/style-packs/celebration-effect';
 
 const CANVAS_WIDTH = 1280;
 const CANVAS_HEIGHT = 720;
@@ -458,6 +459,30 @@ body {
   .silse-anim-feedback-soft,.silse-anim-feedback-warm,.silse-anim-feedback-mission { animation:none !important; }
   .silse-anim-game-mission.silse-game-mission { animation:none !important; }
 }
+/* CELEBRATION-EFFECT-V1: CSS-only celebration on correct answer */
+@keyframes silse-celebrate-burst-ring { 0%{opacity:0.8;transform:scale(0.5)} 100%{opacity:0;transform:scale(1.4)} }
+@keyframes silse-celebrate-sparkle { 0%,100%{opacity:0} 30%{opacity:1} 60%{opacity:0.5} }
+.silse-celebrate-success-clean { position:relative; overflow:visible; }
+.silse-celebrate-burst-clean::before { content:''; position:absolute; inset:-2px; border:2px solid rgba(22,163,74,0.4); border-radius:8px; animation:silse-celebrate-burst-ring 800ms ease-out; pointer-events:none; }
+.silse-celebrate-particle-clean::before, .silse-celebrate-particle-clean::after { content:'✦'; position:absolute; font-size:10px; color:rgba(22,163,74,0.6); animation:silse-celebrate-sparkle 800ms ease-out; pointer-events:none; }
+.silse-celebrate-particle-clean::before { top:-4px; right:8px; }
+.silse-celebrate-particle-clean::after { top:-2px; right:24px; animation-delay:150ms; }
+.silse-celebrate-success-soft { position:relative; overflow:visible; }
+.silse-celebrate-burst-soft::before { content:''; position:absolute; inset:-2px; border:2px solid rgba(245,158,11,0.4); border-radius:12px; animation:silse-celebrate-burst-ring 900ms ease-out; pointer-events:none; }
+.silse-celebrate-particle-soft::before, .silse-celebrate-particle-soft::after { content:'★'; position:absolute; font-size:11px; color:rgba(245,158,11,0.6); animation:silse-celebrate-sparkle 900ms ease-out; pointer-events:none; }
+.silse-celebrate-particle-soft::before { top:-4px; right:8px; }
+.silse-celebrate-particle-soft::after { top:-2px; right:24px; animation-delay:150ms; }
+.silse-celebrate-success-mission { position:relative; overflow:visible; }
+.silse-celebrate-burst-mission::before { content:''; position:absolute; inset:-2px; border:2px solid rgba(59,130,246,0.5); border-radius:6px; animation:silse-celebrate-burst-ring 700ms ease-out; pointer-events:none; box-shadow:0 0 12px rgba(59,130,246,0.3); }
+.silse-celebrate-particle-mission::before, .silse-celebrate-particle-mission::after { content:'◆'; position:absolute; font-size:10px; color:rgba(59,130,246,0.7); animation:silse-celebrate-sparkle 700ms ease-out; pointer-events:none; }
+.silse-celebrate-particle-mission::before { top:-4px; right:8px; }
+.silse-celebrate-particle-mission::after { top:-2px; right:24px; animation-delay:120ms; }
+@media (prefers-reduced-motion: reduce) {
+  .silse-celebrate-burst-clean::before, .silse-celebrate-burst-soft::before, .silse-celebrate-burst-mission::before,
+  .silse-celebrate-particle-clean::before, .silse-celebrate-particle-clean::after,
+  .silse-celebrate-particle-soft::before, .silse-celebrate-particle-soft::after,
+  .silse-celebrate-particle-mission::before, .silse-celebrate-particle-mission::after { animation:none !important; display:none !important; }
+}
 `.trim();
 }
 
@@ -465,10 +490,13 @@ body {
 // JS generation — reads from render model, NO style switch
 // ---------------------------------------------------------------------------
 
-function generateJS(renderModelJson: string, coverClassForProject: string, allCoverClasses: string[], pageEnterClass: string): string {
+function generateJS(renderModelJson: string, coverClassForProject: string, allCoverClasses: string[], pageEnterClass: string, celebrateSuccessClass: string, celebrateBurstClass: string, celebrateParticleClass: string): string {
   const coverClassJson = JSON.stringify(coverClassForProject);
   const allCoverClassesJson = JSON.stringify(allCoverClasses);
   const pageEnterClassJson = JSON.stringify(pageEnterClass);
+  const celebrateSuccessJson = JSON.stringify(celebrateSuccessClass);
+  const celebrateBurstJson = JSON.stringify(celebrateBurstClass);
+  const celebrateParticleJson = JSON.stringify(celebrateParticleClass);
   return `
 (function() {
   var MODEL = ${renderModelJson};
@@ -702,10 +730,22 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       if (existingAnswer && existingAnswer.isAnswered) {
         var feedback = document.createElement('div');
         var isCorrectAnswer = existingAnswer.selectedChoiceIndex === comp.correctChoiceIndex;
-        feedback.className = 'silse-question-feedback ' + (isCorrectAnswer ? 'silse-feedback-correct' : 'silse-feedback-wrong');
+        var celebClasses = '';
+        if (isCorrectAnswer) {
+          celebClasses = ' ' + ${celebrateSuccessJson} + ' ' + ${celebrateBurstJson};
+        }
+        feedback.className = 'silse-question-feedback ' + (isCorrectAnswer ? 'silse-feedback-correct' : 'silse-feedback-wrong') + celebClasses;
+        feedback.style.position = 'relative';
         feedback.style.backgroundColor = isCorrectAnswer ? '#d1fae5' : '#fee2e2';
         feedback.style.color = isCorrectAnswer ? '#065f46' : '#991b1b';
         feedback.textContent = isCorrectAnswer ? comp.feedbackCorrect : comp.feedbackWrong;
+        if (isCorrectAnswer) {
+          var particle = document.createElement('span');
+          particle.className = ${celebrateParticleJson};
+          particle.setAttribute('aria-hidden', 'true');
+          particle.style.cssText = 'position:absolute;inset:0;pointer-events:none;';
+          feedback.appendChild(particle);
+        }
         el.appendChild(feedback);
       }
 
@@ -1147,7 +1187,8 @@ export function exportProjectToHtml(project: SimpleProject): string {
   const renderModelJson = serializeRenderModel(renderModel);
   const css = generateCSS(renderModel.cssVariables);
   const animProfile = getMicroAnimationForStylePack(project.stylePackId);
-  const js = generateJS(renderModelJson, getCoverClassForStylePack(project.stylePackId), getAllCoverClassNames(), animProfile.pageEnterClass);
+  const celebrationProfile = getCelebrationEffectForStylePack(project.stylePackId);
+  const js = generateJS(renderModelJson, getCoverClassForStylePack(project.stylePackId), getAllCoverClassNames(), animProfile.pageEnterClass, celebrationProfile.successClass, celebrationProfile.burstClass, celebrationProfile.particleClass);
 
   return `<!doctype html>
 <html lang="id">
