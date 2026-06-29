@@ -22,6 +22,7 @@ import { getResolvedComponentStyle } from '../core/style/resolveComponentStyle';
 import { getSkinClassForComponent } from '../core/style-packs/component-skin';
 import { getBackgroundPatternForStylePack } from '../core/style-packs/background-pattern';
 import { getCoverClassForStylePack, getAllCoverClassNames } from '../core/style-packs/cover-decoration';
+import { getMicroAnimationForStylePack } from '../core/style-packs/micro-animation';
 
 const CANVAS_WIDTH = 1280;
 const CANVAS_HEIGHT = 720;
@@ -426,6 +427,37 @@ body {
 .silse-quiz-playful .silse-question-choice, .silse-game-playful .silse-game-choice { border-radius:12px; }
 .silse-quiz-playful .silse-feedback-correct, .silse-game-playful .silse-feedback-correct { border-radius:10px; }
 .silse-quiz-playful .silse-feedback-wrong, .silse-game-playful .silse-feedback-wrong { border-radius:10px; }
+/* MICRO-ANIMATION-SYSTEM-V1: micro animation + prefers-reduced-motion */
+@keyframes silse-fade-in-soft { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+@keyframes silse-fade-in-warm { from{opacity:0;transform:translateY(6px) scale(0.998)} to{opacity:1;transform:translateY(0) scale(1)} }
+@keyframes silse-fade-in-mission { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+@keyframes silse-feedback-pop { from{opacity:0;transform:translateY(-2px)} to{opacity:1;transform:translateY(0)} }
+@keyframes silse-mission-pulse { 0%,100%{box-shadow:0 0 16px rgba(59,130,246,0.15)} 50%{box-shadow:0 0 20px rgba(59,130,246,0.25)} }
+.silse-anim-page-soft-in { animation:silse-fade-in-soft 220ms ease-out; }
+.silse-anim-page-warm-in { animation:silse-fade-in-warm 260ms ease-out; }
+.silse-anim-page-mission-in { animation:silse-fade-in-mission 200ms ease-out; }
+.silse-anim-button-clean { transition:transform 150ms ease-out,box-shadow 150ms ease-out; }
+.silse-anim-button-clean:hover { transform:translateY(-1px); }
+.silse-anim-button-soft { transition:transform 150ms ease-out,box-shadow 150ms ease-out; }
+.silse-anim-button-soft:hover { transform:translateY(-1px); }
+.silse-anim-button-mission { transition:transform 120ms ease-out,box-shadow 120ms ease-out; }
+.silse-anim-button-mission:hover { transform:translateY(-1px); }
+.silse-anim-choice-clean { transition:border-color 150ms ease-out,background-color 150ms ease-out; }
+.silse-anim-choice-soft { transition:border-color 180ms ease-out,background-color 180ms ease-out,border-radius 180ms; }
+.silse-anim-choice-mission { transition:border-color 120ms ease-out,background-color 120ms ease-out,box-shadow 120ms; }
+.silse-anim-feedback-soft { animation:silse-feedback-pop 200ms ease-out; }
+.silse-anim-feedback-warm { animation:silse-feedback-pop 240ms ease-out; }
+.silse-anim-feedback-mission { animation:silse-feedback-pop 180ms ease-out; }
+.silse-anim-game-clean { transition:border-color 150ms ease-out; }
+.silse-anim-game-soft { transition:border-color 180ms ease-out,border-radius 180ms; }
+.silse-anim-game-mission { transition:box-shadow 150ms ease-out; }
+.silse-anim-game-mission.silse-game-mission { animation:silse-mission-pulse 3s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  *,*::before,*::after { animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; }
+  .silse-anim-page-soft-in,.silse-anim-page-warm-in,.silse-anim-page-mission-in,
+  .silse-anim-feedback-soft,.silse-anim-feedback-warm,.silse-anim-feedback-mission { animation:none !important; }
+  .silse-anim-game-mission.silse-game-mission { animation:none !important; }
+}
 `.trim();
 }
 
@@ -433,9 +465,10 @@ body {
 // JS generation — reads from render model, NO style switch
 // ---------------------------------------------------------------------------
 
-function generateJS(renderModelJson: string, coverClassForProject: string, allCoverClasses: string[]): string {
+function generateJS(renderModelJson: string, coverClassForProject: string, allCoverClasses: string[], pageEnterClass: string): string {
   const coverClassJson = JSON.stringify(coverClassForProject);
   const allCoverClassesJson = JSON.stringify(allCoverClasses);
+  const pageEnterClassJson = JSON.stringify(pageEnterClass);
   return `
 (function() {
   var MODEL = ${renderModelJson};
@@ -466,6 +499,14 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var coverClasses = ${allCoverClassesJson};
     for (var ci = 0; ci < coverClasses.length; ci++) {
       canvas.classList.remove(coverClasses[ci]);
+    }
+    // MICRO-ANIMATION-SYSTEM-V1: Add/remove page-enter animation class.
+    var animEnterClass = ${pageEnterClassJson};
+    if (animEnterClass) {
+      canvas.classList.remove(animEnterClass);
+      // Force reflow then re-add to restart animation.
+      void canvas.offsetWidth;
+      canvas.classList.add(animEnterClass);
     }
     if (page.role === 'cover') {
       var coverClass = ${coverClassJson};
@@ -1105,7 +1146,8 @@ export function exportProjectToHtml(project: SimpleProject): string {
   const renderModel = buildExportRenderModel(project);
   const renderModelJson = serializeRenderModel(renderModel);
   const css = generateCSS(renderModel.cssVariables);
-  const js = generateJS(renderModelJson, getCoverClassForStylePack(project.stylePackId), getAllCoverClassNames());
+  const animProfile = getMicroAnimationForStylePack(project.stylePackId);
+  const js = generateJS(renderModelJson, getCoverClassForStylePack(project.stylePackId), getAllCoverClassNames(), animProfile.pageEnterClass);
 
   return `<!doctype html>
 <html lang="id">

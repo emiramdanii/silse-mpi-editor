@@ -29,6 +29,7 @@ import { getCapability } from '../core/capability';
 import { getSkinClassForComponent } from '../core/style-packs/component-skin';
 import { getBackgroundPatternForStylePack } from '../core/style-packs/background-pattern';
 import { getCoverClassForStylePack } from '../core/style-packs/cover-decoration';
+import { getMicroAnimationForStylePack } from '../core/style-packs/micro-animation';
 import { getResolvedComponentStyle } from '../core/style/resolveComponentStyle';
 import { snapToGrid, clampRectToCanvas, CANVAS_WIDTH, CANVAS_HEIGHT, type Rect } from '../core/geometry';
 import { Toolbar } from './Toolbar';
@@ -151,6 +152,7 @@ export function CanvasStage() {
 
   const bgPattern = getBackgroundPatternForStylePack(project.stylePackId);
   const coverClass = currentPage?.role === 'cover' ? getCoverClassForStylePack(project.stylePackId) : '';
+  const animProfile = getMicroAnimationForStylePack(project.stylePackId);
 
   const capability = currentPage ? getCapability(currentPage.role) : null;
   const canAdd = capability?.allowAddComponent ?? false;
@@ -170,7 +172,7 @@ export function CanvasStage() {
       <div className="canvas-stage__canvas-area">
         <div
           ref={canvasRef}
-          className={`canvas-frame ${bgPattern.pageClass} ${bgPattern.patternClass} ${coverClass}`.trim()}
+          className={`canvas-frame ${bgPattern.pageClass} ${bgPattern.patternClass} ${coverClass} ${animProfile.pageEnterClass}`.trim()}
           data-testid="canvas-frame"
           style={{
             width: CANVAS_WIDTH,
