@@ -34,6 +34,7 @@ import {
   checkLearningGoalAlignment,
   type ProjectAlignment,
 } from './learning-goal-alignment';
+import { getTeacherFriendlyIssueCopy } from './teacher-friendly-issue-copy';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -273,6 +274,7 @@ export function checkExportQuality(project: SimpleProject): ExportQualityReport 
 
 /**
  * Format the export quality report into a human-readable message for confirm dialog.
+ * Uses teacher-friendly copy (title + message + suggestion) instead of raw issue messages.
  * Returns empty string if report is clean.
  */
 export function formatExportQualityMessage(report: ExportQualityReport): string {
@@ -283,7 +285,10 @@ export function formatExportQualityMessage(report: ExportQualityReport): string 
   if (report.fatalIssues.length > 0) {
     lines.push('Masalah Serius (sebaiknya perbaiki dulu):');
     for (const issue of report.fatalIssues.slice(0, 10)) {
-      lines.push(`  ✗ ${issue.message}`);
+      const copy = getTeacherFriendlyIssueCopy(issue);
+      lines.push(`  ✗ ${copy.title}`);
+      lines.push(`    ${copy.message}`);
+      lines.push(`    Saran: ${copy.suggestion}`);
     }
     if (report.fatalIssues.length > 10) {
       lines.push(`  ...dan ${report.fatalIssues.length - 10} masalah serius lainnya`);
@@ -294,7 +299,10 @@ export function formatExportQualityMessage(report: ExportQualityReport): string 
   if (report.warningIssues.length > 0) {
     lines.push('Catatan (bisa dilewati):');
     for (const issue of report.warningIssues.slice(0, 8)) {
-      lines.push(`  ⚠ ${issue.message}`);
+      const copy = getTeacherFriendlyIssueCopy(issue);
+      lines.push(`  ⚠ ${copy.title}`);
+      lines.push(`    ${copy.message}`);
+      lines.push(`    Saran: ${copy.suggestion}`);
     }
     if (report.warningIssues.length > 8) {
       lines.push(`  ...dan ${report.warningIssues.length - 8} catatan lainnya`);
@@ -302,13 +310,15 @@ export function formatExportQualityMessage(report: ExportQualityReport): string 
     lines.push('');
   }
 
-  lines.push(`Skor Layout: ${report.layoutScore}/100`);
+  lines.push('Ringkasan:');
+  lines.push(`- Skor Layout: ${report.layoutScore}/100`);
   if (report.alignment.totalObjectives > 0) {
     lines.push(
-      `Alignment: ${report.alignment.coveredObjectives}/${report.alignment.totalObjectives} tujuan tercover (skor ${report.alignment.score}/100)`,
+      `- Tujuan tercover: ${report.alignment.coveredObjectives}/${report.alignment.totalObjectives}`,
     );
+    lines.push(`- Skor Alignment: ${report.alignment.score}/100`);
   } else {
-    lines.push('Alignment: Belum ada tujuan pembelajaran');
+    lines.push('- Alignment: Belum ada tujuan pembelajaran');
   }
 
   lines.push('');

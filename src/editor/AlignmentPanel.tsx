@@ -39,6 +39,7 @@ import {
 } from '../core/learning-goal-alignment';
 import type { PageRole } from '../core/types';
 import { getRoleInfo } from './mpi-standard-roles';
+import { getTeacherFriendlyIssueCopy } from '../core/teacher-friendly-issue-copy';
 
 // ---------------------------------------------------------------------------
 // AlignmentSummary — chip di PagePanel header
@@ -239,6 +240,7 @@ function AlignmentDetailPanel({ onClose }: { onClose: () => void }) {
                 {alignment.issues.map((issue, idx) => {
                   const page = issue.pageId ? pageLookup.get(issue.pageId) : undefined;
                   const isClickable = !!issue.pageId;
+                  const copy = getTeacherFriendlyIssueCopy(issue);
                   return (
                     <li
                       key={idx}
@@ -254,7 +256,9 @@ function AlignmentDetailPanel({ onClose }: { onClose: () => void }) {
                         {issue.severity === 'error' ? '✗' : '⚠'}
                       </span>
                       <div className="alignment-detail__item-content">
-                        <span className="alignment-detail__item-text">{issue.message}</span>
+                        <span className="alignment-detail__item-text">{copy.title}</span>
+                        <span className="alignment-detail__item-message">{copy.message}</span>
+                        <span className="alignment-detail__item-suggestion">Saran: {copy.suggestion}</span>
                         {page && (
                           <span className="alignment-detail__item-meta">
                             Halaman: {page.title} · {getRoleInfo(page.role as PageRole).label}
