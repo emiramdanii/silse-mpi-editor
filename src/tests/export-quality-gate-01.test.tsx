@@ -356,26 +356,35 @@ describe('EXPORT-QUALITY-GATE-01 — Topbar broken export', () => {
     confirmSpy.mockRestore();
   });
 
-  it('10. Confirm cancel → no export (downloadHtmlFile not called)', () => {
-    // Default project → broken → confirm → cancel
+  it('10. Confirm cancel → no export (downloadHtmlFile NOT called)', () => {
+    // Default project → broken → confirm → cancel → export should NOT proceed.
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
-    // We can't easily mock downloadHtmlFile, but we can verify confirm was called with cancel
+    const downloadSpy = vi.mocked(downloadHtmlFile);
+    downloadSpy.mockClear();
+
     const { container } = render(React.createElement(Topbar));
     const exportBtn = container.querySelector('[data-testid="topbar-export"]') as HTMLButtonElement;
     fireEvent.click(exportBtn);
 
     expect(confirmSpy).toHaveBeenCalled();
-    // After cancel, function returns early — no way to verify downloadHtmlFile without mocking,
-    // but the early return is verified by code reading + the fact that confirm returns false.
+    // CRITICAL: download must NOT be called when user cancels.
+    expect(downloadSpy).not.toHaveBeenCalled();
     confirmSpy.mockRestore();
   });
 
-  it('11. Confirm OK → export proceeds (no throw)', () => {
+  it('11. Confirm OK → export proceeds (downloadHtmlFile called)', () => {
+    // Default project → broken → confirm → OK → export should proceed.
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const downloadSpy = vi.mocked(downloadHtmlFile);
+    downloadSpy.mockClear();
+
     const { container } = render(React.createElement(Topbar));
     const exportBtn = container.querySelector('[data-testid="topbar-export"]') as HTMLButtonElement;
-    // Should not throw
-    expect(() => fireEvent.click(exportBtn)).not.toThrow();
+    fireEvent.click(exportBtn);
+
+    expect(confirmSpy).toHaveBeenCalled();
+    // CRITICAL: download MUST be called when user confirms.
+    expect(downloadSpy).toHaveBeenCalled();
     confirmSpy.mockRestore();
   });
 });
