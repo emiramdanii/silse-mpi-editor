@@ -2852,3 +2852,34 @@ textarea {
   line-height: 1.4;
   margin-top: 2px;
 }
+
+/* =========================================================================
+   EXPORT-READY-SUMMARY-01 — compact export ready chip in Topbar
+   ========================================================================= */
+
+.editor-topbar__export-ready {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: help;
+  transition: background 0.15s;
+}
+
+.editor-topbar__export-ready.is-ready {
+  background: rgba(34, 197, 94, 0.15);
+  color: #166534;
+}
+
+.editor-topbar__export-ready.is-needs-review {
+  background: rgba(245, 158, 11, 0.15);
+  color: #92400e;
+}
+
+.editor-topbar__export-ready.is-serious {
+  background: rgba(239, 68, 68, 0.15);
+  color: #991b1b;
+}

@@ -15,13 +15,18 @@
  *   konteks aksi dekat dengan kanvas.
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useEditorStore } from '../store/editor-store';
 import { MpiProgressStrip } from './MpiProgressStrip';
 import { usePreviewStore } from '../preview/preview-store';
 import { exportProjectToHtml } from '../export/export-html';
 import { downloadHtmlFile } from '../export/export-download';
 import { checkExportQuality, formatExportQualityMessage } from '../core/export-quality-gate';
+import {
+  buildExportReadySummary,
+  getExportReadyChipLabel,
+  formatExportReadySummaryText,
+} from '../core/export-ready-summary';
 import { GuidedFlowDialog } from './GuidedFlowDialog';
 
 export function Topbar() {
@@ -33,6 +38,12 @@ export function Topbar() {
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(project.title);
   const [showGuidedFlow, setShowGuidedFlow] = useState(false);
+
+  // EXPORT-READY-SUMMARY-01: compute export ready summary (memoized).
+  const exportReadySummary = useMemo(
+    () => buildExportReadySummary(checkExportQuality(project)),
+    [project],
+  );
 
   const startEditTitle = () => {
     setTitleDraft(project.title);
@@ -131,6 +142,16 @@ export function Topbar() {
         >
           ▶ Pratinjau
         </button>
+        {/* EXPORT-READY-SUMMARY-01: compact export ready chip */}
+        <span
+          className={`editor-topbar__export-ready is-${exportReadySummary.status}`}
+          title={formatExportReadySummaryText(exportReadySummary)}
+          data-testid="export-ready-summary"
+          data-status={exportReadySummary.status}
+          data-total-issues={exportReadySummary.totalIssues}
+        >
+          {getExportReadyChipLabel(exportReadySummary)}
+        </span>
         <button
           onClick={handleExport}
           className="editor-topbar__action editor-topbar__action--primary"
