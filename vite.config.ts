@@ -6,7 +6,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   // Use relative asset paths so the build works when served from a sub-path
   // (e.g., /silse-editor/index.html via Next.js iframe embedding).
-  base: '/silse-editor/',
+  base: './',
   plugins: [react()],
   test: {
     globals: true,
