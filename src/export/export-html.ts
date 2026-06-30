@@ -24,6 +24,7 @@ import { getBackgroundPatternForStylePack } from '../core/style-packs/background
 import { getCoverClassForStylePack, getAllCoverClassNames } from '../core/style-packs/cover-decoration';
 import { getMicroAnimationForStylePack } from '../core/style-packs/micro-animation';
 import { getCelebrationEffectForStylePack } from '../core/style-packs/celebration-effect';
+import { getPremiumExportProfile, type PremiumExportProfile } from '../core/style-packs/premium-export-profile';
 
 const CANVAS_WIDTH = 1280;
 const CANVAS_HEIGHT = 720;
@@ -38,6 +39,13 @@ const CANVAS_HEIGHT = 720;
  */
 type ExportRenderModel = {
   title: string;
+  stylePackId: string;
+  /** Curriculum topic for kicker pill on cover/closing pages. */
+  curriculumTopic?: string;
+  /** Curriculum subject for kicker pill on cover/closing pages. */
+  curriculumSubject?: string;
+  /** Curriculum grade for kicker pill on cover/closing pages. */
+  curriculumGrade?: string;
   pages: ExportRenderPage[];
   cssVariables: Record<string, string>;
 };
@@ -45,6 +53,7 @@ type ExportRenderModel = {
 type ExportRenderPage = {
   id: string;
   title: string;
+  role: string;
   background: SimplePage['background'];
   components: ExportRenderComponent[];
 };
@@ -116,13 +125,22 @@ function buildExportRenderModel(project: SimpleProject): ExportRenderModel {
   const pages: ExportRenderPage[] = project.pages.map((page) => ({
     id: page.id,
     title: page.title,
+    role: page.role,
     background: page.background,
     components: page.components.map((component) =>
       buildExportRenderComponent(project, page, component),
     ),
   }));
 
-  return { title: project.title, pages, cssVariables };
+  return {
+    title: project.title,
+    stylePackId: project.stylePackId ?? 'modern-clean',
+    curriculumTopic: project.curriculum?.topic,
+    curriculumSubject: project.curriculum?.subject,
+    curriculumGrade: project.curriculum?.grade,
+    pages,
+    cssVariables,
+  };
 }
 
 function buildExportRenderComponent(
@@ -250,121 +268,274 @@ function generateCssVariablesString(vars: Record<string, string>): string {
 // CSS generation
 // ---------------------------------------------------------------------------
 
-function generateCSS(cssVars: Record<string, string>): string {
+function generateCSS(cssVars: Record<string, string>, profile: PremiumExportProfile): string {
   const varsStr = generateCssVariablesString(cssVars);
+  const c = profile.colors;
+  const g = profile.gradients;
+  const t = profile.typography;
+  const cardR = profile.cardRadius;
+  const btnR = profile.buttonRadius;
+  const isDark = profile.darkStage;
+  const stageOuter = isDark ? c.navy : '#f1f5f9';
+  const stageTextOnDark = isDark ? '#ffffff' : c.navy;
+  const heroColor = isDark ? '#ffffff' : c.blue;
+  const heroAccent = c.red;
+  const bodyColor = isDark ? 'rgba(255,255,255,0.92)' : c.text;
+  const mutedColor = isDark ? 'rgba(255,255,255,0.7)' : c.muted;
+  const cardBg = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.96)';
+  const cardBorder = isDark ? 'rgba(255,255,255,0.14)' : 'rgba(29,53,87,0.12)';
+  const cardShadow = isDark
+    ? `0 22px 54px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.04)`
+    : `0 22px 54px rgba(29,53,87,0.18), 0 4px 12px rgba(29,53,87,0.06)`;
 
   return `
 :root {
 ${varsStr}
+  --silse-navy: ${c.navy};
+  --silse-blue: ${c.blue};
+  --silse-red: ${c.red};
+  --silse-gold: ${c.gold};
+  --silse-gold-deep: ${c.goldDeep};
+  --silse-paper: ${c.paper};
+  --silse-text-premium: ${bodyColor};
+  --silse-muted-premium: ${mutedColor};
+  --silse-hero-font: ${t.heroFont};
+  --silse-body-font: ${t.bodyFont};
+  --silse-hero-weight: ${t.heroWeight};
+  --silse-hero-letter-spacing: ${t.heroLetterSpacing};
+  --silse-card-radius: ${cardR}px;
+  --silse-button-radius: ${btnR}px;
+  --silse-stage-outer: ${stageOuter};
+  --silse-stage-text: ${stageTextOnDark};
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--silse-body-font, 'Segoe UI', Arial, sans-serif);
+  background: var(--silse-stage-outer);
+}
+
 body {
-  font-family: var(--silse-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
-  background: #1a1a1a;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   min-height: 100vh;
-  padding: 20px;
+  padding: 0;
+}
+
+.silse-viewport {
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 14px;
 }
 
 #silse-toolbar {
+  position: absolute;
+  top: 18px;
+  left: 32px;
+  right: 32px;
+  height: 38px;
+  z-index: 50;
   display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-  color: #fff;
-  font-size: 14px;
+  justify-content: space-between;
   align-items: center;
+  padding: 0 6px 0 14px;
+  color: var(--silse-stage-text);
+  font-size: 13px;
+  font-weight: 800;
+  pointer-events: none;
+}
+
+#silse-toolbar > * { pointer-events: auto; }
+#silse-toolbar .silse-toolbar-side { display: inline-flex; align-items: center; gap: 8px; }
+
+#silse-toolbar #silse-page-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.10);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.18);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
 }
 
 #silse-toolbar button {
-  background: rgba(255,255,255,0.1);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.2);
-  padding: 6px 16px;
-  border-radius: 4px;
+  background: rgba(255,255,255,0.12);
+  color: var(--silse-stage-text);
+  border: 1px solid rgba(255,255,255,0.22);
+  padding: 7px 16px;
+  border-radius: 999px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  transition: transform 0.18s ease, background 0.18s ease;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 #silse-toolbar button:disabled { opacity: 0.4; cursor: not-allowed; }
-#silse-toolbar button:hover:not(:disabled) { background: rgba(255,255,255,0.2); }
+#silse-toolbar button:hover:not(:disabled) {
+  background: rgba(255,255,255,0.22);
+  transform: translateY(-1px);
+}
 
 #silse-canvas {
   width: ${CANVAS_WIDTH}px;
   height: ${CANVAS_HEIGHT}px;
-  background: var(--silse-color-background, #ffffff);
+  background: ${g.defaultBg};
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+  border-radius: 26px;
+  box-shadow: 0 26px 70px rgba(0,0,0,0.42), 0 8px 22px rgba(0,0,0,0.22);
   flex-shrink: 0;
+  isolation: isolate;
 }
+
+/* Page-role-aware background gradients (PREMIUM-EXPORT-OVERHAUL-01) */
+#silse-canvas[data-page-role="cover"] { background: ${g.coverBg}; }
+#silse-canvas[data-page-role="closing"] { background: ${g.closingBg}; }
+#silse-canvas[data-page-role="material"],
+#silse-canvas[data-page-role="learningObjectives"] { background: ${g.materialBg}; }
+#silse-canvas[data-page-role="quiz"],
+#silse-canvas[data-page-role="activity"] { background: ${g.quizBg}; }
 
 #silse-canvas .silse-nav-btn {
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: var(--silse-button-radius);
+  font-family: var(--silse-body-font);
+  font-weight: 900;
+  letter-spacing: 0.2px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
+#silse-canvas .silse-nav-btn:hover { transform: translateY(-2px); }
+#silse-canvas .silse-nav-btn:active { transform: translateY(0); }
 
 #silse-canvas .silse-question-choice {
-  padding: 10px 14px;
+  padding: 14px 18px;
   min-height: 44px;
   height: auto;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border: 2px solid ${isDark ? 'rgba(255,255,255,0.10)' : 'rgba(29,53,87,0.10)'};
+  border-radius: 18px;
+  background: ${isDark ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.98)'};
+  color: ${c.text};
   cursor: pointer;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 1.4;
   white-space: normal;
   overflow-wrap: anywhere;
   word-break: break-word;
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  transition: background-color 0.15s ease-out;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.10);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.15s ease-out;
+}
+
+#silse-canvas .silse-question-choice:hover {
+  transform: translateY(-3px);
+  border-color: ${c.gold};
+  box-shadow: 0 14px 28px rgba(0,0,0,0.16);
+}
+
+#silse-canvas .silse-question-choice .silse-choice-letter {
+  display: inline-grid;
+  place-items: center;
+  min-width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: ${c.blue};
+  color: #fff;
+  font-size: 16px;
+  font-weight: 900;
+  flex-shrink: 0;
 }
 
 #silse-canvas .silse-question-feedback {
-  margin-top: 8px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 13px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
   white-space: normal;
   overflow-wrap: anywhere;
 }
 
 #silse-toolbar .silse-score {
-  margin-left: 12px;
-  font-weight: bold;
-  color: #fbbf24;
+  margin-left: 8px;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: linear-gradient(145deg, var(--silse-gold), var(--silse-gold-deep));
+  color: var(--silse-navy);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.3px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
 }
 
 #silse-canvas .silse-game-choice {
-  padding: 10px 14px;
+  padding: 14px 18px;
   min-height: 44px;
   height: auto;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border: 2px solid ${isDark ? 'rgba(255,255,255,0.10)' : 'rgba(29,53,87,0.10)'};
+  border-radius: 18px;
+  background: ${isDark ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.98)'};
+  color: ${c.text};
   cursor: pointer;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 1.4;
   white-space: normal;
   overflow-wrap: anywhere;
   word-break: break-word;
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.10);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+#silse-canvas .silse-game-choice:hover {
+  transform: translateY(-3px);
+  border-color: ${c.gold};
+  box-shadow: 0 14px 28px rgba(0,0,0,0.16);
+}
+
+#silse-canvas .silse-game-choice .silse-choice-letter {
+  display: inline-grid;
+  place-items: center;
+  min-width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: ${c.blue};
+  color: #fff;
+  font-size: 16px;
+  font-weight: 900;
+  flex-shrink: 0;
 }
 
 #silse-canvas .silse-game-feedback {
-  margin-top: 8px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 13px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
   white-space: normal;
   overflow-wrap: anywhere;
 }
@@ -486,6 +657,292 @@ body {
   .silse-celebrate-particle-soft::before, .silse-celebrate-particle-soft::after,
   .silse-celebrate-particle-mission::before, .silse-celebrate-particle-mission::after { animation:none !important; display:none !important; }
 }
+
+/* ----------------------------------------------------------------------- */
+/* PREMIUM-EXPORT-OVERHAUL-01 — premium visual layers (on top of existing)  */
+/* ----------------------------------------------------------------------- */
+
+#silse-canvas > #silse-toolbar { position: absolute; z-index: 50; }
+
+/* Hero typography for text components with variant=title */
+#silse-canvas .silse-text-title,
+#silse-canvas .silse-hero-title {
+  font-family: var(--silse-hero-font);
+  font-weight: var(--silse-hero-weight);
+  letter-spacing: var(--silse-hero-letter-spacing);
+  ${t.heroUppercase ? 'text-transform: uppercase;' : ''}
+  color: ${heroColor};
+  line-height: 1.04;
+  text-shadow: ${isDark ? '0 4px 14px rgba(0,0,0,0.32)' : 'none'};
+}
+#silse-canvas .silse-text-title .silse-accent,
+#silse-canvas .silse-hero-title .silse-accent {
+  color: ${heroAccent};
+}
+
+#silse-canvas .silse-text-subtitle {
+  font-family: var(--silse-body-font);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: ${isDark ? 'rgba(255,255,255,0.86)' : c.muted};
+}
+
+#silse-canvas .silse-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: linear-gradient(145deg, ${c.gold}, ${c.goldDeep});
+  color: ${c.navy};
+  font-family: var(--silse-body-font);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.16);
+  white-space: nowrap;
+}
+
+/* Premium skin overrides — multi-shadow + larger radius + glass bg */
+#silse-canvas .skin-card-flat,
+#silse-canvas .skin-card-soft,
+#silse-canvas .skin-card-bold {
+  border-radius: var(--silse-card-radius) !important;
+  background: ${cardBg} !important;
+  border: 1px solid ${cardBorder} !important;
+  box-shadow: ${cardShadow} !important;
+  color: ${bodyColor} !important;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+#silse-canvas .skin-card-flat > strong,
+#silse-canvas .skin-card-soft > strong,
+#silse-canvas .skin-card-bold > strong {
+  display: block;
+  font-family: var(--silse-hero-font);
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  color: ${isDark ? '#fff' : c.blue};
+  margin-bottom: 6px;
+}
+
+#silse-canvas .skin-button-clean,
+#silse-canvas .skin-button-rounded,
+#silse-canvas .skin-button-mission {
+  border-radius: var(--silse-button-radius) !important;
+  font-family: var(--silse-body-font) !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.4px;
+  ${t.heroUppercase ? 'text-transform: uppercase;' : ''}
+  box-shadow: 0 12px 24px rgba(0,0,0,0.18) !important;
+  background: linear-gradient(145deg, ${c.red}, ${c.blue}) !important;
+  color: #fff !important;
+  border: 0 !important;
+  transition: transform 0.18s ease, box-shadow 0.18s ease !important;
+}
+#silse-canvas .skin-button-clean:hover,
+#silse-canvas .skin-button-rounded:hover,
+#silse-canvas .skin-button-mission:hover {
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 18px 32px rgba(0,0,0,0.26) !important;
+}
+
+#silse-canvas .skin-quiz-calm,
+#silse-canvas .skin-quiz-playful,
+#silse-canvas .skin-quiz-mission,
+#silse-canvas .skin-game-calm,
+#silse-canvas .skin-game-playful,
+#silse-canvas .skin-game-mission {
+  border-radius: var(--silse-card-radius) !important;
+  background: ${cardBg} !important;
+  border: 1px solid ${cardBorder} !important;
+  box-shadow: ${cardShadow} !important;
+  color: ${bodyColor} !important;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+#silse-canvas .skin-quiz-calm > strong,
+#silse-canvas .skin-quiz-playful > strong,
+#silse-canvas .skin-quiz-mission > strong,
+#silse-canvas .skin-game-calm > strong,
+#silse-canvas .skin-game-playful > strong,
+#silse-canvas .skin-game-mission > strong {
+  font-family: var(--silse-hero-font);
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  color: ${isDark ? '#fff' : c.blue};
+}
+
+#silse-canvas .skin-bridge-subtle,
+#silse-canvas .skin-bridge-strong {
+  border-radius: var(--silse-card-radius) !important;
+  background: ${isDark ? 'rgba(255,209,102,0.08)' : 'rgba(255,248,219,0.6)'} !important;
+  border: 1px solid ${isDark ? 'rgba(255,209,102,0.20)' : 'rgba(255,183,3,0.20)'} !important;
+  box-shadow: ${cardShadow} !important;
+  color: ${bodyColor} !important;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+#silse-canvas .skin-layered-clean,
+#silse-canvas .skin-layered-soft,
+#silse-canvas .skin-layered-bold {
+  border-radius: var(--silse-card-radius) !important;
+  background: ${cardBg} !important;
+  border: 1px solid ${cardBorder} !important;
+  box-shadow: ${cardShadow} !important;
+  color: ${bodyColor} !important;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* Award medal — only rendered on closing pages */
+#silse-canvas .silse-award-medal {
+  position: absolute;
+  left: 50%;
+  top: 56px;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 200px;
+  pointer-events: none;
+  z-index: 1;
+}
+#silse-canvas .silse-award-medal .silse-award-shine {
+  position: absolute;
+  inset: -40%;
+  background: conic-gradient(from 0deg, transparent, rgba(255,209,102,0.50), transparent, rgba(255,255,255,0.30), transparent);
+  animation: silse-award-shine 8s linear 60;
+  opacity: 0.55;
+  border-radius: 50%;
+}
+#silse-canvas .silse-award-medal .silse-award-glow {
+  position: absolute;
+  inset: -22px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,209,102,0.70), rgba(255,209,102,0.20) 48%, transparent 70%);
+  filter: blur(4px);
+}
+#silse-canvas .silse-award-medal .silse-award-medal-inner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg, #fff8e7, #fff);
+  border: 8px solid var(--silse-gold);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.20), inset 0 0 0 6px rgba(255,183,3,0.35), inset 0 0 38px rgba(255,209,102,0.28);
+  font-size: 80px;
+  line-height: 1;
+}
+#silse-canvas .silse-award-medal .silse-award-medal-inner::after {
+  content: '';
+  position: absolute;
+  inset: -16px;
+  border-radius: 50%;
+  border: 3px dashed rgba(255,183,3,0.8);
+}
+@keyframes silse-award-shine { to { transform: rotate(360deg); } }
+
+#silse-canvas .silse-award-ribbon {
+  position: absolute;
+  left: 50%;
+  bottom: 64px;
+  transform: translateX(-50%);
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, ${c.red}, ${c.blue});
+  color: #fff;
+  font-family: var(--silse-body-font);
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  box-shadow: 0 12px 24px rgba(0,0,0,0.28);
+  pointer-events: none;
+  z-index: 1;
+  white-space: nowrap;
+}
+
+/* Hero card frame — only rendered on cover pages */
+#silse-canvas .silse-hero-card {
+  position: absolute;
+  left: 50%;
+  top: 130px;
+  transform: translateX(-50%);
+  width: 980px;
+  height: 460px;
+  background: ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.92)'};
+  border: 1px solid ${isDark ? 'rgba(255,255,255,0.18)' : 'rgba(29,53,87,0.14)'};
+  border-radius: 30px;
+  box-shadow: ${isDark
+    ? '0 26px 60px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.04)'
+    : '12px 12px 0 rgba(29,53,87,0.10), 0 24px 60px rgba(29,53,87,0.20)'};
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+#silse-canvas .silse-hero-kicker {
+  position: absolute;
+  left: 50%;
+  top: 168px;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: linear-gradient(145deg, ${c.gold}, ${c.goldDeep});
+  color: ${c.navy};
+  font-family: var(--silse-body-font);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.20);
+  pointer-events: none;
+  z-index: 2;
+  white-space: nowrap;
+}
+
+#silse-canvas .silse-hero-cta {
+  position: absolute;
+  left: 50%;
+  top: 510px;
+  transform: translateX(-50%);
+  padding: 14px 32px;
+  border-radius: 999px;
+  background: linear-gradient(145deg, ${c.red}, ${c.blue});
+  color: #fff;
+  font-family: var(--silse-body-font);
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  border: 0;
+  cursor: pointer;
+  box-shadow: 0 14px 28px rgba(0,0,0,0.28);
+  pointer-events: auto;
+  z-index: 2;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+#silse-canvas .silse-hero-cta:hover {
+  transform: translateX(-50%) translateY(-2px) scale(1.02);
+  box-shadow: 0 20px 36px rgba(0,0,0,0.36);
+}
+
+/* Note: reduced-motion is handled globally by MICRO-ANIMATION-SYSTEM-V1
+   (animation-duration:0.01ms !important; animation-iteration-count:1 !important;
+    transition-duration:0.01ms !important on *,*::before,*::after). */
 `.trim();
 }
 
@@ -524,7 +981,12 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (idx < 0 || idx >= pages.length) return;
     currentPageIdx = idx;
     var page = pages[idx];
+
+    // PREMIUM-EXPORT-OVERHAUL-01: toolbar is now inside the canvas.
+    // Preserve it across renders (only wipe components, not the toolbar).
+    var toolbar = canvas.querySelector('#silse-toolbar');
     canvas.innerHTML = '';
+    if (toolbar) canvas.appendChild(toolbar);
 
     // COVER-PREMIUM-POLISH-01: Add/remove cover decoration class.
     var coverClasses = ${allCoverClassesJson};
@@ -544,13 +1006,65 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       if (coverClass) canvas.classList.add(coverClass);
     }
 
-    // Set background
-    if (page.background.type === 'color') {
-      canvas.style.background = page.background.color;
+    // PREMIUM-EXPORT-OVERHAUL-01: set data-page-role for CSS-driven gradient backgrounds.
+    if (page.role) {
+      canvas.setAttribute('data-page-role', page.role);
+    } else {
+      canvas.removeAttribute('data-page-role');
+    }
+
+    // Set background — image wins, otherwise let CSS handle gradient via data-page-role.
+    if (page.background.type === 'image') {
+      canvas.style.background = 'url(' + page.background.imageSrc + ') center/cover no-repeat';
     } else if (page.background.type === 'gradient') {
       canvas.style.background = page.background.gradient;
-    } else if (page.background.type === 'image') {
-      canvas.style.background = 'url(' + page.background.imageSrc + ') center/cover no-repeat';
+    } else if (page.background.type === 'color') {
+      var heroRole = (page.role === 'cover' || page.role === 'closing');
+      if (heroRole) {
+        canvas.style.background = '';
+      } else {
+        canvas.style.background = page.background.color;
+      }
+    }
+
+    // PREMIUM-EXPORT-OVERHAUL-01: award medal decoration on closing pages.
+    if (page.role === 'closing') {
+      var medal = document.createElement('div');
+      medal.className = 'silse-award-medal';
+      medal.setAttribute('aria-hidden', 'true');
+      medal.innerHTML = '<div class="silse-award-shine"></div><div class="silse-award-glow"></div><div class="silse-award-medal-inner">🏆</div>';
+      canvas.appendChild(medal);
+
+      var ribbon = document.createElement('div');
+      ribbon.className = 'silse-award-ribbon';
+      ribbon.setAttribute('aria-hidden', 'true');
+      ribbon.textContent = '✨ Penjelajah Selesai ✨';
+      canvas.appendChild(ribbon);
+    }
+
+    // PREMIUM-EXPORT-OVERHAUL-01: hero card frame + kicker pill + CTA on cover pages.
+    if (page.role === 'cover') {
+      var heroCard = document.createElement('div');
+      heroCard.className = 'silse-hero-card';
+      heroCard.setAttribute('aria-hidden', 'true');
+      canvas.appendChild(heroCard);
+
+      var kickerText = MODEL.curriculumSubject || page.title || '';
+      if (MODEL.curriculumGrade) kickerText = kickerText + ' · Kelas ' + MODEL.curriculumGrade;
+      if (kickerText) {
+        var heroKicker = document.createElement('div');
+        heroKicker.className = 'silse-hero-kicker';
+        heroKicker.textContent = kickerText;
+        canvas.appendChild(heroKicker);
+      }
+
+      var ctaBtn = document.createElement('button');
+      ctaBtn.className = 'silse-hero-cta';
+      ctaBtn.type = 'button';
+      ctaBtn.textContent = 'Mulai Pembelajaran →';
+      ctaBtn.setAttribute('aria-label', 'Mulai pembelajaran, pergi ke halaman berikutnya');
+      ctaBtn.addEventListener('click', function() { navigate('next'); });
+      canvas.appendChild(ctaBtn);
     }
 
     // Render components — style from resolvedStyle, NO switch
@@ -584,9 +1098,31 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
 
     if (comp.type === 'text') {
       el = document.createElement('div');
-      el.className = comp.skinClass || '';
+      var textClasses = comp.skinClass || '';
+      // PREMIUM-EXPORT-OVERHAUL-01: hero typography for title variant.
+      if (comp.variant === 'title') {
+        textClasses = (textClasses + ' silse-text-title').trim();
+      } else if (comp.variant === 'subtitle') {
+        textClasses = (textClasses + ' silse-text-subtitle').trim();
+      }
+      el.className = textClasses;
       el.style.cssText = style + 'display:flex;align-items:center;overflow:hidden;white-space:pre-wrap;word-break:break-word;box-sizing:border-box;';
-      el.textContent = comp.text || '';
+      // PREMIUM-EXPORT-OVERHAUL-01: accent span on last word for title variant.
+      if (comp.variant === 'title' && comp.text && comp.text.indexOf('\\n') === -1) {
+        var words = comp.text.split(/\\s+/);
+        if (words.length >= 2) {
+          var lastWord = words.pop();
+          var accentSpan = document.createElement('span');
+          accentSpan.className = 'silse-accent';
+          accentSpan.textContent = lastWord;
+          el.textContent = words.join(' ') + ' ';
+          el.appendChild(accentSpan);
+        } else {
+          el.textContent = comp.text || '';
+        }
+      } else {
+        el.textContent = comp.text || '';
+      }
       return el;
     }
 
@@ -604,15 +1140,15 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (comp.type === 'card') {
       el = document.createElement('div');
       el.className = comp.skinClass || '';
-      el.style.cssText = style + 'box-sizing:border-box;display:flex;flex-direction:column;gap:8px;overflow:hidden;';
+      el.style.cssText = style + 'box-sizing:border-box;display:flex;flex-direction:column;gap:8px;overflow:hidden;padding:18px 20px;';
       if (comp.cardTitle) {
         var title = document.createElement('strong');
-        title.style.fontSize = '16px';
+        title.style.fontSize = '20px';
         title.textContent = comp.cardTitle;
         el.appendChild(title);
       }
       var body = document.createElement('div');
-      body.style.cssText = 'font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word;flex:1;overflow:auto;';
+      body.style.cssText = 'font-size:15px;line-height:1.55;white-space:pre-wrap;word-break:break-word;flex:1;overflow:auto;';
       body.textContent = comp.body || '';
       el.appendChild(body);
       return el;
@@ -623,7 +1159,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       el.className = 'silse-nav-btn ' + (comp.skinClass || '');
       el.dataset.action = comp.action;
       el.dataset.target = comp.targetPageId || '';
-      el.style.cssText = style + 'cursor:pointer;display:flex;align-items:center;justify-content:center;user-select:none;';
+      el.style.cssText = style + 'cursor:pointer;display:flex;align-items:center;justify-content:center;user-select:none;padding:10px 22px;font-size:14px;';
 
       // Apply interaction styles from resolvedStyle.interactions
       var interactions = comp.resolvedStyle.interactions;
@@ -667,25 +1203,25 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
 
       if (comp.questionTitle) {
         var qTitle = document.createElement('strong');
-        qTitle.style.fontSize = '16px';
+        qTitle.style.fontSize = '20px';
         qTitle.textContent = comp.questionTitle;
         el.appendChild(qTitle);
       }
 
       var qPrompt = document.createElement('div');
-      qPrompt.style.cssText = 'font-size:15px;font-weight:500;margin-bottom:8px;white-space:normal;overflow-wrap:anywhere;';
+      qPrompt.style.cssText = 'font-size:17px;font-weight:650;line-height:1.4;margin-bottom:6px;white-space:normal;overflow-wrap:anywhere;';
       qPrompt.textContent = comp.prompt || '';
       el.appendChild(qPrompt);
 
       var choicesContainer = document.createElement('div');
-      choicesContainer.style.cssText = 'display:flex;flex-direction:column;gap:6px;';
+      choicesContainer.style.cssText = 'display:flex;flex-direction:column;gap:10px;';
 
       var existingAnswer = questionAnswers[comp.id];
 
       for (var ci = 0; ci < comp.choices.length; ci++) {
         (function(choiceIdx, choice, compId, correctIdx, pts, fbCorrect, fbWrong) {
           var choiceEl = document.createElement('div');
-          var bg = '#ffffff';
+          var bg = '';
           var choiceStateClass = 'silse-choice-default';
           if (existingAnswer && existingAnswer.isAnswered) {
             if (choiceIdx === correctIdx) { bg = '#d1fae5'; choiceStateClass = 'silse-choice-correct'; }
@@ -693,12 +1229,12 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
           }
           choiceEl.className = 'silse-question-choice ' + choiceStateClass;
           choiceEl.dataset.choiceIndex = String(choiceIdx);
-          choiceEl.style.backgroundColor = bg;
+          if (bg) choiceEl.style.backgroundColor = bg;
 
+          // PREMIUM-EXPORT-OVERHAUL-01: letter badge with brand color
           var letter = document.createElement('span');
-          letter.style.fontWeight = 'bold';
-          letter.style.minWidth = '20px';
-          letter.textContent = String.fromCharCode(65 + choiceIdx) + '.';
+          letter.className = 'silse-choice-letter';
+          letter.textContent = String.fromCharCode(65 + choiceIdx);
           choiceEl.appendChild(letter);
 
           var choiceText = document.createElement('span');
@@ -758,22 +1294,22 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (comp.type === 'game') {
       el = document.createElement('div');
       el.className = 'silse-game ' + (comp.skinClass || '');
-      el.style.cssText = style + 'box-sizing:border-box;display:flex;flex-direction:column;gap:8px;overflow:auto;padding:12px;';
+      el.style.cssText = style + 'box-sizing:border-box;display:flex;flex-direction:column;gap:10px;overflow:auto;padding:18px 20px;';
 
       var gameState = gameStates[comp.id] || { currentMissionIndex: 0, selectedChoiceIndex: null, isAnswered: false, score: 0, completed: false };
       gameStates[comp.id] = gameState;
 
       if (gameState.completed) {
         var doneTitle = document.createElement('strong');
-        doneTitle.style.fontSize = '18px';
+        doneTitle.style.fontSize = '22px';
         doneTitle.textContent = 'Game Selesai!';
         el.appendChild(doneTitle);
         var doneScore = document.createElement('div');
-        doneScore.style.cssText = 'font-size:16px;margin-top:8px;';
+        doneScore.style.cssText = 'font-size:18px;margin-top:8px;font-weight:700;';
         doneScore.textContent = 'Skor: ' + gameState.score;
         el.appendChild(doneScore);
         var retryBtn = document.createElement('button');
-        retryBtn.style.cssText = 'margin-top:12px;padding:8px 16px;';
+        retryBtn.style.cssText = 'margin-top:12px;padding:10px 18px;border-radius:999px;border:0;background:#1d3557;color:#fff;font-weight:800;cursor:pointer;';
         retryBtn.textContent = 'Ulangi Game';
         retryBtn.addEventListener('click', function() {
           gameStates[comp.id] = { currentMissionIndex: 0, selectedChoiceIndex: null, isAnswered: false, score: 0, completed: false };
@@ -787,43 +1323,43 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       if (!mission) return el;
 
       var gTitle = document.createElement('strong');
-      gTitle.style.fontSize = '16px';
+      gTitle.style.fontSize = '20px';
       gTitle.textContent = comp.gameTitle || 'Game';
       el.appendChild(gTitle);
 
       var gInstr = document.createElement('div');
-      gInstr.style.cssText = 'font-size:13px;color:#6b7280;white-space:normal;overflow-wrap:anywhere;';
+      gInstr.style.cssText = 'font-size:14px;font-weight:600;opacity:0.78;white-space:normal;overflow-wrap:anywhere;';
       gInstr.textContent = comp.gameInstruction || '';
       el.appendChild(gInstr);
 
       var gProgress = document.createElement('div');
-      gProgress.style.cssText = 'font-size:12px;color:#6b7280;';
+      gProgress.style.cssText = 'font-size:13px;font-weight:700;opacity:0.7;';
       gProgress.textContent = 'Misi ' + (gameState.currentMissionIndex + 1) + ' / ' + comp.missions.length + ' · Skor: ' + gameState.score;
       el.appendChild(gProgress);
 
       var gPrompt = document.createElement('div');
-      gPrompt.style.cssText = 'font-size:15px;font-weight:500;margin-top:4px;white-space:normal;overflow-wrap:anywhere;';
+      gPrompt.style.cssText = 'font-size:17px;font-weight:650;margin-top:6px;white-space:normal;overflow-wrap:anywhere;';
       gPrompt.textContent = mission.prompt || '';
       el.appendChild(gPrompt);
 
       var gChoices = document.createElement('div');
-      gChoices.style.cssText = 'display:flex;flex-direction:column;gap:6px;';
+      gChoices.style.cssText = 'display:flex;flex-direction:column;gap:10px;';
 
       for (var gi = 0; gi < mission.choices.length; gi++) {
         (function(gChoiceIdx, gChoice, gCompId, gMission, gState) {
           var gChoiceEl = document.createElement('div');
           gChoiceEl.className = 'silse-game-choice';
-          var gBg = '#ffffff';
+          var gBg = '';
           if (gState.isAnswered) {
             if (gChoiceIdx === gMission.correctChoiceIndex) gBg = '#d1fae5';
             else if (gChoiceIdx === gState.selectedChoiceIndex) gBg = '#fee2e2';
           }
-          gChoiceEl.style.backgroundColor = gBg;
+          if (gBg) gChoiceEl.style.backgroundColor = gBg;
 
+          // PREMIUM-EXPORT-OVERHAUL-01: letter badge with brand color
           var gLetter = document.createElement('span');
-          gLetter.style.fontWeight = 'bold';
-          gLetter.style.minWidth = '20px';
-          gLetter.textContent = String.fromCharCode(65 + gChoiceIdx) + '.';
+          gLetter.className = 'silse-choice-letter';
+          gLetter.textContent = String.fromCharCode(65 + gChoiceIdx);
           gChoiceEl.appendChild(gLetter);
 
           var gText = document.createElement('span');
@@ -1188,10 +1724,12 @@ function escapeHTML(str: string): string {
 export function exportProjectToHtml(project: SimpleProject): string {
   const renderModel = buildExportRenderModel(project);
   const renderModelJson = serializeRenderModel(renderModel);
-  const css = generateCSS(renderModel.cssVariables);
+  const profile = getPremiumExportProfile(project.stylePackId);
+  const css = generateCSS(renderModel.cssVariables, profile);
   const animProfile = getMicroAnimationForStylePack(project.stylePackId);
   const celebrationProfile = getCelebrationEffectForStylePack(project.stylePackId);
   const js = generateJS(renderModelJson, getCoverClassForStylePack(project.stylePackId), getAllCoverClassNames(), animProfile.pageEnterClass, celebrationProfile.successClass, celebrationProfile.burstClass, celebrationProfile.particleClass);
+  const bgPattern = getBackgroundPatternForStylePack(project.stylePackId);
 
   return `<!doctype html>
 <html lang="id">
@@ -1204,13 +1742,18 @@ ${css}
   </style>
 </head>
 <body>
-  <div id="silse-toolbar">
-    <button id="silse-nav-prev">← Sebelumnya</button>
-    <span id="silse-page-info">1 / 1</span>
-    <button id="silse-nav-next">Berikutnya →</button>
-    <span id="silse-score" class="silse-score">Skor: 0</span>
+  <div class="silse-viewport">
+    <div id="silse-canvas" class="${bgPattern.pageClass} ${bgPattern.patternClass}">
+      <div id="silse-toolbar">
+        <span class="silse-toolbar-side">
+          <button id="silse-nav-prev">← Sebelumnya</button>
+          <span id="silse-page-info">1 / 1</span>
+          <button id="silse-nav-next">Berikutnya →</button>
+        </span>
+        <span id="silse-score" class="silse-score">Skor: 0</span>
+      </div>
+    </div>
   </div>
-  <div id="silse-canvas" class="${getBackgroundPatternForStylePack(project.stylePackId).pageClass} ${getBackgroundPatternForStylePack(project.stylePackId).patternClass}"></div>
   <script>
 ${js}
   </script>
