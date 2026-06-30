@@ -5,6 +5,7 @@
 export type {
   SceneRenderPlan,
   SceneRenderSlot,
+  SlotResolvedStyle,
 } from './renderScenePlan';
 
 export {

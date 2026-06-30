@@ -23,7 +23,6 @@
 import type { CSSProperties } from 'react';
 import type { SceneRenderPlan, SceneRenderSlot } from '../core/scene-renderer';
 import type { MpiDesignContract } from '../core/mpi-design-contract';
-import { resolveDesignToken } from '../core/scene-renderer';
 
 export type SceneRendererViewProps = {
   plan: SceneRenderPlan;
@@ -49,13 +48,14 @@ export function SceneRendererView({
   onQuizAnswer,
   selectedSlotId,
 }: SceneRendererViewProps) {
+  // DESIGN-CONTRACT-RENDER-PARITY-01: scene style from plan (which carries contract tokens).
   const sceneStyle: CSSProperties = {
     position: 'relative',
-    width: contract.frame.width,
-    height: contract.frame.height,
-    overflow: contract.frame.overflow,
-    borderRadius: contract.frame.stageRadius,
-    background: contract.palette.background,
+    width: plan.frame.width,
+    height: plan.frame.height,
+    overflow: plan.frame.overflow as CSSProperties['overflow'],
+    borderRadius: plan.frame.stageRadius,
+    background: plan.background.gradient ?? plan.background.color,
   };
 
   return (
@@ -143,19 +143,41 @@ function ContentRenderer({
   onQuizAnswer?: (slotId: string, choiceId: string) => void;
 }) {
   const c = slot.content;
+  const rs = slot.resolvedStyle; // DESIGN-CONTRACT-RENDER-PARITY-01: resolved visual instruction
 
   if (c.kind === 'text') {
+    // DESIGN-CONTRACT-RENDER-PARITY-01: typography from resolvedStyle
+    const ty = rs?.typography;
     return (
-      <div className={slot.contentClass} style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', padding: 8, boxSizing: 'border-box' }}>
+      <div className={slot.contentClass} style={{
+        width: '100%', height: '100%', display: 'flex', alignItems: 'center',
+        padding: 8, boxSizing: 'border-box',
+        fontFamily: ty?.fontFamily,
+        fontSize: ty?.fontSize,
+        fontWeight: ty?.fontWeight,
+        color: ty?.color,
+        lineHeight: ty?.lineHeight,
+        letterSpacing: ty?.letterSpacing,
+        textTransform: ty?.uppercase ? 'uppercase' : 'none',
+      }}>
         <span>{c.text}</span>
       </div>
     );
   }
 
   if (c.kind === 'card') {
-    const cardRadius = resolveDesignToken(contract, 'card.radius') as number ?? 12;
+    // DESIGN-CONTRACT-RENDER-PARITY-01: card visual from resolvedStyle.surface
+    const surf = rs?.surface;
     return (
-      <div className={slot.contentClass} style={{ width: '100%', height: '100%', padding: 16, borderRadius: cardRadius, background: '#fff', border: '1px solid #e5e7eb', boxSizing: 'border-box' }}>
+      <div className={slot.contentClass} style={{
+        width: '100%', height: '100%',
+        padding: surf?.padding ?? 16,
+        borderRadius: surf?.radius ?? 12,
+        background: surf?.background ?? '#fff',
+        border: surf?.border ?? '1px solid #e5e7eb',
+        boxShadow: surf?.shadow,
+        boxSizing: 'border-box',
+      }}>
         {c.title && <strong style={{ display: 'block', fontSize: 18, marginBottom: 6 }}>{c.title}</strong>}
         <div style={{ fontSize: 14, lineHeight: 1.5 }}>{c.body}</div>
       </div>
@@ -163,8 +185,22 @@ function ContentRenderer({
   }
 
   if (c.kind === 'button') {
+    // DESIGN-CONTRACT-RENDER-PARITY-01: button visual from resolvedStyle.button
+    const btn = rs?.button;
     return (
-      <button className={slot.contentClass} style={{ width: '100%', height: '100%', borderRadius: 8, background: contract.palette.primary, color: '#fff', border: 0, fontWeight: 600, cursor: interactive ? 'pointer' : 'default' }}>
+      <button className={slot.contentClass} style={{
+        width: '100%', height: '100%',
+        borderRadius: btn?.radius ?? 8,
+        background: btn?.background ?? contract.palette.primary,
+        color: btn?.color ?? '#fff',
+        border: 0,
+        fontWeight: btn?.fontWeight ?? 600,
+        cursor: interactive ? 'pointer' : 'default',
+        paddingTop: btn?.padding?.top,
+        paddingRight: btn?.padding?.right,
+        paddingBottom: btn?.padding?.bottom,
+        paddingLeft: btn?.padding?.left,
+      }}>
         {c.label}
       </button>
     );
@@ -204,8 +240,15 @@ function ContentRenderer({
   }
 
   if (c.kind === 'feedback') {
+    // DESIGN-CONTRACT-RENDER-PARITY-01: feedback visual from resolvedStyle.feedback
+    const fb = rs?.feedback;
     return (
-      <div className={slot.contentClass} style={{ padding: 12, borderRadius: 10, background: c.variant === 'correct' ? '#d1fae5' : c.variant === 'wrong' ? '#fee2e2' : '#f3f4f6', borderLeft: '4px solid ' + (c.variant === 'correct' ? '#16a34a' : c.variant === 'wrong' ? '#dc2626' : '#d1d5db') }}>
+      <div className={slot.contentClass} style={{
+        padding: 12, borderRadius: 10,
+        background: fb?.background ?? '#f3f4f6',
+        color: fb?.color,
+        borderLeft: '4px solid ' + (fb?.borderColor ?? '#d1d5db'),
+      }}>
         {c.icon && <span style={{ marginRight: 6 }}>{c.icon}</span>}
         {c.text}
       </div>
@@ -213,8 +256,16 @@ function ContentRenderer({
   }
 
   if (c.kind === 'reward') {
+    // DESIGN-CONTRACT-RENDER-PARITY-01: reward visual from resolvedStyle.reward
+    const rw = rs?.reward;
     return (
-      <div className={slot.contentClass} style={{ padding: 16, borderRadius: 12, background: '#fffbeb', border: '2px solid #fbbf24', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+      <div className={slot.contentClass} style={{
+        padding: 16,
+        borderRadius: rw?.radius ?? 12,
+        background: rw?.background ?? '#fffbeb',
+        border: '2px solid ' + (rw?.borderColor ?? '#fbbf24'),
+        textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+      }}>
         {c.icon && <div style={{ fontSize: 48 }}>{c.icon}</div>}
         <strong style={{ fontSize: 18 }}>{c.label}</strong>
       </div>
@@ -262,16 +313,27 @@ function GameMissionContent({
   interactive: boolean;
   onGameAction?: (slotId: string, actionIndex: number) => void;
 }) {
+  // DESIGN-CONTRACT-RENDER-PARITY-01: briefing/target card style from resolvedStyle.surface
+  const briefingStyle = slot.resolvedStyle?.surface;
   return (
     <div className="silse-game-scene" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: 10, padding: 16, boxSizing: 'border-box', overflow: 'auto' }}>
       {/* Briefing */}
-      <div className="silse-game-briefing" style={{ padding: 12, borderRadius: 10, background: '#fffbeb', border: '1px solid #fde68a' }}>
+      <div className="silse-game-briefing" style={{
+        padding: briefingStyle?.padding ?? 12,
+        borderRadius: briefingStyle?.radius ?? 10,
+        background: briefingStyle?.background ?? '#fffbeb',
+        border: briefingStyle?.border ?? '1px solid #fde68a',
+      }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: '#92400e', textTransform: 'uppercase', marginBottom: 4 }}>📋 Briefing Misi</div>
         <div style={{ fontSize: 15, fontWeight: 600 }}>{content.briefing}</div>
       </div>
 
       {/* Target */}
-      <div className="silse-game-target" style={{ padding: 12, borderRadius: 10, background: '#eff6ff', border: '1px solid #bfdbfe' }}>
+      <div className="silse-game-target" style={{
+        padding: 12, borderRadius: 10,
+        background: contract.game.targetPanel?.background ?? '#eff6ff',
+        border: contract.game.targetPanel?.border ?? '1px solid #bfdbfe',
+      }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: '#1e40af', textTransform: 'uppercase', marginBottom: 4 }}>🎯 Target Misi</div>
         <div style={{ fontSize: 14 }}>{content.missionTarget}</div>
       </div>

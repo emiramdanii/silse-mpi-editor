@@ -238,10 +238,10 @@ describe('FOUNDATION-INTEGRATION-01 — export-html integration', () => {
   it('25. export HTML preserves placement (x, y in scenePlan slots)', () => {
     const project = createSceneProofProject();
     const html = exportProjectToHtml(project);
-    // The game component has x:100, y:60, width:1080, height:580
+    // The game component has x:72, y:120, width:1136, height:480 (visual fidelity values)
     expect(html).toContain('"placement"');
-    expect(html).toContain('"x":100');
-    expect(html).toContain('"y":60');
+    expect(html).toContain('"x":72');
+    expect(html).toContain('"y":120');
   });
 
   it('26. export HTML preserves design token (designTokenKey in plan)', () => {

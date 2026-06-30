@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "metadata": {
+    "title": "Visual Fidelity Game Mission",
+    "subtitle": "Test sample untuk DESIGN-CONTRACT-RENDER-PARITY-01"
+  },
+  "curriculum": {
+    "subject": "PPKn",
+    "grade": "7",
+    "phase": "D",
+    "topic": "Visual Fidelity Test",
+    "objectives": [
+      { "id": "obj-1", "text": "Test visual fidelity." }
+    ]
+  },
+  "styleIntent": {
+    "styleId": "modern-clean",
+    "mood": "clean"
+  },
+  "designSystem": {
+    "contractId": "modern-clean",
+    "paletteName": "navy-crimson-gold",
+    "typographyName": "trebuchet-hero"
+  },
+  "flow": {
+    "steps": [{ "sceneId": "scene-game" }],
+    "mode": "linear"
+  },
+  "scenes": [
+    {
+      "id": "scene-game",
+      "role": "game",
+      "sceneType": "game-mission",
+      "title": "Visual Fidelity Misi",
+      "slots": [
+        {
+          "id": "slot-game",
+          "role": "game",
+          "placement": { "x": 72, "y": 120, "width": 1136, "height": 480, "zIndex": 2 },
+          "designTokenKey": "game.briefingPanel",
+          "content": {
+            "kind": "game-mission",
+            "briefing": "Kamu menjadi penjaga norma di sekolah. Test visual fidelity: placement x=72, y=120, width=1136, height=480.",
+            "missionTarget": "Pilih tindakan yang sesuai dengan norma.",
+            "actions": [
+              { "id": "a", "label": "Menegur dengan sopan", "result": "correct", "feedback": "Tepat." },
+              { "id": "b", "label": "Membiarkan saja", "result": "wrong", "feedback": "Coba lagi." }
+            ],
+            "reward": { "type": "badge", "label": "Lencana Penjaga Norma", "icon": "🏅" }
+          }
+        }
+      ]
+    }
+  ],
+  "assets": [],
+  "runtime": { "showProgress": true, "showScore": true },
+  "exportConfig": { "format": "html-standalone", "stageWidth": 1280, "stageHeight": 720 }
+}

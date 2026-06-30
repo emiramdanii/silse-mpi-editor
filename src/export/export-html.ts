@@ -1097,16 +1097,17 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     pageInfo.textContent = (currentPageIdx + 1) + ' / ' + pages.length + ' - ' + page.title;
   }
 
-  // FOUNDATION-INTEGRATION-01: render scene dari SceneRenderPlan (bukan flat components[]).
-  // Emit DOM dengan classes: silse-scene, silse-scene-<sceneType>, silse-scene-slot,
-  // silse-game-scene, silse-game-briefing, silse-game-target, silse-game-action-grid,
-  // silse-game-action-card, silse-game-reward.
+  // FOUNDATION-INTEGRATION-01 + DESIGN-CONTRACT-RENDER-PARITY-01:
+  // render scene dari SceneRenderPlan (bukan flat components[]).
+  // Emit DOM dengan classes + inline style dari resolvedStyle (design contract).
   function renderSceneFromPlan(plan) {
     var sceneEl = document.createElement('div');
     sceneEl.className = plan.sceneClass;
     sceneEl.setAttribute('data-scene-id', plan.sceneId);
     sceneEl.setAttribute('data-scene-type', plan.sceneType);
-    sceneEl.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;z-index:2;';
+    // DESIGN-CONTRACT-RENDER-PARITY-01: scene background from plan.background
+    var sceneBg = (plan.background && plan.background.gradient) ? plan.background.gradient : (plan.background ? plan.background.color : '#ffffff');
+    sceneEl.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;z-index:2;background:' + sceneBg + ';';
 
     for (var si = 0; si < plan.slots.length; si++) {
       var slot = plan.slots[si];
@@ -1114,6 +1115,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       slotEl.className = slot.slotClass;
       slotEl.setAttribute('data-slot-id', slot.id);
       slotEl.setAttribute('data-slot-role', slot.role);
+      // DESIGN-CONTRACT-RENDER-PARITY-01: placement from slot.placement (x/y/width/height)
       slotEl.style.cssText = 'position:absolute;left:' + slot.placement.x + 'px;top:' + slot.placement.y + 'px;width:' + slot.placement.width + 'px;height:' + slot.placement.height + 'px;z-index:' + (slot.placement.zIndex || 1) + ';';
       sceneEl.appendChild(slotEl);
 
@@ -1128,19 +1130,38 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
 
   function renderSceneContent(slot, content) {
     if (!content) return null;
+    var rs = slot.resolvedStyle || {};
 
     if (content.kind === 'text') {
+      // DESIGN-CONTRACT-RENDER-PARITY-01: typography from resolvedStyle
       var tEl = document.createElement('div');
       tEl.className = slot.contentClass;
-      tEl.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;padding:8px;box-sizing:border-box;';
+      var ty = rs.typography || {};
+      var tCss = 'width:100%;height:100%;display:flex;align-items:center;padding:8px;box-sizing:border-box;';
+      if (ty.fontFamily) tCss += 'font-family:' + ty.fontFamily + ';';
+      if (ty.fontSize) tCss += 'font-size:' + ty.fontSize + 'px;';
+      if (ty.fontWeight) tCss += 'font-weight:' + ty.fontWeight + ';';
+      if (ty.color) tCss += 'color:' + ty.color + ';';
+      if (ty.lineHeight) tCss += 'line-height:' + ty.lineHeight + ';';
+      if (ty.letterSpacing) tCss += 'letter-spacing:' + ty.letterSpacing + 'em;';
+      if (ty.uppercase) tCss += 'text-transform:uppercase;';
+      tEl.style.cssText = tCss;
       tEl.textContent = content.text || '';
       return tEl;
     }
 
     if (content.kind === 'card') {
+      // DESIGN-CONTRACT-RENDER-PARITY-01: card visual from resolvedStyle.surface
       var cEl = document.createElement('div');
       cEl.className = slot.contentClass;
-      cEl.style.cssText = 'width:100%;height:100%;padding:16px;border-radius:12px;background:#fff;border:1px solid #e5e7eb;box-sizing:border-box;';
+      var surf = rs.surface || {};
+      var cCss = 'width:100%;height:100%;box-sizing:border-box;';
+      cCss += 'padding:' + (surf.padding != null ? surf.padding : 16) + 'px;';
+      cCss += 'border-radius:' + (surf.radius != null ? surf.radius : 12) + 'px;';
+      cCss += 'background:' + (surf.background || '#fff') + ';';
+      cCss += 'border:' + (surf.border || '1px solid #e5e7eb') + ';';
+      if (surf.shadow) cCss += 'box-shadow:' + surf.shadow + ';';
+      cEl.style.cssText = cCss;
       if (content.title) {
         var cTitle = document.createElement('strong');
         cTitle.style.cssText = 'display:block;font-size:18px;margin-bottom:6px;';
@@ -1155,9 +1176,19 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     }
 
     if (content.kind === 'button') {
+      // DESIGN-CONTRACT-RENDER-PARITY-01: button visual from resolvedStyle.button
       var bEl = document.createElement('button');
       bEl.className = slot.contentClass;
-      bEl.style.cssText = 'width:100%;height:100%;border-radius:8px;background:#1d3557;color:#fff;border:0;font-weight:600;cursor:pointer;';
+      var btn = rs.button || {};
+      var bCss = 'width:100%;height:100%;border:0;cursor:pointer;';
+      bCss += 'border-radius:' + (btn.radius != null ? btn.radius : 8) + 'px;';
+      bCss += 'background:' + (btn.background || '#1d3557') + ';';
+      bCss += 'color:' + (btn.color || '#fff') + ';';
+      bCss += 'font-weight:' + (btn.fontWeight || 600) + ';';
+      if (btn.padding) {
+        bCss += 'padding:' + (btn.padding.top || 0) + 'px ' + (btn.padding.right || 0) + 'px ' + (btn.padding.bottom || 0) + 'px ' + (btn.padding.left || 0) + 'px;';
+      }
+      bEl.style.cssText = bCss;
       bEl.textContent = content.label || '';
       return bEl;
     }
@@ -1171,9 +1202,15 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     }
 
     if (content.kind === 'reward') {
+      // DESIGN-CONTRACT-RENDER-PARITY-01: reward visual from resolvedStyle.reward
       var rEl = document.createElement('div');
       rEl.className = slot.contentClass;
-      rEl.style.cssText = 'padding:16px;border-radius:12px;background:#fffbeb;border:2px solid #fbbf24;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;';
+      var rw = rs.reward || {};
+      var rCss = 'padding:16px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;';
+      rCss += 'border-radius:' + (rw.radius != null ? rw.radius : 12) + 'px;';
+      rCss += 'background:' + (rw.background || '#fffbeb') + ';';
+      rCss += 'border:2px solid ' + (rw.borderColor || '#fbbf24') + ';';
+      rEl.style.cssText = rCss;
       if (content.icon) {
         var rIcon = document.createElement('div');
         rIcon.style.fontSize = '48px';
@@ -1188,11 +1225,15 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     }
 
     if (content.kind === 'feedback') {
+      // DESIGN-CONTRACT-RENDER-PARITY-01: feedback visual from resolvedStyle.feedback
       var fEl = document.createElement('div');
       fEl.className = slot.contentClass;
-      var fbBg = content.variant === 'correct' ? '#d1fae5' : content.variant === 'wrong' ? '#fee2e2' : '#f3f4f6';
-      var fbBorder = content.variant === 'correct' ? '#16a34a' : content.variant === 'wrong' ? '#dc2626' : '#d1d5db';
-      fEl.style.cssText = 'padding:12px;border-radius:10px;background:' + fbBg + ';border-left:4px solid ' + fbBorder + ';';
+      var fb = rs.feedback || {};
+      var fCss = 'padding:12px;border-radius:10px;';
+      fCss += 'background:' + (fb.background || '#f3f4f6') + ';';
+      if (fb.color) fCss += 'color:' + fb.color + ';';
+      fCss += 'border-left:4px solid ' + (fb.borderColor || '#d1d5db') + ';';
+      fEl.style.cssText = fCss;
       fEl.textContent = content.text || '';
       return fEl;
     }
@@ -1205,15 +1246,23 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
   }
 
   // game-mission scene content untuk export (interactive: click actions)
+  // DESIGN-CONTRACT-RENDER-PARITY-01: briefing/target card style from resolvedStyle
   function renderGameMissionSceneContent(slot, content) {
     var wrapper = document.createElement('div');
     wrapper.className = 'silse-game-scene';
     wrapper.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;gap:10px;padding:16px;box-sizing:border-box;overflow:auto;';
 
-    // Briefing
+    var rs = slot.resolvedStyle || {};
+    var surf = rs.surface || {};
+
+    // Briefing — uses resolvedStyle.surface (from contract.game.briefingPanel)
     var briefing = document.createElement('div');
     briefing.className = 'silse-game-briefing';
-    briefing.style.cssText = 'padding:12px;border-radius:10px;background:#fffbeb;border:1px solid #fde68a;';
+    var briefingCss = 'padding:' + (surf.padding != null ? surf.padding : 12) + 'px;';
+    briefingCss += 'border-radius:' + (surf.radius != null ? surf.radius : 10) + 'px;';
+    briefingCss += 'background:' + (surf.background || '#fffbeb') + ';';
+    briefingCss += 'border:' + (surf.border || '1px solid #fde68a') + ';';
+    briefing.style.cssText = briefingCss;
     var briefingLabel = document.createElement('div');
     briefingLabel.style.cssText = 'font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;margin-bottom:4px;';
     briefingLabel.textContent = '📋 Briefing Misi';

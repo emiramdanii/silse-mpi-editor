@@ -69,7 +69,8 @@ export function createSceneProofProject(): SimpleProject {
               },
             ],
             scoringStyle: 'badge',
-            x: 100, y: 60, width: 1080, height: 580,
+            // DESIGN-CONTRACT-RENDER-PARITY-01: specific placement for visual fidelity test
+            x: 72, y: 120, width: 1136, height: 480,
             sceneMetadata: {
               scene: 'game-mission',
               briefing: 'Kamu menjadi penjaga norma di lingkungan sekolah. Seorang teman tidak menegur siswa yang membuang sampah sembarangan.',
