@@ -1,0 +1,378 @@
+/**
+ * SceneRendererView — React view that renders SceneRenderPlan (SCENE-RENDERER-PROOF-01).
+ *
+ * Layer: components
+ * Allowed imports: react, ../core/scene-renderer, ../core/mpi-design-contract
+ *
+ * Kontrak:
+ *   React view yang mengkonsumsi SceneRenderPlan + DesignContract.
+ *   Emit HTML dengan classes: silse-scene, silse-scene-<sceneType>,
+ *   silse-scene-slot, silse-scene-<role>, silse-scene-card/button/feedback/reward.
+ *
+ *   Bukan list biasa. Scene structure dengan slot-based layout.
+ *
+ *   Editor (CanvasStage), Preview (PreviewApp), Export (export-html) bisa
+ *   pakai view/logic yang sama untuk parity.
+ *
+ *   Prinsip:
+ *     - Pure render — baca plan + contract, emit DOM.
+ *     - Tidak ada state (state di parent).
+ *     - Tambah CSS classes structural, bukan premium polish.
+ */
+
+import type { CSSProperties } from 'react';
+import type { SceneRenderPlan, SceneRenderSlot } from '../core/scene-renderer';
+import type { MpiDesignContract } from '../core/mpi-design-contract';
+import { resolveDesignToken } from '../core/scene-renderer';
+
+export type SceneRendererViewProps = {
+  plan: SceneRenderPlan;
+  contract: MpiDesignContract;
+  /** Interactive mode: editor (false) vs preview/export (true). */
+  interactive?: boolean;
+  /** Called when a slot is clicked (editor select). */
+  onSlotClick?: (slotId: string) => void;
+  /** Called when a game action is chosen. */
+  onGameAction?: (slotId: string, actionIndex: number) => void;
+  /** Called when a quiz choice is selected. */
+  onQuizAnswer?: (slotId: string, choiceId: string) => void;
+  /** Selected slot ID (editor highlight). */
+  selectedSlotId?: string;
+};
+
+export function SceneRendererView({
+  plan,
+  contract,
+  interactive = false,
+  onSlotClick,
+  onGameAction,
+  onQuizAnswer,
+  selectedSlotId,
+}: SceneRendererViewProps) {
+  const sceneStyle: CSSProperties = {
+    position: 'relative',
+    width: contract.frame.width,
+    height: contract.frame.height,
+    overflow: contract.frame.overflow,
+    borderRadius: contract.frame.stageRadius,
+    background: contract.palette.background,
+  };
+
+  return (
+    <div className={plan.sceneClass} data-scene-id={plan.sceneId} data-scene-type={plan.sceneType} style={sceneStyle}>
+      {plan.slots.map((slot) => (
+        <SlotView
+          key={slot.id}
+          slot={slot}
+          contract={contract}
+          interactive={interactive}
+          onSlotClick={onSlotClick}
+          onGameAction={onGameAction}
+          onQuizAnswer={onQuizAnswer}
+          selected={selectedSlotId === slot.id}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// SlotView
+// ---------------------------------------------------------------------------
+
+type SlotViewProps = {
+  slot: SceneRenderSlot;
+  contract: MpiDesignContract;
+  interactive: boolean;
+  onSlotClick?: (slotId: string) => void;
+  onGameAction?: (slotId: string, actionIndex: number) => void;
+  onQuizAnswer?: (slotId: string, choiceId: string) => void;
+  selected: boolean;
+};
+
+function SlotView({ slot, contract, interactive, onSlotClick, onGameAction, onQuizAnswer, selected }: SlotViewProps) {
+  const slotStyle: CSSProperties = {
+    position: 'absolute',
+    left: slot.placement.x,
+    top: slot.placement.y,
+    width: slot.placement.width,
+    height: slot.placement.height,
+    zIndex: slot.placement.zIndex ?? 1,
+    outline: selected ? '2px solid #2563eb' : 'none',
+    outlineOffset: 2,
+    cursor: interactive ? 'pointer' : 'default',
+  };
+
+  return (
+    <div
+      className={slot.slotClass}
+      data-slot-id={slot.id}
+      data-slot-role={slot.role}
+      style={slotStyle}
+      onClick={(e) => {
+        e.stopPropagation();
+        onSlotClick?.(slot.id);
+      }}
+    >
+      <ContentRenderer
+        slot={slot}
+        contract={contract}
+        interactive={interactive}
+        onGameAction={onGameAction}
+        onQuizAnswer={onQuizAnswer}
+      />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// ContentRenderer
+// ---------------------------------------------------------------------------
+
+function ContentRenderer({
+  slot,
+  contract,
+  interactive,
+  onGameAction,
+  onQuizAnswer,
+}: {
+  slot: SceneRenderSlot;
+  contract: MpiDesignContract;
+  interactive: boolean;
+  onGameAction?: (slotId: string, actionIndex: number) => void;
+  onQuizAnswer?: (slotId: string, choiceId: string) => void;
+}) {
+  const c = slot.content;
+
+  if (c.kind === 'text') {
+    return (
+      <div className={slot.contentClass} style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', padding: 8, boxSizing: 'border-box' }}>
+        <span>{c.text}</span>
+      </div>
+    );
+  }
+
+  if (c.kind === 'card') {
+    const cardRadius = resolveDesignToken(contract, 'card.radius') as number ?? 12;
+    return (
+      <div className={slot.contentClass} style={{ width: '100%', height: '100%', padding: 16, borderRadius: cardRadius, background: '#fff', border: '1px solid #e5e7eb', boxSizing: 'border-box' }}>
+        {c.title && <strong style={{ display: 'block', fontSize: 18, marginBottom: 6 }}>{c.title}</strong>}
+        <div style={{ fontSize: 14, lineHeight: 1.5 }}>{c.body}</div>
+      </div>
+    );
+  }
+
+  if (c.kind === 'button') {
+    return (
+      <button className={slot.contentClass} style={{ width: '100%', height: '100%', borderRadius: 8, background: contract.palette.primary, color: '#fff', border: 0, fontWeight: 600, cursor: interactive ? 'pointer' : 'default' }}>
+        {c.label}
+      </button>
+    );
+  }
+
+  if (c.kind === 'badge') {
+    return (
+      <span className={slot.contentClass} style={{ display: 'inline-flex', alignItems: 'center', padding: '4px 12px', borderRadius: 999, background: contract.palette.gold, color: contract.palette.primary, fontSize: 12, fontWeight: 700 }}>
+        {c.icon && <span style={{ marginRight: 4 }}>{c.icon}</span>}
+        {c.label}
+      </span>
+    );
+  }
+
+  if (c.kind === 'game-mission') {
+    return (
+      <GameMissionContent
+        slot={slot}
+        content={c}
+        contract={contract}
+        interactive={interactive}
+        onGameAction={onGameAction}
+      />
+    );
+  }
+
+  if (c.kind === 'quiz-question') {
+    return (
+      <QuizQuestionContent
+        slot={slot}
+        content={c}
+        contract={contract}
+        interactive={interactive}
+        onQuizAnswer={onQuizAnswer}
+      />
+    );
+  }
+
+  if (c.kind === 'feedback') {
+    return (
+      <div className={slot.contentClass} style={{ padding: 12, borderRadius: 10, background: c.variant === 'correct' ? '#d1fae5' : c.variant === 'wrong' ? '#fee2e2' : '#f3f4f6', borderLeft: '4px solid ' + (c.variant === 'correct' ? '#16a34a' : c.variant === 'wrong' ? '#dc2626' : '#d1d5db') }}>
+        {c.icon && <span style={{ marginRight: 6 }}>{c.icon}</span>}
+        {c.text}
+      </div>
+    );
+  }
+
+  if (c.kind === 'reward') {
+    return (
+      <div className={slot.contentClass} style={{ padding: 16, borderRadius: 12, background: '#fffbeb', border: '2px solid #fbbf24', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+        {c.icon && <div style={{ fontSize: 48 }}>{c.icon}</div>}
+        <strong style={{ fontSize: 18 }}>{c.label}</strong>
+      </div>
+    );
+  }
+
+  if (c.kind === 'navigation') {
+    return (
+      <div className={slot.contentClass} style={{ display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+        {c.buttons.map((btn, i) => (
+          <button key={i} style={{ padding: '8px 16px', borderRadius: 8, background: contract.palette.primary, color: '#fff', border: 0, fontWeight: 600, cursor: interactive ? 'pointer' : 'default' }}>
+            {btn.label}
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  if (c.kind === 'image') {
+    const imgContent = c as { kind: 'image'; src: string; alt?: string; objectFit?: 'cover' | 'contain' };
+    return (
+      <img className={slot.contentClass} src={imgContent.src} alt={imgContent.alt ?? ''} style={{ width: '100%', height: '100%', objectFit: imgContent.objectFit ?? 'cover' }} />
+    );
+  }
+
+  // Fallback for any remaining kind
+  const fallbackContent = c as { kind: string };
+  return <div className={slot.contentClass}>[{fallbackContent.kind}]</div>;
+}
+
+// ---------------------------------------------------------------------------
+// GameMissionContent
+// ---------------------------------------------------------------------------
+
+function GameMissionContent({
+  slot,
+  content,
+  contract,
+  interactive,
+  onGameAction,
+}: {
+  slot: SceneRenderSlot;
+  content: Extract<SceneRenderSlot['content'], { kind: 'game-mission' }>;
+  contract: MpiDesignContract;
+  interactive: boolean;
+  onGameAction?: (slotId: string, actionIndex: number) => void;
+}) {
+  return (
+    <div className="silse-game-scene" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: 10, padding: 16, boxSizing: 'border-box', overflow: 'auto' }}>
+      {/* Briefing */}
+      <div className="silse-game-briefing" style={{ padding: 12, borderRadius: 10, background: '#fffbeb', border: '1px solid #fde68a' }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#92400e', textTransform: 'uppercase', marginBottom: 4 }}>📋 Briefing Misi</div>
+        <div style={{ fontSize: 15, fontWeight: 600 }}>{content.briefing}</div>
+      </div>
+
+      {/* Target */}
+      <div className="silse-game-target" style={{ padding: 12, borderRadius: 10, background: '#eff6ff', border: '1px solid #bfdbfe' }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#1e40af', textTransform: 'uppercase', marginBottom: 4 }}>🎯 Target Misi</div>
+        <div style={{ fontSize: 14 }}>{content.missionTarget}</div>
+      </div>
+
+      {/* Action grid */}
+      <div className="silse-game-action-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
+        {content.actions.map((action, idx) => (
+          <div
+            key={action.id}
+            className="silse-game-action-card"
+            data-action-index={idx}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (interactive) onGameAction?.(slot.id, idx);
+            }}
+            style={{
+              padding: 14,
+              borderRadius: 12,
+              background: '#fff',
+              border: '2px solid #d1d5db',
+              cursor: interactive ? 'pointer' : 'default',
+              fontSize: 14,
+              fontWeight: 600,
+              minHeight: 80,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 6,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ display: 'inline-grid', placeItems: 'center', minWidth: 28, height: 28, borderRadius: 8, background: contract.palette.primary, color: '#fff', fontSize: 13, fontWeight: 900 }}>
+                {String.fromCharCode(65 + idx)}
+              </span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase' }}>Aksi</span>
+            </div>
+            <span>{action.label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Reward preview */}
+      <div className="silse-game-reward" style={{ padding: 12, borderRadius: 10, background: '#fffbeb', border: '2px solid #fbbf24', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <span style={{ fontSize: 24 }}>{(content.reward as { icon?: string }).icon ?? '🏅'}</span>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#92400e', textTransform: 'uppercase' }}>Reward</div>
+          <strong style={{ fontSize: 14 }}>{content.reward.label}</strong>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// QuizQuestionContent
+// ---------------------------------------------------------------------------
+
+function QuizQuestionContent({
+  slot,
+  content,
+  contract,
+  interactive,
+  onQuizAnswer,
+}: {
+  slot: SceneRenderSlot;
+  content: Extract<SceneRenderSlot['content'], { kind: 'quiz-question' }>;
+  contract: MpiDesignContract;
+  interactive: boolean;
+  onQuizAnswer?: (slotId: string, choiceId: string) => void;
+}) {
+  return (
+    <div className="silse-quiz-scene" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: 10, padding: 16, boxSizing: 'border-box', overflow: 'auto' }}>
+      <div className="silse-quiz-prompt" style={{ fontSize: 17, fontWeight: 600 }}>{content.prompt}</div>
+      <div className="silse-quiz-choices" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {content.choices.map((choice, idx) => (
+          <div
+            key={choice.id}
+            className="silse-quiz-choice"
+            data-choice-id={choice.id}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (interactive) onQuizAnswer?.(slot.id, choice.id);
+            }}
+            style={{
+              padding: '12px 16px',
+              borderRadius: 10,
+              background: '#fff',
+              border: '2px solid #d1d5db',
+              cursor: interactive ? 'pointer' : 'default',
+              fontSize: 14,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+            }}
+          >
+            <span style={{ display: 'inline-grid', placeItems: 'center', minWidth: 32, height: 32, borderRadius: 8, background: contract.palette.primary, color: '#fff', fontSize: 14, fontWeight: 900 }}>
+              {String.fromCharCode(65 + idx)}
+            </span>
+            <span>{choice.text}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
