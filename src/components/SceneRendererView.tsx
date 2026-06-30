@@ -387,7 +387,16 @@ function GameMissionContent({
 }
 
 // ---------------------------------------------------------------------------
-// QuizQuestionContent
+// QUIZ-SCENE-PROOF-01 — QuizQuestionContent (challenge scene)
+//
+// Render quiz sebagai challenge scene:
+//   challenge header → question focus panel → answer cards (grid) → feedback
+//
+// Class: silse-quiz-scene, silse-quiz-header, silse-quiz-question-focus,
+//        silse-quiz-answer-grid, silse-quiz-answer-card, silse-quiz-choice-badge,
+//        silse-quiz-feedback, silse-quiz-progress
+//
+// Visual dari resolvedStyle (design contract), bukan hardcoded CSS.
 // ---------------------------------------------------------------------------
 
 function QuizQuestionContent({
@@ -403,37 +412,83 @@ function QuizQuestionContent({
   interactive: boolean;
   onQuizAnswer?: (slotId: string, choiceId: string) => void;
 }) {
+  const rs = slot.resolvedStyle;
+  const ansCard = rs?.quizAnswerCard;
+  const badge = rs?.quizChoiceBadge;
+  const panel = rs?.quizQuestionPanel;
+
   return (
     <div className="silse-quiz-scene" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: 10, padding: 16, boxSizing: 'border-box', overflow: 'auto' }}>
-      <div className="silse-quiz-prompt" style={{ fontSize: 17, fontWeight: 600 }}>{content.prompt}</div>
-      <div className="silse-quiz-choices" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {/* Challenge header */}
+      <div className="silse-quiz-header" style={{
+        fontSize: 11, fontWeight: 700, color: contract.palette.mutedText,
+        textTransform: 'uppercase', letterSpacing: 0.5,
+      }}>
+        🎯 Challenge — Pilih jawaban yang tepat
+      </div>
+
+      {/* Question focus panel */}
+      <div className="silse-quiz-question-focus" style={{
+        padding: panel?.padding ?? 16,
+        borderRadius: panel?.radius ?? 12,
+        background: panel?.background ?? contract.palette.surface,
+        fontSize: 17, fontWeight: 600,
+      }}>
+        {content.prompt}
+      </div>
+
+      {/* Answer grid */}
+      <div className="silse-quiz-answer-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10 }}>
         {content.choices.map((choice, idx) => (
           <div
             key={choice.id}
-            className="silse-quiz-choice"
+            className="silse-quiz-answer-card"
             data-choice-id={choice.id}
             onClick={(e) => {
               e.stopPropagation();
               if (interactive) onQuizAnswer?.(slot.id, choice.id);
             }}
             style={{
-              padding: '12px 16px',
-              borderRadius: 10,
-              background: '#fff',
-              border: '2px solid #d1d5db',
+              padding: ansCard?.padding ?? 14,
+              borderRadius: ansCard?.radius ?? 12,
+              background: ansCard?.background ?? '#fff',
+              border: `2px solid ${ansCard?.border ?? '#d1d5db'}`,
               cursor: interactive ? 'pointer' : 'default',
               fontSize: 14,
+              fontWeight: 600,
+              minHeight: 60,
               display: 'flex',
               alignItems: 'center',
               gap: 12,
             }}
           >
-            <span style={{ display: 'inline-grid', placeItems: 'center', minWidth: 32, height: 32, borderRadius: 8, background: contract.palette.primary, color: '#fff', fontSize: 14, fontWeight: 900 }}>
+            {/* Choice letter badge */}
+            <span className="silse-quiz-choice-badge" style={{
+              display: 'inline-grid', placeItems: 'center',
+              minWidth: 32, height: 32,
+              borderRadius: badge?.radius ?? 8,
+              background: badge?.background ?? contract.palette.primary,
+              color: badge?.color ?? '#fff',
+              fontSize: 14, fontWeight: 900, flexShrink: 0,
+            }}>
               {String.fromCharCode(65 + idx)}
             </span>
             <span>{choice.text}</span>
           </div>
         ))}
+      </div>
+
+      {/* Feedback (jika ada — feedback slot terpisah akan render sendiri) */}
+      <div className="silse-quiz-feedback" data-testid="silse-quiz-feedback-placeholder" style={{ display: 'none' }}>
+        {/* Feedback akan dirender oleh feedback slot terpisah jika ada */}
+      </div>
+
+      {/* Progress indicator */}
+      <div className="silse-quiz-progress" style={{
+        fontSize: 12, fontWeight: 700, color: contract.palette.mutedText,
+        marginTop: 'auto',
+      }}>
+        {content.choices.length} pilihan · Correct: {content.correctChoiceId}
       </div>
     </div>
   );

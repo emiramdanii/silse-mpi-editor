@@ -118,7 +118,7 @@ function mapComponentToSlotContent(
         feedbackCorrect: qc.feedbackCorrect,
         feedbackWrong: qc.feedbackWrong,
       },
-      slotRole: 'quiz',
+      slotRole: qc.sceneMetadata?.scene === 'quiz-challenge' ? 'questionFocus' : 'quiz',
     };
   }
   if (component.type === 'game') {

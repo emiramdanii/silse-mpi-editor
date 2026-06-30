@@ -14,6 +14,7 @@ import { resolveStylePackV1 } from './style-packs/style-pack-registry';
 export function createSceneProofProject(): SimpleProject {
   const coverId = createPageId();
   const gameId = createPageId();
+  const quizId = createPageId();
   const closingId = createPageId();
 
   return {
@@ -76,6 +77,38 @@ export function createSceneProofProject(): SimpleProject {
               briefing: 'Kamu menjadi penjaga norma di lingkungan sekolah. Seorang teman tidak menegur siswa yang membuang sampah sembarangan.',
               missionTarget: 'Pilih tindakan yang paling sesuai dengan norma kesopanan dan kepedulian warga sekolah.',
               reward: { type: 'badge', label: 'Lencana Penjaga Norma' },
+            },
+          },
+        ],
+      },
+      // Quiz page (scene-renderable — has sceneMetadata quiz-challenge)
+      {
+        id: quizId, title: 'Quiz Challenge', role: 'quiz', layoutId: 'blank',
+        background: { type: 'color', color: '#f0f9ff' },
+        components: [
+          {
+            id: createComponentId(),
+            type: 'question',
+            variant: 'multipleChoice',
+            title: 'Cek Pemahaman',
+            prompt: 'Norma yang mengatur hubungan manusia dengan Tuhan disebut...',
+            choices: [
+              { id: createComponentId(), text: 'Norma Agama' },
+              { id: createComponentId(), text: 'Norma Kesusilaan' },
+              { id: createComponentId(), text: 'Norma Kesopanan' },
+              { id: createComponentId(), text: 'Norma Hukum' },
+            ],
+            correctChoiceIndex: 0,
+            feedbackCorrect: 'Benar. Norma agama berasal dari Tuhan.',
+            feedbackWrong: 'Belum tepat. Norma agama mengatur hubungan dengan Tuhan.',
+            points: 10,
+            scoringStyle: 'points',
+            // DESIGN-CONTRACT-RENDER-PARITY-01: specific placement for visual fidelity test
+            x: 72, y: 120, width: 1136, height: 480,
+            sceneMetadata: {
+              scene: 'quiz-challenge',
+              challengeTitle: 'Cek Pemahaman',
+              challengeSubtitle: 'Pilih jawaban yang tepat',
             },
           },
         ],

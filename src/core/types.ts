@@ -445,6 +445,21 @@ export type QuestionChoice = {
   text: string;
 };
 
+/**
+ * Scene metadata untuk QuestionComponent (QUIZ-SCENE-PROOF-01).
+ *
+ * Optional field. Jika ada, QuestionComponentView akan render sebagai "challenge scene"
+ * (challenge header + question focus + answer cards + feedback + progress),
+ * bukan form pilihan biasa.
+ *
+ * Sama seperti GameSceneMetadata, scene intent di-preserve dari AI blueprint.
+ */
+export type QuizSceneMetadata = {
+  scene: string; // 'quiz-challenge'
+  challengeTitle?: string;
+  challengeSubtitle?: string;
+};
+
 export type QuestionComponent = BaseComponent & {
   type: 'question';
   variant: QuestionComponentVariant;
@@ -456,4 +471,9 @@ export type QuestionComponent = BaseComponent & {
   feedbackWrong: string;
   points: number;
   scoringStyle: ScoringStyle;
+  /**
+   * QUIZ-SCENE-PROOF-01: Optional scene metadata.
+   * Jika ada, renderer akan tampilkan sebagai challenge scene, bukan form pilihan biasa.
+   */
+  sceneMetadata?: QuizSceneMetadata;
 };

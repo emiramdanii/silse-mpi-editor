@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "metadata": {
+    "title": "Quiz Challenge Scene Proof",
+    "subtitle": "Test sample untuk QUIZ-SCENE-PROOF-01"
+  },
+  "curriculum": {
+    "subject": "PPKn",
+    "grade": "7",
+    "phase": "D",
+    "topic": "Quiz Challenge Test",
+    "objectives": [
+      { "id": "obj-1", "text": "Test quiz challenge scene." }
+    ]
+  },
+  "styleIntent": {
+    "styleId": "modern-clean",
+    "mood": "clean"
+  },
+  "designSystem": {
+    "contractId": "modern-clean",
+    "paletteName": "navy-crimson-gold",
+    "typographyName": "trebuchet-hero"
+  },
+  "flow": {
+    "steps": [{ "sceneId": "scene-quiz" }],
+    "mode": "linear"
+  },
+  "scenes": [
+    {
+      "id": "scene-quiz",
+      "role": "quiz",
+      "sceneType": "quiz-challenge",
+      "title": "Cek Pemahaman Challenge",
+      "slots": [
+        {
+          "id": "slot-quiz",
+          "role": "questionFocus",
+          "placement": { "x": 72, "y": 120, "width": 1136, "height": 480, "zIndex": 2 },
+          "designTokenKey": "quiz.questionPanel",
+          "content": {
+            "kind": "quiz-question",
+            "prompt": "Norma yang mengatur hubungan manusia dengan Tuhan disebut...",
+            "choices": [
+              { "id": "a", "text": "Norma Agama" },
+              { "id": "b", "text": "Norma Kesusilaan" },
+              { "id": "c", "text": "Norma Kesopanan" },
+              { "id": "d", "text": "Norma Hukum" }
+            ],
+            "correctChoiceId": "a",
+            "feedbackCorrect": "Benar. Norma agama berasal dari Tuhan.",
+            "feedbackWrong": "Belum tepat. Norma agama mengatur hubungan dengan Tuhan."
+          }
+        }
+      ]
+    }
+  ],
+  "assets": [],
+  "runtime": { "showProgress": true, "showScore": true },
+  "exportConfig": { "format": "html-standalone", "stageWidth": 1280, "stageHeight": 720 }
+}

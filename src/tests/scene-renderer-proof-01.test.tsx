@@ -231,13 +231,14 @@ describe('SCENE-RENDERER-PROOF-01 — React view produces scene classes', () => 
     expect(dom.querySelector('.silse-quiz-scene')).toBeInTheDocument();
   });
 
-  it('23. quiz scene produces silse-quiz-choices', () => {
+  it('23. quiz scene produces silse-quiz-answer-grid (QUIZ-SCENE-PROOF-01)', () => {
     const container = loadContainer();
     const quizScene = container.scenes.find((s) => s.sceneType === 'quiz-challenge')!;
     const contract = getDesignContract('modern-clean');
     const plan = renderScenePlan(quizScene, contract);
     const { container: dom } = render(<SceneRendererView plan={plan} contract={contract} />);
-    expect(dom.querySelector('.silse-quiz-choices')).toBeInTheDocument();
+    // QUIZ-SCENE-PROOF-01: quiz sekarang render sebagai challenge scene dengan answer-grid
+    expect(dom.querySelector('.silse-quiz-answer-grid')).toBeInTheDocument();
   });
 
   it('24. output bukan list biasa — game scene punya briefing + target + grid + reward', () => {

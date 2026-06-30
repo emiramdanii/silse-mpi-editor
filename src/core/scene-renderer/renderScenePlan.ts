@@ -75,6 +75,31 @@ export type SlotResolvedStyle = {
     radius: number;
     icon?: string;
   };
+  /** QUIZ-SCENE-PROOF-01: Answer card visual (untuk quiz answer cards). */
+  quizAnswerCard?: {
+    background: string;
+    radius: number;
+    padding: number;
+    border: string;
+  };
+  /** QUIZ-SCENE-PROOF-01: Answer state visual (selected/correct/wrong). */
+  quizState?: {
+    selected: { background: string; borderColor: string };
+    correct: { background: string; borderColor: string };
+    wrong: { background: string; borderColor: string };
+  };
+  /** QUIZ-SCENE-PROOF-01: Choice letter badge visual. */
+  quizChoiceBadge?: {
+    background: string;
+    color: string;
+    radius: number;
+  };
+  /** QUIZ-SCENE-PROOF-01: Question focus panel visual. */
+  quizQuestionPanel?: {
+    background: string;
+    radius: number;
+    padding: number;
+  };
 };
 
 export type SceneRenderSlot = {
@@ -264,6 +289,49 @@ function resolveSlotStyle(slot: MpiSceneSlot, contract: MpiDesignContract): Slot
       color: fb.color,
       borderColor: fb.borderColor,
       icon: fb.icon,
+    };
+  }
+
+  // QUIZ-SCENE-PROOF-01: quiz-question slot dapat answer card + state + badge + panel visual
+  if (kind === 'quiz-question') {
+    // Answer card visual (dari contract.quiz.answerCard atau fallback ke contract.card)
+    const ansCard = contract.quiz.answerCard;
+    style.quizAnswerCard = {
+      background: ansCard?.background ?? contract.card.background,
+      radius: ansCard?.radius ?? contract.card.radius,
+      padding: ansCard?.padding ?? contract.card.padding,
+      border: ansCard?.border ?? contract.card.border,
+    };
+    // Answer state visual (selected/correct/wrong)
+    style.quizState = {
+      selected: {
+        background: contract.quiz.selectedState?.background ?? '#dbeafe',
+        borderColor: contract.quiz.selectedState?.borderColor ?? '#2563eb',
+      },
+      correct: {
+        background: contract.quiz.correctState?.background ?? '#d1fae5',
+        borderColor: contract.quiz.correctState?.borderColor ?? '#16a34a',
+      },
+      wrong: {
+        background: contract.quiz.wrongState?.background ?? '#fee2e2',
+        borderColor: contract.quiz.wrongState?.borderColor ?? '#dc2626',
+      },
+    };
+    // Choice letter badge visual
+    const badge = contract.quiz.choiceLetterBadge;
+    if (badge) {
+      style.quizChoiceBadge = {
+        background: badge.background,
+        color: badge.color,
+        radius: badge.radius,
+      };
+    }
+    // Question focus panel visual (dari contract.quiz.questionPanel atau fallback)
+    const qPanel = contract.quiz.questionPanel;
+    style.quizQuestionPanel = {
+      background: qPanel?.background ?? contract.palette.surface,
+      radius: qPanel?.radius ?? contract.card.radius,
+      padding: qPanel?.padding ?? contract.card.padding,
     };
   }
 

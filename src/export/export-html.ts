@@ -1339,38 +1339,80 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     return wrapper;
   }
 
-  // quiz-question scene content untuk export
+  // QUIZ-SCENE-PROOF-01: quiz-question challenge scene content untuk export.
+  // Render: challenge header → question focus panel → answer grid → feedback → progress.
+  // Visual dari resolvedStyle (design contract), bukan hardcoded CSS.
   function renderQuizSceneContent(slot, content) {
+    var rs = slot.resolvedStyle || {};
+    var ansCard = rs.quizAnswerCard || {};
+    var badge = rs.quizChoiceBadge || {};
+    var panel = rs.quizQuestionPanel || {};
+
     var wrapper = document.createElement('div');
     wrapper.className = 'silse-quiz-scene';
     wrapper.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;gap:10px;padding:16px;box-sizing:border-box;overflow:auto;';
 
+    // Challenge header
+    var header = document.createElement('div');
+    header.className = 'silse-quiz-header';
+    header.style.cssText = 'font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;';
+    header.textContent = '🎯 Challenge — Pilih jawaban yang tepat';
+    wrapper.appendChild(header);
+
+    // Question focus panel
     var prompt = document.createElement('div');
-    prompt.className = 'silse-quiz-prompt';
-    prompt.style.cssText = 'font-size:17px;font-weight:600;';
+    prompt.className = 'silse-quiz-question-focus';
+    var promptCss = 'font-size:17px;font-weight:600;';
+    promptCss += 'padding:' + (panel.padding != null ? panel.padding : 16) + 'px;';
+    promptCss += 'border-radius:' + (panel.radius != null ? panel.radius : 12) + 'px;';
+    promptCss += 'background:' + (panel.background || '#f8fafc') + ';';
+    prompt.style.cssText = promptCss;
     prompt.textContent = content.prompt || '';
     wrapper.appendChild(prompt);
 
-    var choices = document.createElement('div');
-    choices.className = 'silse-quiz-choices';
-    choices.style.cssText = 'display:flex;flex-direction:column;gap:8px;';
+    // Answer grid
+    var answerGrid = document.createElement('div');
+    answerGrid.className = 'silse-quiz-answer-grid';
+    answerGrid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:10px;';
     for (var ci = 0; ci < content.choices.length; ci++) {
       (function(choiceIdx, choice) {
-        var choiceEl = document.createElement('div');
-        choiceEl.className = 'silse-quiz-choice';
-        choiceEl.setAttribute('data-choice-id', choice.id);
-        choiceEl.style.cssText = 'padding:12px 16px;border-radius:10px;background:#fff;border:2px solid #d1d5db;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:12px;';
-        var letter = document.createElement('span');
-        letter.style.cssText = 'display:inline-grid;place-items:center;min-width:32px;height:32px;border-radius:8px;background:#1d3557;color:#fff;font-size:14px;font-weight:900;';
-        letter.textContent = String.fromCharCode(65 + choiceIdx);
-        choiceEl.appendChild(letter);
+        var card = document.createElement('div');
+        card.className = 'silse-quiz-answer-card';
+        card.setAttribute('data-choice-id', choice.id);
+        var cardCss = 'padding:' + (ansCard.padding != null ? ansCard.padding : 14) + 'px;';
+        cardCss += 'border-radius:' + (ansCard.radius != null ? ansCard.radius : 12) + 'px;';
+        cardCss += 'background:' + (ansCard.background || '#fff') + ';';
+        cardCss += 'border:2px solid ' + (ansCard.border || '#d1d5db') + ';';
+        cardCss += 'cursor:pointer;font-size:14px;font-weight:600;min-height:60px;display:flex;align-items:center;gap:12px;';
+        card.style.cssText = cardCss;
+
+        // Choice letter badge
+        var letterBadge = document.createElement('span');
+        letterBadge.className = 'silse-quiz-choice-badge';
+        letterBadge.style.cssText = 'display:inline-grid;place-items:center;min-width:32px;height:32px;border-radius:' + (badge.radius != null ? badge.radius : 8) + 'px;background:' + (badge.background || '#1d3557') + ';color:' + (badge.color || '#fff') + ';font-size:14px;font-weight:900;flex-shrink:0;';
+        letterBadge.textContent = String.fromCharCode(65 + choiceIdx);
+        card.appendChild(letterBadge);
+
         var choiceText = document.createElement('span');
         choiceText.textContent = choice.text;
-        choiceEl.appendChild(choiceText);
-        choices.appendChild(choiceEl);
+        card.appendChild(choiceText);
+        answerGrid.appendChild(card);
       })(ci, content.choices[ci]);
     }
-    wrapper.appendChild(choices);
+    wrapper.appendChild(answerGrid);
+
+    // Feedback placeholder
+    var feedback = document.createElement('div');
+    feedback.className = 'silse-quiz-feedback';
+    feedback.style.cssText = 'display:none;';
+    wrapper.appendChild(feedback);
+
+    // Progress indicator
+    var progress = document.createElement('div');
+    progress.className = 'silse-quiz-progress';
+    progress.style.cssText = 'font-size:12px;font-weight:700;margin-top:auto;';
+    progress.textContent = content.choices.length + ' pilihan · Correct: ' + (content.correctChoiceId || '');
+    wrapper.appendChild(progress);
 
     return wrapper;
   }
