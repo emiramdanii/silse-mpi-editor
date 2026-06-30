@@ -305,26 +305,39 @@
             "height": 540
           },
           "content": {
-            "kind": "card",
-            "variant": "info-card",
-            "title": "Game Sortir Norma",
-            "body": "Sortir kartu perilaku ke 4 kategori norma: Agama, Kesusilaan, Kesopanan, Hukum."
-          }
-        },
-        {
-          "id": "slot-game1-cat",
-          "role": "categories",
-          "placement": {
-            "x": 72,
-            "y": 400,
-            "width": 1136,
-            "height": 200
-          },
-          "content": {
-            "kind": "card",
-            "variant": "info-card",
-            "title": "Kategori",
-            "body": "Agama | Kesusilaan | Kesopanan | Hukum"
+            "kind": "classification-game",
+            "instruction": "Sortir kartu perilaku ke 4 kategori norma yang tepat!",
+            "items": [
+              {
+                "id": "i1",
+                "label": "Berdoa sebelum aktivitas",
+                "correctCategory": "Agama"
+              },
+              {
+                "id": "i2",
+                "label": "Mengembalikan uang kembalian lebih",
+                "correctCategory": "Kesusilaan"
+              },
+              {
+                "id": "i3",
+                "label": "Membungkuk saat lewat orang tua",
+                "correctCategory": "Kesopanan"
+              },
+              {
+                "id": "i4",
+                "label": "Memakai helm saat berkendara",
+                "correctCategory": "Hukum"
+              }
+            ],
+            "categories": [
+              "Agama",
+              "Kesusilaan",
+              "Kesopanan",
+              "Hukum"
+            ],
+            "scorePerItem": 10,
+            "feedback": "Perhatikan sumber norma untuk menentukan kategori yang tepat.",
+            "completionMessage": "Selamat! Kamu berhasil menyortir semua norma."
           }
         }
       ]

@@ -162,7 +162,17 @@ export type AiBlueprintSlotContent =
       finalAction?: { label: string; action: string };
     }
   | { kind: 'reward'; type: string; label: string; icon?: string }
-  | { kind: 'navigation'; variant: string; buttons: { label: string; action: string; targetSceneId?: string }[] };
+  | { kind: 'navigation'; variant: string; buttons: { label: string; action: string; targetSceneId?: string }[] }
+  // GOLDEN-REFERENCE-GAME-P1: classification-game content kind
+  | {
+      kind: 'classification-game';
+      instruction?: string;
+      items?: { id: string; label: string; correctCategory: string }[];
+      categories?: string[];
+      scorePerItem?: number;
+      feedback?: string;
+      completionMessage?: string;
+    };
 
 // ---------------------------------------------------------------------------
 // Slot

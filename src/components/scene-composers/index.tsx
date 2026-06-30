@@ -1,5 +1,6 @@
 /**
- * Scene Composers for 7 priority scenes (GOLDEN-REFERENCE-RENDER-P1).
+ * Scene Composers for 7 priority scenes (GOLDEN-REFERENCE-RENDER-P1)
+ * + classification-game (GOLDEN-REFERENCE-GAME-P1).
  *
  * Layer: components/scene-composers
  * Allowed imports: react, ../scene-blocks, ../../core/mpi-design-contract, ../../core/scene-renderer
@@ -252,6 +253,195 @@ export function ReflectionJournalComposer({
         </ScenePanel>
       )}
       <ActionButtonBlock contract={contract} label="Simpan Refleksi" variant="primary" />
+    </SceneShell>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 8. ClassificationGameComposer (GOLDEN-REFERENCE-GAME-P1)
+// Game sortir: klik item → klik kolom → benar/salah → score → selesai
+// ---------------------------------------------------------------------------
+
+type ClassificationItem = {
+  id: string;
+  label: string;
+  correctCategory: string;
+};
+
+type ClassificationGameState = {
+  selectedItem: string | null;
+  placedItems: Record<string, string>; // itemId → category
+  score: number;
+  feedback: { text: string; correct: boolean } | null;
+  completed: boolean;
+};
+
+export function ClassificationGameComposer({
+  contract, content,
+}: {
+  contract: MpiDesignContract;
+  content: {
+    instruction?: string;
+    items?: ClassificationItem[];
+    categories?: string[];
+    scorePerItem?: number;
+    feedback?: string;
+    completionMessage?: string;
+  };
+}) {
+  const items = content.items || [];
+  const categories = content.categories || [];
+  const scorePerItem = content.scorePerItem ?? 10;
+
+  const [state, setState] = useState<ClassificationGameState>({
+    selectedItem: null,
+    placedItems: {},
+    score: 0,
+    feedback: null,
+    completed: false,
+  });
+
+  const handleSelectItem = (itemId: string) => {
+    if (state.placedItems[itemId]) return; // already placed
+    setState(prev => ({ ...prev, selectedItem: itemId, feedback: null }));
+  };
+
+  const handlePlaceItem = (category: string) => {
+    if (!state.selectedItem) return;
+    const item = items.find(i => i.id === state.selectedItem);
+    if (!item) return;
+    const isCorrect = item.correctCategory === category;
+    const newPlaced = { ...state.placedItems, [item.id]: category };
+    const newScore = isCorrect ? state.score + scorePerItem : state.score;
+    const allPlaced = Object.keys(newPlaced).length === items.length;
+
+    setState({
+      selectedItem: null,
+      placedItems: newPlaced,
+      score: newScore,
+      feedback: {
+        text: isCorrect ? `Benar! ${item.label} → ${category}` : `Belum tepat. ${item.label} bukan ${category}.`,
+        correct: isCorrect,
+      },
+      completed: allPlaced,
+    });
+  };
+
+  const handleReset = () => {
+    setState({ selectedItem: null, placedItems: {}, score: 0, feedback: null, completed: false });
+  };
+
+  const remainingItems = items.filter(i => !state.placedItems[i.id]);
+
+  return (
+    <SceneShell contract={contract} className="silse-scene-classification-game">
+      <SceneHeader contract={contract} chipIcon="🎮" chipLabel="Game Sortir · ±15 Menit" chipColor={contract.palette.success} title="Game Sortir Norma" />
+      {content.instruction && (
+        <div className="silse-classification-instruction" style={{
+          background: `${contract.palette.success}11`, border: `1px solid ${contract.palette.success}40`,
+          borderRadius: 13, padding: '13px 15px', fontSize: 14, lineHeight: 1.6, color: contract.palette.text,
+        }}>
+          {content.instruction}
+        </div>
+      )}
+
+      {/* Score */}
+      <div className="silse-classification-score" style={{
+        display: 'flex', alignItems: 'center', gap: 10, fontSize: 16, fontWeight: 800,
+        color: contract.palette.gold,
+      }}>
+        🏆 Skor: <span data-testid="game-score">{state.score}</span>
+        {state.completed && <span data-testid="game-completed" style={{ color: contract.palette.success }}>✓ Selesai!</span>}
+      </div>
+
+      {/* Feedback */}
+      {state.feedback && (
+        <div className="silse-classification-feedback" data-testid="game-feedback" style={{
+          padding: '10px 14px', borderRadius: 10, fontSize: 14, fontWeight: 700,
+          background: state.feedback.correct ? `${contract.palette.success}11` : `${contract.palette.danger}11`,
+          border: `1px solid ${state.feedback.correct ? contract.palette.success : contract.palette.danger}40`,
+          color: state.feedback.correct ? contract.palette.success : contract.palette.danger,
+        }}>
+          {state.feedback.text}
+        </div>
+      )}
+
+      {/* Item Pool */}
+      {!state.completed && remainingItems.length > 0 && (
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', color: contract.palette.mutedText, marginBottom: 8 }}>
+            Pilih Item {state.selectedItem && '→ Lalu klik kolom'}
+          </div>
+          <div className="silse-classification-pool" data-testid="classification-pool" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {remainingItems.map(item => (
+              <button
+                key={item.id}
+                data-testid={`item-${item.id}`}
+                data-item-id={item.id}
+                onClick={() => handleSelectItem(item.id)}
+                style={{
+                  padding: '10px 16px', borderRadius: 999, fontSize: 14, fontWeight: 700,
+                  border: state.selectedItem === item.id ? `2px solid ${contract.palette.gold}` : contract.card.border,
+                  background: state.selectedItem === item.id ? `${contract.palette.gold}22` : contract.card.background,
+                  color: contract.palette.text, cursor: 'pointer', transition: 'all 0.15s',
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Category Columns */}
+      <div className="silse-classification-column-grid" data-testid="classification-columns" style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(categories.length, 4)}, 1fr)`, gap: 10 }}>
+        {categories.map(cat => {
+          const placedInCategory = items.filter(i => state.placedItems[i.id] === cat);
+          return (
+            <div
+              key={cat}
+              data-testid={`column-${cat}`}
+              data-category={cat}
+              onClick={() => handlePlaceItem(cat)}
+              className="silse-classification-column"
+              style={{
+                background: contract.card.background, border: contract.card.border,
+                borderRadius: contract.card.radius, padding: contract.card.padding,
+                minHeight: 120, cursor: state.selectedItem ? 'pointer' : 'default',
+                transition: 'border 0.15s',
+                borderColor: state.selectedItem ? `${contract.palette.gold}66` : contract.card.border,
+              }}
+            >
+              <div style={{ fontSize: 13, fontWeight: 800, color: contract.palette.gold, marginBottom: 10, textAlign: 'center' }}>{cat}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {placedInCategory.map(item => (
+                  <div key={item.id} className="silse-classification-placed-item" data-testid={`placed-${item.id}`} style={{
+                    padding: '6px 12px', borderRadius: 999, fontSize: 13, fontWeight: 600,
+                    background: item.correctCategory === cat ? `${contract.palette.success}22` : `${contract.palette.danger}22`,
+                    color: item.correctCategory === cat ? contract.palette.success : contract.palette.danger,
+                  }}>
+                    {item.label}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Reset + Completion */}
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+        <ActionButtonBlock contract={contract} label="↺ Reset" onClick={handleReset} variant="secondary" />
+      </div>
+      {state.completed && content.completionMessage && (
+        <div data-testid="completion-message" style={{
+          padding: '16px', borderRadius: contract.card.radius, textAlign: 'center',
+          background: `${contract.palette.success}11`, border: `1px solid ${contract.palette.success}40`,
+          fontSize: 16, fontWeight: 800, color: contract.palette.success,
+        }}>
+          {content.completionMessage}
+        </div>
+      )}
     </SceneShell>
   );
 }

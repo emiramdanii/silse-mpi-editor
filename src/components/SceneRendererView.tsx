@@ -26,7 +26,7 @@ import type { MpiDesignContract } from '../core/mpi-design-contract';
 import {
   CurriculumGuideComposer, ObjectivesPathComposer, StarterReviewComposer,
   DiscussionSceneComposer, CaseAnalysisComposer, ResultSummaryComposer,
-  ReflectionJournalComposer,
+  ReflectionJournalComposer, ClassificationGameComposer,
 } from './scene-composers';
 
 // PATCH B: Scene composer routing by sceneType, not content.kind
@@ -51,6 +51,7 @@ function getSceneComposer(sceneType: string): ((props: SceneComposerProps) => Re
     'case-analysis': ({ contract, slot }) => <CaseAnalysisComposer contract={contract} content={slot.content as any} />,
     'result-summary': ({ contract, slot }) => <ResultSummaryComposer contract={contract} content={slot.content as any} />,
     'reflection-journal': ({ contract, slot }) => <ReflectionJournalComposer contract={contract} content={slot.content as any} />,
+    'classification-game': ({ contract, slot }) => <ClassificationGameComposer contract={contract} content={slot.content as any} />,
   };
   return composers[sceneType] ?? null;
 }

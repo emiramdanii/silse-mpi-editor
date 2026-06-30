@@ -1110,6 +1110,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       'case-analysis': function(p) { return p.slots[0] ? renderCaseAnalysisExport(p.slots[0], p.slots[0].content, p) : null; },
       'result-summary': function(p) { return p.slots[0] ? renderResultSummaryExport(p.slots[0], p.slots[0].content, p) : null; },
       'reflection-journal': function(p) { return p.slots[0] ? renderReflectionJournalExport(p.slots[0], p.slots[0].content, p) : null; },
+      'classification-game': function(p) { return p.slots[0] ? renderClassificationGameExport(p.slots[0], p.slots[0].content, p) : null; },
     };
     if (sceneTypeRenderers[plan.sceneType]) {
       var renderedEl = sceneTypeRenderers[plan.sceneType](plan);
@@ -2042,6 +2043,86 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     return exportShell(plan, 'silse-scene-reflection-journal', children);
   }
 
+  // GOLDEN-REFERENCE-GAME-P1: Classification game export renderer
+  function renderClassificationGameExport(slot, content, plan) {
+    var p = plan.palette || {};
+    var children = [
+      exportHeader(plan, '🎮 Game Sortir · ±15 Menit', p.success, 'Game Sortir Norma'),
+    ];
+    // Instruction
+    if (content.instruction) {
+      var instr = document.createElement('div');
+      instr.className = 'silse-classification-instruction';
+      instr.style.cssText = 'background:' + (p.success || '#34d399') + '11;border:1px solid ' + (p.success || '#34d399') + '40;border-radius:13px;padding:13px 15px;font-size:14px;line-height:1.6;color:' + p.text + ';';
+      instr.textContent = content.instruction;
+      children.push(instr);
+    }
+    // Score
+    var scoreEl = document.createElement('div');
+    scoreEl.className = 'silse-classification-score';
+    scoreEl.setAttribute('data-testid', 'game-score');
+    scoreEl.style.cssText = 'display:flex;align-items:center;gap:10px;font-size:16px;font-weight:800;color:' + (p.gold || '#f9c12e') + ';';
+    scoreEl.innerHTML = '🏆 Skor: <span class="silse-game-score-val">0</span>';
+    children.push(scoreEl);
+    // Feedback area
+    var fbEl = document.createElement('div');
+    fbEl.className = 'silse-classification-feedback';
+    fbEl.setAttribute('data-testid', 'game-feedback');
+    fbEl.style.cssText = 'display:none;padding:10px 14px;border-radius:10px;font-size:14px;font-weight:700;';
+    children.push(fbEl);
+    // Item pool
+    var poolLabel = document.createElement('div');
+    poolLabel.style.cssText = 'font-size:12px;font-weight:800;text-transform:uppercase;color:' + p.mutedText + ';margin-bottom:8px;';
+    poolLabel.textContent = 'Pilih Item';
+    children.push(poolLabel);
+    var pool = document.createElement('div');
+    pool.className = 'silse-classification-pool';
+    pool.setAttribute('data-testid', 'classification-pool');
+    pool.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;';
+    if (content.items) {
+      for (var ii = 0; ii < content.items.length; ii++) {
+        (function(item) {
+          var btn = document.createElement('button');
+          btn.className = 'silse-classification-item';
+          btn.setAttribute('data-item-id', item.id);
+          btn.setAttribute('data-correct-cat', item.correctCategory);
+          btn.textContent = item.label;
+          btn.style.cssText = 'padding:10px 16px;border-radius:999px;font-size:14px;font-weight:700;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:' + (p.surface || '#182d45') + ';color:' + p.text + ';cursor:pointer;transition:all 0.15s;';
+          pool.appendChild(btn);
+        })(content.items[ii]);
+      }
+    }
+    children.push(pool);
+    // Category columns
+    var grid = document.createElement('div');
+    grid.className = 'silse-classification-column-grid';
+    grid.setAttribute('data-testid', 'classification-columns');
+    grid.style.cssText = 'display:grid;grid-template-columns:repeat(' + Math.min((content.categories || []).length, 4) + ', 1fr);gap:10px;';
+    if (content.categories) {
+      for (var ci = 0; ci < content.categories.length; ci++) {
+        (function(cat) {
+          var col = document.createElement('div');
+          col.className = 'silse-classification-column';
+          col.setAttribute('data-category', cat);
+          col.style.cssText = 'background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';border-radius:16px;padding:20px;min-height:120px;';
+          var colTitle = document.createElement('div');
+          colTitle.style.cssText = 'font-size:13px;font-weight:800;color:' + (p.gold || '#f9c12e') + ';margin-bottom:10px;text-align:center;';
+          colTitle.textContent = cat;
+          col.appendChild(colTitle);
+          var colItems = document.createElement('div');
+          colItems.className = 'silse-classification-placed-items';
+          colItems.style.cssText = 'display:flex;flex-direction:column;gap:6px;';
+          col.appendChild(colItems);
+          grid.appendChild(col);
+        })(content.categories[ci]);
+      }
+    }
+    children.push(grid);
+    // Reset button
+    children.push(exportActionButton(plan, '↺ Reset', 'secondary'));
+    return exportShell(plan, 'silse-scene-classification-game', children);
+  }
+
   function buildInlineStyle(comp) {
     // Geometry + resolvedStyle.inlineStyle — NO style switch
     var s = 'position:absolute;left:' + comp.x + 'px;top:' + comp.y + 'px;width:' + comp.width + 'px;height:' + comp.height + 'px;';
@@ -2950,6 +3031,94 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
             timerEl.setAttribute('data-interval-id', String(interval));
           }
         }
+      }
+    });
+
+    // GOLDEN-REFERENCE-GAME-P1: Classification game interaction
+    var gameSelectedItem = null;
+    var gameScore = 0;
+    canvas.addEventListener('click', function(e) {
+      // Select item
+      var item = e.target.closest('[data-item-id]');
+      if (item && !item.getAttribute('data-placed')) {
+        // Deselect previous
+        var prevSelected = canvas.querySelector('[data-item-id][data-selected="true"]');
+        if (prevSelected) {
+          prevSelected.removeAttribute('data-selected');
+          prevSelected.style.borderColor = '';
+          prevSelected.style.background = '';
+        }
+        // Select new
+        item.setAttribute('data-selected', 'true');
+        item.style.borderColor = 'var(--silse-gold, #f9c12e)';
+        item.style.background = 'rgba(249,193,46,0.15)';
+        gameSelectedItem = item;
+        return;
+      }
+      // Place item in column
+      var col = e.target.closest('[data-category]');
+      if (col && gameSelectedItem) {
+        var category = col.getAttribute('data-category');
+        var correctCat = gameSelectedItem.getAttribute('data-correct-cat');
+        var isCorrect = correctCat === category;
+        var itemId = gameSelectedItem.getAttribute('data-item-id');
+        var itemLabel = gameSelectedItem.textContent;
+        // Place item in column
+        var placedContainer = col.querySelector('.silse-classification-placed-items');
+        if (placedContainer) {
+          var placed = document.createElement('div');
+          placed.className = 'silse-classification-placed-item';
+          placed.setAttribute('data-placed-id', itemId);
+          placed.style.cssText = 'padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600;background:' + (isCorrect ? 'rgba(52,211,153,0.15)' : 'rgba(255,107,107,0.15)') + ';color:' + (isCorrect ? '#34d399' : '#ff6b6b') + ';';
+          placed.textContent = itemLabel;
+          placedContainer.appendChild(placed);
+        }
+        // Mark item as placed
+        gameSelectedItem.setAttribute('data-placed', 'true');
+        gameSelectedItem.style.display = 'none';
+        gameSelectedItem.removeAttribute('data-selected');
+        // Update score
+        if (isCorrect) gameScore += 10;
+        var scoreVal = canvas.querySelector('.silse-game-score-val');
+        if (scoreVal) scoreVal.textContent = String(gameScore);
+        // Show feedback
+        var fb = canvas.querySelector('.silse-classification-feedback');
+        if (fb) {
+          fb.style.display = 'block';
+          fb.style.background = isCorrect ? 'rgba(52,211,153,0.11)' : 'rgba(255,107,107,0.11)';
+          fb.style.border = '1px solid ' + (isCorrect ? '#34d399' : '#ff6b6b') + '40';
+          fb.style.color = isCorrect ? '#34d399' : '#ff6b6b';
+          fb.textContent = isCorrect ? 'Benar! ' + itemLabel + ' → ' + category : 'Belum tepat. ' + itemLabel + ' bukan ' + category + '.';
+        }
+        gameSelectedItem = null;
+        // Check completion
+        var remaining = canvas.querySelectorAll('[data-item-id]:not([data-placed])');
+        if (remaining.length === 0) {
+          var scoreEl2 = canvas.querySelector('.silse-classification-score');
+          if (scoreEl2) scoreEl2.innerHTML += ' <span style="color:#34d399">✓ Selesai!</span>';
+        }
+        return;
+      }
+      // Reset
+      var resetBtn = e.target.closest('[data-action]');
+      if (resetBtn && resetBtn.textContent.indexOf('Reset') >= 0) {
+        // Reset game
+        var allItems = canvas.querySelectorAll('[data-item-id]');
+        for (var ri = 0; ri < allItems.length; ri++) {
+          allItems[ri].removeAttribute('data-placed');
+          allItems[ri].removeAttribute('data-selected');
+          allItems[ri].style.display = '';
+          allItems[ri].style.borderColor = '';
+          allItems[ri].style.background = '';
+        }
+        var allPlaced = canvas.querySelectorAll('.silse-classification-placed-item');
+        for (var pi = 0; pi < allPlaced.length; pi++) allPlaced[pi].remove();
+        gameScore = 0;
+        gameSelectedItem = null;
+        var sv = canvas.querySelector('.silse-game-score-val');
+        if (sv) sv.textContent = '0';
+        var fb2 = canvas.querySelector('.silse-classification-feedback');
+        if (fb2) fb2.style.display = 'none';
       }
     });
   }

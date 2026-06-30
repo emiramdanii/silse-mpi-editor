@@ -222,7 +222,9 @@ export type MpiSceneSlotContent =
   | { kind: 'discussion-scene'; discussionPrompt?: string; groupInstruction?: string; responseInput?: string }
   | { kind: 'case-analysis'; caseText?: string; analysisPrompt?: string; revealExplanation?: string; discussionPrompt?: string }
   | { kind: 'result-summary'; scoreSummary?: { score: number; maxScore: number }; achievementLevel?: string; breakdown?: { label: string; value: string }[]; reviewCards?: { title: string; body: string }[] }
-  | { kind: 'reflection-journal'; reflectionPrompts?: string[]; commitmentInput?: string; portfolioSummary?: { label: string; value: string }[]; nextTask?: string };
+  | { kind: 'reflection-journal'; reflectionPrompts?: string[]; commitmentInput?: string; portfolioSummary?: { label: string; value: string }[]; nextTask?: string }
+  // GOLDEN-REFERENCE-GAME-P1: classification-game content kind
+  | { kind: 'classification-game'; instruction?: string; items?: { id: string; label: string; correctCategory: string }[]; categories?: string[]; scorePerItem?: number; feedback?: string; completionMessage?: string };
 
 export type MpiSceneSlot = {
   id: string;
