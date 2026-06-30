@@ -24,6 +24,7 @@ import { getSkinClassForComponent } from '../core/style-packs/component-skin';
 import { getBackgroundPatternForStylePack } from '../core/style-packs/background-pattern';
 import { getCoverClassForStylePack } from '../core/style-packs/cover-decoration';
 import { getMicroAnimationForStylePack } from '../core/style-packs/micro-animation';
+import { getPremiumExportProfile, getPremiumCssVariables, getHeroKickerText } from '../core/style-packs/premium-export-profile';
 import type { GameComponent, NavigationComponent, QuestionComponent } from '../core/types';
 
 const CANVAS_WIDTH = 1280;
@@ -73,6 +74,15 @@ export function PreviewApp() {
   const coverClass = currentPage.role === 'cover' ? getCoverClassForStylePack(project.stylePackId) : '';
   const animProfile = getMicroAnimationForStylePack(project.stylePackId);
 
+  // PATCH-1: Premium visual profile shared with editor + export.
+  const premiumProfile = getPremiumExportProfile(project.stylePackId);
+  const premiumCssVars = getPremiumCssVariables(premiumProfile);
+  const heroKickerText = currentPage.role === 'cover'
+    ? getHeroKickerText(project.curriculum?.subject, project.curriculum?.grade, currentPage.title)
+    : '';
+  const isCover = currentPage.role === 'cover';
+  const isClosing = currentPage.role === 'closing';
+
   const currentIdx = project.pages.findIndex((p) => p.id === currentPageId);
   const isFirst = currentIdx === 0;
   const isLast = currentIdx === project.pages.length - 1;
@@ -114,13 +124,53 @@ export function PreviewApp() {
       </div>
       <div className="preview-canvas-wrap">
         <div
-          className={`canvas-frame preview-canvas ${bgPattern.pageClass} ${bgPattern.patternClass} ${coverClass} ${animProfile.pageEnterClass}`.trim()}
+          className={`canvas-frame preview-canvas silse-premium-stage ${bgPattern.pageClass} ${bgPattern.patternClass} ${coverClass} ${animProfile.pageEnterClass}`.trim()}
+          data-testid="preview-canvas-frame"
+          data-page-role={currentPage.role}
           style={{
             width: CANVAS_WIDTH,
             height: CANVAS_HEIGHT,
             background: bg,
-          }}
+            ...premiumCssVars,
+          } as React.CSSProperties}
         >
+          {/* PATCH-1: Premium auto-decoration layer (mirrors export + editor). */}
+          {(isCover || isClosing) && (
+            <div className="silse-premium-decoration" data-testid="silse-premium-decoration-preview" aria-hidden="true">
+              {isCover && (
+                <>
+                  <div className="silse-hero-card" data-testid="silse-hero-card-preview" />
+                  {heroKickerText && (
+                    <div className="silse-hero-kicker" data-testid="silse-hero-kicker-preview">
+                      {heroKickerText}
+                    </div>
+                  )}
+                  <button
+                    className="silse-hero-cta"
+                    data-testid="silse-hero-cta-preview"
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); navigateNext(); }}
+                    aria-label="Mulai pembelajaran, pergi ke halaman berikutnya"
+                  >
+                    Mulai Pembelajaran →
+                  </button>
+                </>
+              )}
+              {isClosing && (
+                <>
+                  <div className="silse-award-medal" data-testid="silse-award-medal-preview">
+                    <div className="silse-award-shine" />
+                    <div className="silse-award-glow" />
+                    <div className="silse-award-medal-inner">🏆</div>
+                  </div>
+                  <div className="silse-award-ribbon" data-testid="silse-award-ribbon-preview">
+                    ✨ Penjelajah Selesai ✨
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
           {currentPage.components.map((component) => {
             // M6 PATCH: resolve style via shared resolver (same as editor + export)
             const resolvedStyle = getResolvedComponentStyle(project, currentPage, component);

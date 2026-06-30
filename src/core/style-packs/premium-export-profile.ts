@@ -1,19 +1,23 @@
 /**
- * Premium Export Profile (PREMIUM-EXPORT-OVERHAUL-01).
+ * Premium Visual Profile (PREMIUM-EXPORT-OVERHAUL-01 + PATCH-1).
  *
  * Layer: core/style-packs (pure data, no React/DOM)
  * Allowed imports: ./style-pack-registry
  *
- * Kontrak (PREMIUM-EXPORT-OVERHAUL-01):
- *   Pure helper yang mengembalikan "signature visual story" per style pack
- *   untuk dipakai di export HTML. Story = 4 warna signature + gradient
- *   background per page-role + typography recipe + glow accent.
+ * Kontrak (PREMIUM-EXPORT-OVERHAUL-01 + PATCH-1):
+ *   Pure helper yang mengembalikan "signature visual story" per style pack.
+ *   Dipakai BERSAMA oleh editor (CanvasStage), preview (PreviewApp), dan
+ *   export (export-html). Patch-1 memastikan profile ini TIDAK export-only.
+ *
+ *   Story = 4 warna signature + gradient background per page-role +
+ *   typography recipe + glow accent.
  *
  *   Prinsip:
- *     - Pure data, no DOM, no React.
+ *     - Pure data, no DOM, no React, no store.
  *     - Unknown style pack → fallback modern-clean.
  *     - Hanya warna/gradient/string — TIDAK mengubah content/layout/geometry.
  *     - Konsisten dengan reference premium (MEDIA_PENJELAJAH_PANCASILA_FINAL).
+ *     - Bisa dipakai editor, preview, export (PATCH-1).
  *
  *   Story per style pack:
  *     - modern-clean   → navy + steel + crimson + amber (clean professional)
@@ -270,4 +274,71 @@ export function isHeroPageRole(role: string): boolean {
  */
 export function isAwardPageRole(role: string): boolean {
   return role === 'closing';
+}
+
+// ---------------------------------------------------------------------------
+// PATCH-1: CSS variables helper for editor/preview (not just export)
+// ---------------------------------------------------------------------------
+
+/**
+ * Get CSS variables map for a premium profile.
+ * Used by CanvasStage (editor) and PreviewApp to set inline CSS variables
+ * on the canvas element, so the premium CSS classes in styles.css work.
+ *
+ * Pure function — no DOM, no React, no store.
+ */
+export function getPremiumCssVariables(profile: PremiumExportProfile): Record<string, string> {
+  const c = profile.colors;
+  const t = profile.typography;
+  const isDark = profile.darkStage;
+  const heroColor = isDark ? '#ffffff' : c.blue;
+  const bodyColor = isDark ? 'rgba(255,255,255,0.92)' : c.text;
+  const mutedColor = isDark ? 'rgba(255,255,255,0.7)' : c.muted;
+  const cardBg = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.96)';
+  const cardBorder = isDark ? 'rgba(255,255,255,0.14)' : 'rgba(29,53,87,0.12)';
+  const cardShadow = isDark
+    ? '0 22px 54px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.04)'
+    : '0 22px 54px rgba(29,53,87,0.18), 0 4px 12px rgba(29,53,87,0.06)';
+  const stageOuter = isDark ? c.navy : '#f1f5f9';
+  const stageText = isDark ? '#ffffff' : c.navy;
+
+  return {
+    '--silse-navy': c.navy,
+    '--silse-blue': c.blue,
+    '--silse-red': c.red,
+    '--silse-gold': c.gold,
+    '--silse-gold-deep': c.goldDeep,
+    '--silse-paper': c.paper,
+    '--silse-text-premium': bodyColor,
+    '--silse-muted-premium': mutedColor,
+    '--silse-hero-font': t.heroFont,
+    '--silse-body-font': t.bodyFont,
+    '--silse-hero-weight': String(t.heroWeight),
+    '--silse-hero-letter-spacing': t.heroLetterSpacing,
+    '--silse-card-radius': `${profile.cardRadius}px`,
+    '--silse-button-radius': `${profile.buttonRadius}px`,
+    '--silse-stage-outer': stageOuter,
+    '--silse-stage-text': stageText,
+    '--silse-hero-color': heroColor,
+    '--silse-hero-accent': c.red,
+    '--silse-card-bg': cardBg,
+    '--silse-card-border': cardBorder,
+    '--silse-card-shadow': cardShadow,
+    '--silse-hero-uppercase': t.heroUppercase ? 'uppercase' : 'none',
+  };
+}
+
+/**
+ * Get the kicker text for a cover page hero.
+ * Returns subject + grade (e.g. "PPKn · Kelas 7") or falls back to page title.
+ * Pure function.
+ */
+export function getHeroKickerText(
+  curriculumSubject: string | undefined,
+  curriculumGrade: string | undefined,
+  pageTitle: string | undefined,
+): string {
+  let text = curriculumSubject || pageTitle || '';
+  if (curriculumGrade) text = text ? `${text} · Kelas ${curriculumGrade}` : `Kelas ${curriculumGrade}`;
+  return text;
 }

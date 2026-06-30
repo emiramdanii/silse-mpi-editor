@@ -30,6 +30,7 @@ import { getSkinClassForComponent } from '../core/style-packs/component-skin';
 import { getBackgroundPatternForStylePack } from '../core/style-packs/background-pattern';
 import { getCoverClassForStylePack } from '../core/style-packs/cover-decoration';
 import { getMicroAnimationForStylePack } from '../core/style-packs/micro-animation';
+import { getPremiumExportProfile, getPremiumCssVariables, getHeroKickerText } from '../core/style-packs/premium-export-profile';
 import { getResolvedComponentStyle } from '../core/style/resolveComponentStyle';
 import { snapToGrid, clampRectToCanvas, CANVAS_WIDTH, CANVAS_HEIGHT, type Rect } from '../core/geometry';
 import { Toolbar } from './Toolbar';
@@ -154,6 +155,15 @@ export function CanvasStage() {
   const coverClass = currentPage?.role === 'cover' ? getCoverClassForStylePack(project.stylePackId) : '';
   const animProfile = getMicroAnimationForStylePack(project.stylePackId);
 
+  // PATCH-1: Premium visual profile shared with export + preview.
+  const premiumProfile = getPremiumExportProfile(project.stylePackId);
+  const premiumCssVars = getPremiumCssVariables(premiumProfile);
+  const heroKickerText = currentPage?.role === 'cover'
+    ? getHeroKickerText(project.curriculum?.subject, project.curriculum?.grade, currentPage.title)
+    : '';
+  const isCover = currentPage?.role === 'cover';
+  const isClosing = currentPage?.role === 'closing';
+
   const capability = currentPage ? getCapability(currentPage.role) : null;
   const canAdd = capability?.allowAddComponent ?? false;
   const roleInfo = currentPage ? getRoleInfo(currentPage.role) : null;
@@ -172,19 +182,54 @@ export function CanvasStage() {
       <div className="canvas-stage__canvas-area">
         <div
           ref={canvasRef}
-          className={`canvas-frame ${bgPattern.pageClass} ${bgPattern.patternClass} ${coverClass} ${animProfile.pageEnterClass}`.trim()}
+          className={`canvas-frame silse-premium-stage ${bgPattern.pageClass} ${bgPattern.patternClass} ${coverClass} ${animProfile.pageEnterClass}`.trim()}
           data-testid="canvas-frame"
+          data-page-role={currentPage?.role ?? undefined}
           style={{
             width: CANVAS_WIDTH,
             height: CANVAS_HEIGHT,
             background: bg,
-          }}
+            ...premiumCssVars,
+          } as React.CSSProperties}
           onClick={() => selectComponent(null)}
         >
           <div className="canvas-frame__label" data-testid="canvas-frame-label">
             {CANVAS_WIDTH} × {CANVAS_HEIGHT} · {currentPage?.title ?? '—'} ·{' '}
             {currentPage ? `${roleInfo?.label ?? currentPage.role} · ${currentPage.layoutId}` : ''}
           </div>
+
+          {/* PATCH-1: Premium auto-decoration layer (mirrors export).
+              pointer-events:none + z-index:0 so it never interferes with
+              drag/select/resize of user components. */}
+          {(isCover || isClosing) && (
+            <div className="silse-premium-decoration" data-testid="silse-premium-decoration" aria-hidden="true">
+              {isCover && (
+                <>
+                  <div className="silse-hero-card" data-testid="silse-hero-card" />
+                  {heroKickerText && (
+                    <div className="silse-hero-kicker" data-testid="silse-hero-kicker">
+                      {heroKickerText}
+                    </div>
+                  )}
+                  <div className="silse-hero-cta" data-testid="silse-hero-cta-editor">
+                    Mulai Pembelajaran →
+                  </div>
+                </>
+              )}
+              {isClosing && (
+                <>
+                  <div className="silse-award-medal" data-testid="silse-award-medal-editor">
+                    <div className="silse-award-shine" />
+                    <div className="silse-award-glow" />
+                    <div className="silse-award-medal-inner">🏆</div>
+                  </div>
+                  <div className="silse-award-ribbon" data-testid="silse-award-ribbon-editor">
+                    ✨ Penjelajah Selesai ✨
+                  </div>
+                </>
+              )}
+            </div>
+          )}
 
           {currentPage && currentPage.components.length === 0 && (
             <div className="canvas-empty" data-testid="canvas-empty">

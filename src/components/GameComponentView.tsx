@@ -115,7 +115,7 @@ export function GameComponentView({
             <div key={choice.id} data-choice-index={idx}
               onClick={(e) => { e.stopPropagation(); onAnswer?.(gs.currentMissionIndex, idx); }}
               style={{ ...choiceStyle, backgroundColor: bg }}>
-              <span style={{ fontWeight: 'bold', minWidth: 20 }}>{String.fromCharCode(65 + idx)}.</span>
+              <span className="silse-choice-letter" style={{ fontWeight: 'bold', minWidth: 20 }}>{String.fromCharCode(65 + idx)}.</span>
               <span style={{ flex: 1, whiteSpace: 'normal', overflowWrap: 'anywhere' }}>{choice.text}</span>
             </div>
           );

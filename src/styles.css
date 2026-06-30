@@ -3706,3 +3706,276 @@ textarea {
     display: none !important;
   }
 }
+
+/* =========================================================================
+   PREMIUM-EXPORT-OVERHAUL-01 PATCH-1 — premium visual classes for editor/preview
+   These classes mirror the export's inline premium CSS, using CSS variables
+   set by CanvasStage/PreviewApp via getPremiumCssVariables().
+   ========================================================================= */
+
+/* Cinematic stage — applied to canvas-frame in editor/preview */
+.canvas-frame.silse-premium-stage {
+  border-radius: 26px;
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.42), 0 8px 22px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Page-role-aware background gradients (editor/preview) */
+.canvas-frame[data-page-role="cover"] {
+  background: linear-gradient(135deg, #1d3557 0%, #457b9d 55%, #eef4fb 100%) !important;
+}
+.canvas-frame[data-page-role="closing"] {
+  background: linear-gradient(135deg, #0d243d 0%, #1d3557 60%, #457b9d 100%) !important;
+}
+.canvas-frame[data-page-role="material"],
+.canvas-frame[data-page-role="learningObjectives"] {
+  background: linear-gradient(180deg, #ffffff 0%, #f6f9fc 100%) !important;
+}
+.canvas-frame[data-page-role="quiz"],
+.canvas-frame[data-page-role="activity"] {
+  background: linear-gradient(135deg, #eef4fb 0%, #f6f9fc 100%) !important;
+}
+
+/* Hero typography for text components with variant=title */
+.canvas-frame .silse-text-title {
+  font-family: var(--silse-hero-font, 'Trebuchet MS', 'Segoe UI', Arial, sans-serif);
+  font-weight: var(--silse-hero-weight, 950);
+  letter-spacing: var(--silse-hero-letter-spacing, -0.025em);
+  text-transform: var(--silse-hero-uppercase, uppercase);
+  color: var(--silse-hero-color, #1d3557);
+  line-height: 1.04;
+}
+.canvas-frame .silse-text-title .silse-accent {
+  color: var(--silse-hero-accent, #e63946);
+}
+.canvas-frame .silse-text-subtitle {
+  font-family: var(--silse-body-font, 'Segoe UI', Arial, sans-serif);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--silse-muted-premium, #60788d);
+}
+
+/* Kicker pill */
+.canvas-frame .silse-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: linear-gradient(145deg, var(--silse-gold, #ffd166), var(--silse-gold-deep, #ffb703));
+  color: var(--silse-navy, #0d243d);
+  font-family: var(--silse-body-font, 'Segoe UI', sans-serif);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.16);
+  white-space: nowrap;
+}
+
+/* Choice letter badge */
+.canvas-frame .silse-choice-letter {
+  display: inline-grid;
+  place-items: center;
+  min-width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--silse-blue, #1d3557);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+/* Premium skin overrides for editor/preview */
+.canvas-frame .skin-card-flat,
+.canvas-frame .skin-card-soft,
+.canvas-frame .skin-card-bold {
+  border-radius: var(--silse-card-radius, 24px) !important;
+  background: var(--silse-card-bg, rgba(255, 255, 255, 0.96)) !important;
+  border: 1px solid var(--silse-card-border, rgba(29, 53, 87, 0.12)) !important;
+  box-shadow: var(--silse-card-shadow, 0 22px 54px rgba(29, 53, 87, 0.18)) !important;
+}
+
+.canvas-frame .skin-button-clean,
+.canvas-frame .skin-button-rounded,
+.canvas-frame .skin-button-mission {
+  border-radius: var(--silse-button-radius, 999px) !important;
+  font-weight: 900 !important;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18) !important;
+  background: linear-gradient(145deg, var(--silse-red, #e63946), var(--silse-blue, #1d3557)) !important;
+  color: #fff !important;
+  border: 0 !important;
+}
+
+.canvas-frame .skin-quiz-calm,
+.canvas-frame .skin-quiz-playful,
+.canvas-frame .skin-quiz-mission,
+.canvas-frame .skin-game-calm,
+.canvas-frame .skin-game-playful,
+.canvas-frame .skin-game-mission {
+  border-radius: var(--silse-card-radius, 24px) !important;
+  background: var(--silse-card-bg, rgba(255, 255, 255, 0.96)) !important;
+  border: 1px solid var(--silse-card-border, rgba(29, 53, 87, 0.12)) !important;
+  box-shadow: var(--silse-card-shadow, 0 22px 54px rgba(29, 53, 87, 0.18)) !important;
+}
+
+.canvas-frame .skin-bridge-subtle,
+.canvas-frame .skin-bridge-strong {
+  border-radius: var(--silse-card-radius, 24px) !important;
+  background: rgba(255, 248, 219, 0.6) !important;
+  border: 1px solid rgba(255, 183, 3, 0.2) !important;
+  box-shadow: var(--silse-card-shadow, 0 22px 54px rgba(29, 53, 87, 0.18)) !important;
+}
+
+.canvas-frame .skin-layered-clean,
+.canvas-frame .skin-layered-soft,
+.canvas-frame .skin-layered-bold {
+  border-radius: var(--silse-card-radius, 24px) !important;
+  background: var(--silse-card-bg, rgba(255, 255, 255, 0.96)) !important;
+  border: 1px solid var(--silse-card-border, rgba(29, 53, 87, 0.12)) !important;
+  box-shadow: var(--silse-card-shadow, 0 22px 54px rgba(29, 53, 87, 0.18)) !important;
+}
+
+/* Hero card frame — auto-injected on cover pages (editor/preview) */
+.canvas-frame .silse-hero-card {
+  position: absolute;
+  left: 50%;
+  top: 130px;
+  transform: translateX(-50%);
+  width: 980px;
+  height: 460px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(29, 53, 87, 0.14);
+  border-radius: 30px;
+  box-shadow: 12px 12px 0 rgba(29, 53, 87, 0.1), 0 24px 60px rgba(29, 53, 87, 0.2);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.canvas-frame .silse-hero-kicker {
+  position: absolute;
+  left: 50%;
+  top: 168px;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: linear-gradient(145deg, var(--silse-gold, #ffd166), var(--silse-gold-deep, #ffb703));
+  color: var(--silse-navy, #0d243d);
+  font-family: var(--silse-body-font, 'Segoe UI', sans-serif);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+  z-index: 0;
+  white-space: nowrap;
+}
+
+.canvas-frame .silse-hero-cta {
+  position: absolute;
+  left: 50%;
+  top: 510px;
+  transform: translateX(-50%);
+  padding: 14px 32px;
+  border-radius: 999px;
+  background: linear-gradient(145deg, var(--silse-red, #e63946), var(--silse-blue, #1d3557));
+  color: #fff;
+  font-family: var(--silse-body-font, 'Segoe UI', sans-serif);
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  border: 0;
+  cursor: pointer;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.28);
+  z-index: 0;
+  white-space: nowrap;
+}
+
+/* Award medal — auto-injected on closing pages (editor/preview) */
+.canvas-frame .silse-award-medal {
+  position: absolute;
+  left: 50%;
+  top: 56px;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 200px;
+  pointer-events: none;
+  z-index: 0;
+}
+.canvas-frame .silse-award-medal .silse-award-shine {
+  position: absolute;
+  inset: -40%;
+  background: conic-gradient(from 0deg, transparent, rgba(255, 209, 102, 0.5), transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: silse-award-shine 8s linear 60;
+  opacity: 0.55;
+  border-radius: 50%;
+}
+.canvas-frame .silse-award-medal .silse-award-glow {
+  position: absolute;
+  inset: -22px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 209, 102, 0.7), rgba(255, 209, 102, 0.2) 48%, transparent 70%);
+  filter: blur(4px);
+}
+.canvas-frame .silse-award-medal .silse-award-medal-inner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg, #fff8e7, #fff);
+  border: 8px solid var(--silse-gold, #ffd166);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), inset 0 0 0 6px rgba(255, 183, 3, 0.35), inset 0 0 38px rgba(255, 209, 102, 0.28);
+  font-size: 80px;
+  line-height: 1;
+}
+.canvas-frame .silse-award-medal .silse-award-medal-inner::after {
+  content: '';
+  position: absolute;
+  inset: -16px;
+  border-radius: 50%;
+  border: 3px dashed rgba(255, 183, 3, 0.8);
+}
+
+.canvas-frame .silse-award-ribbon {
+  position: absolute;
+  left: 50%;
+  bottom: 64px;
+  transform: translateX(-50%);
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--silse-red, #e63946), var(--silse-blue, #1d3557));
+  color: #fff;
+  font-family: var(--silse-body-font, 'Segoe UI', sans-serif);
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.28);
+  pointer-events: none;
+  z-index: 0;
+  white-space: nowrap;
+}
+
+@keyframes silse-award-shine {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Premium decoration layer — wrapper for auto-injected elements */
+.canvas-frame .silse-premium-decoration {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}

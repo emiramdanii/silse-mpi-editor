@@ -1743,7 +1743,7 @@ ${css}
 </head>
 <body>
   <div class="silse-viewport">
-    <div id="silse-canvas" class="${bgPattern.pageClass} ${bgPattern.patternClass}">
+    <div id="silse-canvas" class="silse-premium-stage ${bgPattern.pageClass} ${bgPattern.patternClass}">
       <div id="silse-toolbar">
         <span class="silse-toolbar-side">
           <button id="silse-nav-prev">← Sebelumnya</button>
