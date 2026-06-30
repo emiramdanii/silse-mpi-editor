@@ -20,7 +20,7 @@
  *     - Tambah CSS classes structural, bukan premium polish.
  */
 
-import type { CSSProperties } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import type { SceneRenderPlan, SceneRenderSlot } from '../core/scene-renderer';
 import type { MpiDesignContract } from '../core/mpi-design-contract';
 import {
@@ -28,6 +28,32 @@ import {
   DiscussionSceneComposer, CaseAnalysisComposer, ResultSummaryComposer,
   ReflectionJournalComposer,
 } from './scene-composers';
+
+// PATCH B: Scene composer routing by sceneType, not content.kind
+type SceneComposerProps = {
+  plan: SceneRenderPlan;
+  contract: MpiDesignContract;
+  slot: SceneRenderSlot;
+  interactive?: boolean;
+  onSlotClick?: (slotId: string) => void;
+  onGameAction?: (slotId: string, actionIndex: number) => void;
+  onQuizAnswer?: (slotId: string, choiceId: string) => void;
+  selectedSlotId?: string;
+};
+
+function getSceneComposer(sceneType: string): ((props: SceneComposerProps) => ReactNode) | null {
+  // PATCH B: 7 new scenes routed by sceneType
+  const composers: Record<string, (props: SceneComposerProps) => ReactNode> = {
+    'curriculum-guide': ({ contract, slot }) => <CurriculumGuideComposer contract={contract} content={slot.content as any} />,
+    'objectives-path': ({ contract, slot }) => <ObjectivesPathComposer contract={contract} content={slot.content as any} />,
+    'starter-review': ({ contract, slot }) => <StarterReviewComposer contract={contract} content={slot.content as any} />,
+    'discussion-scene': ({ contract, slot }) => <DiscussionSceneComposer contract={contract} content={slot.content as any} />,
+    'case-analysis': ({ contract, slot }) => <CaseAnalysisComposer contract={contract} content={slot.content as any} />,
+    'result-summary': ({ contract, slot }) => <ResultSummaryComposer contract={contract} content={slot.content as any} />,
+    'reflection-journal': ({ contract, slot }) => <ReflectionJournalComposer contract={contract} content={slot.content as any} />,
+  };
+  return composers[sceneType] ?? null;
+}
 
 export type SceneRendererViewProps = {
   plan: SceneRenderPlan;
@@ -53,6 +79,19 @@ export function SceneRendererView({
   onQuizAnswer,
   selectedSlotId,
 }: SceneRendererViewProps) {
+  // PATCH B: Route by sceneType first, not content.kind.
+  // SceneType determines which composer renders the entire scene.
+  // Content.kind is only for generic slot content (text, card, button, etc.).
+  const sceneComposer = getSceneComposer(plan.sceneType);
+  if (sceneComposer) {
+    // Find the primary content slot (first slot with content that has the scene's data)
+    const primarySlot = plan.slots[0]; // composite slot carries all scene data
+    if (primarySlot) {
+      return sceneComposer({ plan, contract, slot: primarySlot, interactive, onSlotClick, onGameAction, onQuizAnswer, selectedSlotId });
+    }
+  }
+
+  // Fall through to slot-by-slot rendering for generic scenes
   // DESIGN-CONTRACT-RENDER-PARITY-01: scene style from plan (which carries contract tokens).
   const sceneStyle: CSSProperties = {
     position: 'relative',
@@ -274,28 +313,8 @@ function ContentRenderer({
     );
   }
 
-  // GOLDEN-REFERENCE-RENDER-P1: 7 new scene composers
-  if (c.kind === 'curriculum-guide') {
-    return <CurriculumGuideComposer contract={contract} content={c} />;
-  }
-  if (c.kind === 'objectives-path') {
-    return <ObjectivesPathComposer contract={contract} content={c} />;
-  }
-  if (c.kind === 'starter-review') {
-    return <StarterReviewComposer contract={contract} content={c} />;
-  }
-  if (c.kind === 'discussion-scene') {
-    return <DiscussionSceneComposer contract={contract} content={c} />;
-  }
-  if (c.kind === 'case-analysis') {
-    return <CaseAnalysisComposer contract={contract} content={c} />;
-  }
-  if (c.kind === 'result-summary') {
-    return <ResultSummaryComposer contract={contract} content={c} />;
-  }
-  if (c.kind === 'reflection-journal') {
-    return <ReflectionJournalComposer contract={contract} content={c} />;
-  }
+  // PATCH B: 7 new scene composers are now routed by sceneType in getSceneComposer(),
+  // NOT by content.kind here. Content.kind is only for generic slot content.
 
   if (c.kind === 'feedback') {
     // DESIGN-CONTRACT-RENDER-PARITY-01: feedback visual from resolvedStyle.feedback

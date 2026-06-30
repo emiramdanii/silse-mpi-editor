@@ -1097,15 +1097,30 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     pageInfo.textContent = (currentPageIdx + 1) + ' / ' + pages.length + ' - ' + page.title;
   }
 
-  // FOUNDATION-INTEGRATION-01 + DESIGN-CONTRACT-RENDER-PARITY-01:
+  // FOUNDATION-INTEGRATION-01 + DESIGN-CONTRACT-RENDER-PARITY-01 + PATCH B:
   // render scene dari SceneRenderPlan (bukan flat components[]).
-  // Emit DOM dengan classes + inline style dari resolvedStyle (design contract).
+  // PATCH B: Route by plan.sceneType first, then fall through to content.kind for generic slots.
   function renderSceneFromPlan(plan) {
+    // PATCH B: Check sceneType for scene-level composers
+    var sceneTypeRenderers = {
+      'curriculum-guide': function(p) { return p.slots[0] ? renderCurriculumGuideExport(p.slots[0], p.slots[0].content, p) : null; },
+      'objectives-path': function(p) { return p.slots[0] ? renderObjectivesPathExport(p.slots[0], p.slots[0].content, p) : null; },
+      'starter-review': function(p) { return p.slots[0] ? renderStarterReviewExport(p.slots[0], p.slots[0].content, p) : null; },
+      'discussion-scene': function(p) { return p.slots[0] ? renderDiscussionSceneExport(p.slots[0], p.slots[0].content, p) : null; },
+      'case-analysis': function(p) { return p.slots[0] ? renderCaseAnalysisExport(p.slots[0], p.slots[0].content, p) : null; },
+      'result-summary': function(p) { return p.slots[0] ? renderResultSummaryExport(p.slots[0], p.slots[0].content, p) : null; },
+      'reflection-journal': function(p) { return p.slots[0] ? renderReflectionJournalExport(p.slots[0], p.slots[0].content, p) : null; },
+    };
+    if (sceneTypeRenderers[plan.sceneType]) {
+      var renderedEl = sceneTypeRenderers[plan.sceneType](plan);
+      if (renderedEl) return renderedEl;
+    }
+
+    // Fall through to slot-by-slot rendering for generic scenes
     var sceneEl = document.createElement('div');
     sceneEl.className = plan.sceneClass;
     sceneEl.setAttribute('data-scene-id', plan.sceneId);
     sceneEl.setAttribute('data-scene-type', plan.sceneType);
-    // DESIGN-CONTRACT-RENDER-PARITY-01: scene background from plan.background
     var sceneBg = (plan.background && plan.background.gradient) ? plan.background.gradient : (plan.background ? plan.background.color : '#ffffff');
     sceneEl.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;z-index:2;background:' + sceneBg + ';';
 
@@ -1115,11 +1130,10 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       slotEl.className = slot.slotClass;
       slotEl.setAttribute('data-slot-id', slot.id);
       slotEl.setAttribute('data-slot-role', slot.role);
-      // DESIGN-CONTRACT-RENDER-PARITY-01: placement from slot.placement (x/y/width/height)
       slotEl.style.cssText = 'position:absolute;left:' + slot.placement.x + 'px;top:' + slot.placement.y + 'px;width:' + slot.placement.width + 'px;height:' + slot.placement.height + 'px;z-index:' + (slot.placement.zIndex || 1) + ';';
       sceneEl.appendChild(slotEl);
 
-      // Render content based on kind
+      // Render content based on kind (generic content only — scene composers handled above)
       var content = slot.content;
       var contentEl = renderSceneContent(slot, content, plan);
       if (contentEl) slotEl.appendChild(contentEl);
@@ -1213,28 +1227,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       return renderClosingAwardSceneContent(slot, content, plan);
     }
 
-    // GOLDEN-REFERENCE-RENDER-P1 PATCH A: 7 new scene content kinds for export
-    if (content.kind === 'curriculum-guide') {
-      return renderCurriculumGuideExport(slot, content, plan);
-    }
-    if (content.kind === 'objectives-path') {
-      return renderObjectivesPathExport(slot, content, plan);
-    }
-    if (content.kind === 'starter-review') {
-      return renderStarterReviewExport(slot, content, plan);
-    }
-    if (content.kind === 'discussion-scene') {
-      return renderDiscussionSceneExport(slot, content, plan);
-    }
-    if (content.kind === 'case-analysis') {
-      return renderCaseAnalysisExport(slot, content, plan);
-    }
-    if (content.kind === 'result-summary') {
-      return renderResultSummaryExport(slot, content, plan);
-    }
-    if (content.kind === 'reflection-journal') {
-      return renderReflectionJournalExport(slot, content, plan);
-    }
+    // PATCH B: 7 new scene composers are now routed by sceneType in renderSceneFromPlan(),
+    // NOT by content.kind here. Content.kind is only for generic slot content.
 
     if (content.kind === 'reward') {
       // DESIGN-CONTRACT-RENDER-PARITY-01: reward visual from resolvedStyle.reward
