@@ -28,6 +28,8 @@ export type PromptContractSlotKind =
   | 'game-mission'
   | 'quiz-question'
   | 'learning-material'
+  | 'cover-hero'
+  | 'closing-award'
   | 'feedback'
   | 'reward'
   | 'navigation';

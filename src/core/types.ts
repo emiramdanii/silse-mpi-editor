@@ -221,10 +221,25 @@ export type BaseComponent = {
  * style datang dari variant via style adapter (M6) atau lookup minimal
  * hard-coded (sebelum M6). Ini konsisten dengan kontrak Batch 1B + 2R.
  */
+/**
+ * Scene metadata untuk TextComponent (FOUNDATION-FINAL-LOCK-01 cover-hero).
+ */
+export type CoverSceneMetadata = {
+  scene: string; // 'cover-hero'
+  kicker?: string;
+  heroTitle?: string;
+  heroSubtitle?: string;
+  badges?: string[];
+  primaryAction?: { label: string; action: string };
+  visualAnchor?: string;
+};
+
 export type TextComponent = BaseComponent & {
   type: 'text';
   text: string;
   variant: TextComponentVariant;
+  /** FOUNDATION-FINAL-LOCK-01: Optional scene metadata for cover-hero. */
+  sceneMetadata?: CoverSceneMetadata;
 };
 
 /**
@@ -270,16 +285,32 @@ export type MaterialSceneMetadata = {
   visualHint?: string;
 };
 
+/**
+ * Scene metadata untuk CardComponent (FOUNDATION-FINAL-LOCK-01 closing-award).
+ */
+export type ClosingSceneMetadata = {
+  scene: string; // 'closing-award'
+  achievement?: string;
+  summary?: string;
+  reflectionPrompt?: string;
+  rewardLabel?: string;
+  rewardIcon?: string;
+  nextLearning?: string;
+  finalAction?: { label: string; action: string };
+};
+
+/** Union of all scene metadata types that CardComponent can carry. */
+export type CardSceneMetadata = MaterialSceneMetadata | ClosingSceneMetadata;
+
 export type CardComponent = BaseComponent & {
   type: 'card';
   variant: CardComponentVariant;
   title?: string;
   body: string;
   /**
-   * MATERIAL-SCENE-PROOF-01: Optional scene metadata.
-   * Jika ada, renderer akan tampilkan sebagai learning scene, bukan card teks biasa.
+   * Optional scene metadata (learning-scene or closing-award).
    */
-  sceneMetadata?: MaterialSceneMetadata;
+  sceneMetadata?: CardSceneMetadata;
 };
 
 /**

@@ -20,7 +20,7 @@
  *     - Koeksistensi: editor/preview/export bisa render campuran (scene + legacy).
  */
 
-import type { SimpleProject, SimplePage, GameComponent, QuestionComponent, CardComponent } from '../types';
+import type { SimpleProject, SimplePage, GameComponent, QuestionComponent, CardComponent, TextComponent } from '../types';
 import type { MpiContainer } from '../mpi-container/types';
 import { simpleProjectToMpiContainer } from '../mpi-container/simpleProjectToMpiContainer';
 import { getDesignContract } from '../mpi-design-contract';
@@ -52,7 +52,16 @@ export function isPageSceneRenderable(page: SimplePage | undefined | null): bool
   const hasMaterialScene = page.components.find(
     (c): c is CardComponent => c.type === 'card' && 'sceneMetadata' in c && c.sceneMetadata?.scene === 'learning-scene',
   );
-  return !!hasMaterialScene;
+  if (hasMaterialScene) return true;
+  // FOUNDATION-FINAL-LOCK-01: cover-hero (TextComponent) + closing-award (CardComponent)
+  const hasCoverScene = page.components.find(
+    (c): c is TextComponent => c.type === 'text' && 'sceneMetadata' in c && c.sceneMetadata?.scene === 'cover-hero',
+  );
+  if (hasCoverScene) return true;
+  const hasClosingScene = page.components.find(
+    (c): c is CardComponent => c.type === 'card' && 'sceneMetadata' in c && c.sceneMetadata?.scene === 'closing-award',
+  );
+  return !!hasClosingScene;
 }
 
 /**

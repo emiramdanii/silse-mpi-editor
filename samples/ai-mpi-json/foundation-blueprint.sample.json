@@ -45,24 +45,19 @@
       "title": "Sampul",
       "slots": [
         {
-          "id": "slot-cover-title",
-          "role": "title",
-          "placement": { "x": 140, "y": 280, "width": 1000, "height": 120, "zIndex": 2 },
+          "id": "slot-cover-hero",
+          "role": "heroTitle",
+          "placement": { "x": 72, "y": 120, "width": 1136, "height": 480, "zIndex": 2 },
           "designTokenKey": "typography",
-          "content": { "kind": "text", "variant": "title", "text": "Misi Penjaga Norma" }
-        },
-        {
-          "id": "slot-cover-subtitle",
-          "role": "subtitle",
-          "placement": { "x": 340, "y": 420, "width": 600, "height": 60, "zIndex": 2 },
-          "content": { "kind": "text", "variant": "subtitle", "text": "PPKn · Kelas 7 · Fase D" }
-        },
-        {
-          "id": "slot-cover-cta",
-          "role": "cta",
-          "placement": { "x": 440, "y": 520, "width": 400, "height": 56, "zIndex": 2 },
-          "designTokenKey": "button.primary",
-          "content": { "kind": "button", "variant": "primary", "label": "Mulai Pembelajaran", "action": "next" }
+          "content": {
+            "kind": "cover-hero",
+            "kicker": "PPKn · Kelas 7",
+            "heroTitle": "Misi Penjaga Norma",
+            "heroSubtitle": "Belajar hidup tertib dengan norma",
+            "badges": ["Fase D"],
+            "primaryAction": { "label": "Mulai Pembelajaran", "action": "next" },
+            "visualAnchor": "Petualangan ini akan mengajakmu menjelajahi nilai norma"
+          }
         }
       ],
       "navigation": { "nextSceneId": "scene-material" }
@@ -159,17 +154,20 @@
       "title": "Penutup",
       "slots": [
         {
-          "id": "slot-closing-title",
-          "role": "title",
-          "placement": { "x": 340, "y": 320, "width": 600, "height": 80 },
-          "content": { "kind": "text", "variant": "title", "text": "Terima Kasih" }
-        },
-        {
-          "id": "slot-closing-reward",
-          "role": "reward",
-          "placement": { "x": 440, "y": 180, "width": 400, "height": 120 },
+          "id": "slot-closing-award",
+          "role": "achievement",
+          "placement": { "x": 72, "y": 120, "width": 1136, "height": 480 },
           "designTokenKey": "reward.medal",
-          "content": { "kind": "reward", "type": "medal", "label": "Penjelajah Norma", "icon": "🏆" }
+          "content": {
+            "kind": "closing-award",
+            "achievement": "Penjelajah Norma",
+            "summary": "Selamat! Kamu telah menjelajahi nilai-nilai norma.",
+            "reflectionPrompt": "Norma apa yang paling ingin kamu terapkan besok?",
+            "rewardLabel": "Lencana Penjaga Norma",
+            "rewardIcon": "🏆",
+            "nextLearning": "Selanjutnya: Jenis-jenis norma",
+            "finalAction": { "label": "Selesai", "action": "next" }
+          }
         }
       ]
     }

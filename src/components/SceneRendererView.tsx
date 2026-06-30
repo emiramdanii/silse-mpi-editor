@@ -249,6 +249,26 @@ function ContentRenderer({
     );
   }
 
+  if (c.kind === 'cover-hero') {
+    return (
+      <CoverHeroContent
+        slot={slot}
+        content={c}
+        contract={contract}
+      />
+    );
+  }
+
+  if (c.kind === 'closing-award') {
+    return (
+      <ClosingAwardContent
+        slot={slot}
+        content={c}
+        contract={contract}
+      />
+    );
+  }
+
   if (c.kind === 'feedback') {
     // DESIGN-CONTRACT-RENDER-PARITY-01: feedback visual from resolvedStyle.feedback
     const fb = rs?.feedback;
@@ -630,6 +650,148 @@ function LearningMaterialContent({
         }}>
           {contract.learning.visualHintPanel?.icon ?? '💡'} {content.visualHint}
         </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// FOUNDATION-FINAL-LOCK-01 — CoverHeroContent (cover scene)
+// ---------------------------------------------------------------------------
+
+function CoverHeroContent({
+  slot,
+  content,
+  contract,
+}: {
+  slot: SceneRenderSlot;
+  content: Extract<SceneRenderSlot['content'], { kind: 'cover-hero' }>;
+  contract: MpiDesignContract;
+}) {
+  const ty = slot.resolvedStyle?.typography;
+  const btn = slot.resolvedStyle?.button;
+
+  return (
+    <div className="silse-cover-scene" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 32, boxSizing: 'border-box' }}>
+      {content.kicker && (
+        <div className="silse-cover-kicker" style={{
+          display: 'inline-flex', alignItems: 'center', padding: '7px 16px', borderRadius: 999,
+          background: contract.palette.gold, color: contract.palette.primary,
+          fontSize: 13, fontWeight: 900, textTransform: 'uppercase',
+        }}>
+          {content.kicker}
+        </div>
+      )}
+      <div className="silse-cover-title" style={{
+        fontFamily: ty?.fontFamily, fontSize: ty?.fontSize, fontWeight: ty?.fontWeight,
+        color: ty?.color, lineHeight: ty?.lineHeight, letterSpacing: ty?.letterSpacing,
+        textTransform: ty?.uppercase ? 'uppercase' : 'none', textAlign: 'center',
+      }}>
+        {content.heroTitle}
+      </div>
+      {content.heroSubtitle && (
+        <div className="silse-cover-subtitle" style={{ fontSize: 20, color: contract.palette.mutedText, textAlign: 'center' }}>
+          {content.heroSubtitle}
+        </div>
+      )}
+      {content.badges && content.badges.length > 0 && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+          {content.badges.map((b, i) => (
+            <span key={i} className="silse-cover-badge" style={{
+              display: 'inline-flex', padding: '4px 12px', borderRadius: 999,
+              background: contract.palette.surface, color: contract.palette.primary,
+              fontSize: 12, fontWeight: 700, border: `1px solid ${contract.palette.border}`,
+            }}>{b}</span>
+          ))}
+        </div>
+      )}
+      {content.primaryAction && (
+        <button className="silse-cover-primary-action" style={{
+          padding: `${btn?.padding?.top ?? 10}px ${btn?.padding?.right ?? 20}px`,
+          borderRadius: btn?.radius ?? 8, background: btn?.background ?? contract.palette.primary,
+          color: btn?.color ?? '#fff', border: 0, fontWeight: btn?.fontWeight ?? 600,
+          fontSize: 16, cursor: 'pointer', marginTop: 8,
+        }}>
+          {content.primaryAction.label}
+        </button>
+      )}
+      {content.visualAnchor && (
+        <div className="silse-cover-visual-anchor" style={{ fontSize: 14, color: contract.palette.mutedText, fontStyle: 'italic', marginTop: 8 }}>
+          {content.visualAnchor}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// FOUNDATION-FINAL-LOCK-01 — ClosingAwardContent (closing scene)
+// ---------------------------------------------------------------------------
+
+function ClosingAwardContent({
+  slot,
+  content,
+  contract,
+}: {
+  slot: SceneRenderSlot;
+  content: Extract<SceneRenderSlot['content'], { kind: 'closing-award' }>;
+  contract: MpiDesignContract;
+}) {
+  const surf = slot.resolvedStyle?.surface;
+  const rw = slot.resolvedStyle?.reward;
+  const btn = slot.resolvedStyle?.button;
+
+  return (
+    <div className="silse-closing-scene" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 32, boxSizing: 'border-box' }}>
+      {content.achievement && (
+        <div className="silse-closing-achievement" style={{
+          fontFamily: contract.typography.heroFont, fontSize: contract.typography.titleSize,
+          fontWeight: contract.typography.titleWeight, color: contract.palette.text,
+          textAlign: 'center', textTransform: contract.typography.uppercase ? 'uppercase' : 'none',
+        }}>
+          {content.achievement}
+        </div>
+      )}
+      {content.summary && (
+        <div className="silse-closing-summary" style={{ fontSize: 18, color: contract.palette.mutedText, textAlign: 'center', maxWidth: 800 }}>
+          {content.summary}
+        </div>
+      )}
+      {(content.rewardLabel || content.rewardIcon) && (
+        <div className="silse-closing-reward" style={{
+          padding: 20, borderRadius: rw?.radius ?? 12,
+          background: rw?.background ?? '#fffbeb',
+          border: `2px solid ${rw?.borderColor ?? '#fbbf24'}`,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+        }}>
+          {content.rewardIcon && <div style={{ fontSize: 64 }}>{content.rewardIcon}</div>}
+          {content.rewardLabel && <strong style={{ fontSize: 20, color: contract.palette.text }}>{content.rewardLabel}</strong>}
+        </div>
+      )}
+      {content.reflectionPrompt && (
+        <div className="silse-closing-reflection" style={{
+          padding: surf?.padding ?? 16, borderRadius: surf?.radius ?? 12,
+          background: surf?.background ?? contract.palette.surface,
+          border: surf?.border ?? contract.card.border, maxWidth: 600, textAlign: 'center',
+        }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: contract.palette.mutedText, textTransform: 'uppercase', marginBottom: 6 }}>Refleksi</div>
+          <div style={{ fontSize: 15, color: contract.palette.text }}>{content.reflectionPrompt}</div>
+        </div>
+      )}
+      {content.nextLearning && (
+        <div className="silse-closing-next-learning" style={{ fontSize: 13, color: contract.palette.mutedText }}>
+          {content.nextLearning}
+        </div>
+      )}
+      {content.finalAction && (
+        <button className="silse-closing-final-action" style={{
+          padding: `${btn?.padding?.top ?? 10}px ${btn?.padding?.right ?? 20}px`,
+          borderRadius: btn?.radius ?? 8, background: btn?.background ?? contract.palette.primary,
+          color: btn?.color ?? '#fff', border: 0, fontWeight: btn?.fontWeight ?? 600,
+          fontSize: 16, cursor: 'pointer', marginTop: 8,
+        }}>
+          {content.finalAction.label}
+        </button>
       )}
     </div>
   );

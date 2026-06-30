@@ -19,7 +19,7 @@
  *     - SimpleProject TIDAK dihapus. Container berdampingan.
  */
 
-import type { SimpleProject, SimplePage, PageComponent, GameComponent, QuestionComponent, TextComponent, CardComponent, NavigationComponent } from '../types';
+import type { SimpleProject, SimplePage, PageComponent, GameComponent, QuestionComponent, TextComponent, CardComponent, NavigationComponent, MaterialSceneMetadata } from '../types';
 import type {
   MpiContainer,
   MpiScene,
@@ -80,6 +80,21 @@ function mapComponentToSlotContent(
 ): { content: MpiSceneSlotContent; slotRole: string } {
   if (component.type === 'text') {
     const tc = component as TextComponent;
+    // FOUNDATION-FINAL-LOCK-01: text dengan sceneMetadata cover-hero → cover-hero slot
+    if (tc.sceneMetadata?.scene === 'cover-hero') {
+      return {
+        content: {
+          kind: 'cover-hero',
+          kicker: tc.sceneMetadata.kicker,
+          heroTitle: tc.sceneMetadata.heroTitle ?? tc.text,
+          heroSubtitle: tc.sceneMetadata.heroSubtitle,
+          badges: tc.sceneMetadata.badges,
+          primaryAction: tc.sceneMetadata.primaryAction,
+          visualAnchor: tc.sceneMetadata.visualAnchor,
+        },
+        slotRole: 'heroTitle',
+      };
+    }
     return {
       content: { kind: 'text', variant: tc.variant, text: tc.text },
       slotRole: tc.variant === 'title' ? 'title' : tc.variant === 'subtitle' ? 'subtitle' : 'body',
@@ -87,18 +102,35 @@ function mapComponentToSlotContent(
   }
   if (component.type === 'card') {
     const cc = component as CardComponent;
+    // FOUNDATION-FINAL-LOCK-01: card dengan sceneMetadata closing-award → closing-award slot
+    if (cc.sceneMetadata?.scene === 'closing-award') {
+      return {
+        content: {
+          kind: 'closing-award',
+          achievement: (cc.sceneMetadata as { achievement?: string }).achievement,
+          summary: (cc.sceneMetadata as { summary?: string }).summary,
+          reflectionPrompt: (cc.sceneMetadata as { reflectionPrompt?: string }).reflectionPrompt,
+          rewardLabel: (cc.sceneMetadata as { rewardLabel?: string }).rewardLabel,
+          rewardIcon: (cc.sceneMetadata as { rewardIcon?: string }).rewardIcon,
+          nextLearning: (cc.sceneMetadata as { nextLearning?: string }).nextLearning,
+          finalAction: (cc.sceneMetadata as { finalAction?: { label: string; action: string } }).finalAction,
+        },
+        slotRole: 'achievement',
+      };
+    }
     // MATERIAL-SCENE-PROOF-01: card dengan sceneMetadata learning-scene → learning-material slot
     if (cc.sceneMetadata?.scene === 'learning-scene') {
+      const sm = cc.sceneMetadata as MaterialSceneMetadata;
       return {
         content: {
           kind: 'learning-material',
-          conceptTitle: cc.sceneMetadata.conceptTitle ?? cc.title ?? '',
-          conceptSubtitle: cc.sceneMetadata.conceptSubtitle,
-          explanation: cc.sceneMetadata.explanation ?? cc.body,
-          examples: cc.sceneMetadata.examples,
-          keyPoints: cc.sceneMetadata.keyPoints,
-          studentAction: cc.sceneMetadata.studentAction,
-          visualHint: cc.sceneMetadata.visualHint,
+          conceptTitle: sm.conceptTitle ?? cc.title ?? '',
+          conceptSubtitle: sm.conceptSubtitle,
+          explanation: sm.explanation ?? cc.body,
+          examples: sm.examples,
+          keyPoints: sm.keyPoints,
+          studentAction: sm.studentAction,
+          visualHint: sm.visualHint,
         },
         slotRole: 'explanationPanel',
       };

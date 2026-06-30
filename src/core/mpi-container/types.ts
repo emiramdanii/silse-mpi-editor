@@ -162,6 +162,25 @@ export type MpiSceneSlotContent =
       feedbackWrong: string;
     }
   | { kind: 'feedback'; variant: 'correct' | 'wrong' | 'neutral' | 'warning'; text: string; icon?: string }
+  | {
+      kind: 'cover-hero';
+      kicker?: string;
+      heroTitle: string;
+      heroSubtitle?: string;
+      badges?: string[];
+      primaryAction?: { label: string; action: string };
+      visualAnchor?: string;
+    }
+  | {
+      kind: 'closing-award';
+      achievement?: string;
+      summary?: string;
+      reflectionPrompt?: string;
+      rewardLabel?: string;
+      rewardIcon?: string;
+      nextLearning?: string;
+      finalAction?: { label: string; action: string };
+    }
   | { kind: 'reward'; type: string; label: string; icon?: string }
   | {
       kind: 'learning-material';

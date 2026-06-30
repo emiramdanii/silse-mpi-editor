@@ -49,10 +49,11 @@ describe('FOUNDATION-INTEGRATION-01 — scene detection', () => {
     expect(isPageSceneRenderable(gamePage)).toBe(true);
   });
 
-  it('2. isPageSceneRenderable returns false for legacy page (no sceneMetadata)', () => {
+  it('2. isPageSceneRenderable returns true for cover-hero page (FOUNDATION-FINAL-LOCK-01)', () => {
     const project = createSceneProofProject();
     const coverPage = project.pages.find((p) => p.role === 'cover');
-    expect(isPageSceneRenderable(coverPage)).toBe(false);
+    // FOUNDATION-FINAL-LOCK-01: cover now has sceneMetadata cover-hero
+    expect(isPageSceneRenderable(coverPage)).toBe(true);
   });
 
   it('3. buildSceneRenderPlanForPage returns plan for game-mission page', () => {
@@ -63,11 +64,13 @@ describe('FOUNDATION-INTEGRATION-01 — scene detection', () => {
     expect(plan?.sceneClass).toContain('silse-scene-game-mission');
   });
 
-  it('4. buildSceneRenderPlanForPage returns null for legacy page', () => {
+  it('4. buildSceneRenderPlanForPage returns plan for cover-hero page (FOUNDATION-FINAL-LOCK-01)', () => {
     const project = createSceneProofProject();
     const coverPage = project.pages.find((p) => p.role === 'cover')!;
     const plan = buildSceneRenderPlanForPage(project, coverPage);
-    expect(plan).toBeNull();
+    // FOUNDATION-FINAL-LOCK-01: cover now has sceneMetadata cover-hero → plan exists
+    expect(plan).not.toBeNull();
+    expect(plan?.sceneClass).toContain('silse-scene-cover-hero');
   });
 
   it('5. buildContainerAndPlanForPage returns container + plan', () => {
@@ -118,14 +121,14 @@ describe('FOUNDATION-INTEGRATION-01 — CanvasStage integration (editor)', () =>
     expect(container.querySelector('.silse-game-choice')).not.toBeInTheDocument();
   });
 
-  it('11. CanvasStage falls back to legacy for non-scene page (cover)', () => {
+  it('11. CanvasStage renders scene for cover-hero page (FOUNDATION-FINAL-LOCK-01)', () => {
     const project = createSceneProofProject();
     const coverPage = project.pages.find((p) => p.role === 'cover');
     project.currentPageId = coverPage!.id;
     setStoreProject(project);
     const { container } = render(<CanvasStage />);
-    // Cover page should NOT have silse-scene (legacy path)
-    expect(container.querySelector('.silse-scene')).not.toBeInTheDocument();
+    // FOUNDATION-FINAL-LOCK-01: cover now has scene → silse-scene-cover-hero
+    expect(container.querySelector('.silse-scene-cover-hero')).toBeInTheDocument();
   });
 
   it('12. CanvasStage scene renderer mount point exists', () => {
@@ -177,13 +180,14 @@ describe('FOUNDATION-INTEGRATION-01 — PreviewApp integration', () => {
     expect(container.querySelector('[data-testid="scene-renderer-mount-preview"]')).toBeInTheDocument();
   });
 
-  it('18. PreviewApp falls back to legacy for non-scene page (cover)', () => {
+  it('18. PreviewApp renders scene for cover-hero page (FOUNDATION-FINAL-LOCK-01)', () => {
     const project = createSceneProofProject();
     const coverPage = project.pages.find((p) => p.role === 'cover');
     setStoreProject(project);
     openPreview(coverPage!.id);
     const { container } = render(<PreviewApp />);
-    expect(container.querySelector('.silse-scene')).not.toBeInTheDocument();
+    // FOUNDATION-FINAL-LOCK-01: cover now has scene
+    expect(container.querySelector('.silse-scene-cover-hero')).toBeInTheDocument();
   });
 
   it('19. editor and preview produce same scene classes (parity)', () => {
@@ -258,10 +262,11 @@ describe('FOUNDATION-INTEGRATION-01 — export-html integration', () => {
     expect(html).toContain('Briefing Misi');
   });
 
-  it('28. export HTML scenePlan only for scene-renderable pages (null for legacy)', () => {
-    const project = createSceneProofProject();
+  it('28. export HTML scenePlan null for legacy sample project pages (FOUNDATION-FINAL-LOCK-01)', () => {
+    // Use legacy sample project (no sceneMetadata) to verify null scenePlan
+    const project = createSamplePpknProject();
     const html = exportProjectToHtml(project);
-    // The cover page should have scenePlan: null
+    // Legacy project pages should have scenePlan: null
     expect(html).toContain('"scenePlan":null');
   });
 });

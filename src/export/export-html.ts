@@ -1205,6 +1205,14 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       return renderLearningMaterialSceneContent(slot, content, plan);
     }
 
+    if (content.kind === 'cover-hero') {
+      return renderCoverHeroSceneContent(slot, content, plan);
+    }
+
+    if (content.kind === 'closing-award') {
+      return renderClosingAwardSceneContent(slot, content, plan);
+    }
+
     if (content.kind === 'reward') {
       // DESIGN-CONTRACT-RENDER-PARITY-01: reward visual from resolvedStyle.reward
       var rEl = document.createElement('div');
@@ -1545,6 +1553,143 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       wrapper.appendChild(hint);
     }
 
+    return wrapper;
+  }
+
+  // FOUNDATION-FINAL-LOCK-01: cover-hero scene content untuk export.
+  function renderCoverHeroSceneContent(slot, content, plan) {
+    var rs = slot.resolvedStyle || {};
+    var ty = rs.typography || {};
+    var btn = rs.button || {};
+    var palette = plan.palette || {};
+    var wrapper = document.createElement('div');
+    wrapper.className = 'silse-cover-scene';
+    wrapper.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:32px;box-sizing:border-box;';
+
+    if (content.kicker) {
+      var kicker = document.createElement('div');
+      kicker.className = 'silse-cover-kicker';
+      kicker.style.cssText = 'display:inline-flex;align-items:center;padding:7px 16px;border-radius:999px;background:' + palette.gold + ';color:' + palette.primary + ';font-size:13px;font-weight:900;text-transform:uppercase;';
+      kicker.textContent = content.kicker;
+      wrapper.appendChild(kicker);
+    }
+    var title = document.createElement('div');
+    title.className = 'silse-cover-title';
+    var titleCss = 'text-align:center;';
+    if (ty.fontFamily) titleCss += 'font-family:' + ty.fontFamily + ';';
+    if (ty.fontSize) titleCss += 'font-size:' + ty.fontSize + 'px;';
+    if (ty.fontWeight) titleCss += 'font-weight:' + ty.fontWeight + ';';
+    if (ty.color) titleCss += 'color:' + ty.color + ';';
+    if (ty.uppercase) titleCss += 'text-transform:uppercase;';
+    title.style.cssText = titleCss;
+    title.textContent = content.heroTitle || '';
+    wrapper.appendChild(title);
+
+    if (content.heroSubtitle) {
+      var subtitle = document.createElement('div');
+      subtitle.className = 'silse-cover-subtitle';
+      subtitle.style.cssText = 'font-size:20px;color:' + palette.mutedText + ';text-align:center;';
+      subtitle.textContent = content.heroSubtitle;
+      wrapper.appendChild(subtitle);
+    }
+    if (content.badges && content.badges.length > 0) {
+      for (var bi = 0; bi < content.badges.length; bi++) {
+        var badge = document.createElement('span');
+        badge.className = 'silse-cover-badge';
+        badge.style.cssText = 'display:inline-flex;padding:4px 12px;border-radius:999px;background:' + palette.surface + ';color:' + palette.primary + ';font-size:12px;font-weight:700;border:1px solid ' + palette.border + ';';
+        badge.textContent = content.badges[bi];
+        wrapper.appendChild(badge);
+      }
+    }
+    if (content.primaryAction) {
+      var pa = document.createElement('button');
+      pa.className = 'silse-cover-primary-action';
+      pa.style.cssText = 'padding:' + (btn.padding ? (btn.padding.top || 10) : 10) + 'px ' + (btn.padding ? (btn.padding.right || 20) : 20) + 'px;border-radius:' + (btn.radius || 8) + 'px;background:' + (btn.background || palette.primary) + ';color:' + (btn.color || '#fff') + ';border:0;font-weight:' + (btn.fontWeight || 600) + ';font-size:16px;cursor:pointer;margin-top:8px;';
+      pa.textContent = content.primaryAction.label;
+      wrapper.appendChild(pa);
+    }
+    if (content.visualAnchor) {
+      var va = document.createElement('div');
+      va.className = 'silse-cover-visual-anchor';
+      va.style.cssText = 'font-size:14px;color:' + palette.mutedText + ';font-style:italic;margin-top:8px;';
+      va.textContent = content.visualAnchor;
+      wrapper.appendChild(va);
+    }
+    return wrapper;
+  }
+
+  // FOUNDATION-FINAL-LOCK-01: closing-award scene content untuk export.
+  function renderClosingAwardSceneContent(slot, content, plan) {
+    var rs = slot.resolvedStyle || {};
+    var surf = rs.surface || {};
+    var rw = rs.reward || {};
+    var btn = rs.button || {};
+    var palette = plan.palette || {};
+    var ty = plan.typography || {};
+    var wrapper = document.createElement('div');
+    wrapper.className = 'silse-closing-scene';
+    wrapper.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:32px;box-sizing:border-box;';
+
+    if (content.achievement) {
+      var ach = document.createElement('div');
+      ach.className = 'silse-closing-achievement';
+      ach.style.cssText = 'font-family:' + ty.heroFont + ';font-size:' + ty.titleSize + 'px;font-weight:' + ty.titleWeight + ';color:' + palette.text + ';text-align:center;';
+      ach.textContent = content.achievement;
+      wrapper.appendChild(ach);
+    }
+    if (content.summary) {
+      var sum = document.createElement('div');
+      sum.className = 'silse-closing-summary';
+      sum.style.cssText = 'font-size:18px;color:' + palette.mutedText + ';text-align:center;max-width:800px;';
+      sum.textContent = content.summary;
+      wrapper.appendChild(sum);
+    }
+    if (content.rewardLabel || content.rewardIcon) {
+      var reward = document.createElement('div');
+      reward.className = 'silse-closing-reward';
+      reward.style.cssText = 'padding:20px;border-radius:' + (rw.radius || 12) + 'px;background:' + (rw.background || '#fffbeb') + ';border:2px solid ' + (rw.borderColor || '#fbbf24') + ';display:flex;flex-direction:column;align-items:center;gap:8px;';
+      if (content.rewardIcon) {
+        var ri = document.createElement('div');
+        ri.style.fontSize = '64px';
+        ri.textContent = content.rewardIcon;
+        reward.appendChild(ri);
+      }
+      if (content.rewardLabel) {
+        var rl = document.createElement('strong');
+        rl.style.cssText = 'font-size:20px;color:' + palette.text + ';';
+        rl.textContent = content.rewardLabel;
+        reward.appendChild(rl);
+      }
+      wrapper.appendChild(reward);
+    }
+    if (content.reflectionPrompt) {
+      var refl = document.createElement('div');
+      refl.className = 'silse-closing-reflection';
+      refl.style.cssText = 'padding:' + (surf.padding || 16) + 'px;border-radius:' + (surf.radius || 12) + 'px;background:' + (surf.background || palette.surface) + ';border:' + (surf.border || '1px solid #e5e7eb') + ';max-width:600px;text-align:center;';
+      var reflLabel = document.createElement('div');
+      reflLabel.style.cssText = 'font-size:11px;font-weight:700;color:' + palette.mutedText + ';text-transform:uppercase;margin-bottom:6px;';
+      reflLabel.textContent = 'Refleksi';
+      refl.appendChild(reflLabel);
+      var reflText = document.createElement('div');
+      reflText.style.cssText = 'font-size:15px;color:' + palette.text + ';';
+      reflText.textContent = content.reflectionPrompt;
+      refl.appendChild(reflText);
+      wrapper.appendChild(refl);
+    }
+    if (content.nextLearning) {
+      var nl = document.createElement('div');
+      nl.className = 'silse-closing-next-learning';
+      nl.style.cssText = 'font-size:13px;color:' + palette.mutedText + ';';
+      nl.textContent = content.nextLearning;
+      wrapper.appendChild(nl);
+    }
+    if (content.finalAction) {
+      var fa = document.createElement('button');
+      fa.className = 'silse-closing-final-action';
+      fa.style.cssText = 'padding:' + (btn.padding ? (btn.padding.top || 10) : 10) + 'px ' + (btn.padding ? (btn.padding.right || 20) : 20) + 'px;border-radius:' + (btn.radius || 8) + 'px;background:' + (btn.background || palette.primary) + ';color:' + (btn.color || '#fff') + ';border:0;font-weight:' + (btn.fontWeight || 600) + ';font-size:16px;cursor:pointer;margin-top:8px;';
+      fa.textContent = content.finalAction.label;
+      wrapper.appendChild(fa);
+    }
     return wrapper;
   }
 

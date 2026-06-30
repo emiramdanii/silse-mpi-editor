@@ -331,14 +331,15 @@ describe('SCENE-RENDERER-PROOF-01 — React view produces scene classes', () => 
     expect(plan).toBeDefined();
   });
 
-  it('30. closing-award scene produces silse-scene-closing-award', () => {
+  it('30. closing-award scene produces silse-scene-closing-award (FOUNDATION-FINAL-LOCK-01)', () => {
     const container = loadContainer();
     const closingScene = container.scenes.find((s) => s.sceneType === 'closing-award')!;
     const contract = getDesignContract('modern-clean');
     const plan = renderScenePlan(closingScene, contract);
     const { container: dom } = render(<SceneRendererView plan={plan} contract={contract} />);
+    // FOUNDATION-FINAL-LOCK-01: closing-award scene uses composite slot, not reward slot
     expect(dom.querySelector('.silse-scene-closing-award')).toBeInTheDocument();
-    // Reward slot produces silse-scene-reward
-    expect(dom.querySelector('.silse-scene-reward')).toBeInTheDocument();
+    // closing-award content produces silse-closing-scene (content class)
+    expect(dom.querySelector('.silse-closing-scene')).toBeInTheDocument();
   });
 });

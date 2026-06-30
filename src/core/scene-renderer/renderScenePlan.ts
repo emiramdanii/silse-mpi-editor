@@ -199,6 +199,8 @@ function contentKindToClass(kind: MpiSceneSlotContent['kind']): string {
     'game-mission': 'silse-scene-game-mission',
     'quiz-question': 'silse-scene-quiz',
     'learning-material': 'silse-scene-learning',
+    'cover-hero': 'silse-scene-cover',
+    'closing-award': 'silse-scene-closing',
     'feedback': 'silse-scene-feedback',
     'reward': 'silse-scene-reward',
     'navigation': 'silse-scene-navigation',
@@ -244,8 +246,8 @@ function resolveSlotStyle(slot: MpiSceneSlot, contract: MpiDesignContract): Slot
   const style: SlotResolvedStyle = {};
   const kind = slot.content.kind;
 
-  // Card / surface visual (untuk card, game-mission briefing/target, quiz panel, learning-material)
-  if (kind === 'card' || kind === 'game-mission' || kind === 'quiz-question' || kind === 'learning-material') {
+  // Card / surface visual (untuk card, game-mission, quiz, learning-material, closing-award)
+  if (kind === 'card' || kind === 'game-mission' || kind === 'quiz-question' || kind === 'learning-material' || kind === 'closing-award') {
     // Untuk game-mission, briefing & target pakai card style dari contract.game
     if (kind === 'game-mission') {
       const briefingCard = contract.game.briefingPanel;
@@ -362,6 +364,48 @@ function resolveSlotStyle(slot: MpiSceneSlot, contract: MpiDesignContract): Slot
         icon: medal.icon,
       };
     }
+  }
+
+  // FOUNDATION-FINAL-LOCK-01: cover-hero visual
+  if (kind === 'cover-hero') {
+    style.typography = {
+      fontFamily: contract.typography.heroFont,
+      fontSize: contract.typography.titleSize,
+      fontWeight: contract.typography.titleWeight,
+      color: contract.palette.text,
+      lineHeight: contract.typography.lineHeight,
+      letterSpacing: contract.typography.letterSpacing,
+      uppercase: contract.typography.uppercase,
+    };
+    const btn = contract.button.primary;
+    style.button = {
+      background: btn.background,
+      color: btn.color,
+      radius: btn.radius,
+      fontWeight: btn.fontWeight,
+      padding: btn.padding,
+    };
+  }
+
+  // FOUNDATION-FINAL-LOCK-01: closing-award visual (reward + button)
+  if (kind === 'closing-award') {
+    const medal = contract.reward.medal;
+    if (medal) {
+      style.reward = {
+        background: medal.background,
+        borderColor: medal.borderColor,
+        radius: medal.radius,
+        icon: medal.icon,
+      };
+    }
+    const btn = contract.button.primary;
+    style.button = {
+      background: btn.background,
+      color: btn.color,
+      radius: btn.radius,
+      fontWeight: btn.fontWeight,
+      padding: btn.padding,
+    };
   }
 
   return style;

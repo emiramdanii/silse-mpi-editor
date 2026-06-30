@@ -35,12 +35,24 @@ export function createSceneProofProject(): SimpleProject {
       ],
     },
     pages: [
-      // Cover (legacy path — not scene-renderable)
+      // Cover (scene-renderable — FOUNDATION-FINAL-LOCK-01 cover-hero)
       {
         id: coverId, title: 'Cover', role: 'cover', layoutId: 'coverCentered',
         background: { type: 'color', color: '#1e3a5f' },
         components: [
-          { id: createComponentId(), type: 'text', text: 'Misi Penjaga Norma', variant: 'title', x: 140, y: 280, width: 1000, height: 120 },
+          {
+            id: createComponentId(), type: 'text', text: 'Misi Penjaga Norma', variant: 'title',
+            x: 72, y: 120, width: 1136, height: 480,
+            sceneMetadata: {
+              scene: 'cover-hero',
+              kicker: 'PPKn · Kelas 7',
+              heroTitle: 'Misi Penjaga Norma',
+              heroSubtitle: 'Belajar hidup tertib dengan norma',
+              badges: ['Fase D', 'Interaktif'],
+              primaryAction: { label: 'Mulai Pembelajaran', action: 'next' },
+              visualAnchor: 'Petualangan ini akan mengajakmu menjelajahi nilai norma',
+            },
+          },
         ],
       },
       // Material page (scene-renderable — has sceneMetadata learning-scene)
@@ -148,12 +160,29 @@ export function createSceneProofProject(): SimpleProject {
           },
         ],
       },
-      // Closing (legacy path — not scene-renderable)
+      // Closing (scene-renderable — FOUNDATION-FINAL-LOCK-01 closing-award)
       {
         id: closingId, title: 'Penutup', role: 'closing', layoutId: 'blank',
         background: { type: 'color', color: '#1e3a5f' },
         components: [
-          { id: createComponentId(), type: 'text', text: 'Terima Kasih', variant: 'title', x: 340, y: 280, width: 600, height: 80 },
+          {
+            id: createComponentId(),
+            type: 'card',
+            variant: 'infoCard',
+            title: 'Penjelajah Norma',
+            body: 'Selamat! Kamu telah menyelesaikan misi penjaga norma.',
+            x: 72, y: 120, width: 1136, height: 480,
+            sceneMetadata: {
+              scene: 'closing-award',
+              achievement: 'Penjelajah Norma',
+              summary: 'Selamat! Kamu telah menjelajahi nilai-nilai norma dalam kehidupan sehari-hari.',
+              reflectionPrompt: 'Norma apa yang paling ingin kamu terapkan besok?',
+              rewardLabel: 'Lencana Penjaga Norma',
+              rewardIcon: '🏆',
+              nextLearning: 'Selanjutnya: Jenis-jenis norma di masyarakat',
+              finalAction: { label: 'Selesai', action: 'next' },
+            },
+          },
         ],
       },
     ],

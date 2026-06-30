@@ -110,6 +110,26 @@ function validateScene(scene: unknown, path: string): BlueprintValidationError[]
         errors.push({ path: `${path}.slots`, message: 'learning-scene must have at least one slot with content.kind "learning-material"' });
       }
     }
+    // FOUNDATION-FINAL-LOCK-01: cover-hero wajib punya cover-hero slot
+    if (scene.sceneType === 'cover-hero') {
+      const hasCoverHero = scene.slots.some((slot: unknown) =>
+        isObject(slot) && isObject((slot as Record<string, unknown>).content) &&
+        (slot as { content: { kind: string } }).content.kind === 'cover-hero',
+      );
+      if (!hasCoverHero) {
+        errors.push({ path: `${path}.slots`, message: 'cover-hero scene must have at least one slot with content.kind "cover-hero"' });
+      }
+    }
+    // FOUNDATION-FINAL-LOCK-01: closing-award wajib punya closing-award slot
+    if (scene.sceneType === 'closing-award') {
+      const hasClosingAward = scene.slots.some((slot: unknown) =>
+        isObject(slot) && isObject((slot as Record<string, unknown>).content) &&
+        (slot as { content: { kind: string } }).content.kind === 'closing-award',
+      );
+      if (!hasClosingAward) {
+        errors.push({ path: `${path}.slots`, message: 'closing-award scene must have at least one slot with content.kind "closing-award"' });
+      }
+    }
   }
 
   return errors;
@@ -141,7 +161,7 @@ function validateSlot(slot: unknown, path: string): BlueprintValidationError[] {
   }
 
   // FOUNDATION-HARDENING-01: tolak content.kind yang tidak dikenal
-  const knownKinds = ['text', 'card', 'image', 'button', 'badge', 'game-mission', 'quiz-question', 'learning-material', 'feedback', 'reward', 'navigation'];
+  const knownKinds = ['text', 'card', 'image', 'button', 'badge', 'game-mission', 'quiz-question', 'learning-material', 'cover-hero', 'closing-award', 'feedback', 'reward', 'navigation'];
   const kind = slot.content.kind;
   if (!knownKinds.includes(kind)) {
     errors.push({ path: `${path}.content.kind`, message: `unknown kind "${kind}" — must be one of: ${knownKinds.join(', ')}` });
@@ -168,6 +188,20 @@ function validateSlot(slot: unknown, path: string): BlueprintValidationError[] {
     if (!isString(c.prompt)) errors.push({ path: `${path}.content.prompt`, message: 'must be string' });
     if (!Array.isArray(c.choices)) errors.push({ path: `${path}.content.choices`, message: 'must be array' });
     if (!isString(c.correctChoiceId)) errors.push({ path: `${path}.content.correctChoiceId`, message: 'must be string' });
+  }
+  // FOUNDATION-FINAL-LOCK-01: cover-hero requires heroTitle
+  if (kind === 'cover-hero') {
+    if (!isString(c.heroTitle) || (c.heroTitle as string).length === 0) {
+      errors.push({ path: `${path}.content.heroTitle`, message: 'must be non-empty string' });
+    }
+  }
+  // FOUNDATION-FINAL-LOCK-01: closing-award requires achievement or rewardLabel
+  if (kind === 'closing-award') {
+    const hasAch = isString(c.achievement) && (c.achievement as string).length > 0;
+    const hasReward = isString(c.rewardLabel) && (c.rewardLabel as string).length > 0;
+    if (!hasAch && !hasReward) {
+      errors.push({ path: `${path}.content`, message: 'closing-award must have achievement or rewardLabel (at least one non-empty)' });
+    }
   }
 
   return errors;

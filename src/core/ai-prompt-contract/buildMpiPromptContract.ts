@@ -27,9 +27,9 @@ const SCENE_TYPES: PromptContractSceneType[] = [
   {
     id: 'cover-hero',
     role: 'cover',
-    description: 'Halaman sampul dengan judul utama dan CTA mulai.',
-    requiredSlots: ['title', 'cta'],
-    optionalSlots: ['subtitle', 'kicker', 'hero-art'],
+    description: 'Halaman sampul dengan kicker, hero title, subtitle, badges, primary action, visual anchor. Pakai composite slot cover-hero.',
+    requiredSlots: ['heroTitle'],
+    optionalSlots: ['kicker', 'subtitle', 'badges', 'primaryAction', 'visualAnchor'],
   },
   {
     id: 'guide-panel',
@@ -90,9 +90,9 @@ const SCENE_TYPES: PromptContractSceneType[] = [
   {
     id: 'closing-award',
     role: 'closing',
-    description: 'Penutup dengan award medal dan ribbon.',
-    requiredSlots: ['title'],
-    optionalSlots: ['medal', 'ribbon', 'subtitle', 'cta'],
+    description: 'Penutup dengan achievement, summary, reflection prompt, reward badge, next learning, final action. Pakai composite slot closing-award.',
+    requiredSlots: ['achievement'],
+    optionalSlots: ['summary', 'reflection', 'reward', 'nextLearning', 'finalAction'],
   },
 ];
 
@@ -119,6 +119,8 @@ export function buildMpiPromptContract(): MpiPromptContract {
       'game-mission',
       'quiz-question',
       'learning-material',
+      'cover-hero',
+      'closing-award',
       'feedback',
       'reward',
       'navigation',
@@ -174,6 +176,8 @@ export function buildMpiPromptContract(): MpiPromptContract {
       'Untuk game, gunakan slot kind "game-mission" dengan briefing, missionTarget, actions, reward.',
       'Untuk quiz, gunakan slot kind "quiz-question" dengan prompt, choices, correctChoiceId, feedback.',
       'Untuk materi (learning-scene), gunakan slot kind "learning-material" dengan conceptTitle, explanation, examples, keyPoints, studentAction, visualHint.',
+      'Untuk cover (cover-hero), gunakan slot kind "cover-hero" dengan heroTitle, kicker, heroSubtitle, badges, primaryAction, visualAnchor.',
+      'Untuk closing (closing-award), gunakan slot kind "closing-award" dengan achievement, summary, reflectionPrompt, rewardLabel, rewardIcon, nextLearning, finalAction.',
       'Untuk feedback, gunakan variant correct/wrong/neutral/warning.',
     ],
   };
