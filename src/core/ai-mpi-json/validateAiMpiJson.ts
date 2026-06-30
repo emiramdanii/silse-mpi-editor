@@ -99,6 +99,17 @@ function validateScene(scene: unknown, path: string): BlueprintValidationError[]
       const sErrors = validateSlot(slot, `${path}.slots[${i}]`);
       errors.push(...sErrors);
     });
+
+    // FOUNDATION-HARDENING-01: learning-scene wajib punya learning-material slot
+    if (scene.sceneType === 'learning-scene') {
+      const hasLearningMaterial = scene.slots.some((slot: unknown) =>
+        isObject(slot) && isObject((slot as Record<string, unknown>).content) &&
+        (slot as { content: { kind: string } }).content.kind === 'learning-material',
+      );
+      if (!hasLearningMaterial) {
+        errors.push({ path: `${path}.slots`, message: 'learning-scene must have at least one slot with content.kind "learning-material"' });
+      }
+    }
   }
 
   return errors;
@@ -126,6 +137,37 @@ function validateSlot(slot: unknown, path: string): BlueprintValidationError[] {
   // content wajib dengan kind
   if (!isObject(slot.content) || !isString(slot.content.kind)) {
     errors.push({ path: `${path}.content`, message: 'must have kind string' });
+    return errors;
+  }
+
+  // FOUNDATION-HARDENING-01: tolak content.kind yang tidak dikenal
+  const knownKinds = ['text', 'card', 'image', 'button', 'badge', 'game-mission', 'quiz-question', 'learning-material', 'feedback', 'reward', 'navigation'];
+  const kind = slot.content.kind;
+  if (!knownKinds.includes(kind)) {
+    errors.push({ path: `${path}.content.kind`, message: `unknown kind "${kind}" — must be one of: ${knownKinds.join(', ')}` });
+    return errors;
+  }
+
+  // FOUNDATION-HARDENING-01: validasi field wajib per kind
+  const c = slot.content;
+  if (kind === 'learning-material') {
+    if (!isString(c.conceptTitle) || (c.conceptTitle as string).length === 0) {
+      errors.push({ path: `${path}.content.conceptTitle`, message: 'must be non-empty string' });
+    }
+    if (!isString(c.explanation) || (c.explanation as string).length === 0) {
+      errors.push({ path: `${path}.content.explanation`, message: 'must be non-empty string' });
+    }
+  }
+  if (kind === 'game-mission') {
+    if (!isString(c.briefing)) errors.push({ path: `${path}.content.briefing`, message: 'must be string' });
+    if (!isString(c.missionTarget)) errors.push({ path: `${path}.content.missionTarget`, message: 'must be string' });
+    if (!Array.isArray(c.actions)) errors.push({ path: `${path}.content.actions`, message: 'must be array' });
+    if (!isObject(c.reward)) errors.push({ path: `${path}.content.reward`, message: 'must be object' });
+  }
+  if (kind === 'quiz-question') {
+    if (!isString(c.prompt)) errors.push({ path: `${path}.content.prompt`, message: 'must be string' });
+    if (!Array.isArray(c.choices)) errors.push({ path: `${path}.content.choices`, message: 'must be array' });
+    if (!isString(c.correctChoiceId)) errors.push({ path: `${path}.content.correctChoiceId`, message: 'must be string' });
   }
 
   return errors;

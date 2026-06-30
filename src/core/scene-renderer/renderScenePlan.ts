@@ -158,6 +158,21 @@ export type SceneRenderPlan = {
     color: string;
     gradient?: string;
   };
+  /** FOUNDATION-HARDENING-01: learning visual tokens (untuk export yang tidak akses contract langsung). */
+  learning?: {
+    keyPointPanel: { background: string; radius: number; padding: number; border: string; accentColor: string; iconColor: string; icon: string };
+    studentActionPanel: { background: string; radius: number; padding: number; border: string; icon: string; iconColor: string; labelColor: string };
+    visualHintPanel: { color: string; fontStyle: string; icon: string };
+    explanationPanel: { background: string; radius: number; padding: number; border: string };
+    exampleCardStyle: { background: string; radius: number; padding: number; border: string };
+    exampleGridColumns: string;
+  };
+  /** FOUNDATION-HARDENING-01: game visual tokens (untuk export). */
+  gameTokens?: {
+    targetPanel: { background: string; radius: number; padding: number; border: string };
+    actionCardStyle: { background: string; radius: number; padding: number; border: string };
+    rewardBadge: { background: string; color: string; radius: number; icon: string };
+  };
 };
 
 // ---------------------------------------------------------------------------
@@ -409,6 +424,66 @@ export function renderScenePlan(
       pattern: contract.background.pattern,
       color: contract.background.color ?? contract.palette.background,
       gradient: contract.background.gradient,
+    },
+    // FOUNDATION-HARDENING-01: learning tokens untuk export
+    learning: {
+      keyPointPanel: {
+        background: contract.learning.keyPointPanel?.background ?? '#fffbeb',
+        radius: contract.learning.keyPointPanel?.radius ?? 10,
+        padding: contract.learning.keyPointPanel?.padding ?? 12,
+        border: contract.learning.keyPointPanel?.border ?? '1px solid #fde68a',
+        accentColor: contract.learning.keyPointPanel?.accentColor ?? '#f59e0b',
+        iconColor: contract.learning.keyPointPanel?.iconColor ?? '#92400e',
+        icon: contract.learning.keyPointPanel?.icon ?? '🔑',
+      },
+      studentActionPanel: {
+        background: contract.learning.studentActionPanel?.background ?? contract.palette.surface,
+        radius: contract.learning.studentActionPanel?.radius ?? 10,
+        padding: contract.learning.studentActionPanel?.padding ?? 12,
+        border: contract.learning.studentActionPanel?.border ?? `2px solid ${contract.palette.primary}`,
+        icon: contract.learning.studentActionPanel?.icon ?? '✏️',
+        iconColor: contract.learning.studentActionPanel?.iconColor ?? contract.palette.primary,
+        labelColor: contract.learning.studentActionPanel?.labelColor ?? contract.palette.mutedText,
+      },
+      visualHintPanel: {
+        color: contract.learning.visualHintPanel?.color ?? contract.palette.mutedText,
+        fontStyle: contract.learning.visualHintPanel?.fontStyle ?? 'italic',
+        icon: contract.learning.visualHintPanel?.icon ?? '💡',
+      },
+      explanationPanel: {
+        background: contract.learning.explanationPanel?.background ?? contract.card.background,
+        radius: contract.learning.explanationPanel?.radius ?? contract.card.radius,
+        padding: contract.learning.explanationPanel?.padding ?? contract.card.padding,
+        border: contract.learning.explanationPanel?.border ?? contract.card.border,
+      },
+      exampleCardStyle: {
+        background: contract.learning.exampleCardStyle?.background ?? contract.palette.surface,
+        radius: contract.learning.exampleCardStyle?.radius ?? contract.card.radius,
+        padding: contract.learning.exampleCardStyle?.padding ?? contract.card.padding,
+        border: contract.learning.exampleCardStyle?.border ?? contract.card.border,
+      },
+      exampleGridColumns: contract.learning.exampleGridColumns ?? 'repeat(auto-fill, minmax(280px, 1fr))',
+    },
+    // FOUNDATION-HARDENING-01: game tokens untuk export
+    gameTokens: {
+      targetPanel: {
+        background: contract.game.targetPanel?.background ?? '#eff6ff',
+        radius: contract.game.targetPanel?.radius ?? 10,
+        padding: contract.game.targetPanel?.padding ?? 12,
+        border: contract.game.targetPanel?.border ?? '1px solid #bfdbfe',
+      },
+      actionCardStyle: {
+        background: contract.game.actionCardStyle?.background ?? '#ffffff',
+        radius: contract.game.actionCardStyle?.radius ?? 12,
+        padding: contract.game.actionCardStyle?.padding ?? 14,
+        border: contract.game.actionCardStyle?.border ?? '2px solid #d1d5db',
+      },
+      rewardBadge: {
+        background: contract.game.rewardBadge?.background ?? '#fffbeb',
+        color: contract.game.rewardBadge?.color ?? '#92400e',
+        radius: contract.game.rewardBadge?.radius ?? 12,
+        icon: contract.game.rewardBadge?.icon ?? '🏅',
+      },
     },
   };
 }

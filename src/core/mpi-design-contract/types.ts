@@ -224,6 +224,19 @@ export type DesignGame = {
 };
 
 // ---------------------------------------------------------------------------
+// 12b. Learning (MATERIAL-SCENE-PROOF-01 + FOUNDATION-HARDENING-01)
+// ---------------------------------------------------------------------------
+
+export type DesignLearning = {
+  keyPointPanel?: Partial<DesignCard> & { accentColor: string; iconColor: string; icon: string };
+  studentActionPanel?: Partial<DesignCard> & { iconColor: string; icon: string; labelColor: string };
+  visualHintPanel?: { color: string; fontStyle: 'normal' | 'italic'; icon: string };
+  explanationPanel?: Partial<DesignCard>;
+  exampleCardStyle?: Partial<DesignCard>;
+  exampleGridColumns?: string;
+};
+
+// ---------------------------------------------------------------------------
 // 13. Feedback
 // ---------------------------------------------------------------------------
 
@@ -297,6 +310,7 @@ export type MpiDesignContract = {
   navigation: DesignNavigation;
   quiz: DesignQuiz;
   game: DesignGame;
+  learning: DesignLearning;
   feedback: Record<DesignFeedbackVariant, DesignFeedback>;
   reward: DesignReward;
   mapHotspot?: DesignMapHotspot;

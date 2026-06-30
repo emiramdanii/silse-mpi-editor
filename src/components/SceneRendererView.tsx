@@ -578,16 +578,18 @@ function LearningMaterialContent({
         </div>
       )}
 
-      {/* Key point */}
+      {/* Key point — FOUNDATION-HARDENING-01: visual dari contract.learning.keyPointPanel */}
       {content.keyPoints && content.keyPoints.length > 0 && (
         <div className="silse-learning-key-point" style={{
-          padding: 12,
-          borderRadius: 10,
-          background: '#fffbeb',
-          border: '1px solid #fde68a',
-          borderLeft: '4px solid #f59e0b',
+          padding: contract.learning.keyPointPanel?.padding ?? 12,
+          borderRadius: contract.learning.keyPointPanel?.radius ?? 10,
+          background: contract.learning.keyPointPanel?.background ?? '#fffbeb',
+          border: contract.learning.keyPointPanel?.border ?? '1px solid #fde68a',
+          borderLeft: '4px solid ' + (contract.learning.keyPointPanel?.accentColor ?? '#f59e0b'),
         }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#92400e', textTransform: 'uppercase', marginBottom: 6 }}>🔑 Key Points</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: contract.learning.keyPointPanel?.iconColor ?? '#92400e', textTransform: 'uppercase', marginBottom: 6 }}>
+            {contract.learning.keyPointPanel?.icon ?? '🔑'} Key Points
+          </div>
           <ul style={{ margin: 0, paddingLeft: 20, fontSize: 14, lineHeight: 1.6 }}>
             {content.keyPoints.map((kp, i) => (
               <li key={i} style={{ color: contract.palette.text }}>{kp}</li>
@@ -596,37 +598,37 @@ function LearningMaterialContent({
         </div>
       )}
 
-      {/* Student action */}
+      {/* Student action — FOUNDATION-HARDENING-01: visual dari contract.learning.studentActionPanel */}
       {content.studentAction && (
         <div className="silse-learning-student-action" style={{
-          padding: 12,
-          borderRadius: 10,
-          background: contract.palette.surface,
-          border: `2px solid ${contract.palette.primary}`,
+          padding: contract.learning.studentActionPanel?.padding ?? 12,
+          borderRadius: contract.learning.studentActionPanel?.radius ?? 10,
+          background: contract.learning.studentActionPanel?.background ?? contract.palette.surface,
+          border: contract.learning.studentActionPanel?.border ?? `2px solid ${contract.palette.primary}`,
           display: 'flex',
           alignItems: 'center',
           gap: 10,
         }}>
-          <span style={{ fontSize: 20 }}>✏️</span>
+          <span style={{ fontSize: 20 }}>{contract.learning.studentActionPanel?.icon ?? '✏️'}</span>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: contract.palette.mutedText, textTransform: 'uppercase' }}>Student Action</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: contract.learning.studentActionPanel?.labelColor ?? contract.palette.mutedText, textTransform: 'uppercase' }}>Student Action</div>
             <div style={{ fontSize: 14, fontWeight: 600, color: contract.palette.text }}>{content.studentAction}</div>
           </div>
         </div>
       )}
 
-      {/* Visual hint */}
+      {/* Visual hint — FOUNDATION-HARDENING-01: visual dari contract.learning.visualHintPanel */}
       {content.visualHint && (
         <div className="silse-learning-visual-hint" style={{
           padding: 8,
           borderRadius: 8,
           background: 'transparent',
           fontSize: 12,
-          color: contract.palette.mutedText,
-          fontStyle: 'italic',
+          color: contract.learning.visualHintPanel?.color ?? contract.palette.mutedText,
+          fontStyle: contract.learning.visualHintPanel?.fontStyle ?? 'italic',
           textAlign: 'center',
         }}>
-          💡 {content.visualHint}
+          {contract.learning.visualHintPanel?.icon ?? '💡'} {content.visualHint}
         </div>
       )}
     </div>

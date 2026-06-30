@@ -74,21 +74,25 @@
       "title": "Materi",
       "slots": [
         {
-          "id": "slot-mat-title",
-          "role": "title",
-          "placement": { "x": 80, "y": 60, "width": 1120, "height": 60 },
-          "content": { "kind": "text", "variant": "title", "text": "Apa Itu Norma?" }
-        },
-        {
-          "id": "slot-mat-card",
-          "role": "card",
-          "placement": { "x": 80, "y": 160, "width": 1120, "height": 200 },
+          "id": "slot-mat-learning",
+          "role": "explanationPanel",
+          "placement": { "x": 80, "y": 60, "width": 1120, "height": 480 },
           "designTokenKey": "card",
           "content": {
-            "kind": "card",
-            "variant": "info-card",
-            "title": "Pengertian Norma",
-            "body": "Norma adalah aturan atau ketentuan yang berlaku di masyarakat untuk mengatur perilaku anggotanya."
+            "kind": "learning-material",
+            "conceptTitle": "Apa Itu Norma?",
+            "conceptSubtitle": "Memahami aturan yang mengatur kehidupan masyarakat",
+            "explanation": "Norma adalah aturan atau ketentuan yang berlaku di masyarakat untuk mengatur perilaku anggotanya. Norma bersifat mengikat dan menjadi pedoman dalam bertindak.",
+            "examples": [
+              { "id": "ex1", "title": "Norma Agama", "body": "Aturan dari Tuhan yang mengatur hubungan manusia dengan Tuhan." },
+              { "id": "ex2", "title": "Norma Kesopanan", "body": "Aturan tata krama dalam bergaul di masyarakat." }
+            ],
+            "keyPoints": [
+              "Norma mengatur perilaku manusia di masyarakat.",
+              "Norma bersifat mengikat dan menjadi pedoman."
+            ],
+            "studentAction": "Tuliskan 1 contoh norma di sekolah.",
+            "visualHint": "Perhatikan norma di sekitarmu."
           }
         }
       ],

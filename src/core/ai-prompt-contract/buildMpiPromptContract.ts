@@ -55,9 +55,9 @@ const SCENE_TYPES: PromptContractSceneType[] = [
   {
     id: 'learning-scene',
     role: 'material',
-    description: 'Materi pembelajaran utama.',
-    requiredSlots: ['title', 'body'],
-    optionalSlots: ['card', 'image', 'cta'],
+    description: 'Materi pembelajaran utama sebagai learning scene: concept header + explanation panel + example cards + key point + student action + visual hint. Pakai composite slot learning-material.',
+    requiredSlots: ['explanationPanel'],
+    optionalSlots: ['conceptHeader', 'exampleCards', 'keyPoint', 'studentAction', 'visualHint', 'cta'],
   },
   {
     id: 'mission-map',
@@ -118,6 +118,7 @@ export function buildMpiPromptContract(): MpiPromptContract {
       'badge',
       'game-mission',
       'quiz-question',
+      'learning-material',
       'feedback',
       'reward',
       'navigation',
@@ -172,6 +173,7 @@ export function buildMpiPromptContract(): MpiPromptContract {
       'Gunakan allowed variants untuk card/button/badge.',
       'Untuk game, gunakan slot kind "game-mission" dengan briefing, missionTarget, actions, reward.',
       'Untuk quiz, gunakan slot kind "quiz-question" dengan prompt, choices, correctChoiceId, feedback.',
+      'Untuk materi (learning-scene), gunakan slot kind "learning-material" dengan conceptTitle, explanation, examples, keyPoints, studentAction, visualHint.',
       'Untuk feedback, gunakan variant correct/wrong/neutral/warning.',
     ],
   };

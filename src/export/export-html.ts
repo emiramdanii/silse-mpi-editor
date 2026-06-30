@@ -1490,14 +1490,15 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       wrapper.appendChild(exampleGrid);
     }
 
-    // Key point
+    // FOUNDATION-HARDENING-01: Key point — visual dari plan.learning.keyPointPanel (contract token)
     if (content.keyPoints && content.keyPoints.length > 0) {
+      var kp = plan.learning.keyPointPanel;
       var keyPoint = document.createElement('div');
       keyPoint.className = 'silse-learning-key-point';
-      keyPoint.style.cssText = 'padding:12px;border-radius:10px;background:#fffbeb;border:1px solid #fde68a;border-left:4px solid #f59e0b;';
+      keyPoint.style.cssText = 'padding:' + kp.padding + 'px;border-radius:' + kp.radius + 'px;background:' + kp.background + ';border:' + kp.border + ';border-left:4px solid ' + kp.accentColor + ';';
       var kpLabel = document.createElement('div');
-      kpLabel.style.cssText = 'font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;margin-bottom:6px;';
-      kpLabel.textContent = '🔑 Key Points';
+      kpLabel.style.cssText = 'font-size:11px;font-weight:700;color:' + kp.iconColor + ';text-transform:uppercase;margin-bottom:6px;';
+      kpLabel.textContent = kp.icon + ' Key Points';
       keyPoint.appendChild(kpLabel);
       var ul = document.createElement('ul');
       ul.style.cssText = 'margin:0;padding-left:20px;font-size:14px;line-height:1.6;';
@@ -1511,18 +1512,19 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       wrapper.appendChild(keyPoint);
     }
 
-    // Student action
+    // FOUNDATION-HARDENING-01: Student action — visual dari plan.learning.studentActionPanel (contract token)
     if (content.studentAction) {
+      var sa = plan.learning.studentActionPanel;
       var action = document.createElement('div');
       action.className = 'silse-learning-student-action';
-      action.style.cssText = 'padding:12px;border-radius:10px;background:' + palette.surface + ';border:2px solid ' + palette.primary + ';display:flex;align-items:center;gap:10px;';
+      action.style.cssText = 'padding:' + sa.padding + 'px;border-radius:' + sa.radius + 'px;background:' + sa.background + ';border:' + sa.border + ';display:flex;align-items:center;gap:10px;';
       var actionIcon = document.createElement('span');
       actionIcon.style.fontSize = '20px';
-      actionIcon.textContent = '✏️';
+      actionIcon.textContent = sa.icon;
       action.appendChild(actionIcon);
       var actionText = document.createElement('div');
       var actionLabel = document.createElement('div');
-      actionLabel.style.cssText = 'font-size:11px;font-weight:700;color:' + palette.mutedText + ';text-transform:uppercase;';
+      actionLabel.style.cssText = 'font-size:11px;font-weight:700;color:' + sa.labelColor + ';text-transform:uppercase;';
       actionLabel.textContent = 'Student Action';
       actionText.appendChild(actionLabel);
       var actionBody = document.createElement('div');
@@ -1533,12 +1535,13 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       wrapper.appendChild(action);
     }
 
-    // Visual hint
+    // FOUNDATION-HARDENING-01: Visual hint — visual dari plan.learning.visualHintPanel (contract token)
     if (content.visualHint) {
+      var vh = plan.learning.visualHintPanel;
       var hint = document.createElement('div');
       hint.className = 'silse-learning-visual-hint';
-      hint.style.cssText = 'padding:8px;border-radius:8px;background:transparent;font-size:12px;color:' + palette.mutedText + ';font-style:italic;text-align:center;';
-      hint.textContent = '💡 ' + content.visualHint;
+      hint.style.cssText = 'padding:8px;border-radius:8px;background:transparent;font-size:12px;color:' + vh.color + ';font-style:' + vh.fontStyle + ';text-align:center;';
+      hint.textContent = vh.icon + ' ' + content.visualHint;
       wrapper.appendChild(hint);
     }
 

@@ -167,6 +167,15 @@ export const DEFAULT_DESIGN_CONTRACT: MpiDesignContract = {
     missionProgress: { style: 'pills', color: '#6b7280' },
   },
 
+  learning: {
+    explanationPanel: { background: '#ffffff', radius: 12, padding: 16, border: '1px solid #e5e7eb', shadow: 'none', glassEffect: false },
+    exampleCardStyle: { background: '#f8fafc', radius: 12, padding: 16, border: '1px solid #e5e7eb', shadow: 'none', glassEffect: false },
+    exampleGridColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+    keyPointPanel: { background: '#fffbeb', radius: 10, padding: 12, border: '1px solid #fde68a', accentColor: '#f59e0b', iconColor: '#92400e', icon: '🔑', glassEffect: false, shadow: 'none' },
+    studentActionPanel: { background: '#f8fafc', radius: 10, padding: 12, border: '2px solid #1d3557', icon: '✏️', iconColor: '#1d3557', labelColor: '#6b7280', glassEffect: false, shadow: 'none' },
+    visualHintPanel: { color: '#6b7280', fontStyle: 'italic', icon: '💡' },
+  },
+
   feedback: {
     correct: { variant: 'correct', icon: '✓', color: '#065f46', background: '#d1fae5', borderColor: '#16a34a', motionPreset: 'correct-burst' },
     wrong: { variant: 'wrong', icon: '✗', color: '#991b1b', background: '#fee2e2', borderColor: '#dc2626', motionPreset: 'none' },

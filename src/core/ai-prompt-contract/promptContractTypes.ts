@@ -27,6 +27,7 @@ export type PromptContractSlotKind =
   | 'badge'
   | 'game-mission'
   | 'quiz-question'
+  | 'learning-material'
   | 'feedback'
   | 'reward'
   | 'navigation';
