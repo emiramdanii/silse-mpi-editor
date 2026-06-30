@@ -45,6 +45,8 @@ export {
   AiMpiBlueprintError,
 } from './normalizeAiMpiJson';
 
+export { aiJsonToMpiContainer } from './aiJsonToMpiContainer';
+
 // === Proof-of-concept API (MPI-JSON-SCENE-PROOF-01, backward compat) ===
 export type {
   AiMpiJson,
