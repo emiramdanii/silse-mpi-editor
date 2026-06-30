@@ -1,5 +1,5 @@
 /**
- * Reusable Scene Blocks (GOLDEN-REFERENCE-RENDER-P1).
+ * Reusable Scene Blocks (GOLDEN-REFERENCE-RENDER-P1 + INTERACTION-P1).
  *
  * Layer: components/scene-blocks
  * Allowed imports: react, ../../core/mpi-design-contract
@@ -11,11 +11,13 @@
  *     - Bisa dipakai editor dan preview.
  *     - Export HTML punya padanan renderer yang sama.
  *     - Class name stabil untuk test.
+ *     - INTERACTION-P1: blocks punya state ringan (tabs, accordion, timer, input, reveal).
  *
  *   Semua block mengambil nilai visual dari:
  *     contract.palette, contract.typography, contract.card, contract.button, dll.
  */
 
+import { useState, useEffect, useCallback } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import type { MpiDesignContract } from '../../core/mpi-design-contract';
 
@@ -151,19 +153,27 @@ export function SceneGrid({ children, className = '', columns, gap = 10 }: Block
 // 6. SceneTabs
 // ---------------------------------------------------------------------------
 
-export function SceneTabs({ contract, tabs, activeTab, onTabClick, className = '' }: BlockProps & {
+// INTERACTION-P1: SceneTabs with internal state — tabs bisa berpindah panel
+export function SceneTabs({ contract, tabs, activeTab: externalTab, onTabClick, className = '' }: BlockProps & {
   tabs: { id: string; label: string }[];
   activeTab: string;
   onTabClick?: (id: string) => void;
 }) {
+  const [internalTab, setInternalTab] = useState(externalTab || tabs[0]?.id || '');
+  const activeTab = externalTab || internalTab;
+  const handleTabClick = useCallback((id: string) => {
+    setInternalTab(id);
+    onTabClick?.(id);
+  }, [onTabClick]);
+
   return (
-    <div className={`silse-block-tabs ${className}`.trim()} style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+    <div className={`silse-block-tabs ${className}`.trim()} style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }} data-testid="silse-block-tabs">
       {tabs.map((tab) => {
         const isActive = tab.id === activeTab;
         return (
-          <button key={tab.id} onClick={() => onTabClick?.(tab.id)} style={{
+          <button key={tab.id} onClick={() => handleTabClick(tab.id)} data-tab-id={tab.id} style={{
             padding: '6px 14px', borderRadius: 999, fontSize: 13, fontWeight: 800,
-            cursor: onTabClick ? 'pointer' : 'default', border: 'none', transition: 'all 0.2s',
+            cursor: 'pointer', border: 'none', transition: 'all 0.2s',
             background: isActive ? contract.palette.gold : 'rgba(255,255,255,0.04)',
             color: isActive ? contract.palette.primary : contract.palette.mutedText,
           }}>
@@ -176,26 +186,33 @@ export function SceneTabs({ contract, tabs, activeTab, onTabClick, className = '
 }
 
 // ---------------------------------------------------------------------------
-// 7. SceneAccordion
+// 7. SceneAccordion — INTERACTION-P1: internal state, buka/tutup
 // ---------------------------------------------------------------------------
 
-export function SceneAccordion({ contract, items, openIndex, onToggle, className = '' }: BlockProps & {
+export function SceneAccordion({ contract, items, openIndex: externalIdx, onToggle, className = '' }: BlockProps & {
   items: { title: string; body: string }[];
   openIndex: number | null;
   onToggle?: (idx: number) => void;
 }) {
+  const [internalIdx, setInternalIdx] = useState<number | null>(externalIdx ?? null);
+  const openIndex = externalIdx !== undefined ? externalIdx : internalIdx;
+  const handleToggle = useCallback((idx: number) => {
+    setInternalIdx(prev => prev === idx ? null : idx);
+    onToggle?.(idx);
+  }, [onToggle]);
+
   return (
-    <div className={`silse-block-accordion ${className}`.trim()} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div className={`silse-block-accordion ${className}`.trim()} style={{ display: 'flex', flexDirection: 'column', gap: 6 }} data-testid="silse-block-accordion">
       {items.map((item, idx) => {
         const isOpen = idx === openIndex;
         return (
-          <div key={idx} style={{
+          <div key={idx} data-accordion-idx={idx} style={{
             borderRadius: contract.card.radius, overflow: 'hidden',
             border: isOpen ? `1px solid ${contract.palette.gold}` : contract.card.border,
             background: contract.card.background,
           }}>
-            <div onClick={() => onToggle?.(idx)} style={{
-              padding: '12px 16px', cursor: onToggle ? 'pointer' : 'default',
+            <div onClick={() => handleToggle(idx)} style={{
+              padding: '12px 16px', cursor: 'pointer',
               fontWeight: 800, fontSize: 14, color: contract.palette.text,
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
             }}>
@@ -240,13 +257,26 @@ export function DiscussionBanner({ contract, label, title, body, icon, accentCol
 // 9. TimerBlock
 // ---------------------------------------------------------------------------
 
-export function TimerBlock({ contract, seconds, className = '' }: BlockProps & {
+// INTERACTION-P1: TimerBlock with start/reset
+export function TimerBlock({ contract, seconds: initialSeconds, className = '' }: BlockProps & {
   seconds: number;
 }) {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
+  const [remaining, setRemaining] = useState(initialSeconds);
+  const [running, setRunning] = useState(false);
+
+  useEffect(() => {
+    if (!running) return;
+    if (remaining <= 0) { setRunning(false); return; }
+    const timer = setInterval(() => setRemaining(prev => Math.max(0, prev - 1)), 1000);
+    return () => clearInterval(timer);
+  }, [running, remaining]);
+
+  const mins = Math.floor(remaining / 60);
+  const secs = remaining % 60;
+  const pct = initialSeconds > 0 ? (remaining / initialSeconds) * 100 : 0;
+
   return (
-    <div className={`silse-block-timer ${className}`.trim()} style={{
+    <div className={`silse-block-timer ${className}`.trim()} data-testid="silse-block-timer" style={{
       display: 'flex', alignItems: 'center', gap: 10,
       background: `${contract.palette.gold}14`, border: `1px solid ${contract.palette.gold}33`,
       borderRadius: 10, padding: '8px 14px',
@@ -255,8 +285,18 @@ export function TimerBlock({ contract, seconds, className = '' }: BlockProps & {
         {mins}:{secs.toString().padStart(2, '0')}
       </span>
       <div style={{ flex: 1, height: 5, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' }}>
-        <div style={{ height: '100%', background: contract.palette.gold, borderRadius: 99, width: '50%' }} />
+        <div style={{ height: '100%', background: contract.palette.gold, borderRadius: 99, width: `${pct}%`, transition: 'width 1s linear' }} />
       </div>
+      <button data-testid="timer-toggle" onClick={() => { if (remaining <= 0) setRemaining(initialSeconds); setRunning(!running); }} style={{
+        padding: '5px 13px', borderRadius: 999, fontSize: 12, fontWeight: 800, border: 'none', cursor: 'pointer',
+        background: contract.palette.gold, color: contract.palette.primary,
+      }}>
+        {running ? '⏸' : '▶'}
+      </button>
+      <button data-testid="timer-reset" onClick={() => { setRunning(false); setRemaining(initialSeconds); }} style={{
+        padding: '5px 10px', borderRadius: 999, fontSize: 12, fontWeight: 800, border: 'none', cursor: 'pointer',
+        background: 'rgba(255,255,255,0.08)', color: contract.palette.mutedText,
+      }}>↺</button>
     </div>
   );
 }
@@ -265,22 +305,39 @@ export function TimerBlock({ contract, seconds, className = '' }: BlockProps & {
 // 10. ResponseInputBlock
 // ---------------------------------------------------------------------------
 
+// INTERACTION-P1: ResponseInputBlock with text input + save badge
 export function ResponseInputBlock({ contract, placeholder, className = '' }: BlockProps & {
   placeholder?: string;
 }) {
+  const [value, setValue] = useState('');
+  const [saved, setSaved] = useState(false);
+
   return (
-    <div className={`silse-block-input ${className}`.trim()} style={{
+    <div className={`silse-block-input ${className}`.trim()} data-testid="silse-block-input" style={{
       borderRadius: contract.card.radius, padding: contract.card.padding,
       background: contract.card.background, border: contract.card.border,
     }}>
-      <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: contract.palette.mutedText, marginBottom: 8 }}>Jawaban Kamu</div>
-      <div style={{
-        minHeight: 60, borderRadius: 10, padding: 12,
-        background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.15)',
-        fontSize: 14, color: contract.palette.mutedText, fontStyle: 'italic',
-      }}>
-        {placeholder || 'Tulis jawabanmu di sini...'}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: contract.palette.mutedText }}>Jawaban Kamu</div>
+        {saved && <span data-testid="saved-badge" style={{ fontSize: 11, fontWeight: 800, color: contract.palette.success, background: `${contract.palette.success}22`, padding: '2px 8px', borderRadius: 999 }}>✓ Tersimpan</span>}
       </div>
+      <textarea
+        data-testid="response-textarea"
+        value={value}
+        onChange={(e) => { setValue(e.target.value); setSaved(false); }}
+        placeholder={placeholder || 'Tulis jawabanmu di sini...'}
+        style={{
+          width: '100%', minHeight: 60, borderRadius: 10, padding: 12,
+          background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.15)',
+          fontSize: 14, color: contract.palette.text, fontFamily: 'inherit', resize: 'vertical',
+          outline: 'none',
+        }}
+      />
+      <button data-testid="save-response" onClick={() => setSaved(true)} style={{
+        marginTop: 8, padding: '6px 16px', borderRadius: 999, fontSize: 13, fontWeight: 800,
+        border: 'none', cursor: 'pointer',
+        background: contract.palette.success, color: contract.palette.primary,
+      }}>Simpan Jawaban</button>
     </div>
   );
 }
@@ -289,13 +346,18 @@ export function ResponseInputBlock({ contract, placeholder, className = '' }: Bl
 // 11. RevealBlock
 // ---------------------------------------------------------------------------
 
-export function RevealBlock({ contract, label, text, revealed = true, className = '' }: BlockProps & {
+// INTERACTION-P1: RevealBlock with toggle state
+export function RevealBlock({ contract, label, text, revealed: externalRevealed, className = '' }: BlockProps & {
   label: string; text: string; revealed?: boolean;
 }) {
+  const [internalRevealed, setInternalRevealed] = useState(externalRevealed ?? false);
+  const revealed = externalRevealed !== undefined ? externalRevealed : internalRevealed;
+
   return (
-    <div className={`silse-block-reveal ${className}`.trim()} style={{
+    <div className={`silse-block-reveal ${className}`.trim()} data-testid="silse-block-reveal" onClick={() => { if (externalRevealed === undefined) setInternalRevealed(!internalRevealed); }} style={{
       borderRadius: contract.card.radius, padding: contract.card.padding,
       background: `${contract.palette.success}11`, border: `1px solid ${contract.palette.success}40`,
+      cursor: externalRevealed === undefined ? 'pointer' : 'default',
     }}>
       <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: contract.palette.success, marginBottom: 8 }}>💡 {label}</div>
       {revealed && <div style={{ fontSize: 14, lineHeight: 1.6, color: contract.palette.text }}>{text}</div>}

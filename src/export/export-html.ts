@@ -2851,6 +2851,110 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
   });
 
   renderPage(0);
+
+  // ===========================================================================
+  // GOLDEN-REFERENCE-INTERACTION-P1: Export interaction handlers (lightweight)
+  // Wires up tabs, accordion, reveal, timer, save response after each renderPage.
+  // Uses event delegation on canvas — no per-element listeners needed.
+  // ===========================================================================
+  function wireInteractions() {
+    if (!canvas) return;
+
+    // Tab click handler
+    canvas.addEventListener('click', function(e) {
+      var tab = e.target.closest('[data-tab-id]');
+      if (tab) {
+        var tabId = tab.getAttribute('data-tab-id');
+        var tabsContainer = tab.parentElement;
+        var panels = tabsContainer.parentElement.querySelectorAll('[data-tab-panel]');
+        // Update active states
+        var allTabs = tabsContainer.querySelectorAll('[data-tab-id]');
+        for (var i = 0; i < allTabs.length; i++) {
+          var isActive = allTabs[i].getAttribute('data-tab-id') === tabId;
+          allTabs[i].style.background = isActive ? 'var(--silse-gold, #f9c12e)' : 'rgba(255,255,255,0.04)';
+          allTabs[i].style.color = isActive ? 'var(--silse-navy, #0e1c2f)' : 'var(--silse-muted-premium, #6e90b5)';
+        }
+        // Show/hide panels
+        for (var j = 0; j < panels.length; j++) {
+          panels[j].style.display = panels[j].getAttribute('data-tab-panel') === tabId ? 'block' : 'none';
+        }
+      }
+    });
+
+    // Accordion click handler
+    canvas.addEventListener('click', function(e) {
+      var accItem = e.target.closest('[data-accordion-idx]');
+      if (accItem) {
+        var body = accItem.querySelector('.silse-accordion-body');
+        if (body) {
+          var isOpen = body.style.display !== 'none';
+          body.style.display = isOpen ? 'none' : 'block';
+          var header = accItem.querySelector('.silse-accordion-header');
+          if (header) header.textContent = (isOpen ? '▸' : '▾') + header.textContent.replace(/^[▾▸]\s*/, '');
+        }
+      }
+    });
+
+    // Reveal block click handler
+    canvas.addEventListener('click', function(e) {
+      var reveal = e.target.closest('.silse-block-reveal');
+      if (reveal && reveal.getAttribute('data-reveal-locked') !== 'true') {
+        var body = reveal.querySelector('.silse-reveal-body');
+        var hint = reveal.querySelector('.silse-reveal-hint');
+        if (body && hint) {
+          var isHidden = body.style.display === 'none';
+          body.style.display = isHidden ? 'block' : 'none';
+          hint.style.display = isHidden ? 'none' : 'block';
+        }
+      }
+    });
+
+    // Save response handler
+    canvas.addEventListener('click', function(e) {
+      var saveBtn = e.target.closest('[data-action="save-response"]');
+      if (saveBtn) {
+        var wrapper = saveBtn.closest('.silse-block-input');
+        if (wrapper) {
+          var badge = wrapper.querySelector('.silse-saved-badge');
+          if (badge) badge.style.display = 'inline-flex';
+          var textarea = wrapper.querySelector('textarea');
+          if (textarea) textarea.setAttribute('data-saved', 'true');
+        }
+      }
+    });
+
+    // Timer toggle handler
+    canvas.addEventListener('click', function(e) {
+      var timerBtn = e.target.closest('[data-action="timer-toggle"]');
+      if (timerBtn) {
+        var timerEl = timerBtn.closest('.silse-block-timer');
+        if (timerEl) {
+          var isRunning = timerEl.getAttribute('data-running') === 'true';
+          timerEl.setAttribute('data-running', isRunning ? 'false' : 'true');
+          timerBtn.textContent = isRunning ? '▶' : '⏸';
+          if (!isRunning) {
+            // Simple countdown
+            var display = timerEl.querySelector('.silse-timer-display');
+            var currentSec = parseInt(timerEl.getAttribute('data-remaining') || '300', 10);
+            var interval = setInterval(function() {
+              if (timerEl.getAttribute('data-running') !== 'true') { clearInterval(interval); return; }
+              currentSec--;
+              if (currentSec <= 0) { clearInterval(interval); timerEl.setAttribute('data-running', 'false'); timerBtn.textContent = '▶'; return; }
+              timerEl.setAttribute('data-remaining', String(currentSec));
+              if (display) {
+                var m = Math.floor(currentSec / 60);
+                var s = currentSec % 60;
+                display.textContent = m + ':' + (s < 10 ? '0' + s : s);
+              }
+            }, 1000);
+            timerEl.setAttribute('data-interval-id', String(interval));
+          }
+        }
+      }
+    });
+  }
+
+  wireInteractions();
 })();
 `.trim();
 }
