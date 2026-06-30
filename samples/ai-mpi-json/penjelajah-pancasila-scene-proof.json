@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "metadata": {
+    "title": "Misi Penjaga Norma",
+    "subject": "PPKn",
+    "grade": "7",
+    "phase": "D",
+    "topic": "Hidup Tertib dengan Norma",
+    "cp": "Memahami norma yang berlaku di masyarakat dan menunjukkan sikap tertib.",
+    "objectives": [
+      "Menjelaskan pengertian norma.",
+      "Membedakan jenis-jenis norma.",
+      "Menunjukkan sikap tertib sesuai norma."
+    ]
+  },
+  "styleId": "modern-clean",
+  "pages": [
+    {
+      "id": "page-cover",
+      "role": "cover",
+      "scene": "cover-hero",
+      "title": "Sampul",
+      "blocks": [
+        {
+          "type": "text",
+          "variant": "title",
+          "text": "Misi Penjaga Norma"
+        },
+        {
+          "type": "text",
+          "variant": "subtitle",
+          "text": "PPKn · Kelas 7 · Fase D"
+        }
+      ]
+    },
+    {
+      "id": "page-material",
+      "role": "material",
+      "scene": "material-brief",
+      "title": "Materi",
+      "blocks": [
+        {
+          "type": "text",
+          "variant": "title",
+          "text": "Apa Itu Norma?"
+        },
+        {
+          "type": "card",
+          "variant": "info-card",
+          "title": "Pengertian Norma",
+          "body": "Norma adalah aturan atau ketentuan yang berlaku di masyarakat untuk mengatur perilaku anggotanya."
+        }
+      ]
+    },
+    {
+      "id": "page-game",
+      "role": "game",
+      "scene": "game-mission",
+      "title": "Misi Penjaga Norma",
+      "blocks": [
+        {
+          "type": "game",
+          "variant": "mission-choice",
+          "title": "Penjaga Norma di Sekolah",
+          "briefing": "Kamu menjadi penjaga norma di lingkungan sekolah. Seorang teman tidak menegur siswa yang membuang sampah sembarangan.",
+          "missionTarget": "Pilih tindakan yang paling sesuai dengan norma kesopanan dan kepedulian warga sekolah.",
+          "actions": [
+            {
+              "id": "a",
+              "label": "Menegur dengan sopan",
+              "result": "correct",
+              "feedback": "Tepat. Menegur dengan sopan menunjukkan kepedulian dan kesopanan sesuai norma warga sekolah."
+            },
+            {
+              "id": "b",
+              "label": "Membiarkan saja",
+              "result": "wrong",
+              "feedback": "Coba pikirkan kembali tanggung jawab warga sekolah. Membiarkan berarti tidak menjaga norma bersama."
+            },
+            {
+              "id": "c",
+              "label": "Marah di depan banyak orang",
+              "result": "wrong",
+              "feedback": "Meskipun benar bahwa tindakan itu salah, marah di depan umum justru melanggar norma kesopanan."
+            }
+          ],
+          "reward": {
+            "type": "badge",
+            "label": "Lencana Penjaga Norma"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page-quiz",
+      "role": "quiz",
+      "scene": "quiz-check",
+      "title": "Cek Pemahaman",
+      "blocks": [
+        {
+          "type": "quiz",
+          "variant": "multiple-choice",
+          "title": "Cek Pemahaman",
+          "prompt": "Norma yang mengatur hubungan manusia dengan Tuhan disebut...",
+          "choices": [
+            { "id": "a", "text": "Norma Agama" },
+            { "id": "b", "text": "Norma Kesusilaan" },
+            { "id": "c", "text": "Norma Kesopanan" },
+            { "id": "d", "text": "Norma Hukum" }
+          ],
+          "correctChoiceId": "a",
+          "feedbackCorrect": "Benar. Norma agama berasal dari Tuhan.",
+          "feedbackWrong": "Belum tepat. Norma agama mengatur hubungan dengan Tuhan."
+        }
+      ]
+    },
+    {
+      "id": "page-closing",
+      "role": "closing",
+      "scene": "closing-thanks",
+      "title": "Penutup",
+      "blocks": [
+        {
+          "type": "text",
+          "variant": "title",
+          "text": "Terima Kasih"
+        },
+        {
+          "type": "text",
+          "variant": "subtitle",
+          "text": "Mari hidup tertib dengan norma!"
+        }
+      ]
+    }
+  ]
+}

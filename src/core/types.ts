@@ -310,6 +310,31 @@ export type GameMission = {
   points: number;
 };
 
+/**
+ * Scene metadata untuk GameComponent (MPI-JSON-SCENE-PROOF-01).
+ *
+ * Optional field. Jika ada, GameComponentView akan render sebagai "scene misi"
+ * (briefing + target + action cards + feedback + reward), bukan list pertanyaan.
+ *
+ * Dipakai oleh AI JSON converter untuk preserve scene intent dari AI blueprint
+ * tanpa mengubah schema existing (field wajib GameComponent tidak berubah).
+ *
+ * Scene intent yang di-preserve:
+ *   - scene: jenis scene (e.g. "game-mission")
+ *   - briefing: narasi pembuka misi
+ *   - missionTarget: target yang harus dicapai siswa
+ *   - reward: { type, label } — lencana/hadiah yang didapat setelah selesai
+ */
+export type GameSceneMetadata = {
+  scene: string;
+  briefing?: string;
+  missionTarget?: string;
+  reward?: {
+    type: string;
+    label: string;
+  };
+};
+
 export type GameComponent = BaseComponent & {
   type: 'game';
   gameType: GameType;
@@ -317,6 +342,11 @@ export type GameComponent = BaseComponent & {
   instruction: string;
   missions: GameMission[];
   scoringStyle: ScoringStyle;
+  /**
+   * MPI-JSON-SCENE-PROOF-01: Optional scene metadata.
+   * Jika ada, renderer akan tampilkan sebagai scene misi, bukan list pertanyaan.
+   */
+  sceneMetadata?: GameSceneMetadata;
 };
 
 // ---------------------------------------------------------------------------

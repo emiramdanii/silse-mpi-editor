@@ -93,6 +93,8 @@ type ExportRenderComponent = {
   gameTitle?: string;
   gameInstruction?: string;
   missions?: { id: string; title: string; prompt: string; choices: { id: string; text: string }[]; correctChoiceIndex: number; feedbackCorrect: string; feedbackWrong: string; points: number }[];
+  // MPI-JSON-SCENE-PROOF-01: scene metadata for game-mission rendering
+  sceneMetadata?: { scene: string; briefing?: string; missionTarget?: string; reward?: { type: string; label: string } };
   // Layered-info-specific (LXC-02)
   layeredTitle?: string;
   layeredVariant?: string;
@@ -197,6 +199,10 @@ function buildExportRenderComponent(
     base.gameInstruction = component.instruction;
     base.missions = component.missions;
     base.scoringStyle = component.scoringStyle;
+    // MPI-JSON-SCENE-PROOF-01: preserve scene metadata for game-mission rendering
+    if (component.sceneMetadata) {
+      base.sceneMetadata = component.sceneMetadata;
+    }
   } else if (component.type === 'layered-info') {
     base.layeredTitle = component.title;
     base.layeredVariant = component.variant;
@@ -1092,6 +1098,189 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     return s;
   }
 
+  // MPI-JSON-SCENE-PROOF-01: render game sebagai scene misi (bukan list pertanyaan).
+  // Tampil sebagai: briefing → target → action cards → feedback → reward.
+  function renderGameMissionScene(comp, style) {
+    var sceneMeta = comp.sceneMetadata;
+    var gs = gameStates[comp.id] || { currentMissionIndex: 0, selectedChoiceIndex: null, isAnswered: false, score: 0, completed: false };
+    gameStates[comp.id] = gs;
+
+    var mission = comp.missions[gs.currentMissionIndex];
+    if (!mission) return null;
+
+    var el = document.createElement('div');
+    el.className = 'silse-game-scene ' + (comp.skinClass || '');
+    el.style.cssText = style + 'box-sizing:border-box;display:flex;flex-direction:column;gap:10px;overflow:auto;padding:18px 20px;';
+
+    // Completed state: tampilkan reward
+    if (gs.completed) {
+      var rewardDone = document.createElement('div');
+      rewardDone.className = 'silse-game-reward';
+      rewardDone.style.cssText = 'padding:16px;border-radius:12px;background:#fffbeb;border:2px solid #fbbf24;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;';
+      var rewardIcon = document.createElement('div');
+      rewardIcon.style.fontSize = '48px';
+      rewardIcon.textContent = '🏆';
+      rewardDone.appendChild(rewardIcon);
+      var rewardLabel = document.createElement('strong');
+      rewardLabel.style.cssText = 'font-size:20px;display:block;margin-bottom:4px;';
+      rewardLabel.textContent = (sceneMeta.reward && sceneMeta.reward.label) ? sceneMeta.reward.label : 'Misi Selesai';
+      rewardDone.appendChild(rewardLabel);
+      var rewardScore = document.createElement('div');
+      rewardScore.style.cssText = 'font-size:14px;color:#4b5563;';
+      rewardScore.textContent = 'Skor akhir: ' + gs.score;
+      rewardDone.appendChild(rewardScore);
+      el.appendChild(rewardDone);
+
+      var retryBtn = document.createElement('button');
+      retryBtn.style.cssText = 'margin-top:12px;padding:10px 18px;border-radius:999px;border:0;background:#1d3557;color:#fff;font-weight:800;cursor:pointer;align-self:center;';
+      retryBtn.textContent = 'Ulangi Misi';
+      retryBtn.addEventListener('click', function() {
+        gameStates[comp.id] = { currentMissionIndex: 0, selectedChoiceIndex: null, isAnswered: false, score: 0, completed: false };
+        renderPage(currentPageIdx);
+      });
+      el.appendChild(retryBtn);
+      return el;
+    }
+
+    // Briefing
+    var briefing = document.createElement('div');
+    briefing.className = 'silse-game-briefing';
+    briefing.style.cssText = 'padding:12px 14px;border-radius:10px;background:#fffbeb;border:1px solid #fde68a;margin-bottom:8px;';
+    var briefingLabel = document.createElement('div');
+    briefingLabel.style.cssText = 'font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;';
+    briefingLabel.textContent = '📋 Briefing Misi';
+    briefing.appendChild(briefingLabel);
+    var briefingText = document.createElement('div');
+    briefingText.style.cssText = 'font-size:15px;font-weight:600;color:#1f2937;white-space:normal;overflow-wrap:anywhere;';
+    briefingText.textContent = sceneMeta.briefing || comp.gameInstruction || '';
+    briefing.appendChild(briefingText);
+    el.appendChild(briefing);
+
+    // Target
+    var target = document.createElement('div');
+    target.className = 'silse-game-target';
+    target.style.cssText = 'padding:12px 14px;border-radius:10px;background:#eff6ff;border:1px solid #bfdbfe;margin-bottom:8px;';
+    var targetLabel = document.createElement('div');
+    targetLabel.style.cssText = 'font-size:11px;font-weight:700;color:#1e40af;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;';
+    targetLabel.textContent = '🎯 Target Misi';
+    target.appendChild(targetLabel);
+    var targetText = document.createElement('div');
+    targetText.style.cssText = 'font-size:14px;color:#1e3a8a;white-space:normal;overflow-wrap:anywhere;';
+    targetText.textContent = sceneMeta.missionTarget || mission.prompt || '';
+    target.appendChild(targetText);
+    el.appendChild(target);
+
+    // Action grid
+    var actionGrid = document.createElement('div');
+    actionGrid.className = 'silse-game-action-grid';
+    actionGrid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));gap:10px;margin-top:4px;';
+
+    for (var ai = 0; ai < mission.choices.length; ai++) {
+      (function(actionIdx, actionChoice, actionMission, actionState) {
+        var card = document.createElement('div');
+        card.className = 'silse-game-action-card';
+        card.dataset.choiceIndex = String(actionIdx);
+        var bg = '#ffffff';
+        var borderColor = '#d1d5db';
+        if (actionState.isAnswered && actionIdx === actionMission.correctChoiceIndex) { bg = '#d1fae5'; borderColor = '#16a34a'; }
+        else if (actionState.isAnswered && actionIdx === actionState.selectedChoiceIndex && actionIdx !== actionMission.correctChoiceIndex) { bg = '#fee2e2'; borderColor = '#dc2626'; }
+        card.style.cssText = 'padding:14px 16px;min-height:80px;height:auto;background:' + bg + ';border:2px solid ' + borderColor + ';border-radius:12px;cursor:pointer;font-size:14px;font-weight:600;line-height:1.4;white-space:normal;overflow-wrap:anywhere;word-break:break-word;display:flex;flex-direction:column;gap:6px;transition:transform 0.15s ease, box-shadow 0.15s ease;';
+
+        var cardHeader = document.createElement('div');
+        cardHeader.style.cssText = 'display:flex;align-items:center;gap:8px;';
+        var letterBadge = document.createElement('span');
+        letterBadge.style.cssText = 'display:inline-grid;place-items:center;min-width:28px;height:28px;border-radius:8px;background:#1d3557;color:#fff;font-size:13px;font-weight:900;flex-shrink:0;';
+        letterBadge.textContent = String.fromCharCode(65 + actionIdx);
+        cardHeader.appendChild(letterBadge);
+        var actionLabel = document.createElement('span');
+        actionLabel.style.cssText = 'font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;';
+        actionLabel.textContent = 'Aksi';
+        cardHeader.appendChild(actionLabel);
+        card.appendChild(cardHeader);
+
+        var actionText = document.createElement('span');
+        actionText.style.flex = '1';
+        actionText.textContent = actionChoice.text;
+        card.appendChild(actionText);
+
+        card.addEventListener('click', function() {
+          if (actionState.isAnswered) return;
+          actionState.selectedChoiceIndex = actionIdx;
+          actionState.isAnswered = true;
+          if (actionIdx === actionMission.correctChoiceIndex) {
+            actionState.score += actionMission.points;
+            updateScoreDisplay();
+          }
+          renderPage(currentPageIdx);
+        });
+
+        actionGrid.appendChild(card);
+      })(ai, mission.choices[ai], mission, gs);
+    }
+    el.appendChild(actionGrid);
+
+    // Feedback (jika sudah dijawab)
+    if (gs.isAnswered) {
+      var answeredCorrectly = gs.selectedChoiceIndex === mission.correctChoiceIndex;
+      var feedback = document.createElement('div');
+      feedback.className = 'silse-game-feedback';
+      feedback.style.cssText = 'margin-top:8px;padding:12px 14px;border-radius:10px;font-size:13px;font-weight:600;background-color:' + (answeredCorrectly ? '#d1fae5' : '#fee2e2') + ';color:' + (answeredCorrectly ? '#065f46' : '#991b1b') + ';border-left:4px solid ' + (answeredCorrectly ? '#16a34a' : '#dc2626') + ';white-space:normal;overflow-wrap:anywhere;';
+      var feedbackLabel = document.createElement('div');
+      feedbackLabel.style.cssText = 'font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;';
+      feedbackLabel.textContent = answeredCorrectly ? '✓ Hasil Aksi' : '✗ Hasil Aksi';
+      feedback.appendChild(feedbackLabel);
+      feedback.appendChild(document.createTextNode(answeredCorrectly ? mission.feedbackCorrect : mission.feedbackWrong));
+      el.appendChild(feedback);
+
+      // Reward preview (jika benar)
+      if (answeredCorrectly && sceneMeta.reward) {
+        var rewardPreview = document.createElement('div');
+        rewardPreview.className = 'silse-game-reward';
+        rewardPreview.style.cssText = 'margin-top:8px;padding:16px;border-radius:12px;background:linear-gradient(145deg, #fff8e7, #fff);border:2px solid #fbbf24;display:flex;align-items:center;gap:12px;';
+        var rewardIcon2 = document.createElement('div');
+        rewardIcon2.style.fontSize = '24px';
+        rewardIcon2.textContent = '🏅';
+        rewardPreview.appendChild(rewardIcon2);
+        var rewardText = document.createElement('div');
+        var rewardTextLabel = document.createElement('div');
+        rewardTextLabel.style.cssText = 'font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.5px;';
+        rewardTextLabel.textContent = 'Reward Didapat';
+        rewardText.appendChild(rewardTextLabel);
+        var rewardTextValue = document.createElement('strong');
+        rewardTextValue.style.cssText = 'font-size:14px;color:#1f2937;';
+        rewardTextValue.textContent = sceneMeta.reward.label;
+        rewardText.appendChild(rewardTextValue);
+        rewardPreview.appendChild(rewardText);
+        el.appendChild(rewardPreview);
+      }
+
+      // Next mission / finish button
+      if (gs.currentMissionIndex < comp.missions.length - 1) {
+        var nextBtn = document.createElement('button');
+        nextBtn.style.cssText = 'margin-top:8px;padding:10px 18px;align-self:flex-end;';
+        nextBtn.textContent = 'Misi Berikutnya →';
+        nextBtn.addEventListener('click', function() {
+          gs.currentMissionIndex++;
+          gs.selectedChoiceIndex = null;
+          gs.isAnswered = false;
+          renderPage(currentPageIdx);
+        });
+        el.appendChild(nextBtn);
+      } else {
+        gs.completed = true;
+        var finishBtn = document.createElement('button');
+        finishBtn.style.cssText = 'margin-top:8px;padding:10px 18px;align-self:flex-end;';
+        finishBtn.textContent = 'Lihat Hasil';
+        finishBtn.addEventListener('click', function() {
+          renderPage(currentPageIdx);
+        });
+        el.appendChild(finishBtn);
+      }
+    }
+
+    return el;
+  }
+
   function renderComponent(comp) {
     var style = buildInlineStyle(comp);
     var el;
@@ -1292,6 +1481,11 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     }
 
     if (comp.type === 'game') {
+      // MPI-JSON-SCENE-PROOF-01: render sebagai scene misi jika sceneMetadata ada.
+      if (comp.sceneMetadata && comp.sceneMetadata.scene === 'game-mission') {
+        return renderGameMissionScene(comp, style);
+      }
+
       el = document.createElement('div');
       el.className = 'silse-game ' + (comp.skinClass || '');
       el.style.cssText = style + 'box-sizing:border-box;display:flex;flex-direction:column;gap:10px;overflow:auto;padding:18px 20px;';
