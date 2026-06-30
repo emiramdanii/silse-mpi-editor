@@ -241,7 +241,8 @@ describe('MPI-DESIGN-CONTRACT-01 — no premium CSS, no style pack baru', () => 
     expect(ids).toContain('modern-clean');
     expect(ids).toContain('soft-classroom');
     expect(ids).toContain('mission-dark');
+    expect(ids).toContain('golden-reference');
     // Tidak ada style pack ke-5
-    expect(ids.length).toBe(4);
+    expect(ids.length).toBe(5);
   });
 });

@@ -204,6 +204,14 @@ function contentKindToClass(kind: MpiSceneSlotContent['kind']): string {
     'feedback': 'silse-scene-feedback',
     'reward': 'silse-scene-reward',
     'navigation': 'silse-scene-navigation',
+    // GOLDEN-REFERENCE-RENDER-P1: 7 new content kinds
+    'curriculum-guide': 'silse-scene-curriculum',
+    'objectives-path': 'silse-scene-objectives',
+    'starter-review': 'silse-scene-starter',
+    'discussion-scene': 'silse-scene-discussion-block',
+    'case-analysis': 'silse-scene-case',
+    'result-summary': 'silse-scene-result',
+    'reflection-journal': 'silse-scene-reflection-block',
   };
   return mapping[kind] ?? 'silse-scene-unknown';
 }

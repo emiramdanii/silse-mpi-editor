@@ -61,7 +61,37 @@ export function isPageSceneRenderable(page: SimplePage | undefined | null): bool
   const hasClosingScene = page.components.find(
     (c): c is CardComponent => c.type === 'card' && 'sceneMetadata' in c && c.sceneMetadata?.scene === 'closing-award',
   );
-  return !!hasClosingScene;
+  if (hasClosingScene) return true;
+
+  // GOLDEN-REFERENCE-RENDER-P1: check for 7 new scene types via container content kind
+  // These scenes are detected by converting page to container and checking slot content kinds.
+  const newSceneKinds = [
+    'curriculum-guide', 'objectives-path', 'starter-review',
+    'discussion-scene', 'case-analysis', 'result-summary', 'reflection-journal',
+  ];
+  // Quick check: if page role matches a known new scene type, convert and check
+  const newSceneRoleMap: Record<string, string> = {
+    'guide': 'curriculum-guide',
+    'objectives': 'objectives-path',
+    'starter': 'starter-review',
+    'material': 'discussion-scene', // could be discussion or case-analysis or material
+    'reflection': 'reflection-journal',
+  };
+  const possibleKind = newSceneRoleMap[page.role];
+  if (possibleKind) {
+    // Convert to container and check if any slot has the expected content kind
+    const container = simpleProjectToMpiContainer({ ...{} as SimpleProject, pages: [page] } as SimpleProject);
+    const scene = container.scenes[0];
+    if (scene) {
+      const hasNewKind = scene.slots.some((s) => {
+        const kind = (s.content as { kind: string }).kind;
+        return newSceneKinds.includes(kind);
+      });
+      if (hasNewKind) return true;
+    }
+  }
+
+  return false;
 }
 
 /**

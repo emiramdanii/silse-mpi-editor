@@ -23,6 +23,11 @@
 import type { CSSProperties } from 'react';
 import type { SceneRenderPlan, SceneRenderSlot } from '../core/scene-renderer';
 import type { MpiDesignContract } from '../core/mpi-design-contract';
+import {
+  CurriculumGuideComposer, ObjectivesPathComposer, StarterReviewComposer,
+  DiscussionSceneComposer, CaseAnalysisComposer, ResultSummaryComposer,
+  ReflectionJournalComposer,
+} from './scene-composers';
 
 export type SceneRendererViewProps = {
   plan: SceneRenderPlan;
@@ -267,6 +272,29 @@ function ContentRenderer({
         contract={contract}
       />
     );
+  }
+
+  // GOLDEN-REFERENCE-RENDER-P1: 7 new scene composers
+  if (c.kind === 'curriculum-guide') {
+    return <CurriculumGuideComposer contract={contract} content={c} />;
+  }
+  if (c.kind === 'objectives-path') {
+    return <ObjectivesPathComposer contract={contract} content={c} />;
+  }
+  if (c.kind === 'starter-review') {
+    return <StarterReviewComposer contract={contract} content={c} />;
+  }
+  if (c.kind === 'discussion-scene') {
+    return <DiscussionSceneComposer contract={contract} content={c} />;
+  }
+  if (c.kind === 'case-analysis') {
+    return <CaseAnalysisComposer contract={contract} content={c} />;
+  }
+  if (c.kind === 'result-summary') {
+    return <ResultSummaryComposer contract={contract} content={c} />;
+  }
+  if (c.kind === 'reflection-journal') {
+    return <ReflectionJournalComposer contract={contract} content={c} />;
   }
 
   if (c.kind === 'feedback') {

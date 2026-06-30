@@ -169,7 +169,7 @@ describe('FOUNDATION-FINAL-LOCK-01 — hard gate', () => {
     expect(ids).toContain('modern-clean');
     expect(ids).toContain('soft-classroom');
     expect(ids).toContain('mission-dark');
-    expect(ids.length).toBe(4);
+    expect(ids.length).toBe(5);
   });
 
   // Additional: prompt contract has all 5 scenes

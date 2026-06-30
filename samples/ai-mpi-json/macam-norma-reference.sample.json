@@ -12,131 +12,522 @@
     "topic": "Macam-Macam Norma",
     "cp": "Peserta didik mampu memahami macam-macam norma yang berlaku di masyarakat dan menerapkannya dalam kehidupan sehari-hari.",
     "objectives": [
-      { "id": "obj-1", "text": "Mengidentifikasi 4 macam norma (agama, kesusilaan, kesopanan, hukum)." },
-      { "id": "obj-2", "text": "Membedakan ciri-ciri setiap jenis norma." },
-      { "id": "obj-3", "text": "Menunjukkan contoh penerapan norma dalam kehidupan sehari-hari." }
+      {
+        "id": "obj-1",
+        "text": "Mengidentifikasi 4 macam norma (agama, kesusilaan, kesopanan, hukum)."
+      },
+      {
+        "id": "obj-2",
+        "text": "Membedakan ciri-ciri setiap jenis norma."
+      },
+      {
+        "id": "obj-3",
+        "text": "Menunjukkan contoh penerapan norma dalam kehidupan sehari-hari."
+      }
     ]
   },
-  "styleIntent": { "styleId": "modern-clean", "mood": "clean", "intent": "Profesional, rapi, navy-crimson-gold." },
-  "designSystem": { "contractId": "modern-clean", "paletteName": "navy-crimson-gold", "typographyName": "trebuchet-hero" },
+  "styleIntent": {
+    "styleId": "modern-clean",
+    "mood": "clean",
+    "intent": "Profesional, rapi, navy-crimson-gold."
+  },
+  "designSystem": {
+    "contractId": "modern-clean",
+    "paletteName": "navy-crimson-gold",
+    "typographyName": "trebuchet-hero"
+  },
   "flow": {
     "steps": [
-      { "sceneId": "scene-cover", "label": "Sampul" },
-      { "sceneId": "scene-cp", "label": "Kurikulum" },
-      { "sceneId": "scene-tp", "label": "Tujuan" },
-      { "sceneId": "scene-review", "label": "Review" },
-      { "sceneId": "scene-materi", "label": "Materi" },
-      { "sceneId": "scene-diskusi", "label": "Diskusi" },
-      { "sceneId": "scene-game1", "label": "Game Sortir" },
-      { "sceneId": "scene-hubungan", "label": "Hubungan" },
-      { "sceneId": "scene-game2", "label": "Roda Norma" },
-      { "sceneId": "scene-hasil", "label": "Hasil" },
-      { "sceneId": "scene-refleksi", "label": "Refleksi" },
-      { "sceneId": "scene-penutup", "label": "Penutup" }
+      {
+        "sceneId": "scene-cover",
+        "label": "Sampul"
+      },
+      {
+        "sceneId": "scene-cp",
+        "label": "Kurikulum"
+      },
+      {
+        "sceneId": "scene-tp",
+        "label": "Tujuan"
+      },
+      {
+        "sceneId": "scene-review",
+        "label": "Review"
+      },
+      {
+        "sceneId": "scene-materi",
+        "label": "Materi"
+      },
+      {
+        "sceneId": "scene-diskusi",
+        "label": "Diskusi"
+      },
+      {
+        "sceneId": "scene-game1",
+        "label": "Game Sortir"
+      },
+      {
+        "sceneId": "scene-hubungan",
+        "label": "Hubungan"
+      },
+      {
+        "sceneId": "scene-game2",
+        "label": "Roda Norma"
+      },
+      {
+        "sceneId": "scene-hasil",
+        "label": "Hasil"
+      },
+      {
+        "sceneId": "scene-refleksi",
+        "label": "Refleksi"
+      },
+      {
+        "sceneId": "scene-penutup",
+        "label": "Penutup"
+      }
     ],
     "mode": "linear"
   },
   "scenes": [
     {
-      "id": "scene-cover", "role": "cover", "sceneType": "cover-hero", "title": "Sampul",
+      "id": "scene-cover",
+      "role": "cover",
+      "sceneType": "cover-hero",
+      "title": "Sampul",
       "slots": [
-        { "id": "slot-cover", "role": "heroTitle", "placement": { "x": 72, "y": 120, "width": 1136, "height": 480, "zIndex": 2 },
-          "content": { "kind": "cover-hero", "kicker": "PPKn · Kelas 7", "heroTitle": "Macam-Macam Norma", "heroSubtitle": "Pertemuan 2 — Memahami 4 jenis norma di masyarakat", "badges": ["Fase D"], "primaryAction": { "label": "Mulai", "action": "next" }, "visualAnchor": "Petualangan mengenal norma dimulai!" } }
-      ]
-    },
-    {
-      "id": "scene-cp", "role": "guide", "sceneType": "curriculum-guide", "title": "Kurikulum",
-      "slots": [
-        { "id": "slot-cp", "role": "curriculumTitle", "placement": { "x": 72, "y": 60, "width": 1136, "height": 540 },
-          "content": { "kind": "text", "variant": "title", "text": "Kurikulum Merdeka — Capitan Pembelajaran" } },
-        { "id": "slot-cp-competency", "role": "competency", "placement": { "x": 72, "y": 160, "width": 1136, "height": 200 },
-          "content": { "kind": "card", "variant": "info-card", "title": "Capaian Pembelajaran", "body": "Peserta didik mampu memahami macam-macam norma yang berlaku di masyarakat." } }
-      ]
-    },
-    {
-      "id": "scene-tp", "role": "objectives", "sceneType": "objectives-path", "title": "Tujuan Pembelajaran",
-      "slots": [
-        { "id": "slot-tp", "role": "objectiveList", "placement": { "x": 72, "y": 60, "width": 1136, "height": 540 },
-          "content": { "kind": "card", "variant": "info-card", "title": "Tujuan Pembelajaran", "body": "1. Mengidentifikasi 4 macam norma.\n2. Membedakan ciri-ciri setiap norma.\n3. Menunjukkan contoh penerapan norma." } }
-      ]
-    },
-    {
-      "id": "scene-review", "role": "starter", "sceneType": "starter-review", "title": "Review Pertemuan 1",
-      "slots": [
-        { "id": "slot-review", "role": "priorLearning", "placement": { "x": 72, "y": 60, "width": 1136, "height": 540 },
-          "content": { "kind": "card", "variant": "info-card", "title": "Review", "body": "Pertemuan sebelumnya kita belajar tentang pengertian norma. Sekarang kita akan membedakan macam-macam norma." } }
-      ]
-    },
-    {
-      "id": "scene-materi", "role": "material", "sceneType": "learning-scene", "title": "Materi: 4 Macam Norma",
-      "slots": [
-        { "id": "slot-materi", "role": "explanationPanel", "placement": { "x": 72, "y": 120, "width": 1136, "height": 480, "zIndex": 2 },
-          "content": { "kind": "learning-material", "conceptTitle": "4 Macam Norma", "conceptSubtitle": "Agama, Kesusilaan, Kesopanan, Hukum", "explanation": "Norma di masyarakat ada 4 macam: norma agama, norma kesusilaan, norma kesopanan, dan norma hukum. Setiap norma memiliki sumber, sanksi, dan ciri yang berbeda.", "examples": [
-            { "id": "ex1", "title": "Norma Agama", "body": "Aturan dari Tuhan, sanksi dosa." },
-            { "id": "ex2", "title": "Norma Kesusilaan", "body": "Aturan dari hati nurani, sanksi rasa bersalah." },
-            { "id": "ex3", "title": "Norma Kesopanan", "body": "Aturan tata krama masyarakat, sanksi dikucilkan." },
-            { "id": "ex4", "title": "Norma Hukum", "body": "Aturan dari negara, sanksi tegas dan memaksa." }
-          ], "keyPoints": ["4 macam norma: agama, kesusilaan, kesopanan, hukum.", "Setiap norma punya sumber dan sanksi berbeda.", "Norma hukum paling tegas sanksinya."], "studentAction": "Tuliskan 1 contoh norma di sekolah dan jenisnya.", "visualHint": "Ingat: Agama (Tuhan), Kesusilaan (nurani), Kesopanan (masyarakat), Hukum (negara)." }
+        {
+          "id": "slot-cover",
+          "role": "heroTitle",
+          "placement": {
+            "x": 72,
+            "y": 120,
+            "width": 1136,
+            "height": 480,
+            "zIndex": 2
+          },
+          "content": {
+            "kind": "cover-hero",
+            "kicker": "PPKn · Kelas 7",
+            "heroTitle": "Macam-Macam Norma",
+            "heroSubtitle": "Pertemuan 2 — Memahami 4 jenis norma di masyarakat",
+            "badges": [
+              "Fase D"
+            ],
+            "primaryAction": {
+              "label": "Mulai",
+              "action": "next"
+            },
+            "visualAnchor": "Petualangan mengenal norma dimulai!"
+          }
         }
       ]
     },
     {
-      "id": "scene-diskusi", "role": "material", "sceneType": "discussion-scene", "title": "Diskusi Kelompok",
+      "id": "scene-cp",
+      "role": "guide",
+      "sceneType": "curriculum-guide",
+      "title": "Kurikulum",
       "slots": [
-        { "id": "slot-diskusi", "role": "discussionPrompt", "placement": { "x": 72, "y": 60, "width": 1136, "height": 540 },
-          "content": { "kind": "card", "variant": "info-card", "title": "Diskusi Kelompok", "body": "Diskusikan dalam kelompok: Mengapa norma hukum memiliki sanksi yang paling tegas dibandingkan norma lain?" } }
+        {
+          "id": "slot-cp",
+          "role": "curriculumTitle",
+          "placement": {
+            "x": 72,
+            "y": 60,
+            "width": 1136,
+            "height": 540
+          },
+          "content": {
+            "kind": "curriculum-guide",
+            "curriculumTitle": "Kurikulum Merdeka — Capaian Pembelajaran",
+            "competency": "Peserta didik mampu memahami macam-macam norma yang berlaku di masyarakat.",
+            "learningFlow": "Pengertian norma → Macam-macam norma → Hubungan antarnorma",
+            "profileTags": [
+              "Bernalar Kritis",
+              "Gotong Royong"
+            ]
+          }
+        }
       ]
     },
     {
-      "id": "scene-game1", "role": "activity", "sceneType": "classification-game", "title": "Game Sortir Norma",
+      "id": "scene-tp",
+      "role": "objectives",
+      "sceneType": "objectives-path",
+      "title": "Tujuan Pembelajaran",
       "slots": [
-        { "id": "slot-game1", "role": "items", "placement": { "x": 72, "y": 60, "width": 1136, "height": 540 },
-          "content": { "kind": "card", "variant": "info-card", "title": "Game Sortir Norma", "body": "Sortir kartu perilaku ke 4 kategori norma: Agama, Kesusilaan, Kesopanan, Hukum." } },
-        { "id": "slot-game1-cat", "role": "categories", "placement": { "x": 72, "y": 400, "width": 1136, "height": 200 },
-          "content": { "kind": "card", "variant": "info-card", "title": "Kategori", "body": "Agama | Kesusilaan | Kesopanan | Hukum" } }
+        {
+          "id": "slot-tp",
+          "role": "objectiveList",
+          "placement": {
+            "x": 72,
+            "y": 60,
+            "width": 1136,
+            "height": 540
+          },
+          "content": {
+            "kind": "objectives-path",
+            "objectiveList": [
+              "Mengidentifikasi 4 macam norma (agama, kesusilaan, kesopanan, hukum).",
+              "Membedakan ciri-ciri setiap jenis norma.",
+              "Menunjukkan contoh penerapan norma dalam kehidupan sehari-hari."
+            ],
+            "successCriteria": "Siswa dapat menyebutkan dan membedakan 4 macam norma dengan benar.",
+            "activityPath": [
+              "Review",
+              "Materi",
+              "Diskusi",
+              "Game",
+              "Kuis",
+              "Refleksi"
+            ]
+          }
+        }
       ]
     },
     {
-      "id": "scene-hubungan", "role": "material", "sceneType": "case-analysis", "title": "Hubungan Antarnorma",
+      "id": "scene-review",
+      "role": "starter",
+      "sceneType": "starter-review",
+      "title": "Review Pertemuan 1",
       "slots": [
-        { "id": "slot-hubungan", "role": "caseText", "placement": { "x": 72, "y": 60, "width": 1136, "height": 200 },
-          "content": { "kind": "card", "variant": "info-card", "title": "Kasus", "body": "Seorang siswa membuang sampah sembarangan. Norma apa saja yang dilanggar?" } },
-        { "id": "slot-hubungan-analysis", "role": "analysisPrompt", "placement": { "x": 72, "y": 280, "width": 1136, "height": 200 },
-          "content": { "kind": "card", "variant": "info-card", "title": "Analisis", "body": "Membuang sampah sembarangan melanggar: norma kesopanan (tidak sopan), norma hukum (denda), norma kesusilaan (tidak peduli lingkungan)." } }
+        {
+          "id": "slot-review",
+          "role": "priorLearning",
+          "placement": {
+            "x": 72,
+            "y": 60,
+            "width": 1136,
+            "height": 540
+          },
+          "content": {
+            "kind": "starter-review",
+            "priorLearning": "Pertemuan sebelumnya kita belajar tentang pengertian norma. Norma adalah aturan yang berlaku di masyarakat.",
+            "triggerQuestion": "Apa yang terjadi jika tidak ada norma di masyarakat?",
+            "bridgeToNewTopic": "Hari ini kita akan membedakan macam-macam norma.",
+            "discussionPrompt": "Diskusikan dengan teman sebangku: apa norma yang paling sering kamu jumpai?"
+          }
+        }
       ]
     },
     {
-      "id": "scene-game2", "role": "quiz", "sceneType": "quiz-challenge", "title": "Roda Norma — Quiz",
+      "id": "scene-materi",
+      "role": "material",
+      "sceneType": "learning-scene",
+      "title": "Materi: 4 Macam Norma",
       "slots": [
-        { "id": "slot-game2", "role": "questionFocus", "placement": { "x": 72, "y": 120, "width": 1136, "height": 480, "zIndex": 2 },
-          "content": { "kind": "quiz-question", "prompt": "Norma yang sanksinya paling tegas dan memaksa adalah...", "choices": [
-            { "id": "a", "text": "Norma Agama" }, { "id": "b", "text": "Norma Kesusilaan" }, { "id": "c", "text": "Norma Kesopanan" }, { "id": "d", "text": "Norma Hukum" }
-          ], "correctChoiceId": "d", "feedbackCorrect": "Benar! Norma hukum punya sanksi tegas dari negara.", "feedbackWrong": "Belum tepat. Norma hukum yang paling tegas sanksinya." } }
+        {
+          "id": "slot-materi",
+          "role": "explanationPanel",
+          "placement": {
+            "x": 72,
+            "y": 120,
+            "width": 1136,
+            "height": 480,
+            "zIndex": 2
+          },
+          "content": {
+            "kind": "learning-material",
+            "conceptTitle": "4 Macam Norma",
+            "conceptSubtitle": "Agama, Kesusilaan, Kesopanan, Hukum",
+            "explanation": "Norma di masyarakat ada 4 macam: norma agama, norma kesusilaan, norma kesopanan, dan norma hukum. Setiap norma memiliki sumber, sanksi, dan ciri yang berbeda.",
+            "examples": [
+              {
+                "id": "ex1",
+                "title": "Norma Agama",
+                "body": "Aturan dari Tuhan, sanksi dosa."
+              },
+              {
+                "id": "ex2",
+                "title": "Norma Kesusilaan",
+                "body": "Aturan dari hati nurani, sanksi rasa bersalah."
+              },
+              {
+                "id": "ex3",
+                "title": "Norma Kesopanan",
+                "body": "Aturan tata krama masyarakat, sanksi dikucilkan."
+              },
+              {
+                "id": "ex4",
+                "title": "Norma Hukum",
+                "body": "Aturan dari negara, sanksi tegas dan memaksa."
+              }
+            ],
+            "keyPoints": [
+              "4 macam norma: agama, kesusilaan, kesopanan, hukum.",
+              "Setiap norma punya sumber dan sanksi berbeda.",
+              "Norma hukum paling tegas sanksinya."
+            ],
+            "studentAction": "Tuliskan 1 contoh norma di sekolah dan jenisnya.",
+            "visualHint": "Ingat: Agama (Tuhan), Kesusilaan (nurani), Kesopanan (masyarakat), Hukum (negara)."
+          }
+        }
       ]
     },
     {
-      "id": "scene-hasil", "role": "material", "sceneType": "result-summary", "title": "Hasil",
+      "id": "scene-diskusi",
+      "role": "material",
+      "sceneType": "discussion-scene",
+      "title": "Diskusi Kelompok",
       "slots": [
-        { "id": "slot-hasil", "role": "scoreSummary", "placement": { "x": 72, "y": 60, "width": 1136, "height": 540 },
-          "content": { "kind": "card", "variant": "info-card", "title": "Hasil Pembelajaran", "body": "Skor: 80/100. Achievement: Penjelajah Norma." } }
+        {
+          "id": "slot-diskusi",
+          "role": "discussionPrompt",
+          "placement": {
+            "x": 72,
+            "y": 60,
+            "width": 1136,
+            "height": 540
+          },
+          "content": {
+            "kind": "discussion-scene",
+            "discussionPrompt": "Mengapa norma hukum memiliki sanksi yang paling tegas dibandingkan norma lain?",
+            "groupInstruction": "Diskusikan dalam kelompok 4 orang, tentukan juru bicara!",
+            "responseInput": "Tulis hasil diskusi kelompokmu di sini..."
+          }
+        }
       ]
     },
     {
-      "id": "scene-refleksi", "role": "reflection", "sceneType": "reflection-journal", "title": "Refleksi",
+      "id": "scene-game1",
+      "role": "activity",
+      "sceneType": "classification-game",
+      "title": "Game Sortir Norma",
       "slots": [
-        { "id": "slot-refleksi", "role": "reflectionPrompts", "placement": { "x": 72, "y": 60, "width": 1136, "height": 540 },
-          "content": { "kind": "card", "variant": "important-note", "title": "Refleksi Diri", "body": "1. Norma apa yang paling sering kamu jumpai?\n2. Norma mana yang paling sulit kamu terapkan?\n3. Apa yang akan kamu lakukan untuk hidup lebih tertib?" } }
+        {
+          "id": "slot-game1",
+          "role": "items",
+          "placement": {
+            "x": 72,
+            "y": 60,
+            "width": 1136,
+            "height": 540
+          },
+          "content": {
+            "kind": "card",
+            "variant": "info-card",
+            "title": "Game Sortir Norma",
+            "body": "Sortir kartu perilaku ke 4 kategori norma: Agama, Kesusilaan, Kesopanan, Hukum."
+          }
+        },
+        {
+          "id": "slot-game1-cat",
+          "role": "categories",
+          "placement": {
+            "x": 72,
+            "y": 400,
+            "width": 1136,
+            "height": 200
+          },
+          "content": {
+            "kind": "card",
+            "variant": "info-card",
+            "title": "Kategori",
+            "body": "Agama | Kesusilaan | Kesopanan | Hukum"
+          }
+        }
       ]
     },
     {
-      "id": "scene-penutup", "role": "closing", "sceneType": "closing-award", "title": "Penutup",
+      "id": "scene-hubungan",
+      "role": "material",
+      "sceneType": "case-analysis",
+      "title": "Hubungan Antarnorma",
       "slots": [
-        { "id": "slot-penutup", "role": "achievement", "placement": { "x": 72, "y": 120, "width": 1136, "height": 480 },
-          "content": { "kind": "closing-award", "achievement": "Penjelajah Norma", "summary": "Selamat! Kamu telah mempelajari 4 macam norma.", "reflectionPrompt": "Norma apa yang akan kamu terapkan besok?", "rewardLabel": "Lencana Penjelajah Norma", "rewardIcon": "🏆", "nextLearning": "Selanjutnya: Sumber dan fungsi norma.", "finalAction": { "label": "Selesai", "action": "next" } } }
+        {
+          "id": "slot-hubungan",
+          "role": "caseText",
+          "placement": {
+            "x": 72,
+            "y": 60,
+            "width": 1136,
+            "height": 540
+          },
+          "content": {
+            "kind": "case-analysis",
+            "caseText": "Seorang siswa membuang sampah sembarangan di halaman sekolah.",
+            "analysisPrompt": "Norma apa saja yang dilanggar oleh siswa tersebut?",
+            "revealExplanation": "Membuang sampah sembarangan melanggar: norma kesopanan (tidak sopan), norma hukum (denda), norma kesusilaan (tidak peduli lingkungan).",
+            "discussionPrompt": "Apakah ada norma lain yang juga dilanggar?"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-game2",
+      "role": "quiz",
+      "sceneType": "quiz-challenge",
+      "title": "Roda Norma — Quiz",
+      "slots": [
+        {
+          "id": "slot-game2",
+          "role": "questionFocus",
+          "placement": {
+            "x": 72,
+            "y": 120,
+            "width": 1136,
+            "height": 480,
+            "zIndex": 2
+          },
+          "content": {
+            "kind": "quiz-question",
+            "prompt": "Norma yang sanksinya paling tegas dan memaksa adalah...",
+            "choices": [
+              {
+                "id": "a",
+                "text": "Norma Agama"
+              },
+              {
+                "id": "b",
+                "text": "Norma Kesusilaan"
+              },
+              {
+                "id": "c",
+                "text": "Norma Kesopanan"
+              },
+              {
+                "id": "d",
+                "text": "Norma Hukum"
+              }
+            ],
+            "correctChoiceId": "d",
+            "feedbackCorrect": "Benar! Norma hukum punya sanksi tegas dari negara.",
+            "feedbackWrong": "Belum tepat. Norma hukum yang paling tegas sanksinya."
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-hasil",
+      "role": "material",
+      "sceneType": "result-summary",
+      "title": "Hasil",
+      "slots": [
+        {
+          "id": "slot-hasil",
+          "role": "scoreSummary",
+          "placement": {
+            "x": 72,
+            "y": 60,
+            "width": 1136,
+            "height": 540
+          },
+          "content": {
+            "kind": "result-summary",
+            "scoreSummary": {
+              "score": 80,
+              "maxScore": 100
+            },
+            "achievementLevel": "Penjelajah Norma",
+            "breakdown": [
+              {
+                "label": "Game Sortir",
+                "value": "30/30"
+              },
+              {
+                "label": "Roda Norma",
+                "value": "50/70"
+              }
+            ],
+            "reviewCards": [
+              {
+                "title": "Norma Agama",
+                "body": "Aturan dari Tuhan, sanksi dosa."
+              },
+              {
+                "title": "Norma Hukum",
+                "body": "Aturan dari negara, sanksi tegas."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-refleksi",
+      "role": "reflection",
+      "sceneType": "reflection-journal",
+      "title": "Refleksi",
+      "slots": [
+        {
+          "id": "slot-refleksi",
+          "role": "reflectionPrompts",
+          "placement": {
+            "x": 72,
+            "y": 60,
+            "width": 1136,
+            "height": 540
+          },
+          "content": {
+            "kind": "reflection-journal",
+            "reflectionPrompts": [
+              "Norma apa yang paling sering kamu jumpai?",
+              "Norma mana yang paling sulit kamu terapkan?",
+              "Apa yang akan kamu lakukan untuk hidup lebih tertib?"
+            ],
+            "commitmentInput": "Tulis komitmenmu untuk menerapkan norma...",
+            "portfolioSummary": [
+              {
+                "label": "Game Sortir",
+                "value": "Selesai"
+              },
+              {
+                "label": "Roda Norma",
+                "value": "80/100"
+              },
+              {
+                "label": "Diskusi",
+                "value": "Aktif"
+              }
+            ],
+            "nextTask": "Pertemuan berikutnya: Sumber dan fungsi norma."
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-penutup",
+      "role": "closing",
+      "sceneType": "closing-award",
+      "title": "Penutup",
+      "slots": [
+        {
+          "id": "slot-penutup",
+          "role": "achievement",
+          "placement": {
+            "x": 72,
+            "y": 120,
+            "width": 1136,
+            "height": 480
+          },
+          "content": {
+            "kind": "closing-award",
+            "achievement": "Penjelajah Norma",
+            "summary": "Selamat! Kamu telah mempelajari 4 macam norma.",
+            "reflectionPrompt": "Norma apa yang akan kamu terapkan besok?",
+            "rewardLabel": "Lencana Penjelajah Norma",
+            "rewardIcon": "🏆",
+            "nextLearning": "Selanjutnya: Sumber dan fungsi norma.",
+            "finalAction": {
+              "label": "Selesai",
+              "action": "next"
+            }
+          }
+        }
       ]
     }
   ],
   "assets": [],
-  "runtime": { "showProgress": true, "showScore": true },
-  "exportConfig": { "format": "html-standalone", "embedAssets": true, "includeToolbar": true, "stageWidth": 1280, "stageHeight": 720 }
+  "runtime": {
+    "showProgress": true,
+    "showScore": true
+  },
+  "exportConfig": {
+    "format": "html-standalone",
+    "embedAssets": true,
+    "includeToolbar": true,
+    "stageWidth": 1280,
+    "stageHeight": 720
+  }
 }

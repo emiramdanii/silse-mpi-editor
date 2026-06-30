@@ -126,7 +126,29 @@ export type MpiSceneType =
   | 'game-mission'
   | 'quiz-challenge'
   | 'reflection-journal'
-  | 'closing-award';
+  | 'closing-award'
+  // GOLDEN-REFERENCE-RENDER-P1: 7 new rendered scene types
+  | 'curriculum-guide'
+  | 'starter-review'
+  | 'discussion-scene'
+  | 'case-analysis'
+  | 'result-summary'
+  // Additional contract-only types (already in universal-scene-taxonomy)
+  | 'classification-game'
+  | 'diagnostic-check'
+  | 'remedial-practice'
+  | 'enrichment-challenge'
+  | 'worksheet-activity'
+  | 'rubric-panel'
+  | 'hotspot-map'
+  | 'timeline-story'
+  | 'matching-game'
+  | 'sequencing-game'
+  | 'branching-scenario'
+  | 'media-focus'
+  | 'glossary-cards'
+  | 'teacher-guide'
+  | 'accessibility-help';
 
 export type MpiSceneSlotPlacement = {
   x: number;
@@ -192,7 +214,15 @@ export type MpiSceneSlotContent =
       studentAction?: string;
       visualHint?: string;
     }
-  | { kind: 'navigation'; variant: string; buttons: { label: string; action: string; targetSceneId?: string }[] };
+  | { kind: 'navigation'; variant: string; buttons: { label: string; action: string; targetSceneId?: string }[] }
+  // GOLDEN-REFERENCE-RENDER-P1: 7 new content kinds for priority scenes
+  | { kind: 'curriculum-guide'; curriculumTitle?: string; competency?: string; learningFlow?: string; profileTags?: string[] }
+  | { kind: 'objectives-path'; objectiveList?: string[]; successCriteria?: string; activityPath?: string[] }
+  | { kind: 'starter-review'; priorLearning?: string; triggerQuestion?: string; bridgeToNewTopic?: string; discussionPrompt?: string }
+  | { kind: 'discussion-scene'; discussionPrompt?: string; groupInstruction?: string; responseInput?: string }
+  | { kind: 'case-analysis'; caseText?: string; analysisPrompt?: string; revealExplanation?: string; discussionPrompt?: string }
+  | { kind: 'result-summary'; scoreSummary?: { score: number; maxScore: number }; achievementLevel?: string; breakdown?: { label: string; value: string }[]; reviewCards?: { title: string; body: string }[] }
+  | { kind: 'reflection-journal'; reflectionPrompts?: string[]; commitmentInput?: string; portfolioSummary?: { label: string; value: string }[]; nextTask?: string };
 
 export type MpiSceneSlot = {
   id: string;
