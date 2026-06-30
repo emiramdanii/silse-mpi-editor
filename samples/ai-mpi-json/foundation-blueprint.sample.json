@@ -1,0 +1,185 @@
+{
+  "version": 1,
+  "metadata": {
+    "title": "Misi Penjaga Norma",
+    "subtitle": "PPKn · Kelas 7 · Fase D",
+    "author": "AI Blueprint"
+  },
+  "curriculum": {
+    "subject": "PPKn",
+    "grade": "7",
+    "phase": "D",
+    "topic": "Hidup Tertib dengan Norma",
+    "cp": "Memahami norma yang berlaku di masyarakat dan menunjukkan sikap tertib.",
+    "objectives": [
+      { "id": "obj-1", "text": "Menjelaskan pengertian norma." },
+      { "id": "obj-2", "text": "Membedakan jenis-jenis norma." },
+      { "id": "obj-3", "text": "Menunjukkan sikap tertib sesuai norma." }
+    ]
+  },
+  "styleIntent": {
+    "styleId": "modern-clean",
+    "mood": "clean",
+    "intent": "Profesional, rapi, navy-crimson-gold."
+  },
+  "designSystem": {
+    "contractId": "modern-clean",
+    "paletteName": "navy-crimson-gold",
+    "typographyName": "trebuchet-hero"
+  },
+  "flow": {
+    "steps": [
+      { "sceneId": "scene-cover", "label": "Sampul" },
+      { "sceneId": "scene-material", "label": "Materi" },
+      { "sceneId": "scene-game", "label": "Misi" },
+      { "sceneId": "scene-quiz", "label": "Kuis" },
+      { "sceneId": "scene-closing", "label": "Penutup" }
+    ],
+    "mode": "linear"
+  },
+  "scenes": [
+    {
+      "id": "scene-cover",
+      "role": "cover",
+      "sceneType": "cover-hero",
+      "title": "Sampul",
+      "slots": [
+        {
+          "id": "slot-cover-title",
+          "role": "title",
+          "placement": { "x": 140, "y": 280, "width": 1000, "height": 120, "zIndex": 2 },
+          "designTokenKey": "typography",
+          "content": { "kind": "text", "variant": "title", "text": "Misi Penjaga Norma" }
+        },
+        {
+          "id": "slot-cover-subtitle",
+          "role": "subtitle",
+          "placement": { "x": 340, "y": 420, "width": 600, "height": 60, "zIndex": 2 },
+          "content": { "kind": "text", "variant": "subtitle", "text": "PPKn · Kelas 7 · Fase D" }
+        },
+        {
+          "id": "slot-cover-cta",
+          "role": "cta",
+          "placement": { "x": 440, "y": 520, "width": 400, "height": 56, "zIndex": 2 },
+          "designTokenKey": "button.primary",
+          "content": { "kind": "button", "variant": "primary", "label": "Mulai Pembelajaran", "action": "next" }
+        }
+      ],
+      "navigation": { "nextSceneId": "scene-material" }
+    },
+    {
+      "id": "scene-material",
+      "role": "material",
+      "sceneType": "learning-scene",
+      "title": "Materi",
+      "slots": [
+        {
+          "id": "slot-mat-title",
+          "role": "title",
+          "placement": { "x": 80, "y": 60, "width": 1120, "height": 60 },
+          "content": { "kind": "text", "variant": "title", "text": "Apa Itu Norma?" }
+        },
+        {
+          "id": "slot-mat-card",
+          "role": "card",
+          "placement": { "x": 80, "y": 160, "width": 1120, "height": 200 },
+          "designTokenKey": "card",
+          "content": {
+            "kind": "card",
+            "variant": "info-card",
+            "title": "Pengertian Norma",
+            "body": "Norma adalah aturan atau ketentuan yang berlaku di masyarakat untuk mengatur perilaku anggotanya."
+          }
+        }
+      ],
+      "navigation": { "nextSceneId": "scene-game" }
+    },
+    {
+      "id": "scene-game",
+      "role": "game",
+      "sceneType": "game-mission",
+      "title": "Misi Penjaga Norma",
+      "slots": [
+        {
+          "id": "slot-game-mission",
+          "role": "game",
+          "placement": { "x": 100, "y": 60, "width": 1080, "height": 580 },
+          "designTokenKey": "game",
+          "content": {
+            "kind": "game-mission",
+            "briefing": "Kamu menjadi penjaga norma di lingkungan sekolah. Seorang teman tidak menegur siswa yang membuang sampah sembarikan.",
+            "missionTarget": "Pilih tindakan yang paling sesuai dengan norma kesopanan dan kepedulian warga sekolah.",
+            "actions": [
+              { "id": "a", "label": "Menegur dengan sopan", "result": "correct", "feedback": "Tepat. Menegur dengan sopan menunjukkan kepedulian dan kesopanan." },
+              { "id": "b", "label": "Membiarkan saja", "result": "wrong", "feedback": "Membiarkan berarti tidak menjaga norma bersama." },
+              { "id": "c", "label": "Marah di depan umum", "result": "wrong", "feedback": "Marah di depan umum justru melanggar norma kesopanan." }
+            ],
+            "reward": { "type": "badge", "label": "Lencana Penjaga Norma", "icon": "🏅" }
+          }
+        }
+      ],
+      "navigation": { "nextSceneId": "scene-quiz" }
+    },
+    {
+      "id": "scene-quiz",
+      "role": "quiz",
+      "sceneType": "quiz-challenge",
+      "title": "Cek Pemahaman",
+      "slots": [
+        {
+          "id": "slot-quiz-question",
+          "role": "quiz",
+          "placement": { "x": 100, "y": 60, "width": 1080, "height": 580 },
+          "designTokenKey": "quiz",
+          "content": {
+            "kind": "quiz-question",
+            "prompt": "Norma yang mengatur hubungan manusia dengan Tuhan disebut...",
+            "choices": [
+              { "id": "a", "text": "Norma Agama" },
+              { "id": "b", "text": "Norma Kesusilaan" },
+              { "id": "c", "text": "Norma Kesopanan" },
+              { "id": "d", "text": "Norma Hukum" }
+            ],
+            "correctChoiceId": "a",
+            "feedbackCorrect": "Benar. Norma agama berasal dari Tuhan.",
+            "feedbackWrong": "Belum tepat. Norma agama mengatur hubungan dengan Tuhan."
+          }
+        }
+      ],
+      "navigation": { "nextSceneId": "scene-closing" }
+    },
+    {
+      "id": "scene-closing",
+      "role": "closing",
+      "sceneType": "closing-award",
+      "title": "Penutup",
+      "slots": [
+        {
+          "id": "slot-closing-title",
+          "role": "title",
+          "placement": { "x": 340, "y": 320, "width": 600, "height": 80 },
+          "content": { "kind": "text", "variant": "title", "text": "Terima Kasih" }
+        },
+        {
+          "id": "slot-closing-reward",
+          "role": "reward",
+          "placement": { "x": 440, "y": 180, "width": 400, "height": 120 },
+          "designTokenKey": "reward.medal",
+          "content": { "kind": "reward", "type": "medal", "label": "Penjelajah Norma", "icon": "🏆" }
+        }
+      ]
+    }
+  ],
+  "assets": [],
+  "runtime": {
+    "showProgress": true,
+    "showScore": true
+  },
+  "exportConfig": {
+    "format": "html-standalone",
+    "embedAssets": true,
+    "includeToolbar": true,
+    "stageWidth": 1280,
+    "stageHeight": 720
+  }
+}
