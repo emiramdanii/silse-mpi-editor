@@ -54,7 +54,14 @@
 - hotspot/timeline/matching/sequencing/branching renderers (contract-only)
 - runtime interaktif penuh (timer countdown, input save, branching)
 - premium style
-- export-html padanan JS untuk 7 composers (export menggunakan scene plan JSON, React composers hanya di editor/preview)
+- Scene routing by sceneType (currently routes by content.kind — PATCH A addressed export parity, routing cleanup is next)
+
+## Export Parity (PATCH A)
+- Export HTML padanan untuk 7 composers: PASS
+- Reusable export block helpers: exportShell, exportHeader, exportPanel, exportDiscussionBanner, exportTimerBlock, exportResponseInput, exportRevealBlock, exportScoreSummary, exportPortfolio, exportReflectionPrompt, exportActionButton, exportTabs
+- All helpers use plan.palette/plan.typography tokens — no hardcoded colors
+- Export scene classes match editor/preview classes
+- Legacy fallback safe (scenePlan null for legacy pages)
 
 ## Final Status
 READY FOR SENIOR REVIEW

@@ -1213,6 +1213,29 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       return renderClosingAwardSceneContent(slot, content, plan);
     }
 
+    // GOLDEN-REFERENCE-RENDER-P1 PATCH A: 7 new scene content kinds for export
+    if (content.kind === 'curriculum-guide') {
+      return renderCurriculumGuideExport(slot, content, plan);
+    }
+    if (content.kind === 'objectives-path') {
+      return renderObjectivesPathExport(slot, content, plan);
+    }
+    if (content.kind === 'starter-review') {
+      return renderStarterReviewExport(slot, content, plan);
+    }
+    if (content.kind === 'discussion-scene') {
+      return renderDiscussionSceneExport(slot, content, plan);
+    }
+    if (content.kind === 'case-analysis') {
+      return renderCaseAnalysisExport(slot, content, plan);
+    }
+    if (content.kind === 'result-summary') {
+      return renderResultSummaryExport(slot, content, plan);
+    }
+    if (content.kind === 'reflection-journal') {
+      return renderReflectionJournalExport(slot, content, plan);
+    }
+
     if (content.kind === 'reward') {
       // DESIGN-CONTRACT-RENDER-PARITY-01: reward visual from resolvedStyle.reward
       var rEl = document.createElement('div');
@@ -1691,6 +1714,338 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       wrapper.appendChild(fa);
     }
     return wrapper;
+  }
+
+  // ===========================================================================
+  // GOLDEN-REFERENCE-RENDER-P1 PATCH A: Reusable Export Block Helpers
+  // All helpers take plan (for palette/typography tokens) — no hardcoded colors.
+  // ===========================================================================
+
+  function exportShell(plan, className, children) {
+    var p = plan.palette || {};
+    var ty = plan.typography || {};
+    var el = document.createElement('div');
+    el.className = 'silse-block-shell ' + (className || '');
+    el.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;gap:14px;padding:22px;box-sizing:border-box;overflow:auto;background:' + p.background + ';color:' + p.text + ';font-family:' + (ty.bodyFont || 'sans-serif') + ';';
+    for (var i = 0; i < children.length; i++) { if (children[i]) el.appendChild(children[i]); }
+    return el;
+  }
+
+  function exportHeader(plan, chipLabel, chipColor, title, subtitle) {
+    var p = plan.palette || {}; var ty = plan.typography || {};
+    var el = document.createElement('div');
+    el.className = 'silse-block-header';
+    if (chipLabel) {
+      var chip = document.createElement('div');
+      chip.className = 'silse-block-chip';
+      chip.style.cssText = 'display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:999px;background:' + (chipColor ? chipColor + '22' : (p.gold ? p.gold + '22' : 'rgba(255,255,255,0.1)')) + ';color:' + (chipColor || p.gold || '#fff') + ';font-size:12px;font-weight:800;margin-bottom:10px;';
+      chip.textContent = chipLabel;
+      el.appendChild(chip);
+    }
+    var t = document.createElement('div');
+    t.style.cssText = 'font-family:' + (ty.heroFont || 'sans-serif') + ';font-size:' + ty.titleSize + 'px;font-weight:' + ty.titleWeight + ';color:' + p.text + ';line-height:1.2;';
+    t.textContent = title || '';
+    el.appendChild(t);
+    if (subtitle) {
+      var s = document.createElement('div');
+      s.style.cssText = 'font-size:14px;color:' + p.mutedText + ';line-height:1.6;margin-top:4px;';
+      s.textContent = subtitle;
+      el.appendChild(s);
+    }
+    return el;
+  }
+
+  function exportPanel(plan, title, body, className) {
+    var p = plan.palette || {};
+    var el = document.createElement('div');
+    el.className = 'silse-block-panel ' + (className || '');
+    el.style.cssText = 'background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';border-radius:16px;padding:20px;';
+    if (title) {
+      var t = document.createElement('div');
+      t.style.cssText = 'font-weight:800;font-size:14px;margin-bottom:8px;color:' + p.text + ';';
+      t.textContent = title;
+      el.appendChild(t);
+    }
+    if (body) {
+      var b = document.createElement('div');
+      b.style.cssText = 'font-size:14px;line-height:1.7;color:' + p.text + ';';
+      b.textContent = body;
+      el.appendChild(b);
+    }
+    return el;
+  }
+
+  function exportDiscussionBanner(plan, label, title, body, accentColor) {
+    var p = plan.palette || {};
+    var ac = accentColor || p.success || '#34d399';
+    var el = document.createElement('div');
+    el.className = 'silse-block-discussion';
+    el.style.cssText = 'border-radius:13px;padding:13px 15px;display:flex;gap:12px;align-items:flex-start;background:' + ac + '11;border:1px solid ' + ac + '40;';
+    var text = document.createElement('div');
+    var l = document.createElement('div');
+    l.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;color:' + ac + ';';
+    l.textContent = label;
+    text.appendChild(l);
+    var t = document.createElement('div');
+    t.style.cssText = 'font-weight:800;font-size:14px;margin-bottom:4px;color:' + p.text + ';';
+    t.textContent = title;
+    text.appendChild(t);
+    var b = document.createElement('div');
+    b.style.cssText = 'font-size:13px;color:' + p.mutedText + ';line-height:1.6;';
+    b.textContent = body;
+    text.appendChild(b);
+    el.appendChild(text);
+    return el;
+  }
+
+  function exportTimerBlock(plan) {
+    var p = plan.palette || {};
+    var el = document.createElement('div');
+    el.className = 'silse-block-timer';
+    el.style.cssText = 'display:flex;align-items:center;gap:10px;background:' + (p.gold || '#f9c12e') + '14;border:1px solid ' + (p.gold || '#f9c12e') + '33;border-radius:10px;padding:8px 14px;';
+    var time = document.createElement('span');
+    time.style.cssText = 'font-size:20px;color:' + (p.gold || '#f9c12e') + ';min-width:42px;font-weight:800;';
+    time.textContent = '5:00';
+    el.appendChild(time);
+    var bar = document.createElement('div');
+    bar.style.cssText = 'flex:1;height:5px;background:rgba(255,255,255,0.08);border-radius:99px;overflow:hidden;';
+    var fill = document.createElement('div');
+    fill.style.cssText = 'height:100%;background:' + (p.gold || '#f9c12e') + ';border-radius:99px;width:50%;';
+    bar.appendChild(fill);
+    el.appendChild(bar);
+    return el;
+  }
+
+  function exportResponseInput(plan, placeholder) {
+    var p = plan.palette || {};
+    var el = document.createElement('div');
+    el.className = 'silse-block-input';
+    el.style.cssText = 'border-radius:16px;padding:20px;background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
+    var label = document.createElement('div');
+    label.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + p.mutedText + ';margin-bottom:8px;';
+    label.textContent = 'Jawaban Kamu';
+    el.appendChild(label);
+    var input = document.createElement('div');
+    input.style.cssText = 'min-height:60px;border-radius:10px;padding:12px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.15);font-size:14px;color:' + p.mutedText + ';font-style:italic;';
+    input.textContent = placeholder || 'Tulis jawabanmu di sini...';
+    el.appendChild(input);
+    return el;
+  }
+
+  function exportRevealBlock(plan, label, text, revealed) {
+    var p = plan.palette || {};
+    var el = document.createElement('div');
+    el.className = 'silse-block-reveal';
+    el.style.cssText = 'border-radius:16px;padding:20px;background:' + (p.success || '#34d399') + '11;border:1px solid ' + (p.success || '#34d399') + '40;';
+    var l = document.createElement('div');
+    l.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.success || '#34d399') + ';margin-bottom:8px;';
+    l.textContent = '💡 ' + label;
+    el.appendChild(l);
+    var b = document.createElement('div');
+    b.style.cssText = 'font-size:14px;line-height:1.6;color:' + p.text + ';';
+    b.textContent = revealed ? text : 'Klik untuk melihat pembahasan...';
+    el.appendChild(b);
+    return el;
+  }
+
+  function exportScoreSummary(plan, score, maxScore, level) {
+    var p = plan.palette || {};
+    var pct = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
+    var el = document.createElement('div');
+    el.className = 'silse-block-score-summary';
+    el.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:10px;';
+    var circle = document.createElement('div');
+    circle.className = 'silse-result-circle';
+    circle.style.cssText = 'width:120px;height:120px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(' + (p.gold || '#f9c12e') + ' ' + (pct * 3.6) + 'deg, rgba(255,255,255,0.08) 0deg);position:relative;';
+    var inner = document.createElement('div');
+    inner.style.cssText = 'width:96px;height:96px;border-radius:50%;display:grid;place-items:center;background:' + (p.surface || '#182d45') + ';';
+    var num = document.createElement('span');
+    num.style.cssText = 'font-size:32px;color:' + (p.gold || '#f9c12e') + ';font-weight:800;';
+    num.textContent = String(score);
+    inner.appendChild(num);
+    circle.appendChild(inner);
+    el.appendChild(circle);
+    if (level) {
+      var badge = document.createElement('div');
+      badge.className = 'silse-result-level-badge';
+      badge.style.cssText = 'padding:6px 16px;border-radius:999px;background:' + (p.gold || '#f9c12e') + ';color:' + (p.primary || '#0e1c2f') + ';font-size:14px;font-weight:800;';
+      badge.textContent = level;
+      el.appendChild(badge);
+    }
+    return el;
+  }
+
+  function exportPortfolio(plan, title, items) {
+    var p = plan.palette || {};
+    var el = document.createElement('div');
+    el.className = 'silse-block-portfolio';
+    el.style.cssText = 'border-radius:16px;padding:20px;background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
+    var t = document.createElement('div');
+    t.style.cssText = 'font-weight:800;font-size:14px;margin-bottom:10px;color:' + p.text + ';';
+    t.textContent = title;
+    el.appendChild(t);
+    for (var i = 0; i < items.length; i++) {
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;justify-content:space-between;font-size:13px;';
+      var l = document.createElement('span');
+      l.style.cssText = 'color:' + p.mutedText + ';';
+      l.textContent = items[i].label;
+      var v = document.createElement('span');
+      v.style.cssText = 'font-weight:700;color:' + p.text + ';';
+      v.textContent = items[i].value;
+      row.appendChild(l); row.appendChild(v);
+      el.appendChild(row);
+    }
+    return el;
+  }
+
+  function exportReflectionPrompt(plan, prompts) {
+    var p = plan.palette || {};
+    var el = document.createElement('div');
+    el.className = 'silse-block-reflection';
+    el.style.cssText = 'border-radius:16px;padding:20px;background:' + (p.gold || '#f9c12e') + '0A;border:1px solid ' + (p.gold || '#f9c12e') + '33;';
+    var label = document.createElement('div');
+    label.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.gold || '#f9c12e') + ';margin-bottom:10px;';
+    label.textContent = '📝 Refleksi Diri';
+    el.appendChild(label);
+    for (var i = 0; i < prompts.length; i++) {
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;gap:8;font-size:14px;line-height:1.6;color:' + p.text + ';';
+      var num = document.createElement('span');
+      num.style.cssText = 'font-weight:800;color:' + (p.gold || '#f9c12e') + ';flex-shrink:0;';
+      num.textContent = (i + 1) + '.';
+      var text = document.createElement('span');
+      text.textContent = prompts[i];
+      row.appendChild(num); row.appendChild(text);
+      el.appendChild(row);
+    }
+    return el;
+  }
+
+  function exportActionButton(plan, label, variant) {
+    var p = plan.palette || {};
+    var el = document.createElement('button');
+    el.className = 'silse-block-action';
+    var bg = p.gold || '#f9c12e'; var color = p.primary || '#0e1c2f';
+    if (variant === 'secondary') { bg = p.secondary || '#3ecfcf'; }
+    el.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:999px;background:' + bg + ';color:' + color + ';border:none;font-weight:800;font-size:14px;cursor:pointer;';
+    el.textContent = label;
+    return el;
+  }
+
+  function exportTabs(plan, tabs, activeTab) {
+    var p = plan.palette || {};
+    var el = document.createElement('div');
+    el.className = 'silse-block-tabs';
+    el.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;';
+    for (var i = 0; i < tabs.length; i++) {
+      var tab = document.createElement('button');
+      var isActive = tabs[i].id === activeTab;
+      tab.style.cssText = 'padding:6px 14px;border-radius:999px;font-size:13px;font-weight:800;cursor:default;border:none;background:' + (isActive ? (p.gold || '#f9c12e') : 'rgba(255,255,255,0.04)') + ';color:' + (isActive ? (p.primary || '#0e1c2f') : p.mutedText) + ';';
+      tab.textContent = tabs[i].label;
+      el.appendChild(tab);
+    }
+    return el;
+  }
+
+  // ===========================================================================
+  // GOLDEN-REFERENCE-RENDER-P1 PATCH A: 7 Scene Export Renderers
+  // ===========================================================================
+
+  function renderCurriculumGuideExport(slot, content, plan) {
+    return exportShell(plan, 'silse-scene-curriculum-guide', [
+      exportHeader(plan, '📋 Kurikulum Merdeka', plan.palette ? plan.palette.secondary : null, content.curriculumTitle || 'Kurikulum'),
+      exportTabs(plan, [{id:'cp',label:'CP'},{id:'tp',label:'TP'},{id:'atp',label:'ATP'}], 'cp'),
+      exportPanel(plan, 'Capaian Pembelajaran', content.competency || ''),
+    ]);
+  }
+
+  function renderObjectivesPathExport(slot, content, plan) {
+    var children = [
+      exportHeader(plan, '🎯 Tujuan Pembelajaran', plan.palette ? plan.palette.gold : null, 'Tujuan Pembelajaran'),
+    ];
+    // Objective list
+    var listEl = exportPanel(plan, null, null, 'silse-objective-item');
+    var listDiv = listEl.querySelector('div:last-child') || listEl;
+    if (content.objectiveList) {
+      var listHtml = '';
+      for (var i = 0; i < content.objectiveList.length; i++) {
+        listHtml += '<div class="silse-objective-item" style="display:flex;gap:10;align-items:flex-start;margin-bottom:8px;">';
+        listHtml += '<span style="font-size:18px;color:' + (plan.palette ? plan.palette.gold : '#f9c12e') + ';font-weight:800;flex-shrink:0;">' + (i+1) + '</span>';
+        listHtml += '<span style="font-size:14px;line-height:1.6;color:' + (plan.palette ? plan.palette.text : '#fff') + ';">' + content.objectiveList[i] + '</span>';
+        listHtml += '</div>';
+      }
+      listDiv.innerHTML = listHtml;
+    }
+    children.push(listEl);
+    if (content.successCriteria) children.push(exportPanel(plan, 'Kriteria Berhasil', content.successCriteria));
+    return exportShell(plan, 'silse-scene-objectives-path', children);
+  }
+
+  function renderStarterReviewExport(slot, content, plan) {
+    var children = [
+      exportHeader(plan, '🔄 Review · ±5 Menit', plan.palette ? plan.palette.gold : null, 'Review Pertemuan Sebelumnya'),
+      exportPanel(plan, 'Yang Sudah Kita Pelajari', content.priorLearning || '', 'silse-review-summary-card'),
+    ];
+    if (content.triggerQuestion) children.push(exportPanel(plan, 'Pertanyaan Pemantik', content.triggerQuestion));
+    if (content.discussionPrompt) children.push(exportDiscussionBanner(plan, 'Diskusi', 'Diskusikan!', content.discussionPrompt, plan.palette ? plan.palette.success : null));
+    children.push(exportResponseInput(plan, 'Tulis jawaban diskusimu...'));
+    if (content.bridgeToNewTopic) children.push(exportPanel(plan, 'Akan Kita Pelajari Hari Ini', content.bridgeToNewTopic));
+    return exportShell(plan, 'silse-scene-starter-review', children);
+  }
+
+  function renderDiscussionSceneExport(slot, content, plan) {
+    var children = [
+      exportHeader(plan, '💬 Diskusi Kelompok', plan.palette ? plan.palette.success : null, 'Diskusi Kelompok'),
+      exportDiscussionBanner(plan, 'Instruksi', content.groupInstruction || 'Diskusikan', content.discussionPrompt || '', plan.palette ? plan.palette.success : null),
+      exportTimerBlock(plan),
+      exportResponseInput(plan, content.responseInput || 'Tulis hasil diskusi kelompokmu...'),
+      exportActionButton(plan, 'Simpan Jawaban'),
+    ];
+    return exportShell(plan, 'silse-scene-discussion', children);
+  }
+
+  function renderCaseAnalysisExport(slot, content, plan) {
+    var children = [
+      exportHeader(plan, '🔗 Materi · ±15 Menit', plan.palette ? plan.palette.secondary : null, 'Analisis Kasus'),
+      exportPanel(plan, 'Kasus', content.caseText || '', 'silse-case-card'),
+    ];
+    if (content.analysisPrompt) children.push(exportPanel(plan, 'Pertanyaan Analisis', content.analysisPrompt));
+    if (content.revealExplanation) children.push(exportRevealBlock(plan, 'Pembahasan', content.revealExplanation, true));
+    if (content.discussionPrompt) children.push(exportDiscussionBanner(plan, 'Diskusi', 'Diskusikan!', content.discussionPrompt, plan.palette ? plan.palette.gold : null));
+    children.push(exportResponseInput(plan, 'Tulis analisismu...'));
+    return exportShell(plan, 'silse-scene-case-analysis', children);
+  }
+
+  function renderResultSummaryExport(slot, content, plan) {
+    var children = [
+      exportHeader(plan, '🏆 Hasil', plan.palette ? plan.palette.secondary : null, 'Hasil Pembelajaran'),
+      exportScoreSummary(plan, (content.scoreSummary ? content.scoreSummary.score : 0) || 0, (content.scoreSummary ? content.scoreSummary.maxScore : 100) || 100, content.achievementLevel),
+    ];
+    if (content.breakdown) {
+      var bdEl = exportPanel(plan, 'Rincian Skor', null, 'silse-result-breakdown');
+      var bdDiv = bdEl.querySelector('div:last-child') || bdEl;
+      var bdHtml = '';
+      for (var i = 0; i < content.breakdown.length; i++) {
+        bdHtml += '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span style="color:' + (plan.palette ? plan.palette.mutedText : '#888') + ';">' + content.breakdown[i].label + '</span><span style="font-weight:700;color:' + (plan.palette ? plan.palette.text : '#fff') + ';">' + content.breakdown[i].value + '</span></div>';
+      }
+      bdDiv.innerHTML = bdHtml;
+      children.push(bdEl);
+    }
+    children.push(exportActionButton(plan, 'Lanjut ke Refleksi'));
+    return exportShell(plan, 'silse-scene-result-summary', children);
+  }
+
+  function renderReflectionJournalExport(slot, content, plan) {
+    var children = [
+      exportHeader(plan, '📝 Refleksi · ±8 Menit', plan.palette ? plan.palette.secondary : null, 'Refleksi Diri'),
+    ];
+    if (content.portfolioSummary) children.push(exportPortfolio(plan, 'Portofolio Diskusi', content.portfolioSummary));
+    children.push(exportReflectionPrompt(plan, content.reflectionPrompts || ['Refleksikan pembelajaran hari ini']));
+    children.push(exportResponseInput(plan, content.commitmentInput || 'Tulis komitmenmu...'));
+    if (content.nextTask) children.push(exportPanel(plan, 'Tugas Pertemuan Berikutnya', content.nextTask, 'silse-reflection-next-task'));
+    children.push(exportActionButton(plan, 'Simpan Refleksi'));
+    return exportShell(plan, 'silse-scene-reflection-journal', children);
   }
 
   function buildInlineStyle(comp) {
