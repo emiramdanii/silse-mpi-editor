@@ -1,5 +1,5 @@
 /**
- * Scene Renderer module — public API (SCENE-RENDERER-PROOF-01).
+ * Scene Renderer module — public API.
  */
 
 export type {
@@ -12,3 +12,12 @@ export {
   isSceneRenderPlan,
   resolveDesignToken,
 } from './renderScenePlan';
+
+// FOUNDATION-INTEGRATION-01: scene detection + plan builder for product integration
+export {
+  isPageSceneRenderable,
+  hasAnySceneRenderablePage,
+  buildSceneRenderPlanForPage,
+  buildSceneRenderPlanForCurrentPage,
+  buildContainerAndPlanForPage,
+} from './sceneDetection';

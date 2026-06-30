@@ -25,6 +25,7 @@ import { getCoverClassForStylePack, getAllCoverClassNames } from '../core/style-
 import { getMicroAnimationForStylePack } from '../core/style-packs/micro-animation';
 import { getCelebrationEffectForStylePack } from '../core/style-packs/celebration-effect';
 import { getPremiumExportProfile, type PremiumExportProfile } from '../core/style-packs/premium-export-profile';
+import { buildSceneRenderPlanForPage, type SceneRenderPlan } from '../core/scene-renderer';
 
 const CANVAS_WIDTH = 1280;
 const CANVAS_HEIGHT = 720;
@@ -56,6 +57,8 @@ type ExportRenderPage = {
   role: string;
   background: SimplePage['background'];
   components: ExportRenderComponent[];
+  /** FOUNDATION-INTEGRATION-01: scene render plan (jika page scene-renderable). Null = fallback ke legacy. */
+  scenePlan?: SceneRenderPlan | null;
 };
 
 type ExportRenderComponent = {
@@ -132,6 +135,8 @@ function buildExportRenderModel(project: SimpleProject): ExportRenderModel {
     components: page.components.map((component) =>
       buildExportRenderComponent(project, page, component),
     ),
+    // FOUNDATION-INTEGRATION-01: build scene render plan if page is scene-renderable
+    scenePlan: buildSceneRenderPlanForPage(project, page),
   }));
 
   return {
@@ -1073,16 +1078,252 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       canvas.appendChild(ctaBtn);
     }
 
-    // Render components — style from resolvedStyle, NO switch
-    for (var i = 0; i < page.components.length; i++) {
-      var comp = page.components[i];
-      var el = renderComponent(comp);
-      if (el) canvas.appendChild(el);
+    // FOUNDATION-INTEGRATION-01: jika page punya scenePlan, render via scene renderer.
+    // Jalur lama tetap fallback untuk page tanpa scenePlan.
+    if (page.scenePlan) {
+      var sceneEl = renderSceneFromPlan(page.scenePlan);
+      if (sceneEl) canvas.appendChild(sceneEl);
+    } else {
+      // Render components — style from resolvedStyle, NO switch (legacy path)
+      for (var i = 0; i < page.components.length; i++) {
+        var comp = page.components[i];
+        var el = renderComponent(comp);
+        if (el) canvas.appendChild(el);
+      }
     }
 
     prevBtn.disabled = (currentPageIdx === 0);
     nextBtn.disabled = (currentPageIdx === pages.length - 1);
     pageInfo.textContent = (currentPageIdx + 1) + ' / ' + pages.length + ' - ' + page.title;
+  }
+
+  // FOUNDATION-INTEGRATION-01: render scene dari SceneRenderPlan (bukan flat components[]).
+  // Emit DOM dengan classes: silse-scene, silse-scene-<sceneType>, silse-scene-slot,
+  // silse-game-scene, silse-game-briefing, silse-game-target, silse-game-action-grid,
+  // silse-game-action-card, silse-game-reward.
+  function renderSceneFromPlan(plan) {
+    var sceneEl = document.createElement('div');
+    sceneEl.className = plan.sceneClass;
+    sceneEl.setAttribute('data-scene-id', plan.sceneId);
+    sceneEl.setAttribute('data-scene-type', plan.sceneType);
+    sceneEl.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;z-index:2;';
+
+    for (var si = 0; si < plan.slots.length; si++) {
+      var slot = plan.slots[si];
+      var slotEl = document.createElement('div');
+      slotEl.className = slot.slotClass;
+      slotEl.setAttribute('data-slot-id', slot.id);
+      slotEl.setAttribute('data-slot-role', slot.role);
+      slotEl.style.cssText = 'position:absolute;left:' + slot.placement.x + 'px;top:' + slot.placement.y + 'px;width:' + slot.placement.width + 'px;height:' + slot.placement.height + 'px;z-index:' + (slot.placement.zIndex || 1) + ';';
+      sceneEl.appendChild(slotEl);
+
+      // Render content based on kind
+      var content = slot.content;
+      var contentEl = renderSceneContent(slot, content);
+      if (contentEl) slotEl.appendChild(contentEl);
+    }
+
+    return sceneEl;
+  }
+
+  function renderSceneContent(slot, content) {
+    if (!content) return null;
+
+    if (content.kind === 'text') {
+      var tEl = document.createElement('div');
+      tEl.className = slot.contentClass;
+      tEl.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;padding:8px;box-sizing:border-box;';
+      tEl.textContent = content.text || '';
+      return tEl;
+    }
+
+    if (content.kind === 'card') {
+      var cEl = document.createElement('div');
+      cEl.className = slot.contentClass;
+      cEl.style.cssText = 'width:100%;height:100%;padding:16px;border-radius:12px;background:#fff;border:1px solid #e5e7eb;box-sizing:border-box;';
+      if (content.title) {
+        var cTitle = document.createElement('strong');
+        cTitle.style.cssText = 'display:block;font-size:18px;margin-bottom:6px;';
+        cTitle.textContent = content.title;
+        cEl.appendChild(cTitle);
+      }
+      var cBody = document.createElement('div');
+      cBody.style.cssText = 'font-size:14px;line-height:1.5;';
+      cBody.textContent = content.body || '';
+      cEl.appendChild(cBody);
+      return cEl;
+    }
+
+    if (content.kind === 'button') {
+      var bEl = document.createElement('button');
+      bEl.className = slot.contentClass;
+      bEl.style.cssText = 'width:100%;height:100%;border-radius:8px;background:#1d3557;color:#fff;border:0;font-weight:600;cursor:pointer;';
+      bEl.textContent = content.label || '';
+      return bEl;
+    }
+
+    if (content.kind === 'game-mission') {
+      return renderGameMissionSceneContent(slot, content);
+    }
+
+    if (content.kind === 'quiz-question') {
+      return renderQuizSceneContent(slot, content);
+    }
+
+    if (content.kind === 'reward') {
+      var rEl = document.createElement('div');
+      rEl.className = slot.contentClass;
+      rEl.style.cssText = 'padding:16px;border-radius:12px;background:#fffbeb;border:2px solid #fbbf24;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;';
+      if (content.icon) {
+        var rIcon = document.createElement('div');
+        rIcon.style.fontSize = '48px';
+        rIcon.textContent = content.icon;
+        rEl.appendChild(rIcon);
+      }
+      var rLabel = document.createElement('strong');
+      rLabel.style.fontSize = '18px';
+      rLabel.textContent = content.label || '';
+      rEl.appendChild(rLabel);
+      return rEl;
+    }
+
+    if (content.kind === 'feedback') {
+      var fEl = document.createElement('div');
+      fEl.className = slot.contentClass;
+      var fbBg = content.variant === 'correct' ? '#d1fae5' : content.variant === 'wrong' ? '#fee2e2' : '#f3f4f6';
+      var fbBorder = content.variant === 'correct' ? '#16a34a' : content.variant === 'wrong' ? '#dc2626' : '#d1d5db';
+      fEl.style.cssText = 'padding:12px;border-radius:10px;background:' + fbBg + ';border-left:4px solid ' + fbBorder + ';';
+      fEl.textContent = content.text || '';
+      return fEl;
+    }
+
+    // Fallback
+    var fallback = document.createElement('div');
+    fallback.className = slot.contentClass;
+    fallback.textContent = '[' + content.kind + ']';
+    return fallback;
+  }
+
+  // game-mission scene content untuk export (interactive: click actions)
+  function renderGameMissionSceneContent(slot, content) {
+    var wrapper = document.createElement('div');
+    wrapper.className = 'silse-game-scene';
+    wrapper.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;gap:10px;padding:16px;box-sizing:border-box;overflow:auto;';
+
+    // Briefing
+    var briefing = document.createElement('div');
+    briefing.className = 'silse-game-briefing';
+    briefing.style.cssText = 'padding:12px;border-radius:10px;background:#fffbeb;border:1px solid #fde68a;';
+    var briefingLabel = document.createElement('div');
+    briefingLabel.style.cssText = 'font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;margin-bottom:4px;';
+    briefingLabel.textContent = '📋 Briefing Misi';
+    briefing.appendChild(briefingLabel);
+    var briefingText = document.createElement('div');
+    briefingText.style.cssText = 'font-size:15px;font-weight:600;';
+    briefingText.textContent = content.briefing || '';
+    briefing.appendChild(briefingText);
+    wrapper.appendChild(briefing);
+
+    // Target
+    var target = document.createElement('div');
+    target.className = 'silse-game-target';
+    target.style.cssText = 'padding:12px;border-radius:10px;background:#eff6ff;border:1px solid #bfdbfe;';
+    var targetLabel = document.createElement('div');
+    targetLabel.style.cssText = 'font-size:11px;font-weight:700;color:#1e40af;text-transform:uppercase;margin-bottom:4px;';
+    targetLabel.textContent = '🎯 Target Misi';
+    target.appendChild(targetLabel);
+    var targetText = document.createElement('div');
+    targetText.style.cssText = 'font-size:14px;';
+    targetText.textContent = content.missionTarget || '';
+    target.appendChild(targetText);
+    wrapper.appendChild(target);
+
+    // Action grid
+    var actionGrid = document.createElement('div');
+    actionGrid.className = 'silse-game-action-grid';
+    actionGrid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));gap:10px;';
+    for (var ai = 0; ai < content.actions.length; ai++) {
+      (function(actionIdx, action) {
+        var card = document.createElement('div');
+        card.className = 'silse-game-action-card';
+        card.setAttribute('data-action-index', String(actionIdx));
+        card.style.cssText = 'padding:14px;border-radius:12px;background:#fff;border:2px solid #d1d5db;cursor:pointer;font-size:14px;font-weight:600;min-height:80px;display:flex;flex-direction:column;gap:6px;';
+        var cardHeader = document.createElement('div');
+        cardHeader.style.cssText = 'display:flex;align-items:center;gap:8px;';
+        var letterBadge = document.createElement('span');
+        letterBadge.style.cssText = 'display:inline-grid;place-items:center;min-width:28px;height:28px;border-radius:8px;background:#1d3557;color:#fff;font-size:13px;font-weight:900;';
+        letterBadge.textContent = String.fromCharCode(65 + actionIdx);
+        cardHeader.appendChild(letterBadge);
+        var actionLabel = document.createElement('span');
+        actionLabel.style.cssText = 'font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;';
+        actionLabel.textContent = 'Aksi';
+        cardHeader.appendChild(actionLabel);
+        card.appendChild(cardHeader);
+        var actionText = document.createElement('span');
+        actionText.textContent = action.label;
+        card.appendChild(actionText);
+        actionGrid.appendChild(card);
+      })(ai, content.actions[ai]);
+    }
+    wrapper.appendChild(actionGrid);
+
+    // Reward preview
+    var reward = document.createElement('div');
+    reward.className = 'silse-game-reward';
+    reward.style.cssText = 'padding:12px;border-radius:10px;background:#fffbeb;border:2px solid #fbbf24;display:flex;align-items:center;gap:12px;';
+    var rewardIcon = document.createElement('span');
+    rewardIcon.style.fontSize = '24px';
+    rewardIcon.textContent = content.reward.icon || '🏅';
+    reward.appendChild(rewardIcon);
+    var rewardText = document.createElement('div');
+    var rewardTextLabel = document.createElement('div');
+    rewardTextLabel.style.cssText = 'font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;';
+    rewardTextLabel.textContent = 'Reward';
+    rewardText.appendChild(rewardTextLabel);
+    var rewardTextValue = document.createElement('strong');
+    rewardTextValue.style.cssText = 'font-size:14px;';
+    rewardTextValue.textContent = content.reward.label || '';
+    rewardText.appendChild(rewardTextValue);
+    reward.appendChild(rewardText);
+    wrapper.appendChild(reward);
+
+    return wrapper;
+  }
+
+  // quiz-question scene content untuk export
+  function renderQuizSceneContent(slot, content) {
+    var wrapper = document.createElement('div');
+    wrapper.className = 'silse-quiz-scene';
+    wrapper.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;gap:10px;padding:16px;box-sizing:border-box;overflow:auto;';
+
+    var prompt = document.createElement('div');
+    prompt.className = 'silse-quiz-prompt';
+    prompt.style.cssText = 'font-size:17px;font-weight:600;';
+    prompt.textContent = content.prompt || '';
+    wrapper.appendChild(prompt);
+
+    var choices = document.createElement('div');
+    choices.className = 'silse-quiz-choices';
+    choices.style.cssText = 'display:flex;flex-direction:column;gap:8px;';
+    for (var ci = 0; ci < content.choices.length; ci++) {
+      (function(choiceIdx, choice) {
+        var choiceEl = document.createElement('div');
+        choiceEl.className = 'silse-quiz-choice';
+        choiceEl.setAttribute('data-choice-id', choice.id);
+        choiceEl.style.cssText = 'padding:12px 16px;border-radius:10px;background:#fff;border:2px solid #d1d5db;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:12px;';
+        var letter = document.createElement('span');
+        letter.style.cssText = 'display:inline-grid;place-items:center;min-width:32px;height:32px;border-radius:8px;background:#1d3557;color:#fff;font-size:14px;font-weight:900;';
+        letter.textContent = String.fromCharCode(65 + choiceIdx);
+        choiceEl.appendChild(letter);
+        var choiceText = document.createElement('span');
+        choiceText.textContent = choice.text;
+        choiceEl.appendChild(choiceText);
+        choices.appendChild(choiceEl);
+      })(ci, content.choices[ci]);
+    }
+    wrapper.appendChild(choices);
+
+    return wrapper;
   }
 
   function buildInlineStyle(comp) {

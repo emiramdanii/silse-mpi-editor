@@ -32,6 +32,9 @@ import { getCoverClassForStylePack } from '../core/style-packs/cover-decoration'
 import { getMicroAnimationForStylePack } from '../core/style-packs/micro-animation';
 import { getPremiumExportProfile, getPremiumCssVariables, getHeroKickerText } from '../core/style-packs/premium-export-profile';
 import { getResolvedComponentStyle } from '../core/style/resolveComponentStyle';
+import { buildSceneRenderPlanForPage } from '../core/scene-renderer';
+import { SceneRendererView } from '../components/SceneRendererView';
+import { getDesignContract } from '../core/mpi-design-contract';
 import { snapToGrid, clampRectToCanvas, CANVAS_WIDTH, CANVAS_HEIGHT, type Rect } from '../core/geometry';
 import { Toolbar } from './Toolbar';
 import { getRoleInfo } from './mpi-standard-roles';
@@ -176,6 +179,11 @@ export function CanvasStage() {
     return 'Halaman terpandu — elemen diatur otomatis oleh template.';
   })();
 
+  // FOUNDATION-INTEGRATION-01: jika page scene-renderable, pakai SceneRendererView.
+  // Jalur lama tetap fallback untuk page tanpa scene.
+  const sceneRenderPlan = currentPage ? buildSceneRenderPlanForPage(project, currentPage) : null;
+  const useSceneRenderer = !!sceneRenderPlan;
+
   return (
     <main className="canvas-stage" data-testid="canvas-stage">
       <Toolbar />
@@ -231,7 +239,7 @@ export function CanvasStage() {
             </div>
           )}
 
-          {currentPage && currentPage.components.length === 0 && (
+          {currentPage && currentPage.components.length === 0 && !useSceneRenderer && (
             <div className="canvas-empty" data-testid="canvas-empty">
               <div className="canvas-empty__icon" aria-hidden>
                 {roleInfo?.icon ?? '📄'}
@@ -247,7 +255,21 @@ export function CanvasStage() {
             </div>
           )}
 
-        {currentPage?.components.map((component) => {
+          {/* FOUNDATION-INTEGRATION-01: Scene renderer path (jika page scene-renderable).
+              Jalur lama tetap fallback untuk page tanpa scene. */}
+          {useSceneRenderer && sceneRenderPlan && (
+            <div data-testid="scene-renderer-mount" style={{ position: 'absolute', inset: 0, zIndex: 2 }}>
+              <SceneRendererView
+                plan={sceneRenderPlan}
+                contract={getDesignContract(project.stylePackId)}
+                interactive={false}
+                onSlotClick={(slotId) => selectComponent(slotId)}
+                selectedSlotId={selectedComponentId ?? undefined}
+              />
+            </div>
+          )}
+
+        {!useSceneRenderer && currentPage?.components.map((component) => {
           const resolvedStyle = getResolvedComponentStyle(project, currentPage, component);
           const isSelected = component.id === selectedComponentId;
 

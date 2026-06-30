@@ -25,6 +25,9 @@ import { getBackgroundPatternForStylePack } from '../core/style-packs/background
 import { getCoverClassForStylePack } from '../core/style-packs/cover-decoration';
 import { getMicroAnimationForStylePack } from '../core/style-packs/micro-animation';
 import { getPremiumExportProfile, getPremiumCssVariables, getHeroKickerText } from '../core/style-packs/premium-export-profile';
+import { buildSceneRenderPlanForPage } from '../core/scene-renderer';
+import { SceneRendererView } from '../components/SceneRendererView';
+import { getDesignContract } from '../core/mpi-design-contract';
 import type { GameComponent, NavigationComponent, QuestionComponent } from '../core/types';
 
 const CANVAS_WIDTH = 1280;
@@ -82,6 +85,11 @@ export function PreviewApp() {
     : '';
   const isCover = currentPage.role === 'cover';
   const isClosing = currentPage.role === 'closing';
+
+  // FOUNDATION-INTEGRATION-01: jika page scene-renderable, pakai SceneRendererView.
+  // Jalur lama tetap fallback untuk page tanpa scene.
+  const sceneRenderPlan = buildSceneRenderPlanForPage(project, currentPage);
+  const useSceneRenderer = !!sceneRenderPlan;
 
   const currentIdx = project.pages.findIndex((p) => p.id === currentPageId);
   const isFirst = currentIdx === 0;
@@ -171,7 +179,33 @@ export function PreviewApp() {
             </div>
           )}
 
-          {currentPage.components.map((component) => {
+          {/* FOUNDATION-INTEGRATION-01: Scene renderer path (jika page scene-renderable).
+              Jalur lama tetap fallback untuk page tanpa scene. */}
+          {useSceneRenderer && sceneRenderPlan && (
+            <div data-testid="scene-renderer-mount-preview" style={{ position: 'absolute', inset: 0, zIndex: 2 }}>
+              <SceneRendererView
+                plan={sceneRenderPlan}
+                contract={getDesignContract(project.stylePackId)}
+                interactive={true}
+                onGameAction={(_slotId, actionIndex) => {
+                  // Find the game component for this slot and trigger answer
+                  const gameComp = currentPage.components.find((c) => c.type === 'game') as GameComponent | undefined;
+                  if (gameComp) {
+                    answerGameMission(gameComp.id, 0, actionIndex, gameComp.missions[0]?.correctChoiceIndex ?? 0, gameComp.missions[0]?.points ?? 0);
+                  }
+                }}
+                onQuizAnswer={(_slotId, choiceId) => {
+                  const quizComp = currentPage.components.find((c) => c.type === 'question') as QuestionComponent | undefined;
+                  if (quizComp) {
+                    const choiceIdx = quizComp.choices.findIndex((c) => c.id === choiceId);
+                    if (choiceIdx >= 0) answerQuestion(quizComp.id, choiceIdx, quizComp.correctChoiceIndex, quizComp.points);
+                  }
+                }}
+              />
+            </div>
+          )}
+
+          {!useSceneRenderer && currentPage.components.map((component) => {
             // M6 PATCH: resolve style via shared resolver (same as editor + export)
             const resolvedStyle = getResolvedComponentStyle(project, currentPage, component);
 
