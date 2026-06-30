@@ -87,6 +87,22 @@ function mapComponentToSlotContent(
   }
   if (component.type === 'card') {
     const cc = component as CardComponent;
+    // MATERIAL-SCENE-PROOF-01: card dengan sceneMetadata learning-scene → learning-material slot
+    if (cc.sceneMetadata?.scene === 'learning-scene') {
+      return {
+        content: {
+          kind: 'learning-material',
+          conceptTitle: cc.sceneMetadata.conceptTitle ?? cc.title ?? '',
+          conceptSubtitle: cc.sceneMetadata.conceptSubtitle,
+          explanation: cc.sceneMetadata.explanation ?? cc.body,
+          examples: cc.sceneMetadata.examples,
+          keyPoints: cc.sceneMetadata.keyPoints,
+          studentAction: cc.sceneMetadata.studentAction,
+          visualHint: cc.sceneMetadata.visualHint,
+        },
+        slotRole: 'explanationPanel',
+      };
+    }
     return {
       content: { kind: 'card', variant: cc.variant, title: cc.title, body: cc.body },
       slotRole: 'card',

@@ -239,6 +239,16 @@ function ContentRenderer({
     );
   }
 
+  if (c.kind === 'learning-material') {
+    return (
+      <LearningMaterialContent
+        slot={slot}
+        content={c}
+        contract={contract}
+      />
+    );
+  }
+
   if (c.kind === 'feedback') {
     // DESIGN-CONTRACT-RENDER-PARITY-01: feedback visual from resolvedStyle.feedback
     const fb = rs?.feedback;
@@ -490,6 +500,135 @@ function QuizQuestionContent({
       }}>
         {content.choices.length} pilihan · Correct: {content.correctChoiceId}
       </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// MATERIAL-SCENE-PROOF-01 — LearningMaterialContent (learning scene)
+//
+// Render materi sebagai learning scene:
+//   concept header → explanation panel → example cards → key point → student action → visual hint
+//
+// Class: silse-learning-scene, silse-learning-header, silse-learning-explanation,
+//        silse-learning-example-grid, silse-learning-example-card,
+//        silse-learning-key-point, silse-learning-student-action, silse-learning-visual-hint
+//
+// Visual dari resolvedStyle (design contract), bukan hardcoded CSS.
+// ---------------------------------------------------------------------------
+
+function LearningMaterialContent({
+  slot,
+  content,
+  contract,
+}: {
+  slot: SceneRenderSlot;
+  content: Extract<SceneRenderSlot['content'], { kind: 'learning-material' }>;
+  contract: MpiDesignContract;
+}) {
+  const rs = slot.resolvedStyle;
+  const surf = rs?.surface;
+
+  return (
+    <div className="silse-learning-scene" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: 12, padding: 16, boxSizing: 'border-box', overflow: 'auto' }}>
+      {/* Concept header */}
+      <div className="silse-learning-header" style={{
+        fontSize: contract.typography.titleSize,
+        fontWeight: contract.typography.titleWeight,
+        fontFamily: contract.typography.heroFont,
+        color: contract.palette.text,
+        lineHeight: contract.typography.lineHeight,
+      }}>
+        {content.conceptTitle}
+      </div>
+      {content.conceptSubtitle && (
+        <div style={{ fontSize: contract.typography.subtitleSize, color: contract.palette.mutedText, marginTop: -8 }}>
+          {content.conceptSubtitle}
+        </div>
+      )}
+
+      {/* Explanation panel */}
+      <div className="silse-learning-explanation" style={{
+        padding: surf?.padding ?? contract.card.padding,
+        borderRadius: surf?.radius ?? contract.card.radius,
+        background: surf?.background ?? contract.palette.surface,
+        border: surf?.border ?? contract.card.border,
+        boxShadow: surf?.shadow,
+        fontSize: contract.typography.bodySize,
+        lineHeight: contract.typography.lineHeight,
+        color: contract.palette.text,
+      }}>
+        {content.explanation}
+      </div>
+
+      {/* Example cards */}
+      {content.examples && content.examples.length > 0 && (
+        <div className="silse-learning-example-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 10 }}>
+          {content.examples.map((ex) => (
+            <div key={ex.id} className="silse-learning-example-card" style={{
+              padding: surf?.padding ?? contract.card.padding,
+              borderRadius: surf?.radius ?? contract.card.radius,
+              background: contract.palette.surface,
+              border: surf?.border ?? contract.card.border,
+            }}>
+              <strong style={{ display: 'block', fontSize: 15, marginBottom: 4, color: contract.palette.primary }}>{ex.title}</strong>
+              <div style={{ fontSize: 13, lineHeight: 1.5, color: contract.palette.text }}>{ex.body}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Key point */}
+      {content.keyPoints && content.keyPoints.length > 0 && (
+        <div className="silse-learning-key-point" style={{
+          padding: 12,
+          borderRadius: 10,
+          background: '#fffbeb',
+          border: '1px solid #fde68a',
+          borderLeft: '4px solid #f59e0b',
+        }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#92400e', textTransform: 'uppercase', marginBottom: 6 }}>🔑 Key Points</div>
+          <ul style={{ margin: 0, paddingLeft: 20, fontSize: 14, lineHeight: 1.6 }}>
+            {content.keyPoints.map((kp, i) => (
+              <li key={i} style={{ color: contract.palette.text }}>{kp}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Student action */}
+      {content.studentAction && (
+        <div className="silse-learning-student-action" style={{
+          padding: 12,
+          borderRadius: 10,
+          background: contract.palette.surface,
+          border: `2px solid ${contract.palette.primary}`,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+        }}>
+          <span style={{ fontSize: 20 }}>✏️</span>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: contract.palette.mutedText, textTransform: 'uppercase' }}>Student Action</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: contract.palette.text }}>{content.studentAction}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Visual hint */}
+      {content.visualHint && (
+        <div className="silse-learning-visual-hint" style={{
+          padding: 8,
+          borderRadius: 8,
+          background: 'transparent',
+          fontSize: 12,
+          color: contract.palette.mutedText,
+          fontStyle: 'italic',
+          textAlign: 'center',
+        }}>
+          💡 {content.visualHint}
+        </div>
+      )}
     </div>
   );
 }

@@ -1121,14 +1121,14 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
 
       // Render content based on kind
       var content = slot.content;
-      var contentEl = renderSceneContent(slot, content);
+      var contentEl = renderSceneContent(slot, content, plan);
       if (contentEl) slotEl.appendChild(contentEl);
     }
 
     return sceneEl;
   }
 
-  function renderSceneContent(slot, content) {
+  function renderSceneContent(slot, content, plan) {
     if (!content) return null;
     var rs = slot.resolvedStyle || {};
 
@@ -1199,6 +1199,10 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
 
     if (content.kind === 'quiz-question') {
       return renderQuizSceneContent(slot, content);
+    }
+
+    if (content.kind === 'learning-material') {
+      return renderLearningMaterialSceneContent(slot, content, plan);
     }
 
     if (content.kind === 'reward') {
@@ -1413,6 +1417,130 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     progress.style.cssText = 'font-size:12px;font-weight:700;margin-top:auto;';
     progress.textContent = content.choices.length + ' pilihan · Correct: ' + (content.correctChoiceId || '');
     wrapper.appendChild(progress);
+
+    return wrapper;
+  }
+
+  // MATERIAL-SCENE-PROOF-01: learning-material scene content untuk export.
+  // Render: concept header → explanation panel → example cards → key point → student action → visual hint.
+  // Visual dari resolvedStyle (design contract) + plan (palette/typography).
+  function renderLearningMaterialSceneContent(slot, content, plan) {
+    var rs = slot.resolvedStyle || {};
+    var surf = rs.surface || {};
+    var palette = plan.palette || {};
+    var ty = plan.typography || {};
+
+    var wrapper = document.createElement('div');
+    wrapper.className = 'silse-learning-scene';
+    wrapper.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;gap:12px;padding:16px;box-sizing:border-box;overflow:auto;';
+
+    // Concept header
+    var header = document.createElement('div');
+    header.className = 'silse-learning-header';
+    var headerCss = 'font-size:' + ty.titleSize + 'px;font-weight:' + ty.titleWeight + ';font-family:' + ty.heroFont + ';color:' + palette.text + ';line-height:' + ty.lineHeight + ';';
+    header.style.cssText = headerCss;
+    header.textContent = content.conceptTitle || '';
+    wrapper.appendChild(header);
+
+    if (content.conceptSubtitle) {
+      var subtitle = document.createElement('div');
+      subtitle.style.cssText = 'font-size:20px;color:' + palette.mutedText + ';margin-top:-8px;';
+      subtitle.textContent = content.conceptSubtitle;
+      wrapper.appendChild(subtitle);
+    }
+
+    // Explanation panel
+    var explanation = document.createElement('div');
+    explanation.className = 'silse-learning-explanation';
+    var expCss = 'padding:' + (surf.padding != null ? surf.padding : 16) + 'px;';
+    expCss += 'border-radius:' + (surf.radius != null ? surf.radius : 12) + 'px;';
+    expCss += 'background:' + (surf.background || palette.surface) + ';';
+    expCss += 'border:' + (surf.border || '1px solid #e5e7eb') + ';';
+    expCss += 'font-size:' + ty.bodySize + 'px;line-height:' + ty.lineHeight + ';color:' + palette.text + ';';
+    if (surf.shadow) expCss += 'box-shadow:' + surf.shadow + ';';
+    explanation.style.cssText = expCss;
+    explanation.textContent = content.explanation || '';
+    wrapper.appendChild(explanation);
+
+    // Example cards
+    if (content.examples && content.examples.length > 0) {
+      var exampleGrid = document.createElement('div');
+      exampleGrid.className = 'silse-learning-example-grid';
+      exampleGrid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:10px;';
+      for (var ei = 0; ei < content.examples.length; ei++) {
+        (function(ex) {
+          var card = document.createElement('div');
+          card.className = 'silse-learning-example-card';
+          var cardCss = 'padding:' + (surf.padding != null ? surf.padding : 16) + 'px;';
+          cardCss += 'border-radius:' + (surf.radius != null ? surf.radius : 12) + 'px;';
+          cardCss += 'background:' + palette.surface + ';';
+          cardCss += 'border:' + (surf.border || '1px solid #e5e7eb') + ';';
+          card.style.cssText = cardCss;
+          var cardTitle = document.createElement('strong');
+          cardTitle.style.cssText = 'display:block;font-size:15px;margin-bottom:4px;color:' + palette.primary + ';';
+          cardTitle.textContent = ex.title;
+          card.appendChild(cardTitle);
+          var cardBody = document.createElement('div');
+          cardBody.style.cssText = 'font-size:13px;line-height:1.5;color:' + palette.text + ';';
+          cardBody.textContent = ex.body;
+          card.appendChild(cardBody);
+          exampleGrid.appendChild(card);
+        })(content.examples[ei]);
+      }
+      wrapper.appendChild(exampleGrid);
+    }
+
+    // Key point
+    if (content.keyPoints && content.keyPoints.length > 0) {
+      var keyPoint = document.createElement('div');
+      keyPoint.className = 'silse-learning-key-point';
+      keyPoint.style.cssText = 'padding:12px;border-radius:10px;background:#fffbeb;border:1px solid #fde68a;border-left:4px solid #f59e0b;';
+      var kpLabel = document.createElement('div');
+      kpLabel.style.cssText = 'font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;margin-bottom:6px;';
+      kpLabel.textContent = '🔑 Key Points';
+      keyPoint.appendChild(kpLabel);
+      var ul = document.createElement('ul');
+      ul.style.cssText = 'margin:0;padding-left:20px;font-size:14px;line-height:1.6;';
+      for (var ki = 0; ki < content.keyPoints.length; ki++) {
+        var li = document.createElement('li');
+        li.style.color = palette.text;
+        li.textContent = content.keyPoints[ki];
+        ul.appendChild(li);
+      }
+      keyPoint.appendChild(ul);
+      wrapper.appendChild(keyPoint);
+    }
+
+    // Student action
+    if (content.studentAction) {
+      var action = document.createElement('div');
+      action.className = 'silse-learning-student-action';
+      action.style.cssText = 'padding:12px;border-radius:10px;background:' + palette.surface + ';border:2px solid ' + palette.primary + ';display:flex;align-items:center;gap:10px;';
+      var actionIcon = document.createElement('span');
+      actionIcon.style.fontSize = '20px';
+      actionIcon.textContent = '✏️';
+      action.appendChild(actionIcon);
+      var actionText = document.createElement('div');
+      var actionLabel = document.createElement('div');
+      actionLabel.style.cssText = 'font-size:11px;font-weight:700;color:' + palette.mutedText + ';text-transform:uppercase;';
+      actionLabel.textContent = 'Student Action';
+      actionText.appendChild(actionLabel);
+      var actionBody = document.createElement('div');
+      actionBody.style.cssText = 'font-size:14px;font-weight:600;color:' + palette.text + ';';
+      actionBody.textContent = content.studentAction;
+      actionText.appendChild(actionBody);
+      action.appendChild(actionText);
+      wrapper.appendChild(action);
+    }
+
+    // Visual hint
+    if (content.visualHint) {
+      var hint = document.createElement('div');
+      hint.className = 'silse-learning-visual-hint';
+      hint.style.cssText = 'padding:8px;border-radius:8px;background:transparent;font-size:12px;color:' + palette.mutedText + ';font-style:italic;text-align:center;';
+      hint.textContent = '💡 ' + content.visualHint;
+      wrapper.appendChild(hint);
+    }
 
     return wrapper;
   }

@@ -163,6 +163,16 @@ export type MpiSceneSlotContent =
     }
   | { kind: 'feedback'; variant: 'correct' | 'wrong' | 'neutral' | 'warning'; text: string; icon?: string }
   | { kind: 'reward'; type: string; label: string; icon?: string }
+  | {
+      kind: 'learning-material';
+      conceptTitle: string;
+      conceptSubtitle?: string;
+      explanation: string;
+      examples?: { id: string; title: string; body: string }[];
+      keyPoints?: string[];
+      studentAction?: string;
+      visualHint?: string;
+    }
   | { kind: 'navigation'; variant: string; buttons: { label: string; action: string; targetSceneId?: string }[] };
 
 export type MpiSceneSlot = {

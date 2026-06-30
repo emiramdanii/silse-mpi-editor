@@ -13,6 +13,7 @@ import { resolveStylePackV1 } from './style-packs/style-pack-registry';
 
 export function createSceneProofProject(): SimpleProject {
   const coverId = createPageId();
+  const materialId = createPageId();
   const gameId = createPageId();
   const quizId = createPageId();
   const closingId = createPageId();
@@ -40,6 +41,40 @@ export function createSceneProofProject(): SimpleProject {
         background: { type: 'color', color: '#1e3a5f' },
         components: [
           { id: createComponentId(), type: 'text', text: 'Misi Penjaga Norma', variant: 'title', x: 140, y: 280, width: 1000, height: 120 },
+        ],
+      },
+      // Material page (scene-renderable — has sceneMetadata learning-scene)
+      {
+        id: materialId, title: 'Materi', role: 'material', layoutId: 'singleColumn',
+        background: { type: 'color', color: '#ffffff' },
+        components: [
+          {
+            id: createComponentId(),
+            type: 'card',
+            variant: 'infoCard',
+            title: 'Apa Itu Norma?',
+            body: 'Norma adalah aturan atau ketentuan yang berlaku di masyarakat untuk mengatur perilaku anggotanya.',
+            // MATERIAL-SCENE-PROOF-01: specific placement for visual fidelity test
+            x: 72, y: 120, width: 1136, height: 480,
+            sceneMetadata: {
+              scene: 'learning-scene',
+              conceptTitle: 'Apa Itu Norma?',
+              conceptSubtitle: 'Memahami aturan yang mengatur kehidupan masyarakat',
+              explanation: 'Norma adalah aturan atau ketentuan yang berlaku di masyarakat untuk mengatur perilaku anggotanya. Norma bersifat mengikat dan menjadi pedoman dalam bertindak.',
+              examples: [
+                { id: 'ex1', title: 'Norma Agama', body: 'Aturan dari Tuhan yang mengatur hubungan manusia dengan Tuhan.' },
+                { id: 'ex2', title: 'Norma Kesopanan', body: 'Aturan tata krama dalam bergaul di masyarakat.' },
+                { id: 'ex3', title: 'Norma Hukum', body: 'Aturan dari negara yang bersifat memaksa.' },
+              ],
+              keyPoints: [
+                'Norma mengatur perilaku manusia di masyarakat.',
+                'Norma bersifat mengikat dan menjadi pedoman.',
+                'Pelanggaran norma dapat dikenai sanksi.',
+              ],
+              studentAction: 'Tuliskan 1 contoh norma yang kamu jumpai di sekolah hari ini.',
+              visualHint: 'Perhatikan contoh norma di sekitarmu.',
+            },
+          },
         ],
       },
       // Game page (scene-renderable — has sceneMetadata)

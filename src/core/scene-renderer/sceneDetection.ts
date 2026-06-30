@@ -20,7 +20,7 @@
  *     - Koeksistensi: editor/preview/export bisa render campuran (scene + legacy).
  */
 
-import type { SimpleProject, SimplePage, GameComponent, QuestionComponent } from '../types';
+import type { SimpleProject, SimplePage, GameComponent, QuestionComponent, CardComponent } from '../types';
 import type { MpiContainer } from '../mpi-container/types';
 import { simpleProjectToMpiContainer } from '../mpi-container/simpleProjectToMpiContainer';
 import { getDesignContract } from '../mpi-design-contract';
@@ -31,8 +31,11 @@ import { renderScenePlan, type SceneRenderPlan } from './renderScenePlan';
 // ---------------------------------------------------------------------------
 
 /**
- * Check if a SimplePage has a game or question component with sceneMetadata.
- * Supported scenes: game-mission (GameComponent), quiz-challenge (QuestionComponent).
+ * Check if a SimplePage has a component with sceneMetadata.
+ * Supported scenes:
+ *   - game-mission (GameComponent)
+ *   - quiz-challenge (QuestionComponent)
+ *   - learning-scene (CardComponent)
  * If yes, this page can be rendered as a scene via SceneRendererView.
  * Pure function.
  */
@@ -45,7 +48,11 @@ export function isPageSceneRenderable(page: SimplePage | undefined | null): bool
   const hasQuizScene = page.components.find(
     (c): c is QuestionComponent => c.type === 'question' && 'sceneMetadata' in c && c.sceneMetadata?.scene === 'quiz-challenge',
   );
-  return !!hasQuizScene;
+  if (hasQuizScene) return true;
+  const hasMaterialScene = page.components.find(
+    (c): c is CardComponent => c.type === 'card' && 'sceneMetadata' in c && c.sceneMetadata?.scene === 'learning-scene',
+  );
+  return !!hasMaterialScene;
 }
 
 /**

@@ -249,11 +249,37 @@ export type ImageComponent = BaseComponent & {
  * BUKAN nested container — tidak berisi komponen lain.
  * Style datang dari variant via style adapter (M6).
  */
+/**
+ * Scene metadata untuk CardComponent (MATERIAL-SCENE-PROOF-01).
+ *
+ * Optional field. Jika ada, page dengan card ini bisa dirender sebagai "learning scene"
+ * (concept header + explanation panel + example cards + key point + student action),
+ * bukan card teks biasa.
+ *
+ * CardComponent dengan sceneMetadata berperan sebagai "anchor" untuk learning scene.
+ * Component lain di page yang sama (text, card lain, navigation) menjadi slot pendukung.
+ */
+export type MaterialSceneMetadata = {
+  scene: string; // 'learning-scene'
+  conceptTitle?: string;
+  conceptSubtitle?: string;
+  explanation?: string;
+  examples?: { id: string; title: string; body: string }[];
+  keyPoints?: string[];
+  studentAction?: string;
+  visualHint?: string;
+};
+
 export type CardComponent = BaseComponent & {
   type: 'card';
   variant: CardComponentVariant;
   title?: string;
   body: string;
+  /**
+   * MATERIAL-SCENE-PROOF-01: Optional scene metadata.
+   * Jika ada, renderer akan tampilkan sebagai learning scene, bukan card teks biasa.
+   */
+  sceneMetadata?: MaterialSceneMetadata;
 };
 
 /**

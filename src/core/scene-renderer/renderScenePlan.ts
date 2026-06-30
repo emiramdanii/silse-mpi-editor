@@ -183,6 +183,7 @@ function contentKindToClass(kind: MpiSceneSlotContent['kind']): string {
     'badge': 'silse-scene-badge',
     'game-mission': 'silse-scene-game-mission',
     'quiz-question': 'silse-scene-quiz',
+    'learning-material': 'silse-scene-learning',
     'feedback': 'silse-scene-feedback',
     'reward': 'silse-scene-reward',
     'navigation': 'silse-scene-navigation',
@@ -228,8 +229,8 @@ function resolveSlotStyle(slot: MpiSceneSlot, contract: MpiDesignContract): Slot
   const style: SlotResolvedStyle = {};
   const kind = slot.content.kind;
 
-  // Card / surface visual (untuk card, game-mission briefing/target, quiz panel)
-  if (kind === 'card' || kind === 'game-mission' || kind === 'quiz-question') {
+  // Card / surface visual (untuk card, game-mission briefing/target, quiz panel, learning-material)
+  if (kind === 'card' || kind === 'game-mission' || kind === 'quiz-question' || kind === 'learning-material') {
     // Untuk game-mission, briefing & target pakai card style dari contract.game
     if (kind === 'game-mission') {
       const briefingCard = contract.game.briefingPanel;
