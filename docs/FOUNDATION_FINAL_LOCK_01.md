@@ -57,12 +57,58 @@ SimpleProject tetap root. MpiContainer adalah adapter untuk scene/render pipelin
 ## Pipeline Final
 AI prompt → JSON → validate → normalize → container → render plan → editor/preview/export
 
-## Supported Scenes (all 5)
+## Supported Scenes (all 5 rendered + 22 contract-only = 27 total)
+
+### Rendered Scenes (5 — punya renderer penuh)
 1. cover-hero (TextComponent + CoverSceneMetadata)
 2. learning-scene (CardComponent + MaterialSceneMetadata)
 3. game-mission (GameComponent + GameSceneMetadata)
 4. quiz-challenge (QuestionComponent + QuizSceneMetadata)
 5. closing-award (CardComponent + ClosingSceneMetadata)
+
+### Contract-Only Scenes (22 — punya contract, belum punya renderer)
+6. curriculum-guide
+7. objectives-path
+8. starter-review
+9. discussion-scene
+10. case-analysis
+11. classification-game
+12. result-summary
+13. reflection-journal
+14. diagnostic-check
+15. remedial-practice
+16. enrichment-challenge
+17. worksheet-activity
+18. rubric-panel
+19. hotspot-map
+20. timeline-story
+21. matching-game
+22. sequencing-game
+23. branching-scenario
+24. media-focus
+25. glossary-cards
+26. teacher-guide
+27. accessibility-help
+
+## Golden Reference Coverage
+- Source: pertemuan2-camac-norma-v3.html (12 scenes)
+- Sample: samples/ai-mpi-json/macam-norma-reference.sample.json
+- All 12 scenes mapped to SILSE scene taxonomy
+- 5 rendered + 7 contract-only in sample
+- See: docs/GOLDEN_REFERENCE_MAPPING_01.md
+
+## Universal MPI Capability Coverage
+- Runtime contract: MpiRuntimeCapability (progress, score, timer, attempts, completionStatus, savedResponses, studentNotes, reflectionAnswers, portfolioEntries, branchingPath, randomizedQuestions, feedbackHistory, rewardState, resetState, teacherModeVisibility, accessibilitySettings)
+- Assessment contract: MpiAssessmentContract (9 assessment types, scoringMode, feedbackMode, attemptLimit, passingRule, remedialTarget, enrichmentTarget)
+- Asset contract: MpiAssetContract (8 asset types, alt text wajib untuk visual)
+- Accessibility contract: MpiAccessibilityContract (altText, ariaLabel, keyboardNavigation, focusOrder, contrastLevel, reducedMotion, fontScale, readAloudSupport, captionSubtitle, touchTargetSize)
+- Export contract: MpiExportContract (4 export modes, assetMode, includeTeacherGuide, offlineMode, printMode, fullscreenMode, mobileFallback)
+- Navigation contract: MpiNavigationContract (4 navigation types, links with condition/locked/completed/retryTarget)
+
+## Rendered vs Contract-Only
+- Rendered: 5 scene types dengan renderer penuh di SceneRendererView + export-html
+- Contract-only: 22 scene types terdaftar di schema/prompt/container/validator, belum punya renderer khusus
+- Legacy fallback: page tanpa sceneMetadata tetap render via SimpleProject components[]
 
 ## Legacy Fallback Rules
 - Page tanpa sceneMetadata → legacy path (SimpleProject components[])

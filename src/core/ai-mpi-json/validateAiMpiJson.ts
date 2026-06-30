@@ -1,13 +1,18 @@
 /**
- * Validate AI MPI Blueprint (AI-MPI-JSON-BLUEPRINT-01).
+ * Validate AI MPI Blueprint (AI-MPI-JSON-BLUEPRINT-01 + FOUNDATION-FINAL-LOCK-01 PATCH A).
  *
  * Layer: core/ai-mpi-json (pure function, no React/DOM)
- * Allowed imports: ./schema
+ * Allowed imports: ./schema, ../mpi-container/universal-scene-taxonomy
  *
  * Kontrak:
  *   Pure validator untuk AiMpiBlueprint. Menolak JSON datar (hanya title/content).
  *   Returns error array. Empty = valid.
+ *   PATCH A: Mendukung 26 scene types (5 rendered + 21 contract-only).
+ *   Validator menolak sceneType yang tidak dikenal.
+ *   Validator memvalidasi required slots per scene type.
  */
+
+import { isKnownSceneType } from '../mpi-container/universal-scene-taxonomy';
 
 export type BlueprintValidationError = {
   path: string;
@@ -90,6 +95,11 @@ function validateScene(scene: unknown, path: string): BlueprintValidationError[]
   if (!isString(scene.role)) errors.push({ path: `${path}.role`, message: 'must be string' });
   if (!isString(scene.sceneType)) errors.push({ path: `${path}.sceneType`, message: 'must be string' });
   if (!isString(scene.title)) errors.push({ path: `${path}.title`, message: 'must be string' });
+
+  // FOUNDATION-FINAL-LOCK-01 PATCH A: reject unknown sceneType
+  if (isString(scene.sceneType) && !isKnownSceneType(scene.sceneType)) {
+    errors.push({ path: `${path}.sceneType`, message: `unknown sceneType "${scene.sceneType}" — must be one of 26 known scene types` });
+  }
 
   // slots wajib (array, minimal 1 — bukan flat content)
   if (!Array.isArray(scene.slots) || scene.slots.length === 0) {

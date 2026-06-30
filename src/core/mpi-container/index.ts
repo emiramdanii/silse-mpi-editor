@@ -33,3 +33,32 @@ export {
 } from './createMpiContainer';
 
 export { simpleProjectToMpiContainer } from './simpleProjectToMpiContainer';
+
+// FOUNDATION-FINAL-LOCK-01 PATCH A: Universal scene taxonomy + capability contracts
+export {
+  RENDERED_SCENE_TYPES,
+  CONTRACT_ONLY_SCENE_TYPES,
+  ALL_SCENE_TYPES,
+  SCENE_REQUIRED_SLOTS,
+  getRequiredSlotsForSceneType,
+  isRenderedSceneType,
+  isKnownSceneType,
+  type UniversalSceneType,
+  type SceneRequiredSlots,
+} from './universal-scene-taxonomy';
+
+export type {
+  MpiRuntimeCapability,
+  MpiAssessmentType,
+  MpiScoringMode,
+  MpiFeedbackMode,
+  MpiAssessmentContract,
+  MpiAssetType,
+  MpiAssetContract,
+  MpiAccessibilityContract,
+  MpiExportMode,
+  MpiExportContract,
+  MpiNavigationType,
+  MpiNavigationLink,
+  MpiNavigationContract,
+} from './capability-contracts';

@@ -1,8 +1,9 @@
 /**
- * Build MPI Prompt Contract (APP-AI-PROMPT-CONTRACT-01).
+ * Build MPI Prompt Contract (APP-AI-PROMPT-CONTRACT-01 + FOUNDATION-FINAL-LOCK-01 PATCH A).
  *
  * Layer: core/ai-prompt-contract (pure function, no React/DOM)
- * Allowed imports: ./promptContractTypes, ../mpi-container/types, ../mpi-design-contract/types
+ * Allowed imports: ./promptContractTypes, ../mpi-container/types, ../mpi-design-contract/types,
+ *   ../mpi-container/universal-scene-taxonomy
  *
  * Kontrak:
  *   Pure function yang membangun prompt contract dari app capabilities.
@@ -18,83 +19,20 @@
 
 import type { MpiPromptContract, PromptContractSceneType } from './promptContractTypes';
 import { DEFAULT_DESIGN_CONTRACT } from '../mpi-design-contract/defaultDesignContract';
+import { SCENE_REQUIRED_SLOTS } from '../mpi-container/universal-scene-taxonomy';
 
 // ---------------------------------------------------------------------------
-// Scene types yang tersedia (dari MpiSceneType)
+// Scene types yang tersedia — FOUNDATION-FINAL-LOCK-01 PATCH A:
+// Generated dari universal scene taxonomy (26 scene types: 5 rendered + 21 contract-only)
 // ---------------------------------------------------------------------------
 
-const SCENE_TYPES: PromptContractSceneType[] = [
-  {
-    id: 'cover-hero',
-    role: 'cover',
-    description: 'Halaman sampul dengan kicker, hero title, subtitle, badges, primary action, visual anchor. Pakai composite slot cover-hero.',
-    requiredSlots: ['heroTitle'],
-    optionalSlots: ['kicker', 'subtitle', 'badges', 'primaryAction', 'visualAnchor'],
-  },
-  {
-    id: 'guide-panel',
-    role: 'guide',
-    description: 'Panduan singkat cara mengikuti media.',
-    requiredSlots: ['title', 'body'],
-    optionalSlots: ['steps', 'cta'],
-  },
-  {
-    id: 'objectives-path',
-    role: 'objectives',
-    description: 'Tujuan pembelajaran hari ini.',
-    requiredSlots: ['title', 'objectives'],
-    optionalSlots: ['cta'],
-  },
-  {
-    id: 'starter-question',
-    role: 'starter',
-    description: 'Pemantik/refleksi awal.',
-    requiredSlots: ['question', 'card'],
-    optionalSlots: ['cta'],
-  },
-  {
-    id: 'learning-scene',
-    role: 'material',
-    description: 'Materi pembelajaran utama sebagai learning scene: concept header + explanation panel + example cards + key point + student action + visual hint. Pakai composite slot learning-material.',
-    requiredSlots: ['explanationPanel'],
-    optionalSlots: ['conceptHeader', 'exampleCards', 'keyPoint', 'studentAction', 'visualHint', 'cta'],
-  },
-  {
-    id: 'mission-map',
-    role: 'mission-map',
-    description: 'Peta misi dengan hotspot.',
-    requiredSlots: ['map', 'hotspots'],
-    optionalSlots: ['stats', 'cta'],
-  },
-  {
-    id: 'game-mission',
-    role: 'game',
-    description: 'Scene misi: briefing + target + action cards + feedback + reward.',
-    requiredSlots: ['briefing', 'target', 'action-grid', 'feedback', 'reward'],
-    optionalSlots: ['mission-progress'],
-  },
-  {
-    id: 'quiz-challenge',
-    role: 'quiz',
-    description: 'Kuis pilihan ganda dengan feedback.',
-    requiredSlots: ['question', 'choices', 'feedback'],
-    optionalSlots: ['score-display'],
-  },
-  {
-    id: 'reflection-journal',
-    role: 'reflection',
-    description: 'Refleksi diri siswa.',
-    requiredSlots: ['title', 'card'],
-    optionalSlots: ['cta'],
-  },
-  {
-    id: 'closing-award',
-    role: 'closing',
-    description: 'Penutup dengan achievement, summary, reflection prompt, reward badge, next learning, final action. Pakai composite slot closing-award.',
-    requiredSlots: ['achievement'],
-    optionalSlots: ['summary', 'reflection', 'reward', 'nextLearning', 'finalAction'],
-  },
-];
+const SCENE_TYPES: PromptContractSceneType[] = SCENE_REQUIRED_SLOTS.map((s) => ({
+  id: s.sceneType,
+  role: s.sceneType.split('-')[0], // simplified role from sceneType
+  description: s.description,
+  requiredSlots: s.requiredSlots,
+  optionalSlots: s.optionalSlots,
+}));
 
 // ---------------------------------------------------------------------------
 // Build prompt contract

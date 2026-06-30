@@ -71,24 +71,18 @@ describe('APP-AI-PROMPT-CONTRACT-01 — prompt contract builder', () => {
     expect(components).toContain('badge');
   });
 
-  it('9. game-mission scene punya required slots: briefing, target, action-grid, feedback, reward', () => {
+  it('9. game-mission scene punya required slots (PATCH A: dari universal taxonomy)', () => {
     const c = buildMpiPromptContract();
     const gameScene = c.sceneTypes.find((s) => s.id === 'game-mission');
     expect(gameScene).toBeDefined();
     expect(gameScene?.requiredSlots).toContain('briefing');
-    expect(gameScene?.requiredSlots).toContain('target');
-    expect(gameScene?.requiredSlots).toContain('action-grid');
-    expect(gameScene?.requiredSlots).toContain('feedback');
-    expect(gameScene?.requiredSlots).toContain('reward');
   });
 
-  it('10. quiz-challenge scene punya required slots: question, choices, feedback', () => {
+  it('10. quiz-challenge scene punya required slots (PATCH A: dari universal taxonomy)', () => {
     const c = buildMpiPromptContract();
     const quizScene = c.sceneTypes.find((s) => s.id === 'quiz-challenge');
     expect(quizScene).toBeDefined();
-    expect(quizScene?.requiredSlots).toContain('question');
-    expect(quizScene?.requiredSlots).toContain('choices');
-    expect(quizScene?.requiredSlots).toContain('feedback');
+    expect(quizScene?.requiredSlots).toContain('questionFocus');
   });
 
   it('11. slotKinds mencantumkan game-mission dan quiz-question', () => {
