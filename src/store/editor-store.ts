@@ -165,6 +165,10 @@ export type EditorState = {
   navigatePrev: () => void;
   markSceneCompleted: (sceneId: string) => void;
   addSceneScore: (sceneId: string, points: number) => void;
+  /** PATCH A: Set scene score (idempotent — replaces, doesn't add) */
+  setSceneScore: (sceneId: string, score: number) => void;
+  /** PATCH A: Reset scene runtime (clears perSceneScore + removes from completedSceneIds) */
+  resetSceneRuntime: (sceneId: string) => void;
   getCurrentSceneIndex: () => number;
   getProgressPercent: () => number;
   updateSceneContent: (pageId: string, patch: Record<string, unknown>) => void;
@@ -1065,6 +1069,24 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const newPerScene = { ...state.perSceneScore, [sceneId]: currentSceneScore + points };
     const newAggregate = Object.values(newPerScene).reduce((sum, v) => sum + v, 0);
     set({ perSceneScore: newPerScene, aggregateScore: newAggregate });
+  },
+
+  // PATCH A: Idempotent score sync — replaces, doesn't add. Prevents double counting.
+  setSceneScore: (sceneId, score) => {
+    const state = get();
+    const newPerScene = { ...state.perSceneScore, [sceneId]: score };
+    const newAggregate = Object.values(newPerScene).reduce((sum, v) => sum + v, 0);
+    set({ perSceneScore: newPerScene, aggregateScore: newAggregate });
+  },
+
+  // PATCH A: Reset scene runtime — clears score + removes from completed.
+  resetSceneRuntime: (sceneId) => {
+    const state = get();
+    const newPerScene = { ...state.perSceneScore };
+    delete newPerScene[sceneId];
+    const newAggregate = Object.values(newPerScene).reduce((sum, v) => sum + v, 0);
+    const newCompleted = state.completedSceneIds.filter((id) => id !== sceneId);
+    set({ perSceneScore: newPerScene, aggregateScore: newAggregate, completedSceneIds: newCompleted });
   },
 
   getCurrentSceneIndex: () => {

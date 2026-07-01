@@ -222,8 +222,9 @@ export function PreviewApp() {
                     if (choiceIdx >= 0) answerQuestion(quizComp.id, choiceIdx, quizComp.correctChoiceIndex, quizComp.points);
                   }
                 }}
-                onScoreChange={(sceneId, points) => useEditorStore.getState().addSceneScore(sceneId, points)}
+                onScoreSet={(sceneId, score) => useEditorStore.getState().setSceneScore(sceneId, score)}
                 onSceneComplete={(sceneId) => useEditorStore.getState().markSceneCompleted(sceneId)}
+                onSceneReset={(sceneId) => useEditorStore.getState().resetSceneRuntime(sceneId)}
               />
             </div>
           )}

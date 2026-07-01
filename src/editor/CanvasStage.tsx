@@ -50,9 +50,6 @@ export function CanvasStage() {
   // CORE-MPI-UX-FOUNDATION-01: navigation
   const navigateNext = useEditorStore((s) => s.navigateNext);
   const navigatePrev = useEditorStore((s) => s.navigatePrev);
-  // PERFECT-MPI-RUNTIME-SYNC: score + completion tracking
-  const addSceneScore = useEditorStore((s) => s.addSceneScore);
-  const markSceneCompleted = useEditorStore((s) => s.markSceneCompleted);
 
   const [dragState, setDragState] = useState<{
     mode: 'drag' | 'resize' | null;
@@ -285,8 +282,7 @@ export function CanvasStage() {
                 interactive={false}
                 onSlotClick={(slotId) => selectComponent(slotId)}
                 selectedSlotId={selectedComponentId ?? undefined}
-                onScoreChange={(sceneId, points) => addSceneScore(sceneId, points)}
-                onSceneComplete={(sceneId) => markSceneCompleted(sceneId)}
+                // PATCH A: Editor mode does NOT wire score/completion — prevents accidental score changes during editing.
               />
             </div>
           )}

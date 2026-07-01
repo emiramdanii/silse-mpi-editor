@@ -277,7 +277,7 @@ type ClassificationGameState = {
 };
 
 export function ClassificationGameComposer({
-  contract, content, sceneId, onScoreChange, onSceneComplete,
+  contract, content, sceneId, onScoreSet, onSceneComplete, onSceneReset,
 }: {
   contract: MpiDesignContract;
   content: {
@@ -288,10 +288,11 @@ export function ClassificationGameComposer({
     feedback?: string;
     completionMessage?: string;
   };
-  /** PERFECT-MPI-RUNTIME-SYNC */
+  /** PATCH A: Idempotent runtime sync */
   sceneId?: string;
-  onScoreChange?: (sceneId: string, points: number) => void;
+  onScoreSet?: (sceneId: string, score: number) => void;
   onSceneComplete?: (sceneId: string) => void;
+  onSceneReset?: (sceneId: string) => void;
 }) {
   const items = content.items || [];
   const categories = content.categories || [];
@@ -329,13 +330,15 @@ export function ClassificationGameComposer({
       },
       completed: allPlaced,
     });
-    // PERFECT-MPI-RUNTIME-SYNC: wire score + completion to editor store
-    if (isCorrect && sceneId && onScoreChange) onScoreChange(sceneId, scorePerItem);
+    // PATCH A: Idempotent score sync — set total score, don't add.
+    if (sceneId && onScoreSet) onScoreSet(sceneId, newScore);
     if (allPlaced && sceneId && onSceneComplete) onSceneComplete(sceneId);
   };
 
   const handleReset = () => {
     setState({ selectedItem: null, placedItems: {}, score: 0, feedback: null, completed: false });
+    // PATCH A: Reset runtime score + completion in store
+    if (sceneId && onSceneReset) onSceneReset(sceneId);
   };
 
   const remainingItems = items.filter(i => !state.placedItems[i.id]);
@@ -531,7 +534,7 @@ export function HotspotMapComposer({
 // ---------------------------------------------------------------------------
 
 export function MatchingGameComposer({
-  contract, content, sceneId, onScoreChange, onSceneComplete,
+  contract, content, sceneId, onScoreSet, onSceneComplete, onSceneReset,
 }: {
   contract: MpiDesignContract;
   content: {
@@ -542,10 +545,11 @@ export function MatchingGameComposer({
     scorePerPair?: number;
     completionMessage?: string;
   };
-  /** PERFECT-MPI-RUNTIME-SYNC */
+  /** PATCH A: Idempotent runtime sync */
   sceneId?: string;
-  onScoreChange?: (sceneId: string, points: number) => void;
+  onScoreSet?: (sceneId: string, score: number) => void;
   onSceneComplete?: (sceneId: string) => void;
+  onSceneReset?: (sceneId: string) => void;
 }) {
   const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
   const [pairs, setPairs] = useState<Record<string, string>>({});
@@ -571,12 +575,12 @@ export function MatchingGameComposer({
       setPairs(newPairs);
       setScore(score + scorePer);
       setFeedback({ correct: true, text: 'Benar! Pasangan tepat. Kamu memahami hubungan antar konsep dengan baik.' });
-      // PERFECT-MPI-RUNTIME-SYNC: wire score to editor store
-      if (sceneId && onScoreChange) onScoreChange(sceneId, scorePer);
-      // Check completion
-      if (Object.keys(newPairs).length === correctPairs.length && sceneId && onSceneComplete) onSceneComplete(sceneId);
+      // PATCH A: Idempotent score sync — set total score based on correct pairs count.
+      const totalCorrect = Object.keys(newPairs).length;
+      const newTotalScore = totalCorrect * scorePer;
+      if (sceneId && onScoreSet) onScoreSet(sceneId, newTotalScore);
+      if (totalCorrect === correctPairs.length && sceneId && onSceneComplete) onSceneComplete(sceneId);
     } else {
-      // PATCH A: Wrong pair — do NOT save, do NOT lock items, allow retry. Helpful feedback.
       const leftItem = leftItems.find(i => i.id === selectedLeft);
       setFeedback({ correct: false, text: `Belum tepat. "${leftItem?.label}" belum cocok dengan pilihan ini. Pikirkan kembali hubungannya.` });
     }
@@ -584,6 +588,8 @@ export function MatchingGameComposer({
 
   const handleReset = () => {
     setPairs({}); setScore(0); setSelectedLeft(null); setFeedback(null);
+    // PATCH A: Reset runtime score + completion in store
+    if (sceneId && onSceneReset) onSceneReset(sceneId);
   };
 
   return (
@@ -651,7 +657,7 @@ export function MatchingGameComposer({
 // ---------------------------------------------------------------------------
 
 export function SequencingGameComposer({
-  contract, content, sceneId, onScoreChange, onSceneComplete,
+  contract, content, sceneId, onScoreSet, onSceneComplete, onSceneReset,
 }: {
   contract: MpiDesignContract;
   content: {
@@ -661,10 +667,11 @@ export function SequencingGameComposer({
     scorePerItem?: number;
     completionMessage?: string;
   };
-  /** PERFECT-MPI-RUNTIME-SYNC */
+  /** PATCH A: Idempotent runtime sync */
   sceneId?: string;
-  onScoreChange?: (sceneId: string, points: number) => void;
+  onScoreSet?: (sceneId: string, score: number) => void;
   onSceneComplete?: (sceneId: string) => void;
+  onSceneReset?: (sceneId: string) => void;
 }) {
   const [order, setOrder] = useState<string[]>((content.items || []).map((i) => i.id));
   const [feedback, setFeedback] = useState<{ correct: boolean; text: string } | null>(null);
@@ -685,17 +692,20 @@ export function SequencingGameComposer({
     [newOrder[idx], newOrder[idx + 1]] = [newOrder[idx + 1], newOrder[idx]];
     setOrder(newOrder); setFeedback(null);
   };
+  const [scored, setScored] = useState(false);
   const checkAnswer = () => {
     const isCorrect = order.every((id, i) => id === correctOrder[i]);
     if (isCorrect) {
-      const earnedScore = scorePer * items.length;
-      setScore(score + earnedScore);
+      if (!scored) {
+        const earnedScore = scorePer * items.length;
+        setScore(earnedScore);
+        setScored(true);
+        // PATCH A: Idempotent score sync — set total score, guarded by scored flag.
+        if (sceneId && onScoreSet) onScoreSet(sceneId, earnedScore);
+        if (sceneId && onSceneComplete) onSceneComplete(sceneId);
+      }
       setFeedback({ correct: true, text: 'Benar! Urutan tepat. Kamu memahami alur dengan baik.' });
-      // PERFECT-MPI-RUNTIME-SYNC: wire score + completion to editor store
-      if (sceneId && onScoreChange) onScoreChange(sceneId, earnedScore);
-      if (sceneId && onSceneComplete) onSceneComplete(sceneId);
     } else {
-      // Find first wrong position to give helpful hint
       let wrongIdx = -1;
       for (let i = 0; i < order.length; i++) {
         if (order[i] !== correctOrder[i]) { wrongIdx = i; break; }
@@ -705,7 +715,9 @@ export function SequencingGameComposer({
     }
   };
   const handleReset = () => {
-    setOrder(items.map((i) => i.id)); setFeedback(null); setScore(0);
+    setOrder(items.map((i) => i.id)); setFeedback(null); setScore(0); setScored(false);
+    // PATCH A: Reset runtime score + completion in store
+    if (sceneId && onSceneReset) onSceneReset(sceneId);
   };
 
   return (
