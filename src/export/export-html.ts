@@ -3529,7 +3529,46 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       }
       var seqResetBtn = e.target.closest('[data-action]');
       if (seqResetBtn && seqResetBtn.textContent.indexOf('Reset') >= 0) {
-        // Just reload the page to reset order
+        // PATCH A: Actually reset DOM order to initial order (from content.items).
+        // Find initial item order from page data.
+        var initialItems = null;
+        for (var rpi = 0; rpi < pages.length; rpi++) {
+          if (pages[rpi].scenePlan && pages[rpi].scenePlan.slots[0]) {
+            var rc = pages[rpi].scenePlan.slots[0].content;
+            if (rc.kind === 'sequencing-game') {
+              initialItems = rc.items || [];
+              break;
+            }
+          }
+        }
+        if (initialItems) {
+          // Reorder DOM elements to match initial order.
+          var seqContainer = canvas.querySelector('.silse-scene-sequencing-game');
+          if (!seqContainer) seqContainer = canvas;
+          var seqItems = seqContainer.querySelectorAll('.silse-sequence-item');
+          // Build a map of id → element
+          var itemMap = {};
+          for (var im = 0; im < seqItems.length; im++) {
+            var sid = seqItems[im].getAttribute('data-seq-id');
+            itemMap[sid] = seqItems[im];
+          }
+          // Find the parent of sequence items (they're direct children of the shell)
+          var itemParent = seqItems.length > 0 ? seqItems[0].parentNode : null;
+          if (itemParent) {
+            // Reinsert in initial order
+            for (var ri2 = 0; ri2 < initialItems.length; ri2++) {
+              var el = itemMap[initialItems[ri2].id];
+              if (el) itemParent.appendChild(el);
+            }
+            // Renumber 1..n
+            var resetItems = itemParent.querySelectorAll('.silse-sequence-item');
+            for (var rni = 0; rni < resetItems.length; rni++) {
+              var rnum = resetItems[rni].querySelector('.silse-sequence-num');
+              if (rnum) rnum.textContent = (rni + 1) + '.';
+            }
+          }
+        }
+        // Hide feedback + reset score
         var sfb3 = canvas.querySelector('.silse-sequence-feedback');
         if (sfb3) sfb3.style.display = 'none';
         seqScore = 0;

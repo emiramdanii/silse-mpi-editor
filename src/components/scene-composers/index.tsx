@@ -554,13 +554,15 @@ export function MatchingGameComposer({
   const handleRightClick = (rightId: string) => {
     if (!selectedLeft) return;
     const isCorrect = correctPairs.some((p) => p.leftId === selectedLeft && p.rightId === rightId);
-    const newPairs = { ...pairs, [selectedLeft]: rightId };
-    setPairs(newPairs);
     setSelectedLeft(null);
     if (isCorrect) {
+      // PATCH A: Only save pair and increase score when correct.
+      const newPairs = { ...pairs, [selectedLeft]: rightId };
+      setPairs(newPairs);
       setScore(score + scorePer);
       setFeedback({ correct: true, text: 'Benar! Pasangan tepat.' });
     } else {
+      // PATCH A: Wrong pair — do NOT save, do NOT lock items, allow retry.
       setFeedback({ correct: false, text: 'Belum tepat. Coba lagi.' });
     }
   };
