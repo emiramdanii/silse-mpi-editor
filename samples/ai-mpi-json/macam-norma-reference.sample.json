@@ -134,9 +134,9 @@
           "role": "curriculumTitle",
           "placement": {
             "x": 72,
-            "y": 60,
+            "y": 64,
             "width": 1136,
-            "height": 540
+            "height": 544
           },
           "content": {
             "kind": "curriculum-guide",
@@ -162,9 +162,9 @@
           "role": "objectiveList",
           "placement": {
             "x": 72,
-            "y": 60,
+            "y": 64,
             "width": 1136,
-            "height": 540
+            "height": 544
           },
           "content": {
             "kind": "objectives-path",
@@ -197,9 +197,9 @@
           "role": "priorLearning",
           "placement": {
             "x": 72,
-            "y": 60,
+            "y": 64,
             "width": 1136,
-            "height": 540
+            "height": 544
           },
           "content": {
             "kind": "starter-review",
@@ -276,9 +276,9 @@
           "role": "discussionPrompt",
           "placement": {
             "x": 72,
-            "y": 60,
+            "y": 64,
             "width": 1136,
-            "height": 540
+            "height": 544
           },
           "content": {
             "kind": "discussion-scene",
@@ -297,12 +297,13 @@
       "slots": [
         {
           "id": "slot-game1",
-          "role": "items",
+          "role": "instruction",
           "placement": {
             "x": 72,
-            "y": 60,
+            "y": 64,
             "width": 1136,
-            "height": 540
+            "height": 544,
+            "zIndex": 2
           },
           "content": {
             "kind": "classification-game",
@@ -336,8 +337,7 @@
               "Hukum"
             ],
             "scorePerItem": 10,
-            "feedback": "Perhatikan sumber norma untuk menentukan kategori yang tepat.",
-            "completionMessage": "Selamat! Kamu berhasil menyortir semua norma."
+            "completionMessage": "Selamat! Semua norma berhasil disortir."
           }
         }
       ]
@@ -353,9 +353,9 @@
           "role": "caseText",
           "placement": {
             "x": 72,
-            "y": 60,
+            "y": 64,
             "width": 1136,
-            "height": 540
+            "height": 544
           },
           "content": {
             "kind": "case-analysis",
@@ -422,9 +422,9 @@
           "role": "scoreSummary",
           "placement": {
             "x": 72,
-            "y": 60,
+            "y": 64,
             "width": 1136,
-            "height": 540
+            "height": 544
           },
           "content": {
             "kind": "result-summary",
@@ -468,9 +468,9 @@
           "role": "reflectionPrompts",
           "placement": {
             "x": 72,
-            "y": 60,
+            "y": 64,
             "width": 1136,
-            "height": 540
+            "height": 544
           },
           "content": {
             "kind": "reflection-journal",

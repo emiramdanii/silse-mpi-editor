@@ -1797,8 +1797,11 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var p = plan.palette || {};
     var el = document.createElement('div');
     el.className = 'silse-block-timer';
+    el.setAttribute('data-running', 'false');
+    el.setAttribute('data-remaining', '300');
     el.style.cssText = 'display:flex;align-items:center;gap:10px;background:' + (p.gold || '#f9c12e') + '14;border:1px solid ' + (p.gold || '#f9c12e') + '33;border-radius:10px;padding:8px 14px;';
     var time = document.createElement('span');
+    time.className = 'silse-timer-display';
     time.style.cssText = 'font-size:20px;color:' + (p.gold || '#f9c12e') + ';min-width:42px;font-weight:800;';
     time.textContent = '5:00';
     el.appendChild(time);
@@ -1808,6 +1811,16 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     fill.style.cssText = 'height:100%;background:' + (p.gold || '#f9c12e') + ';border-radius:99px;width:50%;';
     bar.appendChild(fill);
     el.appendChild(bar);
+    var toggleBtn = document.createElement('button');
+    toggleBtn.setAttribute('data-action', 'timer-toggle');
+    toggleBtn.style.cssText = 'padding:8px 14px;min-height:44px;border-radius:999px;border:none;background:' + (p.gold || '#f9c12e') + ';color:' + (p.primary || '#0e1c2f') + ';font-weight:800;cursor:pointer;';
+    toggleBtn.textContent = '▶';
+    el.appendChild(toggleBtn);
+    var resetBtn = document.createElement('button');
+    resetBtn.setAttribute('data-action', 'timer-reset');
+    resetBtn.style.cssText = 'padding:8px 14px;min-height:44px;border-radius:999px;border:none;background:rgba(255,255,255,0.08);color:' + (p.mutedText || '#6e90b5') + ';font-weight:800;cursor:pointer;';
+    resetBtn.textContent = '↺';
+    el.appendChild(resetBtn);
     return el;
   }
 
@@ -1820,10 +1833,23 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     label.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + p.mutedText + ';margin-bottom:8px;';
     label.textContent = 'Jawaban Kamu';
     el.appendChild(label);
-    var input = document.createElement('div');
-    input.style.cssText = 'min-height:60px;border-radius:10px;padding:12px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.15);font-size:14px;color:' + p.mutedText + ';font-style:italic;';
-    input.textContent = placeholder || 'Tulis jawabanmu di sini...';
-    el.appendChild(input);
+    var ta = document.createElement('textarea');
+    ta.style.cssText = 'width:100%;min-height:60px;border-radius:10px;padding:12px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.15);font-size:14px;color:' + (p.text || '#fff') + ';font-family:inherit;resize:vertical;box-sizing:border-box;';
+    ta.setAttribute('placeholder', placeholder || 'Tulis jawabanmu di sini...');
+    el.appendChild(ta);
+    var saveRow = document.createElement('div');
+    saveRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-top:8px;';
+    var saveBtn = document.createElement('button');
+    saveBtn.setAttribute('data-action', 'save-response');
+    saveBtn.style.cssText = 'padding:10px 18px;min-height:44px;border-radius:999px;border:none;background:' + (p.gold || '#f9c12e') + ';color:' + (p.primary || '#0e1c2f') + ';font-weight:800;cursor:pointer;';
+    saveBtn.textContent = 'Simpan Jawaban';
+    saveRow.appendChild(saveBtn);
+    var badge = document.createElement('span');
+    badge.className = 'silse-saved-badge';
+    badge.style.cssText = 'display:none;padding:4px 12px;border-radius:999px;background:' + (p.success || '#34d399') + '22;color:' + (p.success || '#34d399') + ';font-size:12px;font-weight:800;';
+    badge.textContent = '✓ Tersimpan';
+    saveRow.appendChild(badge);
+    el.appendChild(saveRow);
     return el;
   }
 
@@ -1831,15 +1857,23 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var p = plan.palette || {};
     var el = document.createElement('div');
     el.className = 'silse-block-reveal';
-    el.style.cssText = 'border-radius:16px;padding:20px;background:' + (p.success || '#34d399') + '11;border:1px solid ' + (p.success || '#34d399') + '40;';
+    el.style.cssText = 'border-radius:16px;padding:20px;background:' + (p.success || '#34d399') + '11;border:1px solid ' + (p.success || '#34d399') + '40;cursor:pointer;';
     var l = document.createElement('div');
     l.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.success || '#34d399') + ';margin-bottom:8px;';
     l.textContent = '💡 ' + label;
     el.appendChild(l);
-    var b = document.createElement('div');
-    b.style.cssText = 'font-size:14px;line-height:1.6;color:' + p.text + ';';
-    b.textContent = revealed ? text : 'Klik untuk melihat pembahasan...';
-    el.appendChild(b);
+    var hint = document.createElement('div');
+    hint.className = 'silse-reveal-hint';
+    hint.style.cssText = 'font-size:14px;line-height:1.6;color:' + (p.mutedText || '#6e90b5') + ';font-style:italic;';
+    hint.textContent = 'Klik untuk melihat pembahasan...';
+    if (revealed) hint.style.display = 'none';
+    el.appendChild(hint);
+    var body = document.createElement('div');
+    body.className = 'silse-reveal-body';
+    body.style.cssText = 'font-size:14px;line-height:1.6;color:' + (p.text || '#fff') + ';';
+    body.textContent = text;
+    if (!revealed) body.style.display = 'none';
+    el.appendChild(body);
     return el;
   }
 
@@ -1935,8 +1969,9 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     el.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;';
     for (var i = 0; i < tabs.length; i++) {
       var tab = document.createElement('button');
+      tab.setAttribute('data-tab-id', tabs[i].id);
       var isActive = tabs[i].id === activeTab;
-      tab.style.cssText = 'padding:6px 14px;border-radius:999px;font-size:13px;font-weight:800;cursor:default;border:none;background:' + (isActive ? (p.gold || '#f9c12e') : 'rgba(255,255,255,0.04)') + ';color:' + (isActive ? (p.primary || '#0e1c2f') : p.mutedText) + ';';
+      tab.style.cssText = 'padding:8px 16px;min-height:40px;border-radius:999px;font-size:13px;font-weight:800;cursor:pointer;border:none;background:' + (isActive ? (p.gold || '#f9c12e') : 'rgba(255,255,255,0.04)') + ';color:' + (isActive ? (p.primary || '#0e1c2f') : p.mutedText) + ';';
       tab.textContent = tabs[i].label;
       el.appendChild(tab);
     }

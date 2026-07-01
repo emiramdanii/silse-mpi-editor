@@ -124,6 +124,18 @@ export type SimplePage = {
   background: PageBackground;
   /** Elemen pembelajaran di halaman. Naming internal "components"; UI memakai "elemen". */
   components: PageComponent[];
+  /**
+   * BASELINE-SYNC: Optional scene type override (from AiMpiBlueprint bridge).
+   * When set, simpleProjectToMpiContainer uses this sceneType instead of the
+   * default role-based mapping. isPageSceneRenderable returns true.
+   */
+  sceneType?: string;
+  /** BASELINE-SYNC: Optional scene slot content (used when sceneType override is set). */
+  sceneContent?: unknown;
+  /** BASELINE-SYNC: Optional scene slot placement (used when sceneType override is set). */
+  scenePlacement?: { x: number; y: number; width: number; height: number; zIndex?: number };
+  /** BASELINE-SYNC: Optional scene slot role (used when sceneType override is set). */
+  sceneSlotRole?: string;
 };
 
 // ---------------------------------------------------------------------------

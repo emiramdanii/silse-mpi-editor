@@ -224,11 +224,32 @@ function mapComponentToSlot(component: PageComponent): MpiSceneSlot {
 
 function mapPageToScene(page: SimplePage): MpiScene {
   const role = mapPageRoleToSceneRole(page.role);
-  const sceneType = getDefaultSceneType(page.role);
-  const slots = page.components.map(mapComponentToSlot);
+  // BASELINE-SYNC: honor sceneType override (from AiMpiBlueprint bridge).
+  const sceneType = (page.sceneType as MpiSceneType | undefined) ?? getDefaultSceneType(page.role);
+
+  let slots: MpiSceneSlot[];
+  if (page.sceneType && page.sceneContent) {
+    // Bridge path — use sceneContent as the single primary slot.
+    const placement: MpiSceneSlotPlacement = page.scenePlacement
+      ? {
+          x: page.scenePlacement.x,
+          y: page.scenePlacement.y,
+          width: page.scenePlacement.width,
+          height: page.scenePlacement.height,
+          zIndex: page.scenePlacement.zIndex,
+        }
+      : { x: 72, y: 120, width: 1136, height: 480 };
+    slots = [createMpiSlot(page.sceneSlotRole ?? 'primary', placement, page.sceneContent as MpiSceneSlotContent)];
+  } else {
+    slots = page.components.map(mapComponentToSlot);
+  }
 
   const scene = createMpiScene(role, sceneType, page.title, slots);
   scene.pageId = page.id;
+  // BASELINE-SYNC: preserve page.id as scene.id when sceneType override is set.
+  if (page.sceneType) {
+    scene.id = page.id;
+  }
   return scene;
 }
 

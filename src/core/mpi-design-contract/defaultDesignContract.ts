@@ -289,7 +289,8 @@ export const DESIGN_CONTRACTS: Record<DesignContractId, MpiDesignContract> = {
       heroFont: "'Fredoka One', 'Trebuchet MS', cursive",
       bodyFont: "'Nunito', 'Segoe UI', sans-serif",
       titleSize: 42,
-      titleWeight: 400,
+      // VISUAL-QUALITY-GUARD: heading weight >= 600
+      titleWeight: 700,
       bodyWeight: 700,
     },
     card: {

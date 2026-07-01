@@ -80,3 +80,6 @@ export {
   getPageScene,
   isGameMissionScene,
 } from './ai-mpi-json-to-project';
+
+// BASELINE-SYNC: AiMpiBlueprint → SimpleProject bridge.
+export { aiBlueprintToSimpleProject } from './aiBlueprintToSimpleProject';

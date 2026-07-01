@@ -213,6 +213,11 @@ function validateSlot(slot: unknown, path: string): BlueprintValidationError[] {
       errors.push({ path: `${path}.content`, message: 'closing-award must have achievement or rewardLabel (at least one non-empty)' });
     }
   }
+  // GOLDEN-REFERENCE-GAME-P1: classification-game requires items + categories
+  if (kind === 'classification-game') {
+    if (!Array.isArray(c.items)) errors.push({ path: `${path}.content.items`, message: 'must be array' });
+    if (!Array.isArray(c.categories)) errors.push({ path: `${path}.content.categories`, message: 'must be array' });
+  }
 
   return errors;
 }
