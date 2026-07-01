@@ -28,7 +28,7 @@ import { renderScenePlan } from '../core/scene-renderer';
 import { SceneRendererView } from '../components/SceneRendererView';
 import { exportProjectToHtml } from '../export/export-html';
 import { createSamplePpknProject } from '../core/sample-project';
-import { SCENE_CONTENT_FIELDS } from '../editor/SceneContentEditor';
+import { SCENE_CONTENT_FIELDS, SceneContentEditor } from '../editor/SceneContentEditor';
 import { SCENE_LIST_FIELDS } from '../editor/ListFieldEditor';
 
 const contract = getDesignContract('golden-reference');
@@ -69,6 +69,21 @@ describe('PERFECT-MPI-RENDER-GATE — Gate 1: React Renderer', () => {
       const { container: dom } = render(<SceneRendererView plan={plan} contract={contract} />);
       const sceneEl = dom.querySelector('[class*="silse-scene-"]');
       expect(sceneEl, `${scene.sceneType} should render in SceneRendererView`).toBeInTheDocument();
+    });
+  });
+
+  // PATCH A: Source-level guard — all 27 scene types have React routing
+  it('2a. SceneRendererView source has routing for all 27 scene types', () => {
+    const source = readFileSync(resolve(__dirname, '../components/SceneRendererView.tsx'), 'utf-8');
+    // 5 rendered scenes use slot-by-slot (not in getSceneComposer) — they are handled by content.kind
+    // 22 composer-routed scenes must appear in getSceneComposer routing
+    const composerRouted = ALL_27_SCENE_TYPES.filter(t => !['cover-hero', 'learning-scene', 'game-mission', 'quiz-challenge', 'closing-award'].includes(t));
+    composerRouted.forEach((st) => {
+      expect(source, `${st} should have routing in SceneRendererView`).toContain(`'${st}'`);
+    });
+    // 5 rendered scenes must have content.kind dispatch
+    ['cover-hero', 'learning-material', 'game-mission', 'quiz-question', 'closing-award'].forEach((kind) => {
+      expect(source, `${kind} should have content.kind dispatch`).toContain(`'${kind}'`);
     });
   });
 });
@@ -145,6 +160,30 @@ describe('PERFECT-MPI-RENDER-GATE — Gate 4: Inspector Support', () => {
       const hasListFields = SCENE_LIST_FIELDS[st] && SCENE_LIST_FIELDS[st].length > 0;
       expect(hasTextFields || hasListFields, `${st} should have inspector support (text or list fields)`).toBe(true);
     });
+  });
+
+  // PATCH A: Explicit game-mission inspector check
+  it('6a. game-mission has SCENE_CONTENT_FIELDS entry (explicit check)', () => {
+    expect(SCENE_CONTENT_FIELDS['game-mission']).toBeDefined();
+    expect(SCENE_CONTENT_FIELDS['game-mission'].length).toBeGreaterThan(0);
+    // Should have at least briefing and missionTarget fields
+    const keys = SCENE_CONTENT_FIELDS['game-mission'].map((f) => f.key);
+    expect(keys).toContain('briefing');
+    expect(keys).toContain('missionTarget');
+  });
+
+  // PATCH A: SceneContentEditor actually renders editor for game-mission
+  it('6b. SceneContentEditor renders editor for game-mission sceneType', () => {
+    const page = {
+      id: 'p-gm', title: 'Game Mission', role: 'activity', layoutId: 'blank',
+      background: { type: 'color' as const, color: '#fff' }, components: [],
+      sceneType: 'game-mission',
+      sceneContent: { kind: 'game-mission', briefing: 'Test briefing', missionTarget: 'Test target', actions: [], reward: { type: 'badge', label: 'Test' } },
+    };
+    const { container } = render(<SceneContentEditor page={page as any} />);
+    expect(container.querySelector('[data-testid="scene-content-editor"]')).toBeInTheDocument();
+    expect(container.querySelector('[data-testid="scene-field-briefing"]')).toBeInTheDocument();
+    expect(container.querySelector('[data-testid="scene-field-missionTarget"]')).toBeInTheDocument();
   });
 });
 

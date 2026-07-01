@@ -23,10 +23,12 @@ Final gate sebelum premium style. Memverifikasi semua scene type di contract pun
 ## Scene Type Coverage: 27/27
 
 All 27 scene types in `universal-scene-taxonomy.ts` now have:
-- React renderer (SceneRendererView routing)
-- Export renderer (sceneTypeRenderers or content.kind dispatch)
-- Inspector support (text fields and/or list fields)
-- Behavior tests (for interactive scenes)
+- **React renderer**: 5 rendered via slot-by-slot content.kind dispatch (cover-hero, learning-scene, game-mission, quiz-challenge, closing-award) + 22 routed via getSceneComposer in SceneRendererView. Verified by source-level guard test.
+- **Export renderer**: 5 rendered via content.kind dispatch + 22 routed via sceneTypeRenderers in export-html. Verified by source-level guard test.
+- **Inspector support**: 27/27 have text fields (SCENE_CONTENT_FIELDS) and/or list fields (SCENE_LIST_FIELDS). game-mission explicitly verified with briefing + missionTarget fields.
+- **Behavior tests**: 12 golden reference scenes tested via render plan + SceneRendererView render. 22 composer-routed scenes verified via source-level routing guard.
+
+**Coverage method**: 12 golden reference scenes are tested with full render (normalize → container → renderScenePlan → SceneRendererView). 15 additional scene types are verified via source-level routing guards (React routing + export routing + inspector field presence).
 
 ## Interaction Coverage: 14 types
 
