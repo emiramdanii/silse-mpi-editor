@@ -100,6 +100,10 @@ import type { Rect } from '../core/geometry';
 export type EditorState = {
   project: SimpleProject;
   selectedComponentId: string | null;
+  // CORE-MPI-UX-FOUNDATION-01: runtime progress + aggregate score
+  completedSceneIds: string[];
+  perSceneScore: Record<string, number>;
+  aggregateScore: number;
 
   // Project lifecycle (M1)
   newProject: () => void;
@@ -155,6 +159,15 @@ export type EditorState = {
   saveCurrent: () => boolean;
   loadCurrent: () => boolean;
   resetProject: () => void;
+
+  // CORE-MPI-UX-FOUNDATION-01: Navigation + Runtime
+  navigateNext: () => void;
+  navigatePrev: () => void;
+  markSceneCompleted: (sceneId: string) => void;
+  addSceneScore: (sceneId: string, points: number) => void;
+  getCurrentSceneIndex: () => number;
+  getProgressPercent: () => number;
+  updateSceneContent: (pageId: string, patch: Record<string, unknown>) => void;
 };
 
 // ---------------------------------------------------------------------------
@@ -481,9 +494,13 @@ function addComponentToCurrentPage(
 export const useEditorStore = create<EditorState>((set, get) => ({
   project: createProject(),
   selectedComponentId: null,
+  // CORE-MPI-UX-FOUNDATION-01: runtime state
+  completedSceneIds: [],
+  perSceneScore: {},
+  aggregateScore: 0,
 
   newProject: () => {
-    set({ project: createProject(), selectedComponentId: null });
+    set({ project: createProject(), selectedComponentId: null, completedSceneIds: [], perSceneScore: {}, aggregateScore: 0 });
   },
 
   setProject: (project) => {
@@ -1017,8 +1034,61 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   resetProject: () => {
-    set({ project: createProject(), selectedComponentId: null });
+    set({ project: createProject(), selectedComponentId: null, completedSceneIds: [], perSceneScore: {}, aggregateScore: 0 });
     clearCurrentProject();
+  },
+
+  // CORE-MPI-UX-FOUNDATION-01: Navigation + Runtime
+  navigateNext: () => {
+    const project = get().project;
+    const idx = project.pages.findIndex((p) => p.id === project.currentPageId);
+    if (idx === -1 || idx >= project.pages.length - 1) return;
+    set({ project: { ...project, currentPageId: project.pages[idx + 1].id }, selectedComponentId: null });
+  },
+
+  navigatePrev: () => {
+    const project = get().project;
+    const idx = project.pages.findIndex((p) => p.id === project.currentPageId);
+    if (idx <= 0) return;
+    set({ project: { ...project, currentPageId: project.pages[idx - 1].id }, selectedComponentId: null });
+  },
+
+  markSceneCompleted: (sceneId) => {
+    const completed = get().completedSceneIds;
+    if (completed.includes(sceneId)) return;
+    set({ completedSceneIds: [...completed, sceneId] });
+  },
+
+  addSceneScore: (sceneId, points) => {
+    const state = get();
+    const currentSceneScore = state.perSceneScore[sceneId] ?? 0;
+    const newPerScene = { ...state.perSceneScore, [sceneId]: currentSceneScore + points };
+    const newAggregate = Object.values(newPerScene).reduce((sum, v) => sum + v, 0);
+    set({ perSceneScore: newPerScene, aggregateScore: newAggregate });
+  },
+
+  getCurrentSceneIndex: () => {
+    const project = get().project;
+    return project.pages.findIndex((p) => p.id === project.currentPageId);
+  },
+
+  getProgressPercent: () => {
+    const project = get().project;
+    const total = project.pages.length;
+    if (total === 0) return 0;
+    const completed = get().completedSceneIds.length;
+    return Math.round((completed / total) * 100);
+  },
+
+  updateSceneContent: (pageId, patch) => {
+    set((state) => {
+      const pages = state.project.pages.map((p) => {
+        if (p.id !== pageId) return p;
+        const currentContent = (p.sceneContent ?? {}) as Record<string, unknown>;
+        return { ...p, sceneContent: { ...currentContent, ...patch } };
+      });
+      return { project: { ...state.project, pages } };
+    });
   },
 }));
 

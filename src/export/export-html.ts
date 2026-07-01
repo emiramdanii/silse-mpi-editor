@@ -1228,6 +1228,26 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       return renderClosingAwardSceneContent(slot, content, plan);
     }
 
+    // CORE-MPI-UX-FOUNDATION-01: image content kind rendering
+    if (content.kind === 'image') {
+      var imgWrap = document.createElement('div');
+      imgWrap.className = 'silse-block-media ' + (slot.contentClass || '');
+      imgWrap.style.cssText = 'width:100%;height:100%;border-radius:12px;overflow:hidden;border:1px solid ' + (plan.palette ? plan.palette.border : '#e5e7eb') + ';background:' + (plan.palette ? plan.palette.surface : '#f8fafc') + ';';
+      if (content.src) {
+        var imgEl = document.createElement('img');
+        imgEl.src = content.src;
+        imgEl.alt = content.alt || '';
+        imgEl.style.cssText = 'width:100%;height:100%;object-fit:' + (content.objectFit || 'cover') + ';display:block;';
+        imgWrap.appendChild(imgEl);
+      } else {
+        var fallback = document.createElement('div');
+        fallback.style.cssText = 'width:100%;height:100%;min-height:120px;display:grid;place-items:center;color:' + (plan.palette ? plan.palette.mutedText : '#6b7280') + ';font-size:13px;font-style:italic;';
+        fallback.textContent = '📷 Media tidak tersedia';
+        imgWrap.appendChild(fallback);
+      }
+      return imgWrap;
+    }
+
     // PATCH B: 7 new scene composers are now routed by sceneType in renderSceneFromPlan(),
     // NOT by content.kind here. Content.kind is only for generic slot content.
 

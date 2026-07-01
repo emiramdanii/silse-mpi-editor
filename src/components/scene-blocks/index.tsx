@@ -470,3 +470,121 @@ export function ActionButtonBlock({ contract, label, onClick, variant = 'primary
     </button>
   );
 }
+
+// ---------------------------------------------------------------------------
+// 16. NavigationToolbarBlock — CORE-MPI-UX-FOUNDATION-01
+// ---------------------------------------------------------------------------
+
+export function NavigationToolbarBlock({ contract, currentSceneIndex, totalScenes, sceneTitle, onPrev, onNext, canPrev, canNext, className = '' }: BlockProps & {
+  currentSceneIndex: number; totalScenes: number; sceneTitle: string;
+  onPrev?: () => void; onNext?: () => void; canPrev: boolean; canNext: boolean;
+}) {
+  return (
+    <div className={`silse-block-nav-toolbar ${className}`.trim()} data-testid="silse-block-nav-toolbar" style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+      padding: '10px 16px', borderRadius: contract.card.radius,
+      background: contract.palette.surface, border: contract.card.border,
+    }}>
+      <button
+        data-testid="nav-prev"
+        onClick={onPrev}
+        disabled={!canPrev}
+        style={{
+          padding: '8px 16px', minHeight: 44, borderRadius: contract.button.primary.radius,
+          border: 'none', background: canPrev ? contract.palette.primary : 'rgba(255,255,255,0.08)',
+          color: canPrev ? '#fff' : contract.palette.mutedText,
+          fontWeight: 700, cursor: canPrev ? 'pointer' : 'not-allowed', fontSize: 14,
+        }}
+      >
+        ← Sebelumnya
+      </button>
+      <div style={{ flex: 1, textAlign: 'center', minWidth: 0 }}>
+        <div data-testid="nav-scene-title" style={{
+          fontSize: 14, fontWeight: 800, color: contract.palette.text,
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+        }}>
+          {sceneTitle}
+        </div>
+        <div data-testid="nav-progress-text" style={{
+          fontSize: 12, color: contract.palette.mutedText, fontWeight: 600,
+        }}>
+          {currentSceneIndex + 1} / {totalScenes}
+        </div>
+      </div>
+      <button
+        data-testid="nav-next"
+        onClick={onNext}
+        disabled={!canNext}
+        style={{
+          padding: '8px 16px', minHeight: 44, borderRadius: contract.button.primary.radius,
+          border: 'none', background: canNext ? contract.palette.primary : 'rgba(255,255,255,0.08)',
+          color: canNext ? '#fff' : contract.palette.mutedText,
+          fontWeight: 700, cursor: canNext ? 'pointer' : 'not-allowed', fontSize: 14,
+        }}
+      >
+        Berikutnya →
+      </button>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 17. ProgressBarBlock — CORE-MPI-UX-FOUNDATION-01
+// ---------------------------------------------------------------------------
+
+export function ProgressBarBlock({ contract, currentSceneIndex, totalScenes, className = '' }: BlockProps & {
+  currentSceneIndex: number; totalScenes: number;
+}) {
+  const pct = totalScenes > 0 ? Math.round(((currentSceneIndex + 1) / totalScenes) * 100) : 0;
+  return (
+    <div className={`silse-block-progress ${className}`.trim()} data-testid="silse-block-progress" style={{
+      display: 'flex', alignItems: 'center', gap: 10, padding: '6px 12px',
+    }}>
+      <div style={{
+        flex: 1, height: 6, borderRadius: 99,
+        background: 'rgba(255,255,255,0.08)', overflow: 'hidden',
+      }}>
+        <div data-testid="progress-fill" style={{
+          height: '100%', width: `${pct}%`, borderRadius: 99,
+          background: contract.palette.gold, transition: 'width 0.3s ease',
+        }} />
+      </div>
+      <span data-testid="progress-percent" style={{
+        fontSize: 12, fontWeight: 800, color: contract.palette.gold, minWidth: 36, textAlign: 'right',
+      }}>
+        {pct}%
+      </span>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 18. MediaDisplayBlock — CORE-MPI-UX-FOUNDATION-01
+// ---------------------------------------------------------------------------
+
+export function MediaDisplayBlock({ contract, src, alt, objectFit = 'cover', className = '' }: BlockProps & {
+  src: string; alt?: string; objectFit?: 'cover' | 'contain';
+}) {
+  if (!src) {
+    return (
+      <div className={`silse-block-media silse-block-media-fallback ${className}`.trim()} data-testid="silse-block-media" style={{
+        width: '100%', height: '100%', minHeight: 120,
+        borderRadius: contract.card.radius, background: contract.palette.surface,
+        border: contract.card.border, display: 'grid', placeItems: 'center',
+        color: contract.palette.mutedText, fontSize: 13, fontStyle: 'italic',
+      }}>
+        📷 Media tidak tersedia
+      </div>
+    );
+  }
+  return (
+    <div className={`silse-block-media ${className}`.trim()} data-testid="silse-block-media" style={{
+      width: '100%', height: '100%', borderRadius: contract.card.radius, overflow: 'hidden',
+      border: contract.card.border, background: contract.palette.surface,
+    }}>
+      <img src={src} alt={alt || ''} style={{
+        width: '100%', height: '100%', objectFit, display: 'block',
+      }} />
+    </div>
+  );
+}

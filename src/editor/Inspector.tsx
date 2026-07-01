@@ -70,6 +70,7 @@ import { getRoleInfo } from './mpi-standard-roles';
 import { createComponentId } from '../core/ids';
 import { PatternLibraryPanel } from './PatternLibraryPanel';
 import { VisualSection } from './VisualSection';
+import { SceneContentEditor } from './SceneContentEditor';
 
 const TEXT_VARIANT_LABELS: Record<TextComponentVariant, string> = {
   title: 'Judul',
@@ -229,6 +230,8 @@ export function Inspector() {
         ) : !selectedComponent ? (
           <>
             <PageInfo currentPage={currentPage} />
+            {/* CORE-MPI-UX-FOUNDATION-01: SceneContent editor for scene-renderable pages */}
+            <SceneContentEditor page={currentPage} />
             <PatternLibraryPanel currentPage={currentPage} project={project} />
             <VisualSection />
           </>

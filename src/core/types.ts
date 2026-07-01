@@ -51,6 +51,11 @@ export type SimpleProject = {
    * Wajib untuk MPI standar: subject, grade, phase, topic, objectives.
    */
   curriculum?: Curriculum;
+  /**
+   * CORE-MPI-UX-FOUNDATION-01: Assets preserved from AiMpiBlueprint bridge.
+   * Images/audio/video referenced by slot content via src URL.
+   */
+  assets?: Array<{ id: string; type: 'image' | 'audio' | 'video'; src: string; alt?: string }>;
 };
 
 // ---------------------------------------------------------------------------

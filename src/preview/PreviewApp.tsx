@@ -27,6 +27,7 @@ import { getMicroAnimationForStylePack } from '../core/style-packs/micro-animati
 import { getPremiumExportProfile, getPremiumCssVariables, getHeroKickerText } from '../core/style-packs/premium-export-profile';
 import { buildSceneRenderPlanForPage } from '../core/scene-renderer';
 import { SceneRendererView } from '../components/SceneRendererView';
+import { NavigationToolbarBlock, ProgressBarBlock } from '../components/scene-blocks';
 import { getDesignContract } from '../core/mpi-design-contract';
 import type { GameComponent, NavigationComponent, QuestionComponent } from '../core/types';
 
@@ -131,6 +132,26 @@ export function PreviewApp() {
         </div>
       </div>
       <div className="preview-canvas-wrap">
+        {/* CORE-MPI-UX-FOUNDATION-01: Navigation + Progress for scene-renderable projects */}
+        {useSceneRenderer && (
+          <>
+            <NavigationToolbarBlock
+              contract={getDesignContract(project.stylePackId)}
+              currentSceneIndex={currentIdx}
+              totalScenes={project.pages.length}
+              sceneTitle={currentPage.title}
+              onPrev={navigatePrev}
+              onNext={navigateNext}
+              canPrev={!isFirst}
+              canNext={!isLast}
+            />
+            <ProgressBarBlock
+              contract={getDesignContract(project.stylePackId)}
+              currentSceneIndex={currentIdx}
+              totalScenes={project.pages.length}
+            />
+          </>
+        )}
         <div
           className={`canvas-frame preview-canvas silse-premium-stage ${bgPattern.pageClass} ${bgPattern.patternClass} ${coverClass} ${animProfile.pageEnterClass}`.trim()}
           data-testid="preview-canvas-frame"

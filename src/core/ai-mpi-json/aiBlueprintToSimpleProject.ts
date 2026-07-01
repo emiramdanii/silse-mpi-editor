@@ -113,5 +113,8 @@ export function aiBlueprintToSimpleProject(blueprint: AiMpiBlueprint): SimplePro
     style: stylePackToProjectStyle(stylePack),
     curriculum,
     pages,
+    // CORE-MPI-UX-FOUNDATION-01: preserve assets from blueprint (for image/media rendering).
+    // Stored as metadata on the project — assets are referenced by slot content via src URL.
+    assets: blueprint.assets.map((a) => ({ id: a.id, type: a.type, src: a.src, alt: a.alt })),
   };
 }

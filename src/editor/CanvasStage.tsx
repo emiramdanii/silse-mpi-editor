@@ -25,6 +25,7 @@ import { QuestionComponentView } from '../components/QuestionComponentView';
 import { GameComponentView } from '../components/GameComponentView';
 import { LayeredInfoComponentView } from '../components/LayeredInfoComponentView';
 import { LearningBridgeComponentView } from '../components/LearningBridgeComponentView';
+import { NavigationToolbarBlock } from '../components/scene-blocks';
 import { getCapability } from '../core/capability';
 import { getSkinClassForComponent } from '../core/style-packs/component-skin';
 import { getBackgroundPatternForStylePack } from '../core/style-packs/background-pattern';
@@ -46,6 +47,9 @@ export function CanvasStage() {
   const selectComponent = useEditorStore((s) => s.selectComponent);
   const updateComponentGeometry = useEditorStore((s) => s.updateComponentGeometry);
   const removeComponent = useEditorStore((s) => s.removeComponent);
+  // CORE-MPI-UX-FOUNDATION-01: navigation
+  const navigateNext = useEditorStore((s) => s.navigateNext);
+  const navigatePrev = useEditorStore((s) => s.navigatePrev);
 
   const [dragState, setDragState] = useState<{
     mode: 'drag' | 'resize' | null;
@@ -187,6 +191,19 @@ export function CanvasStage() {
   return (
     <main className="canvas-stage" data-testid="canvas-stage">
       <Toolbar />
+      {/* CORE-MPI-UX-FOUNDATION-01: Navigation toolbar for scene-renderable projects */}
+      {useSceneRenderer && currentPage && (
+        <NavigationToolbarBlock
+          contract={getDesignContract(project.stylePackId)}
+          currentSceneIndex={project.pages.findIndex((p) => p.id === currentPage.id)}
+          totalScenes={project.pages.length}
+          sceneTitle={currentPage.title}
+          onPrev={() => navigatePrev()}
+          onNext={() => navigateNext()}
+          canPrev={project.pages.findIndex((p) => p.id === currentPage.id) > 0}
+          canNext={project.pages.findIndex((p) => p.id === currentPage.id) < project.pages.length - 1}
+        />
+      )}
       <div className="canvas-stage__canvas-area">
         <div
           ref={canvasRef}
