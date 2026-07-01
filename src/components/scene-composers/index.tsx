@@ -771,13 +771,13 @@ export function SequencingGameComposer({
   const scorePer = content.scorePerItem ?? 10;
 
   const moveUp = (idx: number) => {
-    if (idx === 0) return;
+    if (idx === 0 || scored) return; // P2 PATCH A: lock after correct
     const newOrder = [...order];
     [newOrder[idx - 1], newOrder[idx]] = [newOrder[idx], newOrder[idx - 1]];
     setOrder(newOrder); setFeedback(null);
   };
   const moveDown = (idx: number) => {
-    if (idx === order.length - 1) return;
+    if (idx === order.length - 1 || scored) return; // P2 PATCH A: lock after correct
     const newOrder = [...order];
     [newOrder[idx], newOrder[idx + 1]] = [newOrder[idx + 1], newOrder[idx]];
     setOrder(newOrder); setFeedback(null);
@@ -851,8 +851,8 @@ export function SequencingGameComposer({
           }}>
             <span style={{ fontSize: 18, fontWeight: 800, color: contract.palette.gold, minWidth: 28 }}>{idx + 1}.</span>
             <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: contract.palette.text }}>{item.label}</span>
-            <button data-testid={`sequence-up-${id}`} className="silse-sequence-up silse-premium-sequence-up" onClick={() => moveUp(idx)} disabled={idx === 0} onMouseEnter={(e) => { if (idx === 0) return; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = premiumShadow; }} onMouseLeave={(e) => { if (idx === 0) return; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }} style={{ padding: '6px 12px', minHeight: 36, borderRadius: 8, border: 'none', background: idx === 0 ? 'rgba(255,255,255,0.08)' : contract.palette.primary, color: '#fff', cursor: idx === 0 ? 'not-allowed' : 'pointer', fontWeight: 700, transition: 'all 0.18s ease' }}>↑</button>
-            <button data-testid={`sequence-down-${id}`} className="silse-sequence-down silse-premium-sequence-down" onClick={() => moveDown(idx)} disabled={idx === order.length - 1} onMouseEnter={(e) => { if (idx === order.length - 1) return; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = premiumShadow; }} onMouseLeave={(e) => { if (idx === order.length - 1) return; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }} style={{ padding: '6px 12px', minHeight: 36, borderRadius: 8, border: 'none', background: idx === order.length - 1 ? 'rgba(255,255,255,0.08)' : contract.palette.primary, color: '#fff', cursor: idx === order.length - 1 ? 'not-allowed' : 'pointer', fontWeight: 700, transition: 'all 0.18s ease' }}>↓</button>
+            <button data-testid={`sequence-up-${id}`} className="silse-sequence-up silse-premium-sequence-up" onClick={() => moveUp(idx)} disabled={idx === 0 || scored} onMouseEnter={(e) => { if (idx === 0 || scored) return; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = premiumShadow; }} onMouseLeave={(e) => { if (idx === 0 || scored) return; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }} style={{ padding: '6px 12px', minHeight: 36, borderRadius: 8, border: 'none', background: (idx === 0 || scored) ? 'rgba(255,255,255,0.08)' : contract.palette.primary, color: '#fff', cursor: (idx === 0 || scored) ? 'not-allowed' : 'pointer', fontWeight: 700, transition: 'all 0.18s ease' }}>↑</button>
+            <button data-testid={`sequence-down-${id}`} className="silse-sequence-down silse-premium-sequence-down" onClick={() => moveDown(idx)} disabled={idx === order.length - 1 || scored} onMouseEnter={(e) => { if (idx === order.length - 1 || scored) return; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = premiumShadow; }} onMouseLeave={(e) => { if (idx === order.length - 1 || scored) return; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }} style={{ padding: '6px 12px', minHeight: 36, borderRadius: 8, border: 'none', background: (idx === order.length - 1 || scored) ? 'rgba(255,255,255,0.08)' : contract.palette.primary, color: '#fff', cursor: (idx === order.length - 1 || scored) ? 'not-allowed' : 'pointer', fontWeight: 700, transition: 'all 0.18s ease' }}>↓</button>
           </div>
         );
       })}

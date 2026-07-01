@@ -3967,11 +3967,12 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     // HIGH-PRIORITY-RENDERERS-01: Sequencing game interaction
     var seqOrder = [];
     var seqScore = 0;
+    var seqLocked = false; // P2 PATCH A: lock after correct
     canvas.addEventListener('click', function(e) {
       var upBtn = e.target.closest('[data-action="seq-up"]');
       var downBtn = e.target.closest('[data-action="seq-down"]');
       var checkBtn = e.target.closest('[data-action="seq-check"]');
-      if (upBtn || downBtn) {
+      if ((upBtn || downBtn) && !seqLocked) { // P2 PATCH A: ignore move when locked
         var seqId = (upBtn || downBtn).getAttribute('data-seq-id');
         var items = canvas.querySelectorAll('.silse-sequence-item');
         var idx = -1;
@@ -4019,9 +4020,19 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
           sfb2.textContent = isCorrect ? 'Benar! Urutan tepat.' : 'Belum tepat. Coba urutkan lagi.';
         }
         if (isCorrect) {
-          seqScore += scorePerItem * itemCount;
-          var ssv = canvas.querySelector('.silse-sequence-score-val');
-          if (ssv) ssv.textContent = String(seqScore);
+          if (!seqLocked) { // P2 PATCH A: only score + lock once
+            seqScore += scorePerItem * itemCount;
+            var ssv = canvas.querySelector('.silse-sequence-score-val');
+            if (ssv) ssv.textContent = String(seqScore);
+            seqLocked = true; // P2 PATCH A: lock after correct
+            // Visually disable up/down buttons
+            var lockBtns = canvas.querySelectorAll('[data-action="seq-up"], [data-action="seq-down"]');
+            for (var lb = 0; lb < lockBtns.length; lb++) {
+              lockBtns[lb].disabled = true;
+              lockBtns[lb].style.opacity = '0.4';
+              lockBtns[lb].style.cursor = 'not-allowed';
+            }
+          }
         }
         return;
       }
@@ -4072,6 +4083,14 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         seqScore = 0;
         var ssv2 = canvas.querySelector('.silse-sequence-score-val');
         if (ssv2) ssv2.textContent = '0';
+        // P2 PATCH A: Unlock + re-enable buttons
+        seqLocked = false;
+        var unlockBtns = canvas.querySelectorAll('[data-action="seq-up"], [data-action="seq-down"]');
+        for (var ub = 0; ub < unlockBtns.length; ub++) {
+          unlockBtns[ub].disabled = false;
+          unlockBtns[ub].style.opacity = '';
+          unlockBtns[ub].style.cursor = 'pointer';
+        }
       }
     });
 
