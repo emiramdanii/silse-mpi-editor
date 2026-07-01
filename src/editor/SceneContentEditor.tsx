@@ -92,6 +92,28 @@ const SCENE_CONTENT_FIELDS: Record<string, Array<{ key: string; label: string; t
     { key: 'caption', label: 'Caption', type: 'textarea' },
     { key: 'responseInput', label: 'Placeholder Input', type: 'text' },
   ],
+  // PERFECT-MPI-RENDER-COMPLETE-01: 5 assessment/support scene types
+  'diagnostic-check': [
+    { key: 'diagnosticPrompt', label: 'Prompt Diagnostik', type: 'textarea' },
+    { key: 'recommendation', label: 'Rekomendasi', type: 'textarea' },
+  ],
+  'remedial-practice': [
+    { key: 'misconception', label: 'Miskonsepsi', type: 'textarea' },
+    { key: 'reteachExplanation', label: 'Penjelasan Ulang', type: 'textarea' },
+    { key: 'retryQuestion', label: 'Pertanyaan Retry', type: 'textarea' },
+  ],
+  'enrichment-challenge': [
+    { key: 'challengeContext', label: 'Konteks Challenge', type: 'textarea' },
+    { key: 'advancedTask', label: 'Tugas Lanjutan', type: 'textarea' },
+    { key: 'responseInput', label: 'Placeholder Response', type: 'text' },
+    { key: 'completionMessage', label: 'Pesan Selesai', type: 'textarea' },
+  ],
+  'worksheet-activity': [
+    { key: 'instruction', label: 'Instruksi', type: 'textarea' },
+  ],
+  'rubric-panel': [
+    { key: 'scoreGuide', label: 'Panduan Skor', type: 'textarea' },
+  ],
 };
 
 export function SceneContentEditor({ page }: { page: SimplePage }) {

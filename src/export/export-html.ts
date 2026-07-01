@@ -1115,6 +1115,11 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       'matching-game': function(p) { return p.slots[0] ? renderMatchingGameExport(p.slots[0], p.slots[0].content, p) : null; },
       'sequencing-game': function(p) { return p.slots[0] ? renderSequencingGameExport(p.slots[0], p.slots[0].content, p) : null; },
       'media-focus': function(p) { return p.slots[0] ? renderMediaFocusExport(p.slots[0], p.slots[0].content, p) : null; },
+      'diagnostic-check': function(p) { return p.slots[0] ? renderDiagnosticCheckExport(p.slots[0], p.slots[0].content, p) : null; },
+      'remedial-practice': function(p) { return p.slots[0] ? renderRemedialPracticeExport(p.slots[0], p.slots[0].content, p) : null; },
+      'enrichment-challenge': function(p) { return p.slots[0] ? renderEnrichmentChallengeExport(p.slots[0], p.slots[0].content, p) : null; },
+      'worksheet-activity': function(p) { return p.slots[0] ? renderWorksheetActivityExport(p.slots[0], p.slots[0].content, p) : null; },
+      'rubric-panel': function(p) { return p.slots[0] ? renderRubricPanelExport(p.slots[0], p.slots[0].content, p) : null; },
     };
     if (sceneTypeRenderers[plan.sceneType]) {
       var renderedEl = sceneTypeRenderers[plan.sceneType](plan);
@@ -2375,6 +2380,221 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     return exportShell(plan, 'silse-scene-media-focus', children);
   }
 
+  function renderDiagnosticCheckExport(slot, content, plan) {
+    var p = plan.palette || {};
+    var children = [exportHeader(plan, '🔍 Diagnostik', p.accent, content.diagnosticPrompt || 'Diagnostik Kesiapan')];
+    var questions = content.questionSet || [];
+    for (var qi = 0; qi < questions.length; qi++) {
+      var qEl = document.createElement('div');
+      qEl.className = 'silse-diagnostic-question';
+      qEl.setAttribute('data-question-id', questions[qi].id);
+      qEl.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
+      var qPrompt = document.createElement('div');
+      qPrompt.style.cssText = 'font-size:14px;font-weight:700;color:' + (p.text || '#fff') + ';margin-bottom:8px;';
+      qPrompt.textContent = (qi + 1) + '. ' + questions[qi].prompt;
+      qEl.appendChild(qPrompt);
+      var choices = questions[qi].choices || [];
+      for (var ci = 0; ci < choices.length; ci++) {
+        var cBtn = document.createElement('button');
+        cBtn.className = 'silse-diagnostic-choice';
+        cBtn.setAttribute('data-question-id', questions[qi].id);
+        cBtn.setAttribute('data-choice-id', choices[ci].id);
+        cBtn.setAttribute('data-correct', choices[ci].id === questions[qi].correctChoiceId ? 'true' : 'false');
+        cBtn.style.cssText = 'display:block;text-align:left;margin-bottom:6px;padding:8px 12px;min-height:40px;border-radius:8px;cursor:pointer;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:transparent;color:' + (p.text || '#fff') + ';font-size:13px;font-weight:600;width:100%;';
+        cBtn.textContent = choices[ci].text;
+        qEl.appendChild(cBtn);
+      }
+      children.push(qEl);
+    }
+    children.push(exportActionButton(plan, 'Periksa Hasil', 'primary'));
+    var resultEl = document.createElement('div');
+    resultEl.className = 'silse-diagnostic-result';
+    resultEl.style.cssText = 'display:none;padding:16px;border-radius:12px;background:' + (p.gold || '#f9c12e') + '0A;border:1px solid ' + (p.gold || '#f9c12e') + '33;text-align:center;';
+    resultEl.textContent = 'Hasil akan muncul setelah diperiksa';
+    children.push(resultEl);
+    return exportShell(plan, 'silse-scene-diagnostic-check', children);
+  }
+
+  function renderRemedialPracticeExport(slot, content, plan) {
+    var p = plan.palette || {};
+    var children = [exportHeader(plan, '🔧 Remedial', p.warning, 'Remedial Practice')];
+    if (content.misconception) {
+      var mc = document.createElement('div');
+      mc.style.cssText = 'padding:12px;border-radius:10px;background:' + (p.danger || '#ff6b6b') + '11;border:1px solid ' + (p.danger || '#ff6b6b') + '33;font-size:14px;color:' + (p.text || '#fff') + ';';
+      mc.innerHTML = '<strong style="color:' + (p.danger || '#ff6b6b') + '">⚠️ Miskonsepsi:</strong> ' + content.misconception;
+      children.push(mc);
+    }
+    if (content.reteachExplanation) children.push(exportPanel(plan, 'Penjelasan Ulang', content.reteachExplanation));
+    var practice = content.guidedPractice || [];
+    for (var pi = 0; pi < practice.length; pi++) {
+      var pEl = document.createElement('div');
+      pEl.className = 'silse-remedial-question';
+      pEl.setAttribute('data-question-id', practice[pi].id);
+      pEl.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
+      var pPrompt = document.createElement('div');
+      pPrompt.style.cssText = 'font-size:14px;font-weight:700;color:' + (p.text || '#fff') + ';margin-bottom:8px;';
+      pPrompt.textContent = (pi + 1) + '. ' + practice[pi].prompt;
+      pEl.appendChild(pPrompt);
+      var choices = practice[pi].choices || [];
+      for (var ci = 0; ci < choices.length; ci++) {
+        var cBtn = document.createElement('button');
+        cBtn.className = 'silse-remedial-choice';
+        cBtn.setAttribute('data-question-id', practice[pi].id);
+        cBtn.setAttribute('data-choice-id', choices[ci].id);
+        cBtn.setAttribute('data-correct', choices[ci].id === practice[pi].correctChoiceId ? 'true' : 'false');
+        cBtn.style.cssText = 'display:block;text-align:left;margin-bottom:6px;padding:8px 12px;min-height:40px;border-radius:8px;cursor:pointer;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:transparent;color:' + (p.text || '#fff') + ';font-size:13px;font-weight:600;width:100%;';
+        cBtn.textContent = choices[ci].text;
+        pEl.appendChild(cBtn);
+      }
+      if (practice[pi].hint) {
+        var hintBtn = document.createElement('button');
+        hintBtn.className = 'silse-remedial-hint';
+        hintBtn.setAttribute('data-question-id', practice[pi].id);
+        hintBtn.setAttribute('data-hint', practice[pi].hint);
+        hintBtn.style.cssText = 'margin-top:6px;padding:4px 10px;font-size:12px;border:none;background:transparent;color:' + (p.gold || '#f9c12e') + ';cursor:pointer;font-weight:700;';
+        hintBtn.textContent = '💡 Tampilkan Hint';
+        pEl.appendChild(hintBtn);
+      }
+      var fbEl = document.createElement('div');
+      fbEl.className = 'silse-remedial-feedback';
+      fbEl.setAttribute('data-question-id', practice[pi].id);
+      fbEl.style.cssText = 'display:none;margin-top:6px;padding:8px;border-radius:8px;font-size:13px;font-weight:700;';
+      pEl.appendChild(fbEl);
+      children.push(pEl);
+    }
+    if (content.retryQuestion) children.push(exportPanel(plan, 'Pertanyaan Retry', content.retryQuestion));
+    return exportShell(plan, 'silse-scene-remedial-practice', children);
+  }
+
+  function renderEnrichmentChallengeExport(slot, content, plan) {
+    var p = plan.palette || {};
+    var children = [exportHeader(plan, '🚀 Enrichment', p.secondary, 'Enrichment Challenge')];
+    if (content.challengeContext) children.push(exportPanel(plan, 'Konteks Challenge', content.challengeContext));
+    if (content.advancedTask) {
+      var task = document.createElement('div');
+      task.className = 'silse-enrichment-task';
+      task.style.cssText = 'padding:16px;border-radius:12px;background:' + (p.secondary || '#457b9d') + '11;border:1px solid ' + (p.secondary || '#457b9d') + '33;';
+      var tLabel = document.createElement('div');
+      tLabel.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.secondary || '#457b9d') + ';margin-bottom:6px;';
+      tLabel.textContent = 'Tugas Lanjutan';
+      var tText = document.createElement('div');
+      tText.style.cssText = 'font-size:15px;line-height:1.6;color:' + (p.text || '#fff') + ';font-weight:600;';
+      tText.textContent = content.advancedTask;
+      task.appendChild(tLabel); task.appendChild(tText);
+      children.push(task);
+    }
+    children.push(exportResponseInput(plan, content.responseInput || 'Tugas jawaban enrichment...'));
+    if (content.rubricPreview && content.rubricPreview.length) {
+      var rubric = document.createElement('div');
+      rubric.className = 'silse-enrichment-rubric';
+      rubric.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
+      var rLabel = document.createElement('div');
+      rLabel.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.mutedText || '#6e90b5') + ';margin-bottom:8px;';
+      rLabel.textContent = 'Rubrik Penilaian';
+      rubric.appendChild(rLabel);
+      for (var ri = 0; ri < content.rubricPreview.length; ri++) {
+        var row = document.createElement('div');
+        row.style.cssText = 'display:flex;gap:8px;padding:6px 0;border-bottom:' + (ri < content.rubricPreview.length - 1 ? '1px solid ' + (p.border || 'rgba(255,255,255,0.06)') : 'none') + ';';
+        var cName = document.createElement('span');
+        cName.style.cssText = 'font-size:13px;font-weight:700;color:' + (p.gold || '#f9c12e') + ';min-width:100px;';
+        cName.textContent = content.rubricPreview[ri].criterion;
+        var cDesc = document.createElement('span');
+        cDesc.style.cssText = 'font-size:13px;color:' + (p.mutedText || '#6e90b5') + ';';
+        cDesc.textContent = content.rubricPreview[ri].descriptor;
+        row.appendChild(cName); row.appendChild(cDesc);
+        rubric.appendChild(row);
+      }
+      children.push(rubric);
+    }
+    children.push(exportActionButton(plan, 'Tandai Selesai', 'primary'));
+    return exportShell(plan, 'silse-scene-enrichment-challenge', children);
+  }
+
+  function renderWorksheetActivityExport(slot, content, plan) {
+    var p = plan.palette || {};
+    var children = [exportHeader(plan, '📝 LKPD', p.success, 'Worksheet Activity')];
+    if (content.instruction) {
+      var instr = document.createElement('div');
+      instr.style.cssText = 'font-size:14px;line-height:1.6;padding:8px 12px;background:' + (p.success || '#34d399') + '11;border-radius:10px;color:' + (p.text || '#fff') + ';';
+      instr.textContent = content.instruction;
+      children.push(instr);
+    }
+    var steps = content.taskSteps || [];
+    var checklist = document.createElement('div');
+    checklist.className = 'silse-worksheet-checklist';
+    checklist.style.cssText = 'font-size:13px;font-weight:700;color:' + (p.gold || '#f9c12e') + ';';
+    checklist.textContent = '✓ Selesai: 0 / ' + steps.length;
+    children.push(checklist);
+    for (var si = 0; si < steps.length; si++) {
+      var sEl = document.createElement('div');
+      sEl.className = 'silse-worksheet-question';
+      sEl.setAttribute('data-step-id', steps[si].id);
+      sEl.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
+      var sRow = document.createElement('div');
+      sRow.style.cssText = 'display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;';
+      var checkBtn = document.createElement('button');
+      checkBtn.className = 'silse-worksheet-check';
+      checkBtn.setAttribute('data-step-id', steps[si].id);
+      checkBtn.setAttribute('data-action', 'worksheet-check');
+      checkBtn.style.cssText = 'width:24px;height:24px;min-height:24px;border-radius:6px;border:2px solid ' + (p.success || '#34d399') + ';background:transparent;color:#fff;cursor:pointer;font-size:14px;font-weight:800;flex-shrink:0;display:grid;place-items:center;';
+      checkBtn.textContent = '';
+      var sPrompt = document.createElement('span');
+      sPrompt.style.cssText = 'font-size:14px;font-weight:700;color:' + (p.text || '#fff') + ';';
+      sPrompt.textContent = (si + 1) + '. ' + steps[si].prompt;
+      sRow.appendChild(checkBtn); sRow.appendChild(sPrompt);
+      sEl.appendChild(sRow);
+      var ta = document.createElement('textarea');
+      ta.className = 'silse-worksheet-response';
+      ta.setAttribute('data-step-id', steps[si].id);
+      ta.setAttribute('placeholder', steps[si].responsePlaceholder || 'Tulis jawabanmu...');
+      ta.style.cssText = 'width:100%;min-height:50px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.15);font-size:13px;color:' + (p.text || '#fff') + ';font-family:inherit;resize:vertical;box-sizing:border-box;';
+      sEl.appendChild(ta);
+      children.push(sEl);
+    }
+    return exportShell(plan, 'silse-scene-worksheet-activity', children);
+  }
+
+  function renderRubricPanelExport(slot, content, plan) {
+    var p = plan.palette || {};
+    var children = [exportHeader(plan, '📊 Rubrik', p.gold, 'Rubrik Penilaian')];
+    if (content.scoreGuide) {
+      var sg = document.createElement('div');
+      sg.className = 'silse-rubric-score-guide';
+      sg.style.cssText = 'padding:12px;border-radius:10px;background:' + (p.gold || '#f9c12e') + '0A;border:1px solid ' + (p.gold || '#f9c12e') + '33;font-size:14px;color:' + (p.text || '#fff') + ';';
+      sg.textContent = '📋 ' + content.scoreGuide;
+      children.push(sg);
+    }
+    var levels = content.levels || [];
+    if (levels.length > 0) {
+      var lvlRow = document.createElement('div');
+      lvlRow.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;';
+      for (var li = 0; li < levels.length; li++) {
+        var lvl = document.createElement('div');
+        lvl.className = 'silse-rubric-level';
+        lvl.style.cssText = 'padding:8px 14px;border-radius:999px;background:' + (p.gold || '#f9c12e') + '11;border:1px solid ' + (p.gold || '#f9c12e') + '33;text-align:center;';
+        lvl.innerHTML = '<div style="font-size:14px;font-weight:800;color:' + (p.gold || '#f9c12e') + ';">' + levels[li].name + '</div><div style="font-size:11px;color:' + (p.mutedText || '#6e90b5') + ';">Skor: ' + levels[li].score + '</div>';
+        lvlRow.appendChild(lvl);
+      }
+      children.push(lvlRow);
+    }
+    var criteria = content.criteria || [];
+    for (var ci = 0; ci < criteria.length; ci++) {
+      var cEl = document.createElement('div');
+      cEl.className = 'silse-rubric-criterion';
+      cEl.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
+      var cName = document.createElement('div');
+      cName.style.cssText = 'font-size:14px;font-weight:800;color:' + (p.text || '#fff') + ';margin-bottom:6px;';
+      cName.textContent = criteria[ci].name;
+      cEl.appendChild(cName);
+      var cDesc = document.createElement('div');
+      cDesc.style.cssText = 'font-size:13px;line-height:1.6;color:' + (p.mutedText || '#6e90b5') + ';';
+      cDesc.textContent = criteria[ci].description;
+      cEl.appendChild(cDesc);
+      children.push(cEl);
+    }
+    return exportShell(plan, 'silse-scene-rubric-panel', children);
+  }
+
   function buildInlineStyle(comp) {
     // Geometry + resolvedStyle.inlineStyle — NO style switch
     var s = 'position:absolute;left:' + comp.x + 'px;top:' + comp.y + 'px;width:' + comp.width + 'px;height:' + comp.height + 'px;';
@@ -3574,6 +3794,114 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         seqScore = 0;
         var ssv2 = canvas.querySelector('.silse-sequence-score-val');
         if (ssv2) ssv2.textContent = '0';
+      }
+    });
+
+    // PERFECT-MPI-RENDER-COMPLETE-01: Diagnostic check interaction
+    var diagAnswers = {};
+    var diagSubmitted = false;
+    canvas.addEventListener('click', function(e) {
+      var diagChoice = e.target.closest('.silse-diagnostic-choice');
+      if (diagChoice && !diagSubmitted) {
+        var qId = diagChoice.getAttribute('data-question-id');
+        var cId = diagChoice.getAttribute('data-choice-id');
+        diagAnswers[qId] = cId;
+        // Highlight selected
+        var siblings = diagChoice.parentNode.querySelectorAll('.silse-diagnostic-choice');
+        for (var si = 0; si < siblings.length; si++) {
+          siblings[si].style.borderColor = '';
+          siblings[si].style.background = 'transparent';
+        }
+        diagChoice.style.borderColor = 'var(--silse-gold, #f9c12e)';
+        diagChoice.style.background = 'rgba(249,193,46,0.11)';
+        return;
+      }
+      // Check if "Periksa Hasil" button clicked
+      if (e.target.textContent && e.target.textContent.indexOf('Periksa Hasil') >= 0 && !diagSubmitted) {
+        diagSubmitted = true;
+        var diagQuestions = canvas.querySelectorAll('.silse-diagnostic-question');
+        var score = 0;
+        for (var qi = 0; qi < diagQuestions.length; qi++) {
+          var qId2 = diagQuestions[qi].getAttribute('data-question-id');
+          var choices = diagQuestions[qi].querySelectorAll('.silse-diagnostic-choice');
+          for (var ci = 0; ci < choices.length; ci++) {
+            choices[ci].disabled = true;
+            var isCorrect = choices[ci].getAttribute('data-correct') === 'true';
+            var isSelected = diagAnswers[qId2] === choices[ci].getAttribute('data-choice-id');
+            if (isCorrect) { choices[ci].style.borderColor = '#34d399'; choices[ci].style.background = 'rgba(52,211,153,0.11)'; choices[ci].textContent += ' ✓'; }
+            if (isSelected && !isCorrect) { choices[ci].style.borderColor = '#ff6b6b'; choices[ci].style.background = 'rgba(255,107,107,0.11)'; choices[ci].textContent += ' ✗'; }
+          }
+          if (diagAnswers[qId2] && diagQuestions[qi].querySelector('[data-correct="true"]') && diagAnswers[qId2] === diagQuestions[qi].querySelector('[data-correct="true"]').getAttribute('data-choice-id')) score++;
+        }
+        var result = canvas.querySelector('.silse-diagnostic-result');
+        if (result) { result.style.display = 'block'; result.innerHTML = '<div style="font-size:28px;font-weight:800;color:var(--silse-gold, #f9c12e);">' + score + ' / ' + diagQuestions.length + '</div>'; }
+        e.target.textContent = '↺ Ulangi';
+        return;
+      }
+      if (e.target.textContent && e.target.textContent.indexOf('Ulangi') >= 0 && diagSubmitted) {
+        diagSubmitted = false; diagAnswers = {};
+        var dq = canvas.querySelectorAll('.silse-diagnostic-question');
+        for (var dri = 0; dri < dq.length; dri++) {
+          var dc = dq[dri].querySelectorAll('.silse-diagnostic-choice');
+          for (var dci = 0; dci < dc.length; dci++) { dc[dci].disabled = false; dc[dci].style.borderColor = ''; dc[dci].style.background = 'transparent'; dc[dci].textContent = dc[dci].textContent.replace(' ✓', '').replace(' ✗', ''); }
+        }
+        var dr = canvas.querySelector('.silse-diagnostic-result');
+        if (dr) dr.style.display = 'none';
+        e.target.textContent = 'Periksa Hasil';
+        return;
+      }
+    });
+
+    // PERFECT-MPI-RENDER-COMPLETE-01: Remedial practice interaction
+    canvas.addEventListener('click', function(e) {
+      var remChoice = e.target.closest('.silse-remedial-choice');
+      if (remChoice) {
+        var qId = remChoice.getAttribute('data-question-id');
+        if (remChoice.disabled) return;
+        var isCorrect = remChoice.getAttribute('data-correct') === 'true';
+        remChoice.style.borderColor = isCorrect ? '#34d399' : '#ff6b6b';
+        remChoice.style.background = isCorrect ? 'rgba(52,211,153,0.11)' : 'rgba(255,107,107,0.11)';
+        var siblings = remChoice.parentNode.querySelectorAll('.silse-remedial-choice');
+        for (var si = 0; si < siblings.length; si++) { siblings[si].disabled = true; }
+        var fb = canvas.querySelector('.silse-remedial-feedback[data-question-id="' + qId + '"]');
+        if (fb) {
+          fb.style.display = 'block';
+          fb.style.background = isCorrect ? 'rgba(52,211,153,0.11)' : 'rgba(255,107,107,0.11)';
+          fb.style.color = isCorrect ? '#34d399' : '#ff6b6b';
+          fb.textContent = isCorrect ? 'Benar!' : 'Belum tepat. Coba lagi.';
+        }
+        return;
+      }
+      var hintBtn = e.target.closest('.silse-remedial-hint');
+      if (hintBtn) {
+        var hint = hintBtn.getAttribute('data-hint');
+        if (hint) {
+          hintBtn.style.display = 'none';
+          var hintEl = document.createElement('div');
+          hintEl.style.cssText = 'margin-top:6px;padding:8px;border-radius:8px;background:rgba(249,193,46,0.07);font-size:13px;color:var(--silse-muted-text, #6e90b5);';
+          hintEl.textContent = hint;
+          hintBtn.parentNode.appendChild(hintEl);
+        }
+        return;
+      }
+    });
+
+    // PERFECT-MPI-RENDER-COMPLETE-01: Worksheet checklist interaction
+    canvas.addEventListener('click', function(e) {
+      var wsCheck = e.target.closest('[data-action="worksheet-check"]');
+      if (wsCheck) {
+        var isChecked = wsCheck.textContent === '✓';
+        wsCheck.textContent = isChecked ? '' : '✓';
+        wsCheck.style.background = isChecked ? 'transparent' : 'var(--silse-success, #34d399)';
+        var stepEl = wsCheck.closest('.silse-worksheet-question');
+        if (stepEl) stepEl.style.border = isChecked ? '1px solid var(--silse-border, rgba(255,255,255,0.09))' : '2px solid var(--silse-success, #34d399)';
+        // Update checklist count
+        var allChecks = canvas.querySelectorAll('.silse-worksheet-check');
+        var done = 0;
+        for (var ai = 0; ai < allChecks.length; ai++) { if (allChecks[ai].textContent === '✓') done++; }
+        var checklist = canvas.querySelector('.silse-worksheet-checklist');
+        if (checklist) checklist.textContent = '✓ Selesai: ' + done + ' / ' + allChecks.length;
+        return;
       }
     });
   }

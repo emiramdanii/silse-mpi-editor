@@ -171,7 +171,7 @@ function validateSlot(slot: unknown, path: string): BlueprintValidationError[] {
   }
 
   // FOUNDATION-HARDENING-01: tolak content.kind yang tidak dikenal
-  const knownKinds = ['text', 'card', 'image', 'button', 'badge', 'game-mission', 'quiz-question', 'learning-material', 'cover-hero', 'closing-award', 'feedback', 'reward', 'navigation', 'curriculum-guide', 'objectives-path', 'starter-review', 'discussion-scene', 'case-analysis', 'result-summary', 'reflection-journal', 'classification-game', 'hotspot-map', 'matching-game', 'sequencing-game', 'media-focus'];
+  const knownKinds = ['text', 'card', 'image', 'button', 'badge', 'game-mission', 'quiz-question', 'learning-material', 'cover-hero', 'closing-award', 'feedback', 'reward', 'navigation', 'curriculum-guide', 'objectives-path', 'starter-review', 'discussion-scene', 'case-analysis', 'result-summary', 'reflection-journal', 'classification-game', 'hotspot-map', 'matching-game', 'sequencing-game', 'media-focus', 'diagnostic-check', 'remedial-practice', 'enrichment-challenge', 'worksheet-activity', 'rubric-panel'];
   const kind = slot.content.kind;
   if (!knownKinds.includes(kind)) {
     errors.push({ path: `${path}.content.kind`, message: `unknown kind "${kind}" — must be one of: ${knownKinds.join(', ')}` });

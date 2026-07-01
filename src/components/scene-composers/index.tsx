@@ -751,3 +751,338 @@ export function MediaFocusComposer({
     </SceneShell>
   );
 }
+
+// ===========================================================================
+// PERFECT-MPI-RENDER-COMPLETE-01: 5 assessment/support scene composers
+// ===========================================================================
+
+// ---------------------------------------------------------------------------
+// 13. DiagnosticCheckComposer
+// ---------------------------------------------------------------------------
+
+export function DiagnosticCheckComposer({
+  contract, content,
+}: {
+  contract: MpiDesignContract;
+  content: {
+    diagnosticPrompt?: string;
+    questionSet?: { id: string; prompt: string; choices: { id: string; text: string }[]; correctChoiceId: string }[];
+    recommendation?: string;
+    readinessLevels?: { level: string; minScore: number; description: string }[];
+  };
+}) {
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [submitted, setSubmitted] = useState(false);
+  const questions = content.questionSet || [];
+  const score = questions.filter((q) => answers[q.id] === q.correctChoiceId).length;
+  const maxScore = questions.length;
+  const readiness = content.readinessLevels?.find((l) => score >= l.minScore);
+
+  return (
+    <SceneShell contract={contract} className="silse-scene-diagnostic-check">
+      <SceneHeader contract={contract} chipIcon="🔍" chipLabel="Diagnostik" chipColor={contract.palette.accent} title={content.diagnosticPrompt || 'Diagnostik Kesiapan'} />
+      {questions.map((q, qi) => (
+        <div key={q.id} className="silse-diagnostic-question" data-testid={`diagnostic-q-${q.id}`} style={{ padding: 14, borderRadius: contract.card.radius, background: contract.card.background, border: contract.card.border }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: contract.palette.text, marginBottom: 8 }}>{qi + 1}. {q.prompt}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {q.choices.map((c) => {
+              const selected = answers[q.id] === c.id;
+              const isCorrect = submitted && c.id === q.correctChoiceId;
+              const isWrong = submitted && selected && c.id !== q.correctChoiceId;
+              return (
+                <button
+                  key={c.id}
+                  className="silse-diagnostic-choice"
+                  data-testid={`diagnostic-choice-${q.id}-${c.id}`}
+                  data-question-id={q.id}
+                  data-choice-id={c.id}
+                  disabled={submitted}
+                  onClick={() => setAnswers({ ...answers, [q.id]: c.id })}
+                  style={{
+                    textAlign: 'left', padding: '8px 12px', minHeight: 40, borderRadius: 8, cursor: submitted ? 'default' : 'pointer',
+                    border: isCorrect ? `2px solid ${contract.palette.success}` : isWrong ? `2px solid ${contract.palette.danger}` : selected ? `2px solid ${contract.palette.gold}` : contract.card.border,
+                    background: isCorrect ? `${contract.palette.success}11` : isWrong ? `${contract.palette.danger}11` : selected ? `${contract.palette.gold}11` : 'transparent',
+                    color: contract.palette.text, fontSize: 13, fontWeight: 600,
+                  }}
+                >
+                  {c.text}{isCorrect && ' ✓'}{isWrong && ' ✗'}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+      {!submitted ? (
+        <ActionButtonBlock contract={contract} label="Periksa Hasil" onClick={() => setSubmitted(true)} variant="primary" />
+      ) : (
+        <>
+          <div className="silse-diagnostic-result" data-testid="diagnostic-result" style={{ padding: 16, borderRadius: contract.card.radius, background: `${contract.palette.gold}0A`, border: `1px solid ${contract.palette.gold}33`, textAlign: 'center' }}>
+            <div style={{ fontSize: 28, fontWeight: 800, color: contract.palette.gold }}>{score} / {maxScore}</div>
+            {readiness && (
+              <div style={{ fontSize: 16, fontWeight: 700, color: contract.palette.text, marginTop: 8 }}>{readiness.level}: {readiness.description}</div>
+            )}
+          </div>
+          {content.recommendation && (
+            <div style={{ padding: 12, borderRadius: 10, background: `${contract.palette.secondary}11`, border: `1px solid ${contract.palette.secondary}33`, fontSize: 14, color: contract.palette.text }}>💡 {content.recommendation}</div>
+          )}
+          <ActionButtonBlock contract={contract} label="↺ Ulangi" onClick={() => { setAnswers({}); setSubmitted(false); }} variant="secondary" />
+        </>
+      )}
+    </SceneShell>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 14. RemedialPracticeComposer
+// ---------------------------------------------------------------------------
+
+export function RemedialPracticeComposer({
+  contract, content,
+}: {
+  contract: MpiDesignContract;
+  content: {
+    misconception?: string;
+    reteachExplanation?: string;
+    guidedPractice?: { id: string; prompt: string; choices: { id: string; text: string }[]; correctChoiceId: string; hint?: string }[];
+    retryQuestion?: string;
+  };
+}) {
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [showHints, setShowHints] = useState<Record<string, boolean>>({});
+  const [feedback, setFeedback] = useState<Record<string, boolean>>({});
+  const practice = content.guidedPractice || [];
+
+  return (
+    <SceneShell contract={contract} className="silse-scene-remedial-practice">
+      <SceneHeader contract={contract} chipIcon="🔧" chipLabel="Remedial" chipColor={contract.palette.warning} title="Remedial Practice" />
+      {content.misconception && (
+        <div style={{ padding: 12, borderRadius: 10, background: `${contract.palette.danger}11`, border: `1px solid ${contract.palette.danger}33`, fontSize: 14, color: contract.palette.text }}>
+          <strong style={{ color: contract.palette.danger }}>⚠️ Miskonsepsi:</strong> {content.misconception}
+        </div>
+      )}
+      {content.reteachExplanation && (
+        <ScenePanel contract={contract} title="Penjelasan Ulang">
+          <div style={{ fontSize: 14, lineHeight: 1.6, color: contract.palette.text }}>{content.reteachExplanation}</div>
+        </ScenePanel>
+      )}
+      {practice.map((p, pi) => {
+        const answered = answers[p.id];
+        const isCorrect = feedback[p.id];
+        return (
+          <div key={p.id} className="silse-remedial-question" data-testid={`remedial-q-${p.id}`} style={{ padding: 14, borderRadius: contract.card.radius, background: contract.card.background, border: contract.card.border }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: contract.palette.text, marginBottom: 8 }}>{pi + 1}. {p.prompt}</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {p.choices.map((c) => {
+                const selected = answered === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    disabled={feedback[p.id] !== undefined}
+                    onClick={() => {
+                      setAnswers({ ...answers, [p.id]: c.id });
+                      const correct = c.id === p.correctChoiceId;
+                      setFeedback({ ...feedback, [p.id]: correct });
+                    }}
+                    style={{
+                      textAlign: 'left', padding: '8px 12px', minHeight: 40, borderRadius: 8, cursor: feedback[p.id] !== undefined ? 'default' : 'pointer',
+                      border: selected ? (isCorrect ? `2px solid ${contract.palette.success}` : `2px solid ${contract.palette.danger}`) : contract.card.border,
+                      background: selected ? (isCorrect ? `${contract.palette.success}11` : `${contract.palette.danger}11`) : 'transparent',
+                      color: contract.palette.text, fontSize: 13, fontWeight: 600,
+                    }}
+                  >{c.text}</button>
+                );
+              })}
+            </div>
+            {p.hint && !feedback[p.id] && (
+              <button className="silse-remedial-hint" data-testid={`remedial-hint-${p.id}`} onClick={() => setShowHints({ ...showHints, [p.id]: true })} style={{ marginTop: 6, padding: '4px 10px', fontSize: 12, border: 'none', background: 'transparent', color: contract.palette.gold, cursor: 'pointer', fontWeight: 700 }}>💡 Tampilkan Hint</button>
+            )}
+            {showHints[p.id] && p.hint && (
+              <div className="silse-remedial-hint" style={{ marginTop: 6, padding: 8, borderRadius: 8, background: `${contract.palette.gold}0A`, fontSize: 13, color: contract.palette.mutedText }}>{p.hint}</div>
+            )}
+            {feedback[p.id] !== undefined && (
+              <div className="silse-remedial-feedback" data-testid={`remedial-feedback-${p.id}`} style={{ marginTop: 6, padding: 8, borderRadius: 8, fontSize: 13, fontWeight: 700, background: isCorrect ? `${contract.palette.success}11` : `${contract.palette.danger}11`, color: isCorrect ? contract.palette.success : contract.palette.danger }}>
+                {isCorrect ? 'Benar!' : 'Belum tepat. Coba lagi.'}
+              </div>
+            )}
+          </div>
+        );
+      })}
+      {content.retryQuestion && (
+        <ScenePanel contract={contract} title="Pertanyaan Retry">
+          <div style={{ fontSize: 14, lineHeight: 1.6, color: contract.palette.text }}>{content.retryQuestion}</div>
+        </ScenePanel>
+      )}
+    </SceneShell>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 15. EnrichmentChallengeComposer
+// ---------------------------------------------------------------------------
+
+export function EnrichmentChallengeComposer({
+  contract, content,
+}: {
+  contract: MpiDesignContract;
+  content: {
+    challengeContext?: string;
+    advancedTask?: string;
+    responseInput?: string;
+    rubricPreview?: { criterion: string; descriptor: string }[];
+    completionMessage?: string;
+  };
+}) {
+  const [completed, setCompleted] = useState(false);
+  return (
+    <SceneShell contract={contract} className="silse-scene-enrichment-challenge">
+      <SceneHeader contract={contract} chipIcon="🚀" chipLabel="Enrichment" chipColor={contract.palette.secondary} title="Enrichment Challenge" />
+      {content.challengeContext && (
+        <ScenePanel contract={contract} title="Konteks Challenge">
+          <div style={{ fontSize: 14, lineHeight: 1.6, color: contract.palette.text }}>{content.challengeContext}</div>
+        </ScenePanel>
+      )}
+      {content.advancedTask && (
+        <div className="silse-enrichment-task" data-testid="enrichment-task" style={{ padding: 16, borderRadius: contract.card.radius, background: `${contract.palette.secondary}11`, border: `1px solid ${contract.palette.secondary}33` }}>
+          <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: contract.palette.secondary, marginBottom: 6 }}>Tugas Lanjutan</div>
+          <div style={{ fontSize: 15, lineHeight: 1.6, color: contract.palette.text, fontWeight: 600 }}>{content.advancedTask}</div>
+        </div>
+      )}
+      <div className="silse-enrichment-response">
+        <ResponseInputBlock contract={contract} placeholder={content.responseInput || 'Tugas jawaban enrichment...'} />
+      </div>
+      {content.rubricPreview && content.rubricPreview.length > 0 && (
+        <div className="silse-enrichment-rubric" style={{ padding: 14, borderRadius: contract.card.radius, background: contract.card.background, border: contract.card.border }}>
+          <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: contract.palette.mutedText, marginBottom: 8 }}>Rubrik Penilaian</div>
+          {content.rubricPreview.map((r, i) => (
+            <div key={i} style={{ display: 'flex', gap: 8, padding: '6px 0', borderBottom: i < content.rubricPreview!.length - 1 ? `1px solid ${contract.palette.border}` : 'none' }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: contract.palette.gold, minWidth: 100 }}>{r.criterion}</span>
+              <span style={{ fontSize: 13, color: contract.palette.mutedText }}>{r.descriptor}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {!completed ? (
+        <ActionButtonBlock contract={contract} label="Tandai Selesai" onClick={() => setCompleted(true)} variant="primary" />
+      ) : (
+        <div data-testid="enrichment-completion" style={{ padding: 16, borderRadius: contract.card.radius, textAlign: 'center', background: `${contract.palette.success}11`, border: `1px solid ${contract.palette.success}33`, fontSize: 16, fontWeight: 800, color: contract.palette.success }}>
+          {content.completionMessage || 'Selamat! Challenge enrichment selesai.'}
+        </div>
+      )}
+    </SceneShell>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 16. WorksheetActivityComposer
+// ---------------------------------------------------------------------------
+
+export function WorksheetActivityComposer({
+  contract, content,
+}: {
+  contract: MpiDesignContract;
+  content: {
+    instruction?: string;
+    taskSteps?: { id: string; prompt: string; responsePlaceholder?: string }[];
+    inputFields?: { id: string; label: string; placeholder?: string }[];
+  };
+}) {
+  const [checklist, setChecklist] = useState<Record<string, boolean>>({});
+  const steps = content.taskSteps || [];
+  const fields = content.inputFields || [];
+  const completedCount = Object.values(checklist).filter(Boolean).length;
+
+  return (
+    <SceneShell contract={contract} className="silse-scene-worksheet-activity">
+      <SceneHeader contract={contract} chipIcon="📝" chipLabel="LKPD" chipColor={contract.palette.success} title="Worksheet Activity" />
+      {content.instruction && (
+        <div style={{ fontSize: 14, lineHeight: 1.6, color: contract.palette.text, padding: '8px 12px', background: `${contract.palette.success}11`, borderRadius: 10 }}>{content.instruction}</div>
+      )}
+      <div className="silse-worksheet-checklist" data-testid="worksheet-checklist" style={{ fontSize: 13, fontWeight: 700, color: contract.palette.gold }}>
+        ✓ Selesai: {completedCount} / {steps.length}
+      </div>
+      {steps.map((step, si) => (
+        <div key={step.id} className="silse-worksheet-question" data-testid={`worksheet-step-${step.id}`} style={{ padding: 14, borderRadius: contract.card.radius, background: contract.card.background, border: checklist[step.id] ? `2px solid ${contract.palette.success}` : contract.card.border }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
+            <button
+              data-testid={`worksheet-check-${step.id}`}
+              onClick={() => setChecklist({ ...checklist, [step.id]: !checklist[step.id] })}
+              style={{ width: 24, height: 24, minHeight: 24, borderRadius: 6, border: `2px solid ${contract.palette.success}`, background: checklist[step.id] ? contract.palette.success : 'transparent', color: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 800, flexShrink: 0, display: 'grid', placeItems: 'center' }}
+            >{checklist[step.id] ? '✓' : ''}</button>
+            <span style={{ fontSize: 14, fontWeight: 700, color: contract.palette.text }}>{si + 1}. {step.prompt}</span>
+          </div>
+          <textarea
+            className="silse-worksheet-response"
+            data-testid={`worksheet-response-${step.id}`}
+            placeholder={step.responsePlaceholder || 'Tulis jawabanmu...'}
+            style={{ width: '100%', minHeight: 50, padding: '8px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.15)', fontSize: 13, color: contract.palette.text, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
+          />
+        </div>
+      ))}
+      {fields.length > 0 && (
+        <ScenePanel contract={contract} title="Input Fields">
+          {fields.map((f) => (
+            <div key={f.id} style={{ marginBottom: 8 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: contract.palette.mutedText, marginBottom: 3 }}>{f.label}</label>
+              <input type="text" placeholder={f.placeholder || ''} style={{ width: '100%', padding: '6px 8px', border: `1px solid ${contract.palette.border}`, borderRadius: 6, fontSize: 13, background: 'rgba(255,255,255,0.04)', color: contract.palette.text, boxSizing: 'border-box' }} />
+            </div>
+          ))}
+        </ScenePanel>
+      )}
+    </SceneShell>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 17. RubricPanelComposer
+// ---------------------------------------------------------------------------
+
+export function RubricPanelComposer({
+  contract, content,
+}: {
+  contract: MpiDesignContract;
+  content: {
+    criteria?: { id: string; name: string; description: string }[];
+    levels?: { id: string; name: string; score: number; descriptor: string }[];
+    scoreGuide?: string;
+  };
+}) {
+  const criteria = content.criteria || [];
+  const levels = content.levels || [];
+  return (
+    <SceneShell contract={contract} className="silse-scene-rubric-panel">
+      <SceneHeader contract={contract} chipIcon="📊" chipLabel="Rubrik" chipColor={contract.palette.gold} title="Rubrik Penilaian" />
+      {content.scoreGuide && (
+        <div className="silse-rubric-score-guide" style={{ padding: 12, borderRadius: 10, background: `${contract.palette.gold}0A`, border: `1px solid ${contract.palette.gold}33`, fontSize: 14, color: contract.palette.text }}>📋 {content.scoreGuide}</div>
+      )}
+      {levels.length > 0 && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {levels.map((l) => (
+            <div key={l.id} className="silse-rubric-level" data-testid={`rubric-level-${l.id}`} style={{ padding: '8px 14px', borderRadius: 999, background: `${contract.palette.gold}11`, border: `1px solid ${contract.palette.gold}33`, textAlign: 'center' }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: contract.palette.gold }}>{l.name}</div>
+              <div style={{ fontSize: 11, color: contract.palette.mutedText }}>Skor: {l.score}</div>
+            </div>
+          ))}
+        </div>
+      )}
+      {criteria.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {criteria.map((c) => (
+            <div key={c.id} className="silse-rubric-criterion" data-testid={`rubric-criterion-${c.id}`} style={{ padding: 14, borderRadius: contract.card.radius, background: contract.card.background, border: contract.card.border }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <span style={{ fontSize: 14, fontWeight: 800, color: contract.palette.text }}>{c.name}</span>
+              </div>
+              <div style={{ fontSize: 13, lineHeight: 1.6, color: contract.palette.mutedText }}>{c.description}</div>
+              {levels.length > 0 && (
+                <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+                  {levels.map((l) => (
+                    <span key={l.id} style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, background: 'rgba(255,255,255,0.06)', color: contract.palette.mutedText }}>{l.name}: {l.descriptor}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </SceneShell>
+  );
+}

@@ -229,7 +229,13 @@ export type MpiSceneSlotContent =
   | { kind: 'hotspot-map'; backgroundVisual?: string; guidingQuestion?: string; hotspots?: { id: string; x: number; y: number; label: string; info: string }[]; caption?: string }
   | { kind: 'matching-game'; instruction?: string; leftItems?: { id: string; label: string }[]; rightItems?: { id: string; label: string }[]; correctPairs?: { leftId: string; rightId: string }[]; scorePerPair?: number; completionMessage?: string }
   | { kind: 'sequencing-game'; instruction?: string; items?: { id: string; label: string }[]; correctOrder?: string[]; scorePerItem?: number; completionMessage?: string }
-  | { kind: 'media-focus'; mediaAsset?: { src: string; alt?: string; objectFit?: 'cover' | 'contain' }; guidingQuestion?: string; caption?: string; responseInput?: string };
+  | { kind: 'media-focus'; mediaAsset?: { src: string; alt?: string; objectFit?: 'cover' | 'contain' }; guidingQuestion?: string; caption?: string; responseInput?: string }
+  // PERFECT-MPI-RENDER-COMPLETE-01: 5 assessment/support content kinds
+  | { kind: 'diagnostic-check'; diagnosticPrompt?: string; questionSet?: { id: string; prompt: string; choices: { id: string; text: string }[]; correctChoiceId: string }[]; recommendation?: string; readinessLevels?: { level: string; minScore: number; description: string }[] }
+  | { kind: 'remedial-practice'; misconception?: string; reteachExplanation?: string; guidedPractice?: { id: string; prompt: string; choices: { id: string; text: string }[]; correctChoiceId: string; hint?: string }[]; retryQuestion?: string }
+  | { kind: 'enrichment-challenge'; challengeContext?: string; advancedTask?: string; responseInput?: string; rubricPreview?: { criterion: string; descriptor: string }[]; completionMessage?: string }
+  | { kind: 'worksheet-activity'; instruction?: string; taskSteps?: { id: string; prompt: string; responsePlaceholder?: string }[]; inputFields?: { id: string; label: string; placeholder?: string }[] }
+  | { kind: 'rubric-panel'; criteria?: { id: string; name: string; description: string }[]; levels?: { id: string; name: string; score: number; descriptor: string }[]; scoreGuide?: string };
 
 export type MpiSceneSlot = {
   id: string;
