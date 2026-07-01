@@ -12,7 +12,7 @@ import type { SimplePage } from '../core/types';
 import { ListFieldEditor, SCENE_LIST_FIELDS } from './ListFieldEditor';
 
 // Field definitions per sceneType — only text fields that are safe to edit in V1.
-const SCENE_CONTENT_FIELDS: Record<string, Array<{ key: string; label: string; type: 'text' | 'textarea' }>> = {
+export const SCENE_CONTENT_FIELDS: Record<string, Array<{ key: string; label: string; type: 'text' | 'textarea' }>> = {
   'cover-hero': [
     { key: 'heroTitle', label: 'Judul Hero', type: 'text' },
     { key: 'heroSubtitle', label: 'Subtitle', type: 'text' },
@@ -139,6 +139,11 @@ const SCENE_CONTENT_FIELDS: Record<string, Array<{ key: string; label: string; t
     { key: 'readingGuide', label: 'Panduan Membaca', type: 'textarea' },
     { key: 'keyboardGuide', label: 'Panduan Keyboard/Touch', type: 'textarea' },
     { key: 'contrastOption', label: 'Opsi Kontras', type: 'textarea' },
+  ],
+  // PERFECT-MPI-RENDER-GATE: game-mission was missing from inspector
+  'game-mission': [
+    { key: 'briefing', label: 'Briefing Misi', type: 'textarea' },
+    { key: 'missionTarget', label: 'Target Misi', type: 'textarea' },
   ],
 };
 
