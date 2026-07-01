@@ -2384,6 +2384,9 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var p = plan.palette || {};
     var children = [exportHeader(plan, '🔍 Diagnostik', p.accent, content.diagnosticPrompt || 'Diagnostik Kesiapan')];
     var questions = content.questionSet || [];
+    // PATCH A: embed readiness levels + recommendation as data attrs on the scene shell for wireInteractions.
+    var readinessLevels = content.readinessLevels || [];
+    var recommendation = content.recommendation || '';
     for (var qi = 0; qi < questions.length; qi++) {
       var qEl = document.createElement('div');
       qEl.className = 'silse-diagnostic-question';
@@ -2406,13 +2409,29 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       }
       children.push(qEl);
     }
-    children.push(exportActionButton(plan, 'Periksa Hasil', 'primary'));
+    // PATCH A: Submit button with data-action="diagnostic-submit"
+    var submitBtn = exportActionButton(plan, 'Periksa Hasil', 'primary');
+    submitBtn.setAttribute('data-action', 'diagnostic-submit');
+    children.push(submitBtn);
     var resultEl = document.createElement('div');
     resultEl.className = 'silse-diagnostic-result';
     resultEl.style.cssText = 'display:none;padding:16px;border-radius:12px;background:' + (p.gold || '#f9c12e') + '0A;border:1px solid ' + (p.gold || '#f9c12e') + '33;text-align:center;';
-    resultEl.textContent = 'Hasil akan muncul setelah diperiksa';
     children.push(resultEl);
-    return exportShell(plan, 'silse-scene-diagnostic-check', children);
+    // PATCH A: readiness level element (hidden until submit)
+    var readinessEl = document.createElement('div');
+    readinessEl.className = 'silse-diagnostic-readiness';
+    readinessEl.style.cssText = 'display:none;padding:12px;border-radius:10px;background:' + (p.secondary || '#457b9d') + '11;border:1px solid ' + (p.secondary || '#457b9d') + '33;font-size:14px;font-weight:700;color:' + (p.text || '#fff') + ';text-align:center;';
+    children.push(readinessEl);
+    // PATCH A: recommendation element (hidden until submit)
+    var recEl = document.createElement('div');
+    recEl.className = 'silse-diagnostic-recommendation';
+    recEl.style.cssText = 'display:none;padding:12px;border-radius:10px;background:' + (p.success || '#34d399') + '11;border:1px solid ' + (p.success || '#34d399') + '33;font-size:14px;color:' + (p.text || '#fff') + ';';
+    children.push(recEl);
+    // PATCH A: store readinessLevels + recommendation as JSON data attrs on the scene shell for wireInteractions.
+    var sceneShell = exportShell(plan, 'silse-scene-diagnostic-check', children);
+    sceneShell.setAttribute('data-readiness-levels', JSON.stringify(readinessLevels));
+    sceneShell.setAttribute('data-recommendation', recommendation);
+    return sceneShell;
   }
 
   function renderRemedialPracticeExport(slot, content, plan) {
@@ -2421,7 +2440,13 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.misconception) {
       var mc = document.createElement('div');
       mc.style.cssText = 'padding:12px;border-radius:10px;background:' + (p.danger || '#ff6b6b') + '11;border:1px solid ' + (p.danger || '#ff6b6b') + '33;font-size:14px;color:' + (p.text || '#fff') + ';';
-      mc.innerHTML = '<strong style="color:' + (p.danger || '#ff6b6b') + '">⚠️ Miskonsepsi:</strong> ' + content.misconception;
+      // PATCH A: safe DOM — use textContent + appendChild instead of innerHTML
+      var mcLabel = document.createElement('strong');
+      mcLabel.style.color = (p.danger || '#ff6b6b');
+      mcLabel.textContent = '⚠️ Miskonsepsi: ';
+      mc.appendChild(mcLabel);
+      var mcText = document.createTextNode(content.misconception);
+      mc.appendChild(mcText);
       children.push(mc);
     }
     if (content.reteachExplanation) children.push(exportPanel(plan, 'Penjelasan Ulang', content.reteachExplanation));
@@ -2506,8 +2531,17 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       }
       children.push(rubric);
     }
-    children.push(exportActionButton(plan, 'Tandai Selesai', 'primary'));
-    return exportShell(plan, 'silse-scene-enrichment-challenge', children);
+    // PATCH A: completion button with data-action + completion message element (hidden initially)
+    var completeBtn = exportActionButton(plan, 'Tandai Selesai', 'primary');
+    completeBtn.setAttribute('data-action', 'enrichment-complete');
+    children.push(completeBtn);
+    var completionMsg = document.createElement('div');
+    completionMsg.className = 'silse-enrichment-completion';
+    completionMsg.style.cssText = 'display:none;padding:16px;border-radius:12px;text-align:center;background:' + (p.success || '#34d399') + '11;border:1px solid ' + (p.success || '#34d399') + '33;font-size:16px;font-weight:800;color:' + (p.success || '#34d399') + ';';
+    completionMsg.textContent = content.completionMessage || 'Selamat! Challenge enrichment selesai.';
+    children.push(completionMsg);
+    var enrShell = exportShell(plan, 'silse-scene-enrichment-challenge', children);
+    return enrShell;
   }
 
   function renderWorksheetActivityExport(slot, content, plan) {
@@ -2572,7 +2606,15 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         var lvl = document.createElement('div');
         lvl.className = 'silse-rubric-level';
         lvl.style.cssText = 'padding:8px 14px;border-radius:999px;background:' + (p.gold || '#f9c12e') + '11;border:1px solid ' + (p.gold || '#f9c12e') + '33;text-align:center;';
-        lvl.innerHTML = '<div style="font-size:14px;font-weight:800;color:' + (p.gold || '#f9c12e') + ';">' + levels[li].name + '</div><div style="font-size:11px;color:' + (p.mutedText || '#6e90b5') + ';">Skor: ' + levels[li].score + '</div>';
+        // PATCH A: safe DOM — use appendChild instead of innerHTML
+        var lvlName = document.createElement('div');
+        lvlName.style.cssText = 'font-size:14px;font-weight:800;color:' + (p.gold || '#f9c12e') + ';';
+        lvlName.textContent = levels[li].name;
+        lvl.appendChild(lvlName);
+        var lvlScore = document.createElement('div');
+        lvlScore.style.cssText = 'font-size:11px;color:' + (p.mutedText || '#6e90b5') + ';';
+        lvlScore.textContent = 'Skor: ' + levels[li].score;
+        lvl.appendChild(lvlScore);
         lvlRow.appendChild(lvl);
       }
       children.push(lvlRow);
@@ -3816,8 +3858,9 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         diagChoice.style.background = 'rgba(249,193,46,0.11)';
         return;
       }
-      // Check if "Periksa Hasil" button clicked
-      if (e.target.textContent && e.target.textContent.indexOf('Periksa Hasil') >= 0 && !diagSubmitted) {
+      // PATCH A: Check if "Periksa Hasil" button clicked (via data-action or text)
+      var diagSubmitBtn = e.target.closest('[data-action="diagnostic-submit"]');
+      if (diagSubmitBtn && !diagSubmitted && (diagSubmitBtn.textContent.indexOf('Periksa Hasil') >= 0)) {
         diagSubmitted = true;
         var diagQuestions = canvas.querySelectorAll('.silse-diagnostic-question');
         var score = 0;
@@ -3833,12 +3876,46 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
           }
           if (diagAnswers[qId2] && diagQuestions[qi].querySelector('[data-correct="true"]') && diagAnswers[qId2] === diagQuestions[qi].querySelector('[data-correct="true"]').getAttribute('data-choice-id')) score++;
         }
+        // PATCH A: Show score (safe DOM, no innerHTML)
         var result = canvas.querySelector('.silse-diagnostic-result');
-        if (result) { result.style.display = 'block'; result.innerHTML = '<div style="font-size:28px;font-weight:800;color:var(--silse-gold, #f9c12e);">' + score + ' / ' + diagQuestions.length + '</div>'; }
-        e.target.textContent = '↺ Ulangi';
+        if (result) {
+          result.style.display = 'block';
+          result.textContent = '';
+          var scoreNum = document.createElement('div');
+          scoreNum.style.cssText = 'font-size:28px;font-weight:800;color:var(--silse-gold, #f9c12e);';
+          scoreNum.textContent = score + ' / ' + diagQuestions.length;
+          result.appendChild(scoreNum);
+        }
+        // PATCH A: Show readiness level based on score + readinessLevels
+        var diagShell = canvas.querySelector('.silse-scene-diagnostic-check');
+        var readinessLevels = [];
+        if (diagShell) {
+          try { readinessLevels = JSON.parse(diagShell.getAttribute('data-readiness-levels') || '[]'); } catch(re) { readinessLevels = []; }
+        }
+        var readinessEl = canvas.querySelector('.silse-diagnostic-readiness');
+        if (readinessEl && readinessLevels.length > 0) {
+          var matched = null;
+          for (var ri = 0; ri < readinessLevels.length; ri++) {
+            if (score >= readinessLevels[ri].minScore) { matched = readinessLevels[ri]; break; }
+          }
+          if (matched) {
+            readinessEl.style.display = 'block';
+            readinessEl.textContent = matched.level + ': ' + matched.description;
+          }
+        }
+        // PATCH A: Show recommendation
+        var recommendation = diagShell ? (diagShell.getAttribute('data-recommendation') || '') : '';
+        var recEl = canvas.querySelector('.silse-diagnostic-recommendation');
+        if (recEl && recommendation) {
+          recEl.style.display = 'block';
+          recEl.textContent = '💡 ' + recommendation;
+        }
+        diagSubmitBtn.textContent = '↺ Ulangi';
         return;
       }
-      if (e.target.textContent && e.target.textContent.indexOf('Ulangi') >= 0 && diagSubmitted) {
+      // PATCH A: Reset via data-action="diagnostic-submit" when text is "Ulangi"
+      var diagResetBtn = e.target.closest('[data-action="diagnostic-submit"]');
+      if (diagResetBtn && diagSubmitted && (diagResetBtn.textContent.indexOf('Ulangi') >= 0)) {
         diagSubmitted = false; diagAnswers = {};
         var dq = canvas.querySelectorAll('.silse-diagnostic-question');
         for (var dri = 0; dri < dq.length; dri++) {
@@ -3847,7 +3924,12 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         }
         var dr = canvas.querySelector('.silse-diagnostic-result');
         if (dr) dr.style.display = 'none';
-        e.target.textContent = 'Periksa Hasil';
+        // PATCH A: Also hide readiness + recommendation
+        var dr2 = canvas.querySelector('.silse-diagnostic-readiness');
+        if (dr2) dr2.style.display = 'none';
+        var dr3 = canvas.querySelector('.silse-diagnostic-recommendation');
+        if (dr3) dr3.style.display = 'none';
+        diagResetBtn.textContent = 'Periksa Hasil';
         return;
       }
     });
@@ -3901,6 +3983,19 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         for (var ai = 0; ai < allChecks.length; ai++) { if (allChecks[ai].textContent === '✓') done++; }
         var checklist = canvas.querySelector('.silse-worksheet-checklist');
         if (checklist) checklist.textContent = '✓ Selesai: ' + done + ' / ' + allChecks.length;
+        return;
+      }
+    });
+
+    // PATCH A: Enrichment challenge completion toggle
+    canvas.addEventListener('click', function(e) {
+      var enrBtn = e.target.closest('[data-action="enrichment-complete"]');
+      if (enrBtn) {
+        var completionEl = canvas.querySelector('.silse-enrichment-completion');
+        if (completionEl) {
+          completionEl.style.display = 'block';
+          enrBtn.style.display = 'none';
+        }
         return;
       }
     });
