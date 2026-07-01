@@ -44,6 +44,12 @@ type SceneComposerProps = {
   onGameAction?: (slotId: string, actionIndex: number) => void;
   onQuizAnswer?: (slotId: string, choiceId: string) => void;
   selectedSlotId?: string;
+  /** PERFECT-MPI-RUNTIME-SYNC: scene ID for score tracking */
+  sceneId?: string;
+  /** PERFECT-MPI-RUNTIME-SYNC: callback when score changes in a game/quiz composer */
+  onScoreChange?: (sceneId: string, points: number) => void;
+  /** PERFECT-MPI-RUNTIME-SYNC: callback when scene is completed */
+  onSceneComplete?: (sceneId: string) => void;
 };
 
 function getSceneComposer(sceneType: string): ((props: SceneComposerProps) => ReactNode) | null {
@@ -56,10 +62,10 @@ function getSceneComposer(sceneType: string): ((props: SceneComposerProps) => Re
     'case-analysis': ({ contract, slot }) => <CaseAnalysisComposer contract={contract} content={slot.content as any} />,
     'result-summary': ({ contract, slot }) => <ResultSummaryComposer contract={contract} content={slot.content as any} />,
     'reflection-journal': ({ contract, slot }) => <ReflectionJournalComposer contract={contract} content={slot.content as any} />,
-    'classification-game': ({ contract, slot }) => <ClassificationGameComposer contract={contract} content={slot.content as any} />,
+    'classification-game': ({ contract, slot, sceneId, onScoreChange, onSceneComplete }) => <ClassificationGameComposer contract={contract} content={slot.content as any} sceneId={sceneId} onScoreChange={onScoreChange} onSceneComplete={onSceneComplete} />,
     'hotspot-map': ({ contract, slot }) => <HotspotMapComposer contract={contract} content={slot.content as any} />,
-    'matching-game': ({ contract, slot }) => <MatchingGameComposer contract={contract} content={slot.content as any} />,
-    'sequencing-game': ({ contract, slot }) => <SequencingGameComposer contract={contract} content={slot.content as any} />,
+    'matching-game': ({ contract, slot, sceneId, onScoreChange, onSceneComplete }) => <MatchingGameComposer contract={contract} content={slot.content as any} sceneId={sceneId} onScoreChange={onScoreChange} onSceneComplete={onSceneComplete} />,
+    'sequencing-game': ({ contract, slot, sceneId, onScoreChange, onSceneComplete }) => <SequencingGameComposer contract={contract} content={slot.content as any} sceneId={sceneId} onScoreChange={onScoreChange} onSceneComplete={onSceneComplete} />,
     'media-focus': ({ contract, slot }) => <MediaFocusComposer contract={contract} content={slot.content as any} />,
     'diagnostic-check': ({ contract, slot }) => <DiagnosticCheckComposer contract={contract} content={slot.content as any} />,
     'remedial-practice': ({ contract, slot }) => <RemedialPracticeComposer contract={contract} content={slot.content as any} />,
@@ -88,6 +94,10 @@ export type SceneRendererViewProps = {
   onQuizAnswer?: (slotId: string, choiceId: string) => void;
   /** Selected slot ID (editor highlight). */
   selectedSlotId?: string;
+  /** PERFECT-MPI-RUNTIME-SYNC: callback when score changes in a game/quiz composer */
+  onScoreChange?: (sceneId: string, points: number) => void;
+  /** PERFECT-MPI-RUNTIME-SYNC: callback when scene is completed */
+  onSceneComplete?: (sceneId: string) => void;
 };
 
 export function SceneRendererView({
@@ -98,16 +108,15 @@ export function SceneRendererView({
   onGameAction,
   onQuizAnswer,
   selectedSlotId,
+  onScoreChange,
+  onSceneComplete,
 }: SceneRendererViewProps) {
   // PATCH B: Route by sceneType first, not content.kind.
-  // SceneType determines which composer renders the entire scene.
-  // Content.kind is only for generic slot content (text, card, button, etc.).
   const sceneComposer = getSceneComposer(plan.sceneType);
   if (sceneComposer) {
-    // Find the primary content slot (first slot with content that has the scene's data)
-    const primarySlot = plan.slots[0]; // composite slot carries all scene data
+    const primarySlot = plan.slots[0];
     if (primarySlot) {
-      return sceneComposer({ plan, contract, slot: primarySlot, interactive, onSlotClick, onGameAction, onQuizAnswer, selectedSlotId });
+      return sceneComposer({ plan, contract, slot: primarySlot, interactive, onSlotClick, onGameAction, onQuizAnswer, selectedSlotId, sceneId: plan.sceneId, onScoreChange, onSceneComplete });
     }
   }
 

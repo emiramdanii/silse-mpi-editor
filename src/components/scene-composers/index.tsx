@@ -277,7 +277,7 @@ type ClassificationGameState = {
 };
 
 export function ClassificationGameComposer({
-  contract, content,
+  contract, content, sceneId, onScoreChange, onSceneComplete,
 }: {
   contract: MpiDesignContract;
   content: {
@@ -288,6 +288,10 @@ export function ClassificationGameComposer({
     feedback?: string;
     completionMessage?: string;
   };
+  /** PERFECT-MPI-RUNTIME-SYNC */
+  sceneId?: string;
+  onScoreChange?: (sceneId: string, points: number) => void;
+  onSceneComplete?: (sceneId: string) => void;
 }) {
   const items = content.items || [];
   const categories = content.categories || [];
@@ -325,6 +329,9 @@ export function ClassificationGameComposer({
       },
       completed: allPlaced,
     });
+    // PERFECT-MPI-RUNTIME-SYNC: wire score + completion to editor store
+    if (isCorrect && sceneId && onScoreChange) onScoreChange(sceneId, scorePerItem);
+    if (allPlaced && sceneId && onSceneComplete) onSceneComplete(sceneId);
   };
 
   const handleReset = () => {
@@ -524,7 +531,7 @@ export function HotspotMapComposer({
 // ---------------------------------------------------------------------------
 
 export function MatchingGameComposer({
-  contract, content,
+  contract, content, sceneId, onScoreChange, onSceneComplete,
 }: {
   contract: MpiDesignContract;
   content: {
@@ -535,6 +542,10 @@ export function MatchingGameComposer({
     scorePerPair?: number;
     completionMessage?: string;
   };
+  /** PERFECT-MPI-RUNTIME-SYNC */
+  sceneId?: string;
+  onScoreChange?: (sceneId: string, points: number) => void;
+  onSceneComplete?: (sceneId: string) => void;
 }) {
   const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
   const [pairs, setPairs] = useState<Record<string, string>>({});
@@ -556,14 +567,18 @@ export function MatchingGameComposer({
     const isCorrect = correctPairs.some((p) => p.leftId === selectedLeft && p.rightId === rightId);
     setSelectedLeft(null);
     if (isCorrect) {
-      // PATCH A: Only save pair and increase score when correct.
       const newPairs = { ...pairs, [selectedLeft]: rightId };
       setPairs(newPairs);
       setScore(score + scorePer);
-      setFeedback({ correct: true, text: 'Benar! Pasangan tepat.' });
+      setFeedback({ correct: true, text: 'Benar! Pasangan tepat. Kamu memahami hubungan antar konsep dengan baik.' });
+      // PERFECT-MPI-RUNTIME-SYNC: wire score to editor store
+      if (sceneId && onScoreChange) onScoreChange(sceneId, scorePer);
+      // Check completion
+      if (Object.keys(newPairs).length === correctPairs.length && sceneId && onSceneComplete) onSceneComplete(sceneId);
     } else {
-      // PATCH A: Wrong pair — do NOT save, do NOT lock items, allow retry.
-      setFeedback({ correct: false, text: 'Belum tepat. Coba lagi.' });
+      // PATCH A: Wrong pair — do NOT save, do NOT lock items, allow retry. Helpful feedback.
+      const leftItem = leftItems.find(i => i.id === selectedLeft);
+      setFeedback({ correct: false, text: `Belum tepat. "${leftItem?.label}" belum cocok dengan pilihan ini. Pikirkan kembali hubungannya.` });
     }
   };
 
@@ -636,7 +651,7 @@ export function MatchingGameComposer({
 // ---------------------------------------------------------------------------
 
 export function SequencingGameComposer({
-  contract, content,
+  contract, content, sceneId, onScoreChange, onSceneComplete,
 }: {
   contract: MpiDesignContract;
   content: {
@@ -646,6 +661,10 @@ export function SequencingGameComposer({
     scorePerItem?: number;
     completionMessage?: string;
   };
+  /** PERFECT-MPI-RUNTIME-SYNC */
+  sceneId?: string;
+  onScoreChange?: (sceneId: string, points: number) => void;
+  onSceneComplete?: (sceneId: string) => void;
 }) {
   const [order, setOrder] = useState<string[]>((content.items || []).map((i) => i.id));
   const [feedback, setFeedback] = useState<{ correct: boolean; text: string } | null>(null);
@@ -669,10 +688,20 @@ export function SequencingGameComposer({
   const checkAnswer = () => {
     const isCorrect = order.every((id, i) => id === correctOrder[i]);
     if (isCorrect) {
-      setScore(score + scorePer * items.length);
-      setFeedback({ correct: true, text: 'Benar! Urutan tepat.' });
+      const earnedScore = scorePer * items.length;
+      setScore(score + earnedScore);
+      setFeedback({ correct: true, text: 'Benar! Urutan tepat. Kamu memahami alur dengan baik.' });
+      // PERFECT-MPI-RUNTIME-SYNC: wire score + completion to editor store
+      if (sceneId && onScoreChange) onScoreChange(sceneId, earnedScore);
+      if (sceneId && onSceneComplete) onSceneComplete(sceneId);
     } else {
-      setFeedback({ correct: false, text: 'Belum tepat. Coba urutkan lagi.' });
+      // Find first wrong position to give helpful hint
+      let wrongIdx = -1;
+      for (let i = 0; i < order.length; i++) {
+        if (order[i] !== correctOrder[i]) { wrongIdx = i; break; }
+      }
+      const hint = wrongIdx >= 0 ? ` Periksa posisi ke-${wrongIdx + 1}.` : '';
+      setFeedback({ correct: false, text: `Belum tepat.${hint} Coba urutkan lagi.` });
     }
   };
   const handleReset = () => {
