@@ -37,11 +37,14 @@ export type BlockProps = {
 // ---------------------------------------------------------------------------
 
 export function SceneShell({ contract, children, className = '', style }: BlockProps) {
+  // PREMIUM-STYLE-AFTER-FOUNDATION-01: subtle radial gradient + depth via contract palette
+  const bgColor = contract.palette.background;
+  const surfaceColor = contract.palette.surface;
   return (
     <div className={`silse-block-shell ${className}`.trim()} style={{
       width: '100%', height: '100%', display: 'flex', flexDirection: 'column',
-      gap: 14, padding: 22, boxSizing: 'border-box', overflow: 'auto',
-      background: contract.palette.background,
+      gap: 16, padding: 28, boxSizing: 'border-box', overflow: 'auto',
+      background: `radial-gradient(ellipse at top, ${surfaceColor} 0%, ${bgColor} 70%)`,
       color: contract.palette.text,
       fontFamily: contract.typography.bodyFont,
       ...style,
@@ -61,15 +64,16 @@ export function SceneHeader({
   chipIcon?: string; chipLabel?: string; chipColor?: string;
   title: string; subtitle?: string;
 }) {
+  // PREMIUM-STYLE-AFTER-FOUNDATION-01: stronger hierarchy with accent line + letter spacing
   return (
-    <div className={`silse-block-header ${className}`.trim()}>
+    <div className={`silse-block-header ${className}`.trim()} style={{ borderBottom: `2px solid ${chipColor || contract.palette.gold}33`, paddingBottom: 10, marginBottom: 4 }}>
       {chipLabel && (
         <div className="silse-block-chip" style={{
           display: 'inline-flex', alignItems: 'center', gap: 5,
-          padding: '4px 12px', borderRadius: contract.badge.radius,
+          padding: '4px 14px', borderRadius: contract.badge.radius,
           background: chipColor ? `${chipColor}22` : contract.badge.background,
           color: chipColor || contract.badge.color,
-          fontSize: 12, fontWeight: 800, marginBottom: 10,
+          fontSize: 11, fontWeight: 800, marginBottom: 10, letterSpacing: '0.05em', textTransform: 'uppercase',
         }}>
           {chipIcon && <span>{chipIcon}</span>}
           {chipLabel}
@@ -81,9 +85,10 @@ export function SceneHeader({
         fontWeight: contract.typography.titleWeight,
         color: contract.palette.text,
         lineHeight: 1.2,
+        letterSpacing: '-0.02em',
       }}>{title}</div>
       {subtitle && (
-        <div style={{ fontSize: 14, color: contract.palette.mutedText, lineHeight: 1.6, marginTop: 4 }}>
+        <div style={{ fontSize: 14, color: contract.palette.mutedText, lineHeight: 1.6, marginTop: 6 }}>
           {subtitle}
         </div>
       )}
@@ -117,15 +122,17 @@ export function SceneChip({ contract, label, icon, color, className = '' }: Bloc
 // ---------------------------------------------------------------------------
 
 export function ScenePanel({ contract, children, className = '', style, title }: BlockProps & { title?: string }) {
+  // PREMIUM-STYLE-AFTER-FOUNDATION-01: depth shadow from contract.card.shadow
   return (
     <div className={`silse-block-panel ${className}`.trim()} style={{
       background: contract.card.background,
       border: contract.card.border,
       borderRadius: contract.card.radius,
       padding: contract.card.padding,
+      boxShadow: contract.card.shadow || '0 2px 8px rgba(0,0,0,0.08)',
       ...style,
     }}>
-      {title && <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 8, color: contract.palette.text }}>{title}</div>}
+      {title && <div style={{ fontWeight: 800, fontSize: 13, marginBottom: 8, color: contract.palette.mutedText, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{title}</div>}
       {children}
     </div>
   );
@@ -458,14 +465,22 @@ export function ActionButtonBlock({ contract, label, onClick, variant = 'primary
   label: string; onClick?: () => void; variant?: 'primary' | 'secondary' | 'gold';
 }) {
   const btn = contract.button[variant] || contract.button.primary;
+  // PREMIUM-STYLE-AFTER-FOUNDATION-01: shadow + hover lift via onMouseEnter/Leave
   return (
-    <button className={`silse-block-action ${className}`.trim()} onClick={onClick} style={{
-      display: 'inline-flex', alignItems: 'center', gap: 6,
-      padding: `${btn.padding.top}px ${btn.padding.right}px`,
-      borderRadius: btn.radius, background: btn.background, color: btn.color,
-      border: 'none', fontWeight: btn.fontWeight, fontSize: 14,
-      cursor: onClick ? 'pointer' : 'default', transition: 'all 0.18s',
-    }}>
+    <button
+      className={`silse-block-action ${className}`.trim()}
+      onClick={onClick}
+      onMouseEnter={(e) => { if (onClick) e.currentTarget.style.transform = 'translateY(-1px)'; }}
+      onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; }}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 6,
+        padding: `${btn.padding.top}px ${btn.padding.right}px`,
+        borderRadius: btn.radius, background: btn.background, color: btn.color,
+        border: 'none', fontWeight: btn.fontWeight, fontSize: 14,
+        cursor: onClick ? 'pointer' : 'default', transition: 'all 0.18s ease',
+        boxShadow: btn.shadow || '0 2px 6px rgba(0,0,0,0.12)',
+      }}
+    >
       {label}
     </button>
   );

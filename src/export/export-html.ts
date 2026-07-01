@@ -1755,7 +1755,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var ty = plan.typography || {};
     var el = document.createElement('div');
     el.className = 'silse-block-shell ' + (className || '');
-    el.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;gap:14px;padding:22px;box-sizing:border-box;overflow:auto;background:' + p.background + ';color:' + p.text + ';font-family:' + (ty.bodyFont || 'sans-serif') + ';';
+    // PREMIUM-STYLE-AFTER-FOUNDATION-01: subtle radial gradient + more gap + padding
+    el.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;gap:16px;padding:28px;box-sizing:border-box;overflow:auto;background:radial-gradient(ellipse at top,' + (p.surface || '#182d45') + ' 0%,' + (p.background || '#0e1c2f') + ' 70%);color:' + p.text + ';font-family:' + (ty.bodyFont || 'sans-serif') + ';';
     for (var i = 0; i < children.length; i++) { if (children[i]) el.appendChild(children[i]); }
     return el;
   }
@@ -1764,20 +1765,22 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var p = plan.palette || {}; var ty = plan.typography || {};
     var el = document.createElement('div');
     el.className = 'silse-block-header';
+    // PREMIUM-STYLE-AFTER-FOUNDATION-01: accent border bottom + letter spacing
+    el.style.cssText = 'border-bottom:2px solid ' + (chipColor || p.gold || '#f9c12e') + '33;padding-bottom:10px;margin-bottom:4px;';
     if (chipLabel) {
       var chip = document.createElement('div');
       chip.className = 'silse-block-chip';
-      chip.style.cssText = 'display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:999px;background:' + (chipColor ? chipColor + '22' : (p.gold ? p.gold + '22' : 'rgba(255,255,255,0.1)')) + ';color:' + (chipColor || p.gold || '#fff') + ';font-size:12px;font-weight:800;margin-bottom:10px;';
+      chip.style.cssText = 'display:inline-flex;align-items:center;gap:5px;padding:4px 14px;border-radius:999px;background:' + (chipColor ? chipColor + '22' : (p.gold ? p.gold + '22' : 'rgba(255,255,255,0.1)')) + ';color:' + (chipColor || p.gold || '#fff') + ';font-size:11px;font-weight:800;margin-bottom:10px;letter-spacing:0.05em;text-transform:uppercase;';
       chip.textContent = chipLabel;
       el.appendChild(chip);
     }
     var t = document.createElement('div');
-    t.style.cssText = 'font-family:' + (ty.heroFont || 'sans-serif') + ';font-size:' + ty.titleSize + 'px;font-weight:' + ty.titleWeight + ';color:' + p.text + ';line-height:1.2;';
+    t.style.cssText = 'font-family:' + (ty.heroFont || 'sans-serif') + ';font-size:' + ty.titleSize + 'px;font-weight:' + ty.titleWeight + ';color:' + p.text + ';line-height:1.2;letter-spacing:-0.02em;';
     t.textContent = title || '';
     el.appendChild(t);
     if (subtitle) {
       var s = document.createElement('div');
-      s.style.cssText = 'font-size:14px;color:' + p.mutedText + ';line-height:1.6;margin-top:4px;';
+      s.style.cssText = 'font-size:14px;color:' + p.mutedText + ';line-height:1.6;margin-top:6px;';
       s.textContent = subtitle;
       el.appendChild(s);
     }
@@ -1788,10 +1791,11 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var p = plan.palette || {};
     var el = document.createElement('div');
     el.className = 'silse-block-panel ' + (className || '');
-    el.style.cssText = 'background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';border-radius:16px;padding:20px;';
+    // PREMIUM-STYLE-AFTER-FOUNDATION-01: depth shadow + uppercase title
+    el.style.cssText = 'background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';border-radius:16px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);';
     if (title) {
       var t = document.createElement('div');
-      t.style.cssText = 'font-weight:800;font-size:14px;margin-bottom:8px;color:' + p.text + ';';
+      t.style.cssText = 'font-weight:800;font-size:13px;margin-bottom:8px;color:' + (p.mutedText || '#6e90b5') + ';text-transform:uppercase;letter-spacing:0.04em;';
       t.textContent = title;
       el.appendChild(t);
     }
