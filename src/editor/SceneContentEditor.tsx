@@ -9,6 +9,7 @@
 
 import { useEditorStore } from '../store/editor-store';
 import type { SimplePage } from '../core/types';
+import { ListFieldEditor, SCENE_LIST_FIELDS } from './ListFieldEditor';
 
 // Field definitions per sceneType — only text fields that are safe to edit in V1.
 const SCENE_CONTENT_FIELDS: Record<string, Array<{ key: string; label: string; type: 'text' | 'textarea' }>> = {
@@ -189,6 +190,10 @@ export function SceneContentEditor({ page }: { page: SimplePage }) {
           </div>
         );
       })}
+      {/* PERFECT-MPI-INSPECTOR-V2: List field editors */}
+      {SCENE_LIST_FIELDS[page.sceneType]?.map((fieldDef) => (
+        <ListFieldEditor key={fieldDef.key} page={page} fieldDef={fieldDef} />
+      ))}
     </div>
   );
 }
