@@ -224,7 +224,12 @@ export type MpiSceneSlotContent =
   | { kind: 'result-summary'; scoreSummary?: { score: number; maxScore: number }; achievementLevel?: string; breakdown?: { label: string; value: string }[]; reviewCards?: { title: string; body: string }[] }
   | { kind: 'reflection-journal'; reflectionPrompts?: string[]; commitmentInput?: string; portfolioSummary?: { label: string; value: string }[]; nextTask?: string }
   // GOLDEN-REFERENCE-GAME-P1: classification-game content kind
-  | { kind: 'classification-game'; instruction?: string; items?: { id: string; label: string; correctCategory: string }[]; categories?: string[]; scorePerItem?: number; feedback?: string; completionMessage?: string };
+  | { kind: 'classification-game'; instruction?: string; items?: { id: string; label: string; correctCategory: string }[]; categories?: string[]; scorePerItem?: number; feedback?: string; completionMessage?: string }
+  // HIGH-PRIORITY-RENDERERS-01: 4 new content kinds
+  | { kind: 'hotspot-map'; backgroundVisual?: string; guidingQuestion?: string; hotspots?: { id: string; x: number; y: number; label: string; info: string }[]; caption?: string }
+  | { kind: 'matching-game'; instruction?: string; leftItems?: { id: string; label: string }[]; rightItems?: { id: string; label: string }[]; correctPairs?: { leftId: string; rightId: string }[]; scorePerPair?: number; completionMessage?: string }
+  | { kind: 'sequencing-game'; instruction?: string; items?: { id: string; label: string }[]; correctOrder?: string[]; scorePerItem?: number; completionMessage?: string }
+  | { kind: 'media-focus'; mediaAsset?: { src: string; alt?: string; objectFit?: 'cover' | 'contain' }; guidingQuestion?: string; caption?: string; responseInput?: string };
 
 export type MpiSceneSlot = {
   id: string;

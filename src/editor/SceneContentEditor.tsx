@@ -73,6 +73,25 @@ const SCENE_CONTENT_FIELDS: Record<string, Array<{ key: string; label: string; t
     { key: 'rewardLabel', label: 'Label Reward', type: 'text' },
     { key: 'nextLearning', label: 'Pembelajaran Selanjutnya', type: 'textarea' },
   ],
+  // HIGH-PRIORITY-RENDERERS-01: 4 new scene types
+  'hotspot-map': [
+    { key: 'guidingQuestion', label: 'Pertanyaan Pemandu', type: 'textarea' },
+    { key: 'caption', label: 'Caption', type: 'textarea' },
+    { key: 'backgroundVisual', label: 'URL Background', type: 'text' },
+  ],
+  'matching-game': [
+    { key: 'instruction', label: 'Instruksi', type: 'textarea' },
+    { key: 'completionMessage', label: 'Pesan Selesai', type: 'textarea' },
+  ],
+  'sequencing-game': [
+    { key: 'instruction', label: 'Instruksi', type: 'textarea' },
+    { key: 'completionMessage', label: 'Pesan Selesai', type: 'textarea' },
+  ],
+  'media-focus': [
+    { key: 'guidingQuestion', label: 'Pertanyaan Pemandu', type: 'textarea' },
+    { key: 'caption', label: 'Caption', type: 'textarea' },
+    { key: 'responseInput', label: 'Placeholder Input', type: 'text' },
+  ],
 };
 
 export function SceneContentEditor({ page }: { page: SimplePage }) {

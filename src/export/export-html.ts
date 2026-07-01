@@ -1111,6 +1111,10 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       'result-summary': function(p) { return p.slots[0] ? renderResultSummaryExport(p.slots[0], p.slots[0].content, p) : null; },
       'reflection-journal': function(p) { return p.slots[0] ? renderReflectionJournalExport(p.slots[0], p.slots[0].content, p) : null; },
       'classification-game': function(p) { return p.slots[0] ? renderClassificationGameExport(p.slots[0], p.slots[0].content, p) : null; },
+      'hotspot-map': function(p) { return p.slots[0] ? renderHotspotMapExport(p.slots[0], p.slots[0].content, p) : null; },
+      'matching-game': function(p) { return p.slots[0] ? renderMatchingGameExport(p.slots[0], p.slots[0].content, p) : null; },
+      'sequencing-game': function(p) { return p.slots[0] ? renderSequencingGameExport(p.slots[0], p.slots[0].content, p) : null; },
+      'media-focus': function(p) { return p.slots[0] ? renderMediaFocusExport(p.slots[0], p.slots[0].content, p) : null; },
     };
     if (sceneTypeRenderers[plan.sceneType]) {
       var renderedEl = sceneTypeRenderers[plan.sceneType](plan);
@@ -2178,6 +2182,199 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     return exportShell(plan, 'silse-scene-classification-game', children);
   }
 
+  function renderHotspotMapExport(slot, content, plan) {
+    var p = plan.palette || {};
+    var children = [exportHeader(plan, '🗺️ Peta Interaktif', p.secondary, content.guidingQuestion || 'Peta Hotspot')];
+    if (content.caption) {
+      var cap = document.createElement('div');
+      cap.style.cssText = 'font-size:14px;line-height:1.6;color:' + (p.mutedText || '#6e90b5') + ';';
+      cap.textContent = content.caption;
+      children.push(cap);
+    }
+    var mapEl = document.createElement('div');
+    mapEl.className = 'silse-hotspot-map';
+    mapEl.style.cssText = 'position:relative;width:100%;min-height:320px;border-radius:12px;overflow:hidden;background:' + (content.backgroundVisual ? 'url(' + content.backgroundVisual + ') center/cover' : (p.surface || '#182d45')) + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
+    if (!content.backgroundVisual) {
+      var fb = document.createElement('div');
+      fb.style.cssText = 'position:absolute;inset:0;display:grid;place-items:center;color:' + (p.mutedText || '#6e90b5') + ';font-style:italic;';
+      fb.textContent = '🗺️ Peta tidak tersedia — klik titik untuk informasi';
+      mapEl.appendChild(fb);
+    }
+    var hotspots = content.hotspots || [];
+    for (var i = 0; i < hotspots.length; i++) {
+      var btn = document.createElement('button');
+      btn.className = 'silse-hotspot-point';
+      btn.setAttribute('data-hotspot-id', hotspots[i].id);
+      btn.style.cssText = 'position:absolute;left:' + hotspots[i].x + '%;top:' + hotspots[i].y + '%;width:28px;height:28px;border-radius:50%;border:3px solid ' + (p.primary || '#0e1c2f') + ';background:' + (p.primary || '#0e1c2f') + ';cursor:pointer;transform:translate(-50%,-50%);box-shadow:0 2px 8px rgba(0,0,0,0.3);';
+      var lbl = document.createElement('span');
+      lbl.style.cssText = 'position:absolute;top:-24px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:800;color:' + (p.text || '#fff') + ';white-space:nowrap;';
+      lbl.textContent = hotspots[i].label;
+      btn.appendChild(lbl);
+      mapEl.appendChild(btn);
+    }
+    children.push(mapEl);
+    var panel = document.createElement('div');
+    panel.className = 'silse-hotspot-panel';
+    panel.style.cssText = 'display:none;padding:16px;border-radius:12px;background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.gold || '#f9c12e') + '66;';
+    panel.textContent = 'Klik titik untuk melihat informasi';
+    children.push(panel);
+    return exportShell(plan, 'silse-scene-hotspot-map', children);
+  }
+
+  function renderMatchingGameExport(slot, content, plan) {
+    var p = plan.palette || {};
+    var children = [exportHeader(plan, '🔗 Game Mencocokkan', p.success, 'Game Mencocokkan')];
+    if (content.instruction) {
+      var instr = document.createElement('div');
+      instr.style.cssText = 'font-size:14px;line-height:1.6;padding:8px 12px;background:' + (p.success || '#34d399') + '11;border-radius:10px;color:' + (p.text || '#fff') + ';';
+      instr.textContent = content.instruction;
+      children.push(instr);
+    }
+    var scoreEl = document.createElement('div');
+    scoreEl.className = 'silse-matching-score';
+    scoreEl.style.cssText = 'font-size:16px;font-weight:800;color:' + (p.gold || '#f9c12e') + ';';
+    scoreEl.innerHTML = '🏆 Skor: <span class="silse-matching-score-val">0</span>';
+    children.push(scoreEl);
+    var fbEl = document.createElement('div');
+    fbEl.className = 'silse-matching-feedback';
+    fbEl.style.cssText = 'display:none;padding:10px 14px;border-radius:10px;font-size:14px;font-weight:700;';
+    children.push(fbEl);
+    var grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:12px;';
+    var leftCol = document.createElement('div');
+    leftCol.className = 'silse-matching-left';
+    var leftLabel = document.createElement('div');
+    leftLabel.style.cssText = 'font-size:12px;font-weight:800;text-transform:uppercase;color:' + (p.mutedText || '#6e90b5') + ';margin-bottom:8px;';
+    leftLabel.textContent = 'Kolom Kiri';
+    leftCol.appendChild(leftLabel);
+    var leftItems = content.leftItems || [];
+    for (var li = 0; li < leftItems.length; li++) {
+      var lbtn = document.createElement('button');
+      lbtn.className = 'silse-matching-pair';
+      lbtn.setAttribute('data-left-id', leftItems[li].id);
+      lbtn.style.cssText = 'display:block;width:100%;text-align:left;margin-bottom:6px;padding:10px 14px;min-height:44px;border-radius:10px;cursor:pointer;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:' + (p.surface || '#182d45') + ';color:' + (p.text || '#fff') + ';font-size:14px;font-weight:600;';
+      lbtn.textContent = leftItems[li].label;
+      leftCol.appendChild(lbtn);
+    }
+    grid.appendChild(leftCol);
+    var rightCol = document.createElement('div');
+    rightCol.className = 'silse-matching-right';
+    var rightLabel = document.createElement('div');
+    rightLabel.style.cssText = 'font-size:12px;font-weight:800;text-transform:uppercase;color:' + (p.mutedText || '#6e90b5') + ';margin-bottom:8px;';
+    rightLabel.textContent = 'Kolom Kanan';
+    rightCol.appendChild(rightLabel);
+    var rightItems = content.rightItems || [];
+    for (var ri = 0; ri < rightItems.length; ri++) {
+      var rbtn = document.createElement('button');
+      rbtn.className = 'silse-matching-pair';
+      rbtn.setAttribute('data-right-id', rightItems[ri].id);
+      rbtn.style.cssText = 'display:block;width:100%;text-align:left;margin-bottom:6px;padding:10px 14px;min-height:44px;border-radius:10px;cursor:pointer;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:' + (p.surface || '#182d45') + ';color:' + (p.text || '#fff') + ';font-size:14px;font-weight:600;';
+      rbtn.textContent = rightItems[ri].label;
+      rightCol.appendChild(rbtn);
+    }
+    grid.appendChild(rightCol);
+    children.push(grid);
+    children.push(exportActionButton(plan, '↺ Reset', 'secondary'));
+    return exportShell(plan, 'silse-scene-matching-game', children);
+  }
+
+  function renderSequencingGameExport(slot, content, plan) {
+    var p = plan.palette || {};
+    var children = [exportHeader(plan, '📋 Game Urutkan', p.accent, 'Game Mengurutkan')];
+    if (content.instruction) {
+      var instr = document.createElement('div');
+      instr.style.cssText = 'font-size:14px;line-height:1.6;padding:8px 12px;background:' + (p.accent || '#e63946') + '11;border-radius:10px;color:' + (p.text || '#fff') + ';';
+      instr.textContent = content.instruction;
+      children.push(instr);
+    }
+    var scoreEl = document.createElement('div');
+    scoreEl.style.cssText = 'font-size:16px;font-weight:800;color:' + (p.gold || '#f9c12e') + ';';
+    scoreEl.innerHTML = '🏆 Skor: <span class="silse-sequence-score-val">0</span>';
+    children.push(scoreEl);
+    var fbEl = document.createElement('div');
+    fbEl.className = 'silse-sequence-feedback';
+    fbEl.style.cssText = 'display:none;padding:10px 14px;border-radius:10px;font-size:14px;font-weight:700;';
+    children.push(fbEl);
+    var items = content.items || [];
+    for (var si = 0; si < items.length; si++) {
+      var row = document.createElement('div');
+      row.className = 'silse-sequence-item';
+      row.setAttribute('data-seq-id', items[si].id);
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
+      var num = document.createElement('span');
+      num.className = 'silse-sequence-num';
+      num.style.cssText = 'font-size:18px;font-weight:800;color:' + (p.gold || '#f9c12e') + ';min-width:28px;';
+      num.textContent = (si + 1) + '.';
+      var lbl = document.createElement('span');
+      lbl.style.cssText = 'flex:1;font-size:14px;font-weight:600;color:' + (p.text || '#fff') + ';';
+      lbl.textContent = items[si].label;
+      var upBtn = document.createElement('button');
+      upBtn.className = 'silse-sequence-up';
+      upBtn.setAttribute('data-action', 'seq-up');
+      upBtn.setAttribute('data-seq-id', items[si].id);
+      upBtn.style.cssText = 'padding:6px 12px;min-height:36px;border-radius:8px;border:none;background:' + (p.primary || '#0e1c2f') + ';color:#fff;font-weight:700;cursor:pointer;';
+      upBtn.textContent = '↑';
+      var downBtn = document.createElement('button');
+      downBtn.className = 'silse-sequence-down';
+      downBtn.setAttribute('data-action', 'seq-down');
+      downBtn.setAttribute('data-seq-id', items[si].id);
+      downBtn.style.cssText = 'padding:6px 12px;min-height:36px;border-radius:8px;border:none;background:' + (p.primary || '#0e1c2f') + ';color:#fff;font-weight:700;cursor:pointer;';
+      downBtn.textContent = '↓';
+      row.appendChild(num); row.appendChild(lbl); row.appendChild(upBtn); row.appendChild(downBtn);
+      children.push(row);
+    }
+    var checkBtn = document.createElement('button');
+    checkBtn.className = 'silse-sequence-check';
+    checkBtn.setAttribute('data-action', 'seq-check');
+    checkBtn.style.cssText = 'padding:10px 18px;min-height:44px;border-radius:999px;border:none;background:' + (p.success || '#34d399') + ';color:#fff;font-weight:800;cursor:pointer;';
+    checkBtn.textContent = '✓ Cek Jawaban';
+    children.push(checkBtn);
+    children.push(exportActionButton(plan, '↺ Reset', 'secondary'));
+    return exportShell(plan, 'silse-scene-sequencing-game', children);
+  }
+
+  function renderMediaFocusExport(slot, content, plan) {
+    var p = plan.palette || {};
+    var children = [exportHeader(plan, '🖼️ Fokus Media', p.secondary, 'Fokus Media')];
+    var mediaWrap = document.createElement('div');
+    mediaWrap.className = 'silse-media-focus-display';
+    mediaWrap.style.cssText = 'width:100%;min-height:200px;border-radius:12px;overflow:hidden;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
+    if (content.mediaAsset && content.mediaAsset.src) {
+      var img = document.createElement('img');
+      img.src = content.mediaAsset.src;
+      img.alt = content.mediaAsset.alt || '';
+      img.style.cssText = 'width:100%;height:100%;object-fit:' + (content.mediaAsset.objectFit || 'cover') + ';display:block;';
+      mediaWrap.appendChild(img);
+    } else {
+      var fb = document.createElement('div');
+      fb.style.cssText = 'width:100%;min-height:200px;display:grid;place-items:center;color:' + (p.mutedText || '#6e90b5') + ';font-size:13px;font-style:italic;';
+      fb.textContent = '📷 Media tidak tersedia';
+      mediaWrap.appendChild(fb);
+    }
+    children.push(mediaWrap);
+    if (content.caption) {
+      var cap = document.createElement('div');
+      cap.style.cssText = 'font-size:13px;color:' + (p.mutedText || '#6e90b5') + ';font-style:italic;';
+      cap.textContent = content.caption;
+      children.push(cap);
+    }
+    if (content.guidingQuestion) {
+      var q = document.createElement('div');
+      q.className = 'silse-media-focus-question';
+      q.style.cssText = 'padding:16px;border-radius:12px;background:' + (p.gold || '#f9c12e') + '0A;border:1px solid ' + (p.gold || '#f9c12e') + '33;';
+      var qLabel = document.createElement('div');
+      qLabel.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.gold || '#f9c12e') + ';margin-bottom:6px;';
+      qLabel.textContent = '❓ Pertanyaan Pemandu';
+      var qText = document.createElement('div');
+      qText.style.cssText = 'font-size:15px;line-height:1.6;color:' + (p.text || '#fff') + ';font-weight:600;';
+      qText.textContent = content.guidingQuestion;
+      q.appendChild(qLabel); q.appendChild(qText);
+      children.push(q);
+    }
+    children.push(exportResponseInput(plan, content.responseInput || 'Tulis jawabanmu...'));
+    return exportShell(plan, 'silse-scene-media-focus', children);
+  }
+
   function buildInlineStyle(comp) {
     // Geometry + resolvedStyle.inlineStyle — NO style switch
     var s = 'position:absolute;left:' + comp.x + 'px;top:' + comp.y + 'px;width:' + comp.width + 'px;height:' + comp.height + 'px;';
@@ -3174,6 +3371,170 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         if (sv) sv.textContent = '0';
         var fb2 = canvas.querySelector('.silse-classification-feedback');
         if (fb2) fb2.style.display = 'none';
+      }
+    });
+
+    // HIGH-PRIORITY-RENDERERS-01: Hotspot map interaction
+    canvas.addEventListener('click', function(e) {
+      var hotspot = e.target.closest('[data-hotspot-id]');
+      if (hotspot) {
+        var hotspotId = hotspot.getAttribute('data-hotspot-id');
+        var panel = canvas.querySelector('.silse-hotspot-panel');
+        if (panel) {
+          // Find hotspot data from the page's scenePlan
+          var hotspotData = null;
+          for (var pi = 0; pi < pages.length; pi++) {
+            if (pages[pi].scenePlan && pages[pi].scenePlan.slots[0]) {
+              var c = pages[pi].scenePlan.slots[0].content;
+              if (c.kind === 'hotspot-map' && c.hotspots) {
+                hotspotData = c.hotspots.find(function(h) { return h.id === hotspotId; });
+                if (hotspotData) break;
+              }
+            }
+          }
+          if (hotspotData) {
+            panel.style.display = 'block';
+            panel.innerHTML = '<div style="font-size:13px;font-weight:800;color:var(--silse-gold, #f9c12e);margin-bottom:6px;">' + hotspotData.label + '</div><div style="font-size:14px;line-height:1.6;color:var(--silse-text, #e8f2ff);">' + hotspotData.info + '</div>';
+          }
+        }
+      }
+    });
+
+    // HIGH-PRIORITY-RENDERERS-01: Matching game interaction
+    var matchingSelectedLeft = null;
+    var matchingScore = 0;
+    canvas.addEventListener('click', function(e) {
+      var leftBtn = e.target.closest('[data-left-id]');
+      if (leftBtn) {
+        var leftId = leftBtn.getAttribute('data-left-id');
+        var prevSelected = canvas.querySelector('[data-left-id][data-selected="true"]');
+        if (prevSelected) { prevSelected.removeAttribute('data-selected'); prevSelected.style.borderColor = ''; prevSelected.style.background = ''; }
+        leftBtn.setAttribute('data-selected', 'true');
+        leftBtn.style.borderColor = 'var(--silse-gold, #f9c12e)';
+        leftBtn.style.background = 'rgba(249,193,46,0.15)';
+        matchingSelectedLeft = leftId;
+        return;
+      }
+      var rightBtn = e.target.closest('[data-right-id]');
+      if (rightBtn && matchingSelectedLeft) {
+        var rightId = rightBtn.getAttribute('data-right-id');
+        // Find correctPairs from page data
+        var correctPairs = null;
+        var scorePer = 10;
+        for (var pi = 0; pi < pages.length; pi++) {
+          if (pages[pi].scenePlan && pages[pi].scenePlan.slots[0]) {
+            var c = pages[pi].scenePlan.slots[0].content;
+            if (c.kind === 'matching-game') {
+              correctPairs = c.correctPairs || [];
+              scorePer = c.scorePerPair || 10;
+              break;
+            }
+          }
+        }
+        var isCorrect = correctPairs && correctPairs.some(function(p) { return p.leftId === matchingSelectedLeft && p.rightId === rightId; });
+        var fb = canvas.querySelector('.silse-matching-feedback');
+        if (fb) {
+          fb.style.display = 'block';
+          fb.style.background = isCorrect ? 'rgba(52,211,153,0.11)' : 'rgba(255,107,107,0.11)';
+          fb.style.color = isCorrect ? '#34d399' : '#ff6b6b';
+          fb.textContent = isCorrect ? 'Benar! Pasangan tepat.' : 'Belum tepat. Coba lagi.';
+        }
+        if (isCorrect) {
+          matchingScore += scorePer;
+          var sv = canvas.querySelector('.silse-matching-score-val');
+          if (sv) sv.textContent = String(matchingScore);
+          rightBtn.style.borderColor = '#34d399';
+          rightBtn.style.background = 'rgba(52,211,153,0.11)';
+          rightBtn.disabled = true;
+          var leftSelected = canvas.querySelector('[data-left-id][data-selected="true"]');
+          if (leftSelected) { leftSelected.style.borderColor = '#34d399'; leftSelected.style.background = 'rgba(52,211,153,0.11)'; leftSelected.removeAttribute('data-selected'); }
+        }
+        matchingSelectedLeft = null;
+        return;
+      }
+      var resetBtn = e.target.closest('[data-action]');
+      if (resetBtn && resetBtn.textContent.indexOf('Reset') >= 0) {
+        var allLeft = canvas.querySelectorAll('[data-left-id]');
+        for (var ali = 0; ali < allLeft.length; ali++) { allLeft[ali].removeAttribute('data-selected'); allLeft[ali].style.borderColor = ''; allLeft[ali].style.background = ''; }
+        var allRight = canvas.querySelectorAll('[data-right-id]');
+        for (var ari = 0; ari < allRight.length; ari++) { allRight[ari].style.borderColor = ''; allRight[ari].style.background = ''; allRight[ari].disabled = false; }
+        matchingScore = 0; matchingSelectedLeft = null;
+        var msv = canvas.querySelector('.silse-matching-score-val');
+        if (msv) msv.textContent = '0';
+        var mfb = canvas.querySelector('.silse-matching-feedback');
+        if (mfb) mfb.style.display = 'none';
+      }
+    });
+
+    // HIGH-PRIORITY-RENDERERS-01: Sequencing game interaction
+    var seqOrder = [];
+    var seqScore = 0;
+    canvas.addEventListener('click', function(e) {
+      var upBtn = e.target.closest('[data-action="seq-up"]');
+      var downBtn = e.target.closest('[data-action="seq-down"]');
+      var checkBtn = e.target.closest('[data-action="seq-check"]');
+      if (upBtn || downBtn) {
+        var seqId = (upBtn || downBtn).getAttribute('data-seq-id');
+        var items = canvas.querySelectorAll('.silse-sequence-item');
+        var idx = -1;
+        for (var ii = 0; ii < items.length; ii++) { if (items[ii].getAttribute('data-seq-id') === seqId) { idx = ii; break; } }
+        if (idx === -1) return;
+        var swapIdx = upBtn ? idx - 1 : idx + 1;
+        if (swapIdx < 0 || swapIdx >= items.length) return;
+        var parent = items[idx].parentNode;
+        if (upBtn) { parent.insertBefore(items[idx], items[swapIdx]); }
+        else { parent.insertBefore(items[swapIdx], items[idx]); }
+        // Renumber
+        var allItems = canvas.querySelectorAll('.silse-sequence-item');
+        for (var ni = 0; ni < allItems.length; ni++) {
+          var num = allItems[ni].querySelector('.silse-sequence-num');
+          if (num) num.textContent = (ni + 1) + '.';
+        }
+        var sfb = canvas.querySelector('.silse-sequence-feedback');
+        if (sfb) sfb.style.display = 'none';
+        return;
+      }
+      if (checkBtn) {
+        var allItems2 = canvas.querySelectorAll('.silse-sequence-item');
+        var currentOrder = [];
+        for (var ci = 0; ci < allItems2.length; ci++) { currentOrder.push(allItems2[ci].getAttribute('data-seq-id')); }
+        // Find correctOrder from page data
+        var correctOrder = null;
+        var scorePerItem = 10;
+        var itemCount = currentOrder.length;
+        for (var pi = 0; pi < pages.length; pi++) {
+          if (pages[pi].scenePlan && pages[pi].scenePlan.slots[0]) {
+            var c = pages[pi].scenePlan.slots[0].content;
+            if (c.kind === 'sequencing-game') {
+              correctOrder = c.correctOrder || [];
+              scorePerItem = c.scorePerItem || 10;
+              break;
+            }
+          }
+        }
+        var isCorrect = correctOrder && currentOrder.every(function(id, i) { return id === correctOrder[i]; });
+        var sfb2 = canvas.querySelector('.silse-sequence-feedback');
+        if (sfb2) {
+          sfb2.style.display = 'block';
+          sfb2.style.background = isCorrect ? 'rgba(52,211,153,0.11)' : 'rgba(255,107,107,0.11)';
+          sfb2.style.color = isCorrect ? '#34d399' : '#ff6b6b';
+          sfb2.textContent = isCorrect ? 'Benar! Urutan tepat.' : 'Belum tepat. Coba urutkan lagi.';
+        }
+        if (isCorrect) {
+          seqScore += scorePerItem * itemCount;
+          var ssv = canvas.querySelector('.silse-sequence-score-val');
+          if (ssv) ssv.textContent = String(seqScore);
+        }
+        return;
+      }
+      var seqResetBtn = e.target.closest('[data-action]');
+      if (seqResetBtn && seqResetBtn.textContent.indexOf('Reset') >= 0) {
+        // Just reload the page to reset order
+        var sfb3 = canvas.querySelector('.silse-sequence-feedback');
+        if (sfb3) sfb3.style.display = 'none';
+        seqScore = 0;
+        var ssv2 = canvas.querySelector('.silse-sequence-score-val');
+        if (ssv2) ssv2.textContent = '0';
       }
     });
   }

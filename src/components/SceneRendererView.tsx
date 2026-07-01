@@ -27,6 +27,7 @@ import {
   CurriculumGuideComposer, ObjectivesPathComposer, StarterReviewComposer,
   DiscussionSceneComposer, CaseAnalysisComposer, ResultSummaryComposer,
   ReflectionJournalComposer, ClassificationGameComposer,
+  HotspotMapComposer, MatchingGameComposer, SequencingGameComposer, MediaFocusComposer,
 } from './scene-composers';
 
 // PATCH B: Scene composer routing by sceneType, not content.kind
@@ -52,6 +53,10 @@ function getSceneComposer(sceneType: string): ((props: SceneComposerProps) => Re
     'result-summary': ({ contract, slot }) => <ResultSummaryComposer contract={contract} content={slot.content as any} />,
     'reflection-journal': ({ contract, slot }) => <ReflectionJournalComposer contract={contract} content={slot.content as any} />,
     'classification-game': ({ contract, slot }) => <ClassificationGameComposer contract={contract} content={slot.content as any} />,
+    'hotspot-map': ({ contract, slot }) => <HotspotMapComposer contract={contract} content={slot.content as any} />,
+    'matching-game': ({ contract, slot }) => <MatchingGameComposer contract={contract} content={slot.content as any} />,
+    'sequencing-game': ({ contract, slot }) => <SequencingGameComposer contract={contract} content={slot.content as any} />,
+    'media-focus': ({ contract, slot }) => <MediaFocusComposer contract={contract} content={slot.content as any} />,
   };
   return composers[sceneType] ?? null;
 }
