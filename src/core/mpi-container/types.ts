@@ -235,7 +235,13 @@ export type MpiSceneSlotContent =
   | { kind: 'remedial-practice'; misconception?: string; reteachExplanation?: string; guidedPractice?: { id: string; prompt: string; choices: { id: string; text: string }[]; correctChoiceId: string; hint?: string }[]; retryQuestion?: string }
   | { kind: 'enrichment-challenge'; challengeContext?: string; advancedTask?: string; responseInput?: string; rubricPreview?: { criterion: string; descriptor: string }[]; completionMessage?: string }
   | { kind: 'worksheet-activity'; instruction?: string; taskSteps?: { id: string; prompt: string; responsePlaceholder?: string }[]; inputFields?: { id: string; label: string; placeholder?: string }[] }
-  | { kind: 'rubric-panel'; criteria?: { id: string; name: string; description: string }[]; levels?: { id: string; name: string; score: number; descriptor: string }[]; scoreGuide?: string };
+  | { kind: 'rubric-panel'; criteria?: { id: string; name: string; description: string }[]; levels?: { id: string; name: string; score: number; descriptor: string }[]; scoreGuide?: string }
+  // PERFECT-MPI-RENDER-COMPLETE-02: 5 narrative/guidance content kinds
+  | { kind: 'timeline-story'; title?: string; events?: { id: string; label: string; description: string }[]; checkpointQuestion?: string; checkpointAnswer?: string }
+  | { kind: 'branching-scenario'; scenarioPrompt?: string; choices?: { id: string; label: string; consequence: string; isCorrect?: boolean }[]; resetLabel?: string }
+  | { kind: 'glossary-cards'; title?: string; terms?: { id: string; term: string; definition: string; example?: string }[] }
+  | { kind: 'teacher-guide'; title?: string; teacherInstruction?: string; facilitationTips?: string[]; timeAllocation?: string; assessmentNotes?: string }
+  | { kind: 'accessibility-help'; title?: string; readingGuide?: string; keyboardGuide?: string; contrastOption?: string };
 
 export type MpiSceneSlot = {
   id: string;

@@ -1120,6 +1120,11 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       'enrichment-challenge': function(p) { return p.slots[0] ? renderEnrichmentChallengeExport(p.slots[0], p.slots[0].content, p) : null; },
       'worksheet-activity': function(p) { return p.slots[0] ? renderWorksheetActivityExport(p.slots[0], p.slots[0].content, p) : null; },
       'rubric-panel': function(p) { return p.slots[0] ? renderRubricPanelExport(p.slots[0], p.slots[0].content, p) : null; },
+      'timeline-story': function(p) { return p.slots[0] ? renderTimelineStoryExport(p.slots[0], p.slots[0].content, p) : null; },
+      'branching-scenario': function(p) { return p.slots[0] ? renderBranchingScenarioExport(p.slots[0], p.slots[0].content, p) : null; },
+      'glossary-cards': function(p) { return p.slots[0] ? renderGlossaryCardsExport(p.slots[0], p.slots[0].content, p) : null; },
+      'teacher-guide': function(p) { return p.slots[0] ? renderTeacherGuideExport(p.slots[0], p.slots[0].content, p) : null; },
+      'accessibility-help': function(p) { return p.slots[0] ? renderAccessibilityHelpExport(p.slots[0], p.slots[0].content, p) : null; },
     };
     if (sceneTypeRenderers[plan.sceneType]) {
       var renderedEl = sceneTypeRenderers[plan.sceneType](plan);
@@ -2637,6 +2642,176 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     return exportShell(plan, 'silse-scene-rubric-panel', children);
   }
 
+  function renderTimelineStoryExport(slot, content, plan) {
+    var p = plan.palette || {};
+    var children = [exportHeader(plan, '📜 Timeline', p.secondary, content.title || 'Timeline Story')];
+    var events = content.events || [];
+    var trackEl = document.createElement('div');
+    trackEl.className = 'silse-timeline-track';
+    trackEl.style.cssText = 'display:flex;align-items:center;gap:4px;overflow-x:auto;padding:8px 0;';
+    for (var i = 0; i < events.length; i++) {
+      var stepBtn = document.createElement('button');
+      stepBtn.className = 'silse-timeline-step';
+      stepBtn.setAttribute('data-event-id', events[i].id);
+      stepBtn.setAttribute('data-event-idx', String(i));
+      stepBtn.style.cssText = 'width:32px;height:32px;min-height:32px;border-radius:50%;border:2px solid ' + (p.mutedText || '#6e90b5') + ';background:transparent;color:' + (p.text || '#fff') + ';font-weight:800;cursor:pointer;font-size:13px;flex-shrink:0;';
+      stepBtn.textContent = String(i + 1);
+      trackEl.appendChild(stepBtn);
+      if (i < events.length - 1) {
+        var line = document.createElement('div');
+        line.style.cssText = 'width:20px;height:2px;background:' + (p.mutedText || '#6e90b5') + ';flex-shrink:0;';
+        trackEl.appendChild(line);
+      }
+    }
+    children.push(trackEl);
+    var detailEl = document.createElement('div');
+    detailEl.className = 'silse-timeline-event';
+    detailEl.style.cssText = 'padding:16px;border-radius:12px;background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
+    detailEl.textContent = 'Klik nomor untuk melihat detail';
+    children.push(detailEl);
+    var navRow = document.createElement('div');
+    navRow.style.cssText = 'display:flex;gap:8px;';
+    var prevBtn = document.createElement('button');
+    prevBtn.setAttribute('data-action', 'timeline-prev');
+    prevBtn.style.cssText = 'padding:8px 16px;min-height:44px;border-radius:999px;border:none;background:' + (p.primary || '#0e1c2f') + ';color:#fff;font-weight:700;cursor:pointer;';
+    prevBtn.textContent = '← Prev';
+    var nextBtn = document.createElement('button');
+    nextBtn.setAttribute('data-action', 'timeline-next');
+    nextBtn.style.cssText = 'padding:8px 16px;min-height:44px;border-radius:999px;border:none;background:' + (p.primary || '#0e1c2f') + ';color:#fff;font-weight:700;cursor:pointer;';
+    nextBtn.textContent = 'Next →';
+    navRow.appendChild(prevBtn);
+    navRow.appendChild(nextBtn);
+    children.push(navRow);
+    // Store events data as JSON attr for wireInteractions
+    var shell = exportShell(plan, 'silse-scene-timeline-story', children);
+    shell.setAttribute('data-events', JSON.stringify(events));
+    shell.setAttribute('data-current-idx', '0');
+    return shell;
+  }
+
+  function renderBranchingScenarioExport(slot, content, plan) {
+    var p = plan.palette || {};
+    var children = [exportHeader(plan, '🌿 Skenario', p.accent, 'Branching Scenario')];
+    if (content.scenarioPrompt) {
+      var promptEl = document.createElement('div');
+      promptEl.className = 'silse-branching-prompt';
+      promptEl.style.cssText = 'padding:16px;border-radius:12px;background:' + (p.accent || '#e63946') + '11;border:1px solid ' + (p.accent || '#e63946') + '33;font-size:15px;line-height:1.6;color:' + (p.text || '#fff') + ';font-weight:600;';
+      promptEl.textContent = content.scenarioPrompt;
+      children.push(promptEl);
+    }
+    var choices = content.choices || [];
+    var choicesContainer = document.createElement('div');
+    choicesContainer.className = 'silse-branching-choices';
+    choicesContainer.style.cssText = 'display:flex;flex-direction:column;gap:8px;';
+    for (var ci = 0; ci < choices.length; ci++) {
+      var cBtn = document.createElement('button');
+      cBtn.className = 'silse-branching-choice';
+      cBtn.setAttribute('data-choice-id', choices[ci].id);
+      cBtn.setAttribute('data-consequence', choices[ci].consequence);
+      cBtn.setAttribute('data-is-correct', choices[ci].isCorrect ? 'true' : 'false');
+      cBtn.style.cssText = 'text-align:left;padding:12px 16px;min-height:44px;border-radius:10px;cursor:pointer;border:2px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:' + (p.surface || '#182d45') + ';color:' + (p.text || '#fff') + ';font-size:14px;font-weight:600;';
+      cBtn.textContent = choices[ci].label;
+      choicesContainer.appendChild(cBtn);
+    }
+    children.push(choicesContainer);
+    var consequenceEl = document.createElement('div');
+    consequenceEl.className = 'silse-branching-consequence';
+    consequenceEl.style.cssText = 'display:none;padding:16px;border-radius:12px;';
+    children.push(consequenceEl);
+    var resetBtn = exportActionButton(plan, content.resetLabel || '↺ Coba Lagi', 'secondary');
+    resetBtn.setAttribute('data-action', 'branching-reset');
+    resetBtn.style.display = 'none';
+    children.push(resetBtn);
+    return exportShell(plan, 'silse-scene-branching-scenario', children);
+  }
+
+  function renderGlossaryCardsExport(slot, content, plan) {
+    var p = plan.palette || {};
+    var children = [exportHeader(plan, '📖 Glosarium', p.secondary, content.title || 'Glosarium')];
+    var terms = content.terms || [];
+    var grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;';
+    for (var ti = 0; ti < terms.length; ti++) {
+      var card = document.createElement('div');
+      card.className = 'silse-glossary-card';
+      card.setAttribute('data-term-id', terms[ti].id);
+      card.setAttribute('data-definition', terms[ti].definition);
+      if (terms[ti].example) card.setAttribute('data-example', terms[ti].example);
+      card.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';cursor:pointer;';
+      var termEl = document.createElement('div');
+      termEl.style.cssText = 'font-size:15px;font-weight:800;color:' + (p.gold || '#f9c12e') + ';margin-bottom:6px;';
+      termEl.textContent = terms[ti].term;
+      card.appendChild(termEl);
+      var hintEl = document.createElement('div');
+      hintEl.className = 'silse-glossary-hint';
+      hintEl.style.cssText = 'font-size:13px;color:' + (p.mutedText || '#6e90b5') + ';font-style:italic;';
+      hintEl.textContent = 'Klik untuk melihat definisi...';
+      card.appendChild(hintEl);
+      var defEl = document.createElement('div');
+      defEl.className = 'silse-glossary-definition';
+      defEl.style.cssText = 'display:none;font-size:13px;line-height:1.6;color:' + (p.text || '#fff') + ';';
+      defEl.textContent = terms[ti].definition;
+      card.appendChild(defEl);
+      if (terms[ti].example) {
+        var exEl = document.createElement('div');
+        exEl.className = 'silse-glossary-example';
+        exEl.style.cssText = 'display:none;font-size:12px;color:' + (p.mutedText || '#6e90b5') + ';font-style:italic;margin-top:6px;';
+        exEl.textContent = 'Contoh: ' + terms[ti].example;
+        card.appendChild(exEl);
+      }
+      grid.appendChild(card);
+    }
+    children.push(grid);
+    return exportShell(plan, 'silse-scene-glossary-cards', children);
+  }
+
+  function renderTeacherGuideExport(slot, content, plan) {
+    var p = plan.palette || {};
+    var children = [exportHeader(plan, '👨\u200d🏫 Panduan Guru', p.accent, content.title || 'Panduan Guru')];
+    if (content.timeAllocation) {
+      var timing = document.createElement('div');
+      timing.className = 'silse-teacher-timing';
+      timing.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;background:' + (p.accent || '#e63946') + '11;border:1px solid ' + (p.accent || '#e63946') + '33;font-size:13px;font-weight:700;color:' + (p.accent || '#e63946') + ';';
+      timing.textContent = '⏱️ ' + content.timeAllocation;
+      children.push(timing);
+    }
+    if (content.teacherInstruction) children.push(exportPanel(plan, 'Instruksi Guru', content.teacherInstruction));
+    if (content.facilitationTips && content.facilitationTips.length) {
+      var tipsEl = document.createElement('div');
+      tipsEl.className = 'silse-teacher-tips';
+      tipsEl.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.gold || '#f9c12e') + '0A;border:1px solid ' + (p.gold || '#f9c12e') + '33;';
+      var tipsLabel = document.createElement('div');
+      tipsLabel.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.gold || '#f9c12e') + ';margin-bottom:8px;';
+      tipsLabel.textContent = '💡 Tips Fasilitasi';
+      tipsEl.appendChild(tipsLabel);
+      for (var fi = 0; fi < content.facilitationTips.length; fi++) {
+        var tipRow = document.createElement('div');
+        tipRow.className = 'silse-teacher-tip';
+        tipRow.style.cssText = 'display:flex;gap:8px;padding:4px 0;font-size:13px;line-height:1.5;color:' + (p.text || '#fff') + ';';
+        var tipNum = document.createElement('span');
+        tipNum.style.cssText = 'color:' + (p.gold || '#f9c12e') + ';font-weight:800;';
+        tipNum.textContent = (fi + 1) + '.';
+        var tipText = document.createElement('span');
+        tipText.textContent = content.facilitationTips[fi];
+        tipRow.appendChild(tipNum);
+        tipRow.appendChild(tipText);
+        tipsEl.appendChild(tipRow);
+      }
+      children.push(tipsEl);
+    }
+    if (content.assessmentNotes) children.push(exportPanel(plan, 'Catatan Asesmen', content.assessmentNotes));
+    return exportShell(plan, 'silse-scene-teacher-guide', children);
+  }
+
+  function renderAccessibilityHelpExport(slot, content, plan) {
+    var p = plan.palette || {};
+    var children = [exportHeader(plan, '♿ Aksesibilitas', p.success, content.title || 'Bantuan Aksesibilitas')];
+    if (content.readingGuide) children.push(exportPanel(plan, '📖 Panduan Membaca', content.readingGuide));
+    if (content.keyboardGuide) children.push(exportPanel(plan, '⌨️ Panduan Keyboard/Touch', content.keyboardGuide));
+    if (content.contrastOption) children.push(exportPanel(plan, '🎨 Opsi Kontras', content.contrastOption));
+    return exportShell(plan, 'silse-scene-accessibility-help', children);
+  }
+
   function buildInlineStyle(comp) {
     // Geometry + resolvedStyle.inlineStyle — NO style switch
     var s = 'position:absolute;left:' + comp.x + 'px;top:' + comp.y + 'px;width:' + comp.width + 'px;height:' + comp.height + 'px;';
@@ -3996,6 +4171,118 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
           completionEl.style.display = 'block';
           enrBtn.style.display = 'none';
         }
+        return;
+      }
+    });
+
+    // PERFECT-MPI-RENDER-COMPLETE-02: Timeline story interaction
+    canvas.addEventListener('click', function(e) {
+      var tlStep = e.target.closest('.silse-timeline-step');
+      if (tlStep) {
+        var shell = canvas.querySelector('.silse-scene-timeline-story');
+        if (!shell) return;
+        var events = [];
+        try { events = JSON.parse(shell.getAttribute('data-events') || '[]'); } catch(te) { events = []; }
+        var idx = parseInt(tlStep.getAttribute('data-event-idx') || '0', 10);
+        shell.setAttribute('data-current-idx', String(idx));
+        // Update step styles
+        var allSteps = canvas.querySelectorAll('.silse-timeline-step');
+        for (var si = 0; si < allSteps.length; si++) {
+          var stepI = parseInt(allSteps[si].getAttribute('data-event-idx') || '0', 10);
+          allSteps[si].style.borderColor = stepI === idx ? 'var(--silse-gold, #f9c12e)' : 'var(--silse-muted-text, #6e90b5)';
+          allSteps[si].style.background = stepI === idx ? 'var(--silse-gold, #f9c12e)' : (stepI < idx ? 'var(--silse-success, #34d399)' : 'transparent');
+          allSteps[si].style.color = stepI === idx ? 'var(--silse-navy, #0e1c2f)' : 'var(--silse-text, #e8f2ff)';
+        }
+        // Update detail
+        var detail = canvas.querySelector('.silse-timeline-event');
+        if (detail && events[idx]) {
+          detail.textContent = '';
+          var dLabel = document.createElement('div');
+          dLabel.style.cssText = 'font-size:16px;font-weight:800;color:var(--silse-gold, #f9c12e);margin-bottom:8px;';
+          dLabel.textContent = events[idx].label;
+          var dDesc = document.createElement('div');
+          dDesc.style.cssText = 'font-size:14px;line-height:1.6;color:var(--silse-text, #e8f2ff);';
+          dDesc.textContent = events[idx].description;
+          detail.appendChild(dLabel);
+          detail.appendChild(dDesc);
+        }
+        return;
+      }
+      var tlPrev = e.target.closest('[data-action="timeline-prev"]');
+      if (tlPrev) {
+        var shell2 = canvas.querySelector('.silse-scene-timeline-story');
+        if (!shell2) return;
+        var curIdx = parseInt(shell2.getAttribute('data-current-idx') || '0', 10);
+        if (curIdx > 0) {
+          var steps = canvas.querySelectorAll('.silse-timeline-step');
+          if (steps[curIdx - 1]) steps[curIdx - 1].click();
+        }
+        return;
+      }
+      var tlNext = e.target.closest('[data-action="timeline-next"]');
+      if (tlNext) {
+        var shell3 = canvas.querySelector('.silse-scene-timeline-story');
+        if (!shell3) return;
+        var curIdx3 = parseInt(shell3.getAttribute('data-current-idx') || '0', 10);
+        var steps3 = canvas.querySelectorAll('.silse-timeline-step');
+        if (curIdx3 < steps3.length - 1) {
+          if (steps3[curIdx3 + 1]) steps3[curIdx3 + 1].click();
+        }
+        return;
+      }
+    });
+
+    // PERFECT-MPI-RENDER-COMPLETE-02: Branching scenario interaction
+    canvas.addEventListener('click', function(e) {
+      var brChoice = e.target.closest('.silse-branching-choice');
+      if (brChoice) {
+        var consequence = brChoice.getAttribute('data-consequence') || '';
+        var isCorrect = brChoice.getAttribute('data-is-correct') === 'true';
+        var consEl = canvas.querySelector('.silse-branching-consequence');
+        if (consEl) {
+          consEl.style.display = 'block';
+          consEl.style.background = isCorrect ? 'rgba(52,211,153,0.11)' : 'rgba(249,193,46,0.11)';
+          consEl.style.border = '1px solid ' + (isCorrect ? '#34d399' : '#f9c12e') + '40';
+          consEl.textContent = '';
+          var consLabel = document.createElement('div');
+          consLabel.style.cssText = 'font-size:13px;font-weight:800;text-transform:uppercase;color:' + (isCorrect ? '#34d399' : '#f9c12e') + ';margin-bottom:8px;';
+          consLabel.textContent = isCorrect ? '✓ Pilihan Tepat' : '⚠ Pertimbangkan Kembali';
+          var consText = document.createElement('div');
+          consText.style.cssText = 'font-size:14px;line-height:1.6;color:var(--silse-text, #e8f2ff);';
+          consText.textContent = consequence;
+          consEl.appendChild(consLabel);
+          consEl.appendChild(consText);
+        }
+        // Hide choices, show reset
+        var choicesEl = canvas.querySelector('.silse-branching-choices');
+        if (choicesEl) choicesEl.style.display = 'none';
+        var resetBtn = canvas.querySelector('[data-action="branching-reset"]');
+        if (resetBtn) resetBtn.style.display = 'inline-flex';
+        return;
+      }
+      var brReset = e.target.closest('[data-action="branching-reset"]');
+      if (brReset) {
+        var consEl2 = canvas.querySelector('.silse-branching-consequence');
+        if (consEl2) consEl2.style.display = 'none';
+        var choicesEl2 = canvas.querySelector('.silse-branching-choices');
+        if (choicesEl2) choicesEl2.style.display = 'flex';
+        brReset.style.display = 'none';
+        return;
+      }
+    });
+
+    // PERFECT-MPI-RENDER-COMPLETE-02: Glossary cards toggle
+    canvas.addEventListener('click', function(e) {
+      var glCard = e.target.closest('.silse-glossary-card');
+      if (glCard) {
+        var hint = glCard.querySelector('.silse-glossary-hint');
+        var def = glCard.querySelector('.silse-glossary-definition');
+        var ex = glCard.querySelector('.silse-glossary-example');
+        var isShown = def && def.style.display !== 'none';
+        if (hint) hint.style.display = isShown ? 'block' : 'none';
+        if (def) def.style.display = isShown ? 'none' : 'block';
+        if (ex) ex.style.display = isShown ? 'none' : 'block';
+        glCard.style.borderColor = isShown ? 'var(--silse-border, rgba(255,255,255,0.09))' : 'var(--silse-gold, #f9c12e)';
         return;
       }
     });

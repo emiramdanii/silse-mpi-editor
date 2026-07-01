@@ -1086,3 +1086,283 @@ export function RubricPanelComposer({
     </SceneShell>
   );
 }
+
+// ===========================================================================
+// PERFECT-MPI-RENDER-COMPLETE-02: 5 narrative/guidance scene composers
+// ===========================================================================
+
+// ---------------------------------------------------------------------------
+// 18. TimelineStoryComposer
+// ---------------------------------------------------------------------------
+
+export function TimelineStoryComposer({
+  contract, content,
+}: {
+  contract: MpiDesignContract;
+  content: {
+    title?: string;
+    events?: { id: string; label: string; description: string }[];
+    checkpointQuestion?: string;
+    checkpointAnswer?: string;
+  };
+}) {
+  const [activeStep, setActiveStep] = useState(0);
+  const [showCheckpoint, setShowCheckpoint] = useState(false);
+  const [checkpointInput, setCheckpointInput] = useState('');
+  const [checkpointFeedback, setCheckpointFeedback] = useState<{ correct: boolean; text: string } | null>(null);
+  const events = content.events || [];
+
+  const handleCheck = () => {
+    const isCorrect = checkpointInput.trim().toLowerCase().includes((content.checkpointAnswer || '').trim().toLowerCase());
+    if (isCorrect) {
+      setCheckpointFeedback({ correct: true, text: 'Benar! Jawabanmu tepat — kamu memahami alur cerita dengan baik.' });
+    } else {
+      setCheckpointFeedback({ correct: false, text: `Belum tepat. Pikirkan kembali: kunci jawaban mengandung kata "${(content.checkpointAnswer || '').split(' ').slice(0, 2).join(' ')}..."` });
+    }
+  };
+
+  return (
+    <SceneShell contract={contract} className="silse-scene-timeline-story">
+      <SceneHeader contract={contract} chipIcon="📜" chipLabel="Timeline" chipColor={contract.palette.secondary} title={content.title || 'Timeline Story'} />
+      <div className="silse-timeline-track" style={{ display: 'flex', alignItems: 'center', gap: 4, overflowX: 'auto', padding: '8px 0' }}>
+        {events.map((event, i) => (
+          <div key={event.id} style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+            <button
+              data-testid={`timeline-step-${event.id}`}
+              data-event-id={event.id}
+              onClick={() => { setActiveStep(i); setShowCheckpoint(false); setCheckpointFeedback(null); }}
+              style={{
+                width: 32, height: 32, minHeight: 32, borderRadius: '50%',
+                border: i === activeStep ? `3px solid ${contract.palette.gold}` : `2px solid ${contract.palette.mutedText}`,
+                background: i === activeStep ? contract.palette.gold : i < activeStep ? contract.palette.success : 'transparent',
+                color: i === activeStep ? contract.palette.primary : contract.palette.text,
+                fontWeight: 800, cursor: 'pointer', fontSize: 13, flexShrink: 0,
+              }}
+            >{i + 1}</button>
+            {i < events.length - 1 && <div style={{ width: 20, height: 2, background: contract.palette.mutedText, flexShrink: 0 }} />}
+          </div>
+        ))}
+      </div>
+      {events[activeStep] && (
+        <div className="silse-timeline-event" data-testid="timeline-event-detail" style={{ padding: 16, borderRadius: contract.card.radius, background: contract.card.background, border: contract.card.border }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: contract.palette.gold, marginBottom: 8 }}>{events[activeStep].label}</div>
+          <div style={{ fontSize: 14, lineHeight: 1.6, color: contract.palette.text }}>{events[activeStep].description}</div>
+        </div>
+      )}
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button data-testid="timeline-prev" onClick={() => setActiveStep(Math.max(0, activeStep - 1))} disabled={activeStep === 0} style={{ padding: '8px 16px', minHeight: 44, borderRadius: 999, border: 'none', background: activeStep === 0 ? 'rgba(255,255,255,0.08)' : contract.palette.primary, color: '#fff', fontWeight: 700, cursor: activeStep === 0 ? 'not-allowed' : 'pointer' }}>← Prev</button>
+        <button data-testid="timeline-next" onClick={() => setActiveStep(Math.min(events.length - 1, activeStep + 1))} disabled={activeStep === events.length - 1} style={{ padding: '8px 16px', minHeight: 44, borderRadius: 999, border: 'none', background: activeStep === events.length - 1 ? 'rgba(255,255,255,0.08)' : contract.palette.primary, color: '#fff', fontWeight: 700, cursor: activeStep === events.length - 1 ? 'not-allowed' : 'pointer' }}>Next →</button>
+        {content.checkpointQuestion && activeStep === events.length - 1 && (
+          <button data-testid="timeline-checkpoint" onClick={() => setShowCheckpoint(!showCheckpoint)} style={{ padding: '8px 16px', minHeight: 44, borderRadius: 999, border: 'none', background: contract.palette.gold, color: contract.palette.primary, fontWeight: 700, cursor: 'pointer' }}> checkpoint?</button>
+        )}
+      </div>
+      {showCheckpoint && content.checkpointQuestion && (
+        <div data-testid="timeline-checkpoint-panel" style={{ padding: 16, borderRadius: contract.card.radius, background: `${contract.palette.gold}0A`, border: `1px solid ${contract.palette.gold}33` }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: contract.palette.text, marginBottom: 8 }}>❓ {content.checkpointQuestion}</div>
+          <textarea data-testid="timeline-checkpoint-input" value={checkpointInput} onChange={(e) => { setCheckpointInput(e.target.value); setCheckpointFeedback(null); }} placeholder="Tulis jawabanmu..." style={{ width: '100%', minHeight: 50, padding: 8, borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.15)', color: contract.palette.text, fontSize: 14, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }} />
+          <button data-testid="timeline-checkpoint-check" onClick={handleCheck} style={{ marginTop: 8, padding: '8px 16px', minHeight: 44, borderRadius: 999, border: 'none', background: contract.palette.success, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>Periksa</button>
+          {checkpointFeedback && (
+            <div data-testid="timeline-checkpoint-feedback" style={{ marginTop: 8, padding: 10, borderRadius: 8, fontSize: 14, fontWeight: 700, background: checkpointFeedback.correct ? `${contract.palette.success}11` : `${contract.palette.danger}11`, color: checkpointFeedback.correct ? contract.palette.success : contract.palette.danger }}>{checkpointFeedback.text}</div>
+          )}
+        </div>
+      )}
+    </SceneShell>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 19. BranchingScenarioComposer
+// ---------------------------------------------------------------------------
+
+export function BranchingScenarioComposer({
+  contract, content,
+}: {
+  contract: MpiDesignContract;
+  content: {
+    scenarioPrompt?: string;
+    choices?: { id: string; label: string; consequence: string; isCorrect?: boolean }[];
+    resetLabel?: string;
+  };
+}) {
+  const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
+  const choices = content.choices || [];
+  const selected = choices.find((c) => c.id === selectedChoice);
+
+  return (
+    <SceneShell contract={contract} className="silse-scene-branching-scenario">
+      <SceneHeader contract={contract} chipIcon="🌿" chipLabel="Skenario" chipColor={contract.palette.accent} title="Branching Scenario" />
+      {content.scenarioPrompt && (
+        <div className="silse-branching-prompt" data-testid="branching-prompt" style={{ padding: 16, borderRadius: contract.card.radius, background: `${contract.palette.accent}11`, border: `1px solid ${contract.palette.accent}33`, fontSize: 15, lineHeight: 1.6, color: contract.palette.text, fontWeight: 600 }}>
+          {content.scenarioPrompt}
+        </div>
+      )}
+      {!selectedChoice && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {choices.map((c) => (
+            <button
+              key={c.id}
+              data-testid={`branching-choice-${c.id}`}
+              data-choice-id={c.id}
+              onClick={() => setSelectedChoice(c.id)}
+              style={{
+                textAlign: 'left', padding: '12px 16px', minHeight: 44, borderRadius: 10, cursor: 'pointer',
+                border: `2px solid ${contract.palette.border}`, background: contract.card.background,
+                color: contract.palette.text, fontSize: 14, fontWeight: 600,
+              }}
+            >{c.label}</button>
+          ))}
+        </div>
+      )}
+      {selected && (
+        <div className="silse-branching-consequence" data-testid="branching-consequence" style={{
+          padding: 16, borderRadius: contract.card.radius,
+          background: selected.isCorrect ? `${contract.palette.success}11` : `${contract.palette.warning}11`,
+          border: `1px solid ${selected.isCorrect ? contract.palette.success : contract.palette.warning}40`,
+        }}>
+          <div style={{ fontSize: 13, fontWeight: 800, textTransform: 'uppercase', color: selected.isCorrect ? contract.palette.success : contract.palette.warning, marginBottom: 8 }}>
+            {selected.isCorrect ? '✓ Pilihan Tepat' : '⚠ Pertimbangkan Kembali'}
+          </div>
+          <div style={{ fontSize: 14, lineHeight: 1.6, color: contract.palette.text }}>{selected.consequence}</div>
+        </div>
+      )}
+      {selectedChoice && (
+        <ActionButtonBlock contract={contract} label={content.resetLabel || '↺ Coba Lagi'} onClick={() => setSelectedChoice(null)} variant="secondary" />
+      )}
+    </SceneShell>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 20. GlossaryCardsComposer
+// ---------------------------------------------------------------------------
+
+export function GlossaryCardsComposer({
+  contract, content,
+}: {
+  contract: MpiDesignContract;
+  content: {
+    title?: string;
+    terms?: { id: string; term: string; definition: string; example?: string }[];
+  };
+}) {
+  const [revealedTerms, setRevealedTerms] = useState<Set<string>>(new Set());
+  const terms = content.terms || [];
+  const toggleReveal = (id: string) => {
+    const next = new Set(revealedTerms);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setRevealedTerms(next);
+  };
+  return (
+    <SceneShell contract={contract} className="silse-scene-glossary-cards">
+      <SceneHeader contract={contract} chipIcon="📖" chipLabel="Glosarium" chipColor={contract.palette.secondary} title={content.title || 'Glosarium'} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 10 }}>
+        {terms.map((t) => {
+          const revealed = revealedTerms.has(t.id);
+          return (
+            <div key={t.id} className="silse-glossary-card" data-testid={`glossary-card-${t.id}`} data-term-id={t.id} onClick={() => toggleReveal(t.id)} style={{
+              padding: 14, borderRadius: contract.card.radius, background: contract.card.background,
+              border: `1px solid ${revealed ? contract.palette.gold : contract.palette.border}`,
+              cursor: 'pointer', transition: 'border 0.2s',
+            }}>
+              <div style={{ fontSize: 15, fontWeight: 800, color: contract.palette.gold, marginBottom: 6 }}>{t.term}</div>
+              {revealed ? (
+                <>
+                  <div className="silse-glossary-definition" data-testid={`glossary-def-${t.id}`} style={{ fontSize: 13, lineHeight: 1.6, color: contract.palette.text, marginBottom: t.example ? 6 : 0 }}>{t.definition}</div>
+                  {t.example && <div style={{ fontSize: 12, color: contract.palette.mutedText, fontStyle: 'italic' }}>Contoh: {t.example}</div>}
+                </>
+              ) : (
+                <div style={{ fontSize: 13, color: contract.palette.mutedText, fontStyle: 'italic' }}>Klik untuk melihat definisi...</div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </SceneShell>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 21. TeacherGuideComposer
+// ---------------------------------------------------------------------------
+
+export function TeacherGuideComposer({
+  contract, content,
+}: {
+  contract: MpiDesignContract;
+  content: {
+    title?: string;
+    teacherInstruction?: string;
+    facilitationTips?: string[];
+    timeAllocation?: string;
+    assessmentNotes?: string;
+  };
+}) {
+  return (
+    <SceneShell contract={contract} className="silse-scene-teacher-guide">
+      <SceneHeader contract={contract} chipIcon="👨‍🏫" chipLabel="Panduan Guru" chipColor={contract.palette.accent} title={content.title || 'Panduan Guru'} />
+      {content.timeAllocation && (
+        <div className="silse-teacher-timing" data-testid="teacher-timing" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 999, background: `${contract.palette.accent}11`, border: `1px solid ${contract.palette.accent}33`, fontSize: 13, fontWeight: 700, color: contract.palette.accent }}>
+          ⏱️ {content.timeAllocation}
+        </div>
+      )}
+      {content.teacherInstruction && (
+        <ScenePanel contract={contract} title="Instruksi Guru">
+          <div style={{ fontSize: 14, lineHeight: 1.6, color: contract.palette.text }}>{content.teacherInstruction}</div>
+        </ScenePanel>
+      )}
+      {content.facilitationTips && content.facilitationTips.length > 0 && (
+        <div className="silse-teacher-tips" style={{ padding: 14, borderRadius: contract.card.radius, background: `${contract.palette.gold}0A`, border: `1px solid ${contract.palette.gold}33` }}>
+          <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: contract.palette.gold, marginBottom: 8 }}>💡 Tips Fasilitasi</div>
+          {content.facilitationTips.map((tip, i) => (
+            <div key={i} data-testid={`teacher-tip-${i}`} style={{ display: 'flex', gap: 8, padding: '4px 0', fontSize: 13, lineHeight: 1.5, color: contract.palette.text }}>
+              <span style={{ color: contract.palette.gold, fontWeight: 800 }}>{i + 1}.</span>
+              <span>{tip}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {content.assessmentNotes && (
+        <ScenePanel contract={contract} title="Catatan Asesmen">
+          <div style={{ fontSize: 14, lineHeight: 1.6, color: contract.palette.text }}>{content.assessmentNotes}</div>
+        </ScenePanel>
+      )}
+    </SceneShell>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 22. AccessibilityHelpComposer
+// ---------------------------------------------------------------------------
+
+export function AccessibilityHelpComposer({
+  contract, content,
+}: {
+  contract: MpiDesignContract;
+  content: {
+    title?: string;
+    readingGuide?: string;
+    keyboardGuide?: string;
+    contrastOption?: string;
+  };
+}) {
+  return (
+    <SceneShell contract={contract} className="silse-scene-accessibility-help">
+      <SceneHeader contract={contract} chipIcon="♿" chipLabel="Aksesibilitas" chipColor={contract.palette.success} title={content.title || 'Bantuan Aksesibilitas'} />
+      {content.readingGuide && (
+        <ScenePanel contract={contract} title="📖 Panduan Membaca">
+          <div style={{ fontSize: 14, lineHeight: 1.8, color: contract.palette.text }}>{content.readingGuide}</div>
+        </ScenePanel>
+      )}
+      {content.keyboardGuide && (
+        <ScenePanel contract={contract} title="⌨️ Panduan Keyboard/Touch">
+          <div style={{ fontSize: 14, lineHeight: 1.8, color: contract.palette.text }}>{content.keyboardGuide}</div>
+        </ScenePanel>
+      )}
+      {content.contrastOption && (
+        <ScenePanel contract={contract} title="🎨 Opsi Kontras">
+          <div style={{ fontSize: 14, lineHeight: 1.8, color: contract.palette.text }}>{content.contrastOption}</div>
+        </ScenePanel>
+      )}
+    </SceneShell>
+  );
+}

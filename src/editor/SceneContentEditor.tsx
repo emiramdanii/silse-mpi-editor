@@ -114,6 +114,31 @@ const SCENE_CONTENT_FIELDS: Record<string, Array<{ key: string; label: string; t
   'rubric-panel': [
     { key: 'scoreGuide', label: 'Panduan Skor', type: 'textarea' },
   ],
+  // PERFECT-MPI-RENDER-COMPLETE-02: 5 narrative/guidance scene types
+  'timeline-story': [
+    { key: 'title', label: 'Judul Timeline', type: 'text' },
+    { key: 'checkpointQuestion', label: 'Pertanyaan Checkpoint', type: 'textarea' },
+    { key: 'checkpointAnswer', label: 'Jawaban Checkpoint', type: 'text' },
+  ],
+  'branching-scenario': [
+    { key: 'scenarioPrompt', label: 'Prompt Skenario', type: 'textarea' },
+    { key: 'resetLabel', label: 'Label Reset', type: 'text' },
+  ],
+  'glossary-cards': [
+    { key: 'title', label: 'Judul Glosarium', type: 'text' },
+  ],
+  'teacher-guide': [
+    { key: 'title', label: 'Judul Panduan', type: 'text' },
+    { key: 'teacherInstruction', label: 'Instruksi Guru', type: 'textarea' },
+    { key: 'timeAllocation', label: 'Alokasi Waktu', type: 'text' },
+    { key: 'assessmentNotes', label: 'Catatan Asesmen', type: 'textarea' },
+  ],
+  'accessibility-help': [
+    { key: 'title', label: 'Judul Bantuan', type: 'text' },
+    { key: 'readingGuide', label: 'Panduan Membaca', type: 'textarea' },
+    { key: 'keyboardGuide', label: 'Panduan Keyboard/Touch', type: 'textarea' },
+    { key: 'contrastOption', label: 'Opsi Kontras', type: 'textarea' },
+  ],
 };
 
 export function SceneContentEditor({ page }: { page: SimplePage }) {
