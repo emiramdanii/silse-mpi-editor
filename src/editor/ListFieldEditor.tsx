@@ -19,8 +19,8 @@ export type ListFieldDef = {
   key: string;
   /** Display label */
   label: string;
-  /** Which sub-fields of each item to show as editable text inputs */
-  itemFields: Array<{ key: string; label: string; type?: 'text' | 'textarea' }>;
+  /** Which sub-fields of each item to show as editable inputs */
+  itemFields: Array<{ key: string; label: string; type?: 'text' | 'textarea' | 'number' | 'boolean' }>;
   /** Factory to create a new empty item */
   newItem: () => Record<string, unknown>;
 };
@@ -52,8 +52,8 @@ export const SCENE_LIST_FIELDS: Record<string, ListFieldDef[]> = {
       itemFields: [
         { key: 'id', label: 'ID', type: 'text' },
         { key: 'label', label: 'Label', type: 'text' },
-        { key: 'x', label: 'X (%)', type: 'text' },
-        { key: 'y', label: 'Y (%)', type: 'text' },
+        { key: 'x', label: 'X (%)', type: 'number' },
+        { key: 'y', label: 'Y (%)', type: 'number' },
         { key: 'info', label: 'Info', type: 'textarea' },
       ],
       newItem: () => ({ id: `hs-${Date.now()}`, x: 50, y: 50, label: '', info: '' }),
@@ -135,7 +135,7 @@ export const SCENE_LIST_FIELDS: Record<string, ListFieldDef[]> = {
       itemFields: [
         { key: 'id', label: 'ID', type: 'text' },
         { key: 'name', label: 'Nama', type: 'text' },
-        { key: 'score', label: 'Skor', type: 'text' },
+        { key: 'score', label: 'Skor', type: 'number' },
         { key: 'descriptor', label: 'Deskriptor', type: 'textarea' },
       ],
       newItem: () => ({ id: `lv-${Date.now()}`, name: '', score: 0, descriptor: '' }),
@@ -173,7 +173,7 @@ export const SCENE_LIST_FIELDS: Record<string, ListFieldDef[]> = {
         { key: 'id', label: 'ID', type: 'text' },
         { key: 'label', label: 'Label', type: 'text' },
         { key: 'consequence', label: 'Konsekuensi', type: 'textarea' },
-        { key: 'isCorrect', label: 'Benar? (true/false)', type: 'text' },
+        { key: 'isCorrect', label: 'Benar?', type: 'boolean' },
       ],
       newItem: () => ({ id: `ch-${Date.now()}`, label: '', consequence: '', isCorrect: false }),
     },
@@ -222,7 +222,7 @@ export function ListFieldEditor({
     updateSceneContent(storePage.id, { [fieldDef.key]: unwrapped });
   };
 
-  const handleEditItem = (idx: number, fieldKey: string, value: string) => {
+  const handleEditItem = (idx: number, fieldKey: string, value: unknown) => {
     const newItems = items.map((item, i) =>
       i === idx ? { ...item, [fieldKey]: value } : item,
     );
@@ -272,22 +272,40 @@ export function ListFieldEditor({
             </div>
           </div>
           {fieldDef.itemFields.map((f) => {
-            const val = String(item[f.key] ?? '');
+            const fieldType = f.type ?? 'text';
             return (
               <div key={f.key} style={{ marginBottom: 4 }}>
                 <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#6b7280', marginBottom: 2 }}>{f.label}</label>
-                {f.type === 'textarea' ? (
+                {fieldType === 'textarea' ? (
                   <textarea
                     data-testid={`list-field-${fieldDef.key}-${idx}-${f.key}`}
-                    value={val}
+                    value={String(item[f.key] ?? '')}
                     onChange={(e) => handleEditItem(idx, f.key, e.target.value)}
                     style={{ width: '100%', minHeight: 40, padding: '4px 6px', border: '1px solid #d1d5db', borderRadius: 4, fontSize: 12, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
                   />
+                ) : fieldType === 'number' ? (
+                  <input
+                    type="number"
+                    data-testid={`list-field-${fieldDef.key}-${idx}-${f.key}`}
+                    value={Number(item[f.key] ?? 0)}
+                    onChange={(e) => handleEditItem(idx, f.key, e.target.value === '' ? 0 : Number(e.target.value))}
+                    style={{ width: '100%', padding: '4px 6px', border: '1px solid #d1d5db', borderRadius: 4, fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
+                  />
+                ) : fieldType === 'boolean' ? (
+                  <select
+                    data-testid={`list-field-${fieldDef.key}-${idx}-${f.key}`}
+                    value={String(item[f.key] === true)}
+                    onChange={(e) => handleEditItem(idx, f.key, e.target.value === 'true')}
+                    style={{ width: '100%', padding: '4px 6px', border: '1px solid #d1d5db', borderRadius: 4, fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
+                  >
+                    <option value="false">false</option>
+                    <option value="true">true</option>
+                  </select>
                 ) : (
                   <input
                     type="text"
                     data-testid={`list-field-${fieldDef.key}-${idx}-${f.key}`}
-                    value={val}
+                    value={String(item[f.key] ?? '')}
                     onChange={(e) => handleEditItem(idx, f.key, e.target.value)}
                     style={{ width: '100%', padding: '4px 6px', border: '1px solid #d1d5db', borderRadius: 4, fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
                   />
