@@ -1227,7 +1227,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     }
 
     if (content.kind === 'quiz-question') {
-      return renderQuizSceneContent(slot, content);
+      return renderQuizSceneContent(slot, content, plan);
     }
 
     if (content.kind === 'learning-material') {
@@ -1406,53 +1406,58 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
   // QUIZ-SCENE-PROOF-01: quiz-question challenge scene content untuk export.
   // Render: challenge header → question focus panel → answer grid → feedback → progress.
   // Visual dari resolvedStyle (design contract), bukan hardcoded CSS.
-  function renderQuizSceneContent(slot, content) {
+  function renderQuizSceneContent(slot, content, plan) {
     var rs = slot.resolvedStyle || {};
     var ansCard = rs.quizAnswerCard || {};
     var badge = rs.quizChoiceBadge || {};
     var panel = rs.quizQuestionPanel || {};
+    var premiumShadow = (plan.card && plan.card.shadow) || '0 2px 8px rgba(0,0,0,0.08)';
+    var quizPanelBorder = ansCard.border || (plan.palette ? plan.palette.border : '#d1d5db');
 
     var wrapper = document.createElement('div');
-    wrapper.className = 'silse-quiz-scene';
+    wrapper.className = 'silse-quiz-scene silse-premium-quiz-scene';
     wrapper.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;gap:10px;padding:16px;box-sizing:border-box;overflow:auto;';
 
     // Challenge header
     var header = document.createElement('div');
-    header.className = 'silse-quiz-header';
+    header.className = 'silse-quiz-header silse-premium-quiz-header';
     header.style.cssText = 'font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;';
     header.textContent = '🎯 Challenge — Pilih jawaban yang tepat';
     wrapper.appendChild(header);
 
     // Question focus panel
     var prompt = document.createElement('div');
-    prompt.className = 'silse-quiz-question-focus';
+    prompt.className = 'silse-quiz-question-focus silse-premium-quiz-focus';
     var promptCss = 'font-size:17px;font-weight:600;';
     promptCss += 'padding:' + (panel.padding != null ? panel.padding : 16) + 'px;';
-    promptCss += 'border-radius:' + (panel.radius != null ? panel.radius : 12) + 'px;';
+    promptCss += 'border-radius:' + (panel.radius != null ? panel.radius : (plan.card ? plan.card.radius : 12)) + 'px;';
     promptCss += 'background:' + (panel.background || '#f8fafc') + ';';
+    promptCss += 'border:1px solid ' + quizPanelBorder + ';';
+    promptCss += 'box-shadow:' + premiumShadow + ';';
     prompt.style.cssText = promptCss;
     prompt.textContent = content.prompt || '';
     wrapper.appendChild(prompt);
 
     // Answer grid
     var answerGrid = document.createElement('div');
-    answerGrid.className = 'silse-quiz-answer-grid';
+    answerGrid.className = 'silse-quiz-answer-grid silse-premium-quiz-grid';
     answerGrid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:10px;';
     for (var ci = 0; ci < content.choices.length; ci++) {
       (function(choiceIdx, choice) {
         var card = document.createElement('div');
-        card.className = 'silse-quiz-answer-card';
+        card.className = 'silse-quiz-answer-card silse-premium-quiz-card';
         card.setAttribute('data-choice-id', choice.id);
         var cardCss = 'padding:' + (ansCard.padding != null ? ansCard.padding : 14) + 'px;';
-        cardCss += 'border-radius:' + (ansCard.radius != null ? ansCard.radius : 12) + 'px;';
+        cardCss += 'border-radius:' + (ansCard.radius != null ? ansCard.radius : (plan.card ? plan.card.radius : 12)) + 'px;';
         cardCss += 'background:' + (ansCard.background || '#fff') + ';';
-        cardCss += 'border:2px solid ' + (ansCard.border || '#d1d5db') + ';';
-        cardCss += 'cursor:pointer;font-size:14px;font-weight:600;min-height:60px;display:flex;align-items:center;gap:12px;';
+        cardCss += 'border:2px solid ' + quizPanelBorder + ';';
+        cardCss += 'cursor:pointer;font-size:14px;font-weight:600;min-height:60px;display:flex;align-items:center;gap:12px;transition:all 0.18s ease;';
+        cardCss += 'box-shadow:' + premiumShadow + ';';
         card.style.cssText = cardCss;
 
         // Choice letter badge
         var letterBadge = document.createElement('span');
-        letterBadge.className = 'silse-quiz-choice-badge';
+        letterBadge.className = 'silse-quiz-choice-badge silse-premium-quiz-badge';
         letterBadge.style.cssText = 'display:inline-grid;place-items:center;min-width:32px;height:32px;border-radius:' + (badge.radius != null ? badge.radius : 8) + 'px;background:' + (badge.background || '#1d3557') + ';color:' + (badge.color || '#fff') + ';font-size:14px;font-weight:900;flex-shrink:0;';
         letterBadge.textContent = String.fromCharCode(65 + choiceIdx);
         card.appendChild(letterBadge);
@@ -1467,13 +1472,13 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
 
     // Feedback placeholder
     var feedback = document.createElement('div');
-    feedback.className = 'silse-quiz-feedback';
+    feedback.className = 'silse-quiz-feedback silse-premium-quiz-feedback';
     feedback.style.cssText = 'display:none;';
     wrapper.appendChild(feedback);
 
     // Progress indicator
     var progress = document.createElement('div');
-    progress.className = 'silse-quiz-progress';
+    progress.className = 'silse-quiz-progress silse-premium-quiz-progress';
     progress.style.cssText = 'font-size:12px;font-weight:700;margin-top:auto;';
     progress.textContent = content.choices.length + ' pilihan · Correct: ' + (content.correctChoiceId || '');
     wrapper.appendChild(progress);
@@ -1489,15 +1494,20 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var surf = rs.surface || {};
     var palette = plan.palette || {};
     var ty = plan.typography || {};
+    var premiumShadow = (plan.card && plan.card.shadow) || '0 2px 8px rgba(0,0,0,0.08)';
+    var surfBorder = surf.border || (plan.card ? plan.card.border : '1px solid #e5e7eb');
+    var surfRadius = surf.radius != null ? surf.radius : (plan.card ? plan.card.radius : 12);
+    var surfPadding = surf.padding != null ? surf.padding : (plan.card ? plan.card.padding : 16);
 
     var wrapper = document.createElement('div');
-    wrapper.className = 'silse-learning-scene';
+    wrapper.className = 'silse-learning-scene silse-premium-learning-scene';
     wrapper.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;gap:12px;padding:16px;box-sizing:border-box;overflow:auto;';
 
     // Concept header
     var header = document.createElement('div');
-    header.className = 'silse-learning-header';
+    header.className = 'silse-learning-header silse-premium-learning-header';
     var headerCss = 'font-size:' + ty.titleSize + 'px;font-weight:' + ty.titleWeight + ';font-family:' + ty.heroFont + ';color:' + palette.text + ';line-height:' + ty.lineHeight + ';';
+    headerCss += 'border-left:4px solid ' + palette.primary + ';padding-left:12px;';
     header.style.cssText = headerCss;
     header.textContent = content.conceptTitle || '';
     wrapper.appendChild(header);
@@ -1511,13 +1521,13 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
 
     // Explanation panel
     var explanation = document.createElement('div');
-    explanation.className = 'silse-learning-explanation';
-    var expCss = 'padding:' + (surf.padding != null ? surf.padding : 16) + 'px;';
-    expCss += 'border-radius:' + (surf.radius != null ? surf.radius : 12) + 'px;';
+    explanation.className = 'silse-learning-explanation silse-premium-learning-explanation';
+    var expCss = 'padding:' + surfPadding + 'px;';
+    expCss += 'border-radius:' + surfRadius + 'px;';
     expCss += 'background:' + (surf.background || palette.surface) + ';';
-    expCss += 'border:' + (surf.border || '1px solid #e5e7eb') + ';';
+    expCss += 'border:' + surfBorder + ';';
     expCss += 'font-size:' + ty.bodySize + 'px;line-height:' + ty.lineHeight + ';color:' + palette.text + ';';
-    if (surf.shadow) expCss += 'box-shadow:' + surf.shadow + ';';
+    expCss += 'box-shadow:' + (surf.shadow || premiumShadow) + ';';
     explanation.style.cssText = expCss;
     explanation.textContent = content.explanation || '';
     wrapper.appendChild(explanation);
@@ -1525,16 +1535,18 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     // Example cards
     if (content.examples && content.examples.length > 0) {
       var exampleGrid = document.createElement('div');
-      exampleGrid.className = 'silse-learning-example-grid';
+      exampleGrid.className = 'silse-learning-example-grid silse-premium-learning-example-grid';
       exampleGrid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:10px;';
       for (var ei = 0; ei < content.examples.length; ei++) {
         (function(ex) {
           var card = document.createElement('div');
-          card.className = 'silse-learning-example-card';
-          var cardCss = 'padding:' + (surf.padding != null ? surf.padding : 16) + 'px;';
-          cardCss += 'border-radius:' + (surf.radius != null ? surf.radius : 12) + 'px;';
+          card.className = 'silse-learning-example-card silse-premium-learning-example-card';
+          var cardCss = 'padding:' + surfPadding + 'px;';
+          cardCss += 'border-radius:' + surfRadius + 'px;';
           cardCss += 'background:' + palette.surface + ';';
-          cardCss += 'border:' + (surf.border || '1px solid #e5e7eb') + ';';
+          cardCss += 'border:' + surfBorder + ';';
+          cardCss += 'box-shadow:' + premiumShadow + ';';
+          cardCss += 'transition:all 0.18s ease;';
           card.style.cssText = cardCss;
           var cardTitle = document.createElement('strong');
           cardTitle.style.cssText = 'display:block;font-size:15px;margin-bottom:4px;color:' + palette.primary + ';';
@@ -1554,8 +1566,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.keyPoints && content.keyPoints.length > 0) {
       var kp = plan.learning.keyPointPanel;
       var keyPoint = document.createElement('div');
-      keyPoint.className = 'silse-learning-key-point';
-      keyPoint.style.cssText = 'padding:' + kp.padding + 'px;border-radius:' + kp.radius + 'px;background:' + kp.background + ';border:' + kp.border + ';border-left:4px solid ' + kp.accentColor + ';';
+      keyPoint.className = 'silse-learning-key-point silse-premium-learning-key-point';
+      keyPoint.style.cssText = 'padding:' + kp.padding + 'px;border-radius:' + kp.radius + 'px;background:' + kp.background + ';border:' + kp.border + ';border-left:4px solid ' + kp.accentColor + ';box-shadow:' + premiumShadow + ';';
       var kpLabel = document.createElement('div');
       kpLabel.style.cssText = 'font-size:11px;font-weight:700;color:' + kp.iconColor + ';text-transform:uppercase;margin-bottom:6px;';
       kpLabel.textContent = kp.icon + ' Key Points';
@@ -1576,8 +1588,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.studentAction) {
       var sa = plan.learning.studentActionPanel;
       var action = document.createElement('div');
-      action.className = 'silse-learning-student-action';
-      action.style.cssText = 'padding:' + sa.padding + 'px;border-radius:' + sa.radius + 'px;background:' + sa.background + ';border:' + sa.border + ';display:flex;align-items:center;gap:10px;';
+      action.className = 'silse-learning-student-action silse-premium-learning-student-action';
+      action.style.cssText = 'padding:' + sa.padding + 'px;border-radius:' + sa.radius + 'px;background:' + sa.background + ';border:' + sa.border + ';display:flex;align-items:center;gap:10px;box-shadow:' + premiumShadow + ';';
       var actionIcon = document.createElement('span');
       actionIcon.style.fontSize = '20px';
       actionIcon.textContent = sa.icon;
@@ -1599,7 +1611,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.visualHint) {
       var vh = plan.learning.visualHintPanel;
       var hint = document.createElement('div');
-      hint.className = 'silse-learning-visual-hint';
+      hint.className = 'silse-learning-visual-hint silse-premium-learning-visual-hint';
       hint.style.cssText = 'padding:8px;border-radius:8px;background:transparent;font-size:12px;color:' + vh.color + ';font-style:' + vh.fontStyle + ';text-align:center;';
       hint.textContent = vh.icon + ' ' + content.visualHint;
       wrapper.appendChild(hint);
@@ -2063,14 +2075,26 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
   }
 
   function renderDiscussionSceneExport(slot, content, plan) {
+    var premiumShadow = (plan.card && plan.card.shadow) || '0 2px 8px rgba(0,0,0,0.08)';
+    var banner = exportDiscussionBanner(plan, 'Instruksi', content.groupInstruction || 'Diskusikan', content.discussionPrompt || '', plan.palette ? plan.palette.success : null);
+    banner.classList.add('silse-premium-discussion-banner');
+    banner.style.boxShadow = premiumShadow;
+    var timer = exportTimerBlock(plan);
+    timer.classList.add('silse-premium-discussion-timer');
+    timer.style.boxShadow = premiumShadow;
+    var input = exportResponseInput(plan, content.responseInput || 'Tulis hasil diskusi kelompokmu...');
+    input.classList.add('silse-premium-discussion-input');
+    input.style.boxShadow = premiumShadow;
     var children = [
       exportHeader(plan, '💬 Diskusi Kelompok', plan.palette ? plan.palette.success : null, 'Diskusi Kelompok'),
-      exportDiscussionBanner(plan, 'Instruksi', content.groupInstruction || 'Diskusikan', content.discussionPrompt || '', plan.palette ? plan.palette.success : null),
-      exportTimerBlock(plan),
-      exportResponseInput(plan, content.responseInput || 'Tulis hasil diskusi kelompokmu...'),
+      banner,
+      timer,
+      input,
       exportActionButton(plan, 'Simpan Jawaban'),
     ];
-    return exportShell(plan, 'silse-scene-discussion', children);
+    var shell = exportShell(plan, 'silse-scene-discussion', children);
+    shell.style.overflow = 'hidden';
+    return shell;
   }
 
   function renderCaseAnalysisExport(slot, content, plan) {
@@ -2105,43 +2129,65 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
   }
 
   function renderReflectionJournalExport(slot, content, plan) {
+    var premiumShadow = (plan.card && plan.card.shadow) || '0 2px 8px rgba(0,0,0,0.08)';
     var children = [
       exportHeader(plan, '📝 Refleksi · ±8 Menit', plan.palette ? plan.palette.secondary : null, 'Refleksi Diri'),
     ];
-    if (content.portfolioSummary) children.push(exportPortfolio(plan, 'Portofolio Diskusi', content.portfolioSummary));
-    children.push(exportReflectionPrompt(plan, content.reflectionPrompts || ['Refleksikan pembelajaran hari ini']));
-    children.push(exportResponseInput(plan, content.commitmentInput || 'Tulis komitmenmu...'));
-    if (content.nextTask) children.push(exportPanel(plan, 'Tugas Pertemuan Berikutnya', content.nextTask, 'silse-reflection-next-task'));
+    if (content.portfolioSummary) {
+      var portfolio = exportPortfolio(plan, 'Portofolio Diskusi', content.portfolioSummary);
+      portfolio.classList.add('silse-premium-reflection-portfolio');
+      portfolio.style.boxShadow = premiumShadow;
+      children.push(portfolio);
+    }
+    var prompts = exportReflectionPrompt(plan, content.reflectionPrompts || ['Refleksikan pembelajaran hari ini']);
+    prompts.classList.add('silse-premium-reflection-prompt');
+    prompts.style.boxShadow = premiumShadow;
+    if (plan.palette && plan.palette.secondary) {
+      prompts.style.borderLeft = '4px solid ' + plan.palette.secondary;
+    }
+    children.push(prompts);
+    var input = exportResponseInput(plan, content.commitmentInput || 'Tulis komitmenmu...');
+    input.classList.add('silse-premium-reflection-input');
+    input.style.boxShadow = premiumShadow;
+    children.push(input);
+    if (content.nextTask) {
+      var nextTask = exportPanel(plan, 'Tugas Pertemuan Berikutnya', content.nextTask, 'silse-reflection-next-task silse-premium-reflection-next-task');
+      nextTask.style.boxShadow = premiumShadow;
+      children.push(nextTask);
+    }
     children.push(exportActionButton(plan, 'Simpan Refleksi'));
-    return exportShell(plan, 'silse-scene-reflection-journal', children);
+    var shell = exportShell(plan, 'silse-scene-reflection-journal', children);
+    shell.style.overflow = 'hidden';
+    return shell;
   }
 
   // GOLDEN-REFERENCE-GAME-P1: Classification game export renderer
   function renderClassificationGameExport(slot, content, plan) {
     var p = plan.palette || {};
+    var premiumShadow = (plan.card && plan.card.shadow) || '0 2px 8px rgba(0,0,0,0.08)';
     var children = [
       exportHeader(plan, '🎮 Game Sortir · ±15 Menit', p.success, 'Game Sortir Norma'),
     ];
     // Instruction
     if (content.instruction) {
       var instr = document.createElement('div');
-      instr.className = 'silse-classification-instruction';
-      instr.style.cssText = 'background:' + (p.success || '#34d399') + '11;border:1px solid ' + (p.success || '#34d399') + '40;border-radius:13px;padding:13px 15px;font-size:14px;line-height:1.6;color:' + p.text + ';';
+      instr.className = 'silse-classification-instruction silse-premium-game-instruction';
+      instr.style.cssText = 'background:' + (p.success || '#34d399') + '11;border:1px solid ' + (p.success || '#34d399') + '40;border-radius:13px;padding:13px 15px;font-size:14px;line-height:1.6;color:' + p.text + ';box-shadow:' + premiumShadow + ';';
       instr.textContent = content.instruction;
       children.push(instr);
     }
     // Score
     var scoreEl = document.createElement('div');
-    scoreEl.className = 'silse-classification-score';
+    scoreEl.className = 'silse-classification-score silse-premium-game-score';
     scoreEl.setAttribute('data-testid', 'game-score');
-    scoreEl.style.cssText = 'display:flex;align-items:center;gap:10px;font-size:16px;font-weight:800;color:' + (p.gold || '#f9c12e') + ';';
-    scoreEl.innerHTML = '🏆 Skor: <span class="silse-game-score-val">0</span>';
+    scoreEl.style.cssText = 'display:inline-flex;align-items:center;gap:10px;font-size:16px;font-weight:800;color:' + (p.gold || '#f9c12e') + ';padding:8px 14px;border-radius:999px;background:' + (p.gold || '#f9c12e') + '11;border:1px solid ' + (p.gold || '#f9c12e') + '33;box-shadow:' + premiumShadow + ';';
+    scoreEl.innerHTML = '<span style="font-size:18px;">🏆</span> Skor: <span class="silse-game-score-val">0</span>';
     children.push(scoreEl);
     // Feedback area
     var fbEl = document.createElement('div');
-    fbEl.className = 'silse-classification-feedback';
+    fbEl.className = 'silse-classification-feedback silse-premium-game-feedback';
     fbEl.setAttribute('data-testid', 'game-feedback');
-    fbEl.style.cssText = 'display:none;padding:10px 14px;border-radius:10px;font-size:14px;font-weight:700;';
+    fbEl.style.cssText = 'display:none;padding:10px 14px;border-radius:13px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;box-shadow:' + premiumShadow + ';';
     children.push(fbEl);
     // Item pool
     var poolLabel = document.createElement('div');
@@ -2149,18 +2195,18 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     poolLabel.textContent = 'Pilih Item';
     children.push(poolLabel);
     var pool = document.createElement('div');
-    pool.className = 'silse-classification-pool';
+    pool.className = 'silse-classification-pool silse-premium-game-pool';
     pool.setAttribute('data-testid', 'classification-pool');
     pool.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;';
     if (content.items) {
       for (var ii = 0; ii < content.items.length; ii++) {
         (function(item) {
           var btn = document.createElement('button');
-          btn.className = 'silse-classification-item';
+          btn.className = 'silse-classification-item silse-premium-game-item';
           btn.setAttribute('data-item-id', item.id);
           btn.setAttribute('data-correct-cat', item.correctCategory);
           btn.textContent = item.label;
-          btn.style.cssText = 'padding:10px 16px;border-radius:999px;font-size:14px;font-weight:700;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:' + (p.surface || '#182d45') + ';color:' + p.text + ';cursor:pointer;transition:all 0.15s;';
+          btn.style.cssText = 'padding:10px 16px;border-radius:999px;font-size:14px;font-weight:700;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:' + (p.surface || '#182d45') + ';color:' + p.text + ';cursor:pointer;transition:all 0.18s ease;';
           pool.appendChild(btn);
         })(content.items[ii]);
       }
@@ -2168,22 +2214,22 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     children.push(pool);
     // Category columns
     var grid = document.createElement('div');
-    grid.className = 'silse-classification-column-grid';
+    grid.className = 'silse-classification-column-grid silse-premium-game-columns';
     grid.setAttribute('data-testid', 'classification-columns');
     grid.style.cssText = 'display:grid;grid-template-columns:repeat(' + Math.min((content.categories || []).length, 4) + ', 1fr);gap:10px;';
     if (content.categories) {
       for (var ci = 0; ci < content.categories.length; ci++) {
         (function(cat) {
           var col = document.createElement('div');
-          col.className = 'silse-classification-column';
+          col.className = 'silse-classification-column silse-premium-game-column';
           col.setAttribute('data-category', cat);
-          col.style.cssText = 'background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';border-radius:16px;padding:20px;min-height:120px;';
+          col.style.cssText = 'background:' + (p.surface || '#182d45') + ';border:2px dashed ' + (p.gold || '#f9c12e') + 'aa;border-radius:16px;padding:20px;min-height:120px;box-shadow:' + premiumShadow + ';transition:all 0.18s ease;';
           var colTitle = document.createElement('div');
           colTitle.style.cssText = 'font-size:13px;font-weight:800;color:' + (p.gold || '#f9c12e') + ';margin-bottom:10px;text-align:center;';
           colTitle.textContent = cat;
           col.appendChild(colTitle);
           var colItems = document.createElement('div');
-          colItems.className = 'silse-classification-placed-items';
+          colItems.className = 'silse-classification-placed-items silse-premium-game-placed-list';
           colItems.style.cssText = 'display:flex;flex-direction:column;gap:6px;';
           col.appendChild(colItems);
           grid.appendChild(col);
@@ -2193,7 +2239,9 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     children.push(grid);
     // Reset button
     children.push(exportActionButton(plan, '↺ Reset', 'secondary'));
-    return exportShell(plan, 'silse-scene-classification-game', children);
+    var shell = exportShell(plan, 'silse-scene-classification-game', children);
+    shell.style.overflow = 'hidden';
+    return shell;
   }
 
   function renderHotspotMapExport(slot, content, plan) {
@@ -2237,26 +2285,28 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
 
   function renderMatchingGameExport(slot, content, plan) {
     var p = plan.palette || {};
+    var premiumShadow = (plan.card && plan.card.shadow) || '0 2px 8px rgba(0,0,0,0.08)';
     var children = [exportHeader(plan, '🔗 Game Mencocokkan', p.success, 'Game Mencocokkan')];
     if (content.instruction) {
       var instr = document.createElement('div');
-      instr.style.cssText = 'font-size:14px;line-height:1.6;padding:8px 12px;background:' + (p.success || '#34d399') + '11;border-radius:10px;color:' + (p.text || '#fff') + ';';
+      instr.className = 'silse-premium-matching-instruction';
+      instr.style.cssText = 'font-size:14px;line-height:1.6;padding:8px 12px;background:' + (p.success || '#34d399') + '11;border-radius:16px;color:' + (p.text || '#fff') + ';box-shadow:' + premiumShadow + ';';
       instr.textContent = content.instruction;
       children.push(instr);
     }
     var scoreEl = document.createElement('div');
-    scoreEl.className = 'silse-matching-score';
-    scoreEl.style.cssText = 'font-size:16px;font-weight:800;color:' + (p.gold || '#f9c12e') + ';';
-    scoreEl.innerHTML = '🏆 Skor: <span class="silse-matching-score-val">0</span>';
+    scoreEl.className = 'silse-matching-score silse-premium-matching-score';
+    scoreEl.style.cssText = 'display:inline-flex;align-items:center;gap:8px;font-size:16px;font-weight:800;color:' + (p.gold || '#f9c12e') + ';padding:8px 14px;border-radius:999px;background:' + (p.gold || '#f9c12e') + '11;border:1px solid ' + (p.gold || '#f9c12e') + '33;box-shadow:' + premiumShadow + ';';
+    scoreEl.innerHTML = '<span style="font-size:18px;">🏆</span> Skor: <span class="silse-matching-score-val">0</span>';
     children.push(scoreEl);
     var fbEl = document.createElement('div');
-    fbEl.className = 'silse-matching-feedback';
-    fbEl.style.cssText = 'display:none;padding:10px 14px;border-radius:10px;font-size:14px;font-weight:700;';
+    fbEl.className = 'silse-matching-feedback silse-premium-matching-feedback';
+    fbEl.style.cssText = 'display:none;padding:10px 14px;border-radius:16px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;box-shadow:' + premiumShadow + ';';
     children.push(fbEl);
     var grid = document.createElement('div');
     grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:12px;';
     var leftCol = document.createElement('div');
-    leftCol.className = 'silse-matching-left';
+    leftCol.className = 'silse-matching-left silse-premium-matching-left';
     var leftLabel = document.createElement('div');
     leftLabel.style.cssText = 'font-size:12px;font-weight:800;text-transform:uppercase;color:' + (p.mutedText || '#6e90b5') + ';margin-bottom:8px;';
     leftLabel.textContent = 'Kolom Kiri';
@@ -2264,15 +2314,15 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var leftItems = content.leftItems || [];
     for (var li = 0; li < leftItems.length; li++) {
       var lbtn = document.createElement('button');
-      lbtn.className = 'silse-matching-pair';
+      lbtn.className = 'silse-matching-pair silse-premium-matching-pair';
       lbtn.setAttribute('data-left-id', leftItems[li].id);
-      lbtn.style.cssText = 'display:block;width:100%;text-align:left;margin-bottom:6px;padding:10px 14px;min-height:44px;border-radius:10px;cursor:pointer;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:' + (p.surface || '#182d45') + ';color:' + (p.text || '#fff') + ';font-size:14px;font-weight:600;';
+      lbtn.style.cssText = 'display:block;width:100%;text-align:left;margin-bottom:6px;padding:10px 14px;min-height:44px;border-radius:16px;cursor:pointer;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:' + (p.surface || '#182d45') + ';color:' + (p.text || '#fff') + ';font-size:14px;font-weight:600;transition:all 0.18s ease;';
       lbtn.textContent = leftItems[li].label;
       leftCol.appendChild(lbtn);
     }
     grid.appendChild(leftCol);
     var rightCol = document.createElement('div');
-    rightCol.className = 'silse-matching-right';
+    rightCol.className = 'silse-matching-right silse-premium-matching-right';
     var rightLabel = document.createElement('div');
     rightLabel.style.cssText = 'font-size:12px;font-weight:800;text-transform:uppercase;color:' + (p.mutedText || '#6e90b5') + ';margin-bottom:8px;';
     rightLabel.textContent = 'Kolom Kanan';
@@ -2280,41 +2330,46 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var rightItems = content.rightItems || [];
     for (var ri = 0; ri < rightItems.length; ri++) {
       var rbtn = document.createElement('button');
-      rbtn.className = 'silse-matching-pair';
+      rbtn.className = 'silse-matching-pair silse-premium-matching-pair';
       rbtn.setAttribute('data-right-id', rightItems[ri].id);
-      rbtn.style.cssText = 'display:block;width:100%;text-align:left;margin-bottom:6px;padding:10px 14px;min-height:44px;border-radius:10px;cursor:pointer;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:' + (p.surface || '#182d45') + ';color:' + (p.text || '#fff') + ';font-size:14px;font-weight:600;';
+      rbtn.style.cssText = 'display:block;width:100%;text-align:left;margin-bottom:6px;padding:10px 14px;min-height:44px;border-radius:16px;cursor:pointer;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:' + (p.surface || '#182d45') + ';color:' + (p.text || '#fff') + ';font-size:14px;font-weight:600;transition:all 0.18s ease;';
       rbtn.textContent = rightItems[ri].label;
       rightCol.appendChild(rbtn);
     }
     grid.appendChild(rightCol);
     children.push(grid);
     children.push(exportActionButton(plan, '↺ Reset', 'secondary'));
-    return exportShell(plan, 'silse-scene-matching-game', children);
+    var shell = exportShell(plan, 'silse-scene-matching-game', children);
+    shell.style.overflow = 'hidden';
+    return shell;
   }
 
   function renderSequencingGameExport(slot, content, plan) {
     var p = plan.palette || {};
+    var premiumShadow = (plan.card && plan.card.shadow) || '0 2px 8px rgba(0,0,0,0.08)';
     var children = [exportHeader(plan, '📋 Game Urutkan', p.accent, 'Game Mengurutkan')];
     if (content.instruction) {
       var instr = document.createElement('div');
-      instr.style.cssText = 'font-size:14px;line-height:1.6;padding:8px 12px;background:' + (p.accent || '#e63946') + '11;border-radius:10px;color:' + (p.text || '#fff') + ';';
+      instr.className = 'silse-premium-sequence-instruction';
+      instr.style.cssText = 'font-size:14px;line-height:1.6;padding:8px 12px;background:' + (p.accent || '#e63946') + '11;border-radius:16px;color:' + (p.text || '#fff') + ';box-shadow:' + premiumShadow + ';';
       instr.textContent = content.instruction;
       children.push(instr);
     }
     var scoreEl = document.createElement('div');
-    scoreEl.style.cssText = 'font-size:16px;font-weight:800;color:' + (p.gold || '#f9c12e') + ';';
-    scoreEl.innerHTML = '🏆 Skor: <span class="silse-sequence-score-val">0</span>';
+    scoreEl.className = 'silse-premium-sequence-score';
+    scoreEl.style.cssText = 'display:inline-flex;align-items:center;gap:8px;font-size:16px;font-weight:800;color:' + (p.gold || '#f9c12e') + ';padding:8px 14px;border-radius:999px;background:' + (p.gold || '#f9c12e') + '11;border:1px solid ' + (p.gold || '#f9c12e') + '33;box-shadow:' + premiumShadow + ';';
+    scoreEl.innerHTML = '<span style="font-size:18px;">🏆</span> Skor: <span class="silse-sequence-score-val">0</span>';
     children.push(scoreEl);
     var fbEl = document.createElement('div');
-    fbEl.className = 'silse-sequence-feedback';
-    fbEl.style.cssText = 'display:none;padding:10px 14px;border-radius:10px;font-size:14px;font-weight:700;';
+    fbEl.className = 'silse-sequence-feedback silse-premium-sequence-feedback';
+    fbEl.style.cssText = 'display:none;padding:10px 14px;border-radius:16px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;box-shadow:' + premiumShadow + ';';
     children.push(fbEl);
     var items = content.items || [];
     for (var si = 0; si < items.length; si++) {
       var row = document.createElement('div');
-      row.className = 'silse-sequence-item';
+      row.className = 'silse-sequence-item silse-premium-sequence-item';
       row.setAttribute('data-seq-id', items[si].id);
-      row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:16px;background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';box-shadow:' + premiumShadow + ';transition:all 0.18s ease;';
       var num = document.createElement('span');
       num.className = 'silse-sequence-num';
       num.style.cssText = 'font-size:18px;font-weight:800;color:' + (p.gold || '#f9c12e') + ';min-width:28px;';
@@ -2323,28 +2378,30 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       lbl.style.cssText = 'flex:1;font-size:14px;font-weight:600;color:' + (p.text || '#fff') + ';';
       lbl.textContent = items[si].label;
       var upBtn = document.createElement('button');
-      upBtn.className = 'silse-sequence-up';
+      upBtn.className = 'silse-sequence-up silse-premium-sequence-up';
       upBtn.setAttribute('data-action', 'seq-up');
       upBtn.setAttribute('data-seq-id', items[si].id);
-      upBtn.style.cssText = 'padding:6px 12px;min-height:36px;border-radius:8px;border:none;background:' + (p.primary || '#0e1c2f') + ';color:#fff;font-weight:700;cursor:pointer;';
+      upBtn.style.cssText = 'padding:6px 12px;min-height:36px;border-radius:8px;border:none;background:' + (p.primary || '#0e1c2f') + ';color:#fff;font-weight:700;cursor:pointer;transition:all 0.18s ease;';
       upBtn.textContent = '↑';
       var downBtn = document.createElement('button');
-      downBtn.className = 'silse-sequence-down';
+      downBtn.className = 'silse-sequence-down silse-premium-sequence-down';
       downBtn.setAttribute('data-action', 'seq-down');
       downBtn.setAttribute('data-seq-id', items[si].id);
-      downBtn.style.cssText = 'padding:6px 12px;min-height:36px;border-radius:8px;border:none;background:' + (p.primary || '#0e1c2f') + ';color:#fff;font-weight:700;cursor:pointer;';
+      downBtn.style.cssText = 'padding:6px 12px;min-height:36px;border-radius:8px;border:none;background:' + (p.primary || '#0e1c2f') + ';color:#fff;font-weight:700;cursor:pointer;transition:all 0.18s ease;';
       downBtn.textContent = '↓';
       row.appendChild(num); row.appendChild(lbl); row.appendChild(upBtn); row.appendChild(downBtn);
       children.push(row);
     }
     var checkBtn = document.createElement('button');
-    checkBtn.className = 'silse-sequence-check';
+    checkBtn.className = 'silse-sequence-check silse-premium-sequence-check';
     checkBtn.setAttribute('data-action', 'seq-check');
-    checkBtn.style.cssText = 'padding:10px 18px;min-height:44px;border-radius:999px;border:none;background:' + (p.success || '#34d399') + ';color:#fff;font-weight:800;cursor:pointer;';
+    checkBtn.style.cssText = 'padding:10px 18px;min-height:44px;border-radius:999px;border:none;background:' + (p.success || '#34d399') + ';color:#fff;font-weight:800;cursor:pointer;transition:all 0.18s ease;box-shadow:' + premiumShadow + ';';
     checkBtn.textContent = '✓ Cek Jawaban';
     children.push(checkBtn);
     children.push(exportActionButton(plan, '↺ Reset', 'secondary'));
-    return exportShell(plan, 'silse-scene-sequencing-game', children);
+    var shell = exportShell(plan, 'silse-scene-sequencing-game', children);
+    shell.style.overflow = 'hidden';
+    return shell;
   }
 
   function renderMediaFocusExport(slot, content, plan) {

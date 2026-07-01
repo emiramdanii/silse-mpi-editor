@@ -527,11 +527,14 @@ function QuizQuestionContent({
   const ansCard = rs?.quizAnswerCard;
   const badge = rs?.quizChoiceBadge;
   const panel = rs?.quizQuestionPanel;
+  const premiumShadow = contract.card.shadow || '0 2px 8px rgba(0,0,0,0.08)';
+  const quizPanelBg = panel?.background ?? contract.palette.surface;
+  const quizPanelBorder = ansCard?.border ?? contract.palette.border;
 
   return (
-    <div className="silse-quiz-scene" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: 10, padding: 16, boxSizing: 'border-box', overflow: 'auto' }}>
+    <div className="silse-quiz-scene silse-premium-quiz-scene" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: 10, padding: 16, boxSizing: 'border-box', overflow: 'auto' }}>
       {/* Challenge header */}
-      <div className="silse-quiz-header" style={{
+      <div className="silse-quiz-header silse-premium-quiz-header" style={{
         fontSize: 11, fontWeight: 700, color: contract.palette.mutedText,
         textTransform: 'uppercase', letterSpacing: 0.5,
       }}>
@@ -539,31 +542,45 @@ function QuizQuestionContent({
       </div>
 
       {/* Question focus panel */}
-      <div className="silse-quiz-question-focus" style={{
+      <div className="silse-quiz-question-focus silse-premium-quiz-focus" style={{
         padding: panel?.padding ?? 16,
-        borderRadius: panel?.radius ?? 12,
-        background: panel?.background ?? contract.palette.surface,
+        borderRadius: panel?.radius ?? contract.card.radius,
+        background: quizPanelBg,
+        border: `1px solid ${quizPanelBorder}`,
+        boxShadow: premiumShadow,
         fontSize: 17, fontWeight: 600,
       }}>
         {content.prompt}
       </div>
 
       {/* Answer grid */}
-      <div className="silse-quiz-answer-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10 }}>
+      <div className="silse-quiz-answer-grid silse-premium-quiz-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10 }}>
         {content.choices.map((choice, idx) => (
           <div
             key={choice.id}
-            className="silse-quiz-answer-card"
+            className="silse-quiz-answer-card silse-premium-quiz-card"
             data-choice-id={choice.id}
             onClick={(e) => {
               e.stopPropagation();
               if (interactive) onQuizAnswer?.(slot.id, choice.id);
             }}
+            onMouseEnter={(e) => {
+              if (!interactive) return;
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.borderColor = `${contract.palette.primary}aa`;
+              e.currentTarget.style.boxShadow = premiumShadow;
+            }}
+            onMouseLeave={(e) => {
+              if (!interactive) return;
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.borderColor = quizPanelBorder;
+              e.currentTarget.style.boxShadow = 'none';
+            }}
             style={{
               padding: ansCard?.padding ?? 14,
-              borderRadius: ansCard?.radius ?? 12,
+              borderRadius: ansCard?.radius ?? contract.card.radius,
               background: ansCard?.background ?? '#fff',
-              border: `2px solid ${ansCard?.border ?? '#d1d5db'}`,
+              border: `2px solid ${quizPanelBorder}`,
               cursor: interactive ? 'pointer' : 'default',
               fontSize: 14,
               fontWeight: 600,
@@ -571,10 +588,11 @@ function QuizQuestionContent({
               display: 'flex',
               alignItems: 'center',
               gap: 12,
+              transition: 'all 0.18s ease',
             }}
           >
             {/* Choice letter badge */}
-            <span className="silse-quiz-choice-badge" style={{
+            <span className="silse-quiz-choice-badge silse-premium-quiz-badge" style={{
               display: 'inline-grid', placeItems: 'center',
               minWidth: 32, height: 32,
               borderRadius: badge?.radius ?? 8,
@@ -595,7 +613,7 @@ function QuizQuestionContent({
       </div>
 
       {/* Progress indicator */}
-      <div className="silse-quiz-progress" style={{
+      <div className="silse-quiz-progress silse-premium-quiz-progress" style={{
         fontSize: 12, fontWeight: 700, color: contract.palette.mutedText,
         marginTop: 'auto',
       }}>
@@ -629,16 +647,23 @@ function LearningMaterialContent({
 }) {
   const rs = slot.resolvedStyle;
   const surf = rs?.surface;
+  const premiumShadow = contract.card.shadow || '0 2px 8px rgba(0,0,0,0.08)';
+  const surfBorder = surf?.border ?? contract.card.border;
+  const surfBg = surf?.background ?? contract.palette.surface;
+  const surfPadding = surf?.padding ?? contract.card.padding;
+  const surfRadius = surf?.radius ?? contract.card.radius;
 
   return (
-    <div className="silse-learning-scene" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: 12, padding: 16, boxSizing: 'border-box', overflow: 'auto' }}>
+    <div className="silse-learning-scene silse-premium-learning-scene" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: 12, padding: 16, boxSizing: 'border-box', overflow: 'auto' }}>
       {/* Concept header */}
-      <div className="silse-learning-header" style={{
+      <div className="silse-learning-header silse-premium-learning-header" style={{
         fontSize: contract.typography.titleSize,
         fontWeight: contract.typography.titleWeight,
         fontFamily: contract.typography.heroFont,
         color: contract.palette.text,
         lineHeight: contract.typography.lineHeight,
+        borderLeft: `4px solid ${contract.palette.primary}`,
+        paddingLeft: 12,
       }}>
         {content.conceptTitle}
       </div>
@@ -649,12 +674,12 @@ function LearningMaterialContent({
       )}
 
       {/* Explanation panel */}
-      <div className="silse-learning-explanation" style={{
-        padding: surf?.padding ?? contract.card.padding,
-        borderRadius: surf?.radius ?? contract.card.radius,
-        background: surf?.background ?? contract.palette.surface,
-        border: surf?.border ?? contract.card.border,
-        boxShadow: surf?.shadow,
+      <div className="silse-learning-explanation silse-premium-learning-explanation" style={{
+        padding: surfPadding,
+        borderRadius: surfRadius,
+        background: surfBg,
+        border: surfBorder,
+        boxShadow: surf?.shadow || premiumShadow,
         fontSize: contract.typography.bodySize,
         lineHeight: contract.typography.lineHeight,
         color: contract.palette.text,
@@ -664,13 +689,15 @@ function LearningMaterialContent({
 
       {/* Example cards */}
       {content.examples && content.examples.length > 0 && (
-        <div className="silse-learning-example-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 10 }}>
+        <div className="silse-learning-example-grid silse-premium-learning-example-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 10 }}>
           {content.examples.map((ex) => (
-            <div key={ex.id} className="silse-learning-example-card" style={{
-              padding: surf?.padding ?? contract.card.padding,
-              borderRadius: surf?.radius ?? contract.card.radius,
+            <div key={ex.id} className="silse-learning-example-card silse-premium-learning-example-card" style={{
+              padding: surfPadding,
+              borderRadius: surfRadius,
               background: contract.palette.surface,
-              border: surf?.border ?? contract.card.border,
+              border: surfBorder,
+              boxShadow: premiumShadow,
+              transition: 'all 0.18s ease',
             }}>
               <strong style={{ display: 'block', fontSize: 15, marginBottom: 4, color: contract.palette.primary }}>{ex.title}</strong>
               <div style={{ fontSize: 13, lineHeight: 1.5, color: contract.palette.text }}>{ex.body}</div>
@@ -681,12 +708,13 @@ function LearningMaterialContent({
 
       {/* Key point — FOUNDATION-HARDENING-01: visual dari contract.learning.keyPointPanel */}
       {content.keyPoints && content.keyPoints.length > 0 && (
-        <div className="silse-learning-key-point" style={{
+        <div className="silse-learning-key-point silse-premium-learning-key-point" style={{
           padding: contract.learning.keyPointPanel?.padding ?? 12,
           borderRadius: contract.learning.keyPointPanel?.radius ?? 10,
           background: contract.learning.keyPointPanel?.background ?? '#fffbeb',
           border: contract.learning.keyPointPanel?.border ?? '1px solid #fde68a',
           borderLeft: '4px solid ' + (contract.learning.keyPointPanel?.accentColor ?? '#f59e0b'),
+          boxShadow: premiumShadow,
         }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: contract.learning.keyPointPanel?.iconColor ?? '#92400e', textTransform: 'uppercase', marginBottom: 6 }}>
             {contract.learning.keyPointPanel?.icon ?? '🔑'} Key Points
@@ -701,7 +729,7 @@ function LearningMaterialContent({
 
       {/* Student action — FOUNDATION-HARDENING-01: visual dari contract.learning.studentActionPanel */}
       {content.studentAction && (
-        <div className="silse-learning-student-action" style={{
+        <div className="silse-learning-student-action silse-premium-learning-student-action" style={{
           padding: contract.learning.studentActionPanel?.padding ?? 12,
           borderRadius: contract.learning.studentActionPanel?.radius ?? 10,
           background: contract.learning.studentActionPanel?.background ?? contract.palette.surface,
@@ -709,6 +737,7 @@ function LearningMaterialContent({
           display: 'flex',
           alignItems: 'center',
           gap: 10,
+          boxShadow: premiumShadow,
         }}>
           <span style={{ fontSize: 20 }}>{contract.learning.studentActionPanel?.icon ?? '✏️'}</span>
           <div>
@@ -720,7 +749,7 @@ function LearningMaterialContent({
 
       {/* Visual hint — FOUNDATION-HARDENING-01: visual dari contract.learning.visualHintPanel */}
       {content.visualHint && (
-        <div className="silse-learning-visual-hint" style={{
+        <div className="silse-learning-visual-hint silse-premium-learning-visual-hint" style={{
           padding: 8,
           borderRadius: 8,
           background: 'transparent',

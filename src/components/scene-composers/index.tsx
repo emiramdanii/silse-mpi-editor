@@ -140,12 +140,19 @@ export function DiscussionSceneComposer({
   contract: MpiDesignContract;
   content: { discussionPrompt?: string; groupInstruction?: string; responseInput?: string };
 }) {
+  const premiumShadow = contract.card.shadow || '0 2px 8px rgba(0,0,0,0.08)';
   return (
-    <SceneShell contract={contract} className="silse-scene-discussion">
+    <SceneShell contract={contract} className="silse-scene-discussion" style={{ overflow: 'hidden' }}>
       <SceneHeader contract={contract} chipIcon="💬" chipLabel="Diskusi Kelompok" chipColor={contract.palette.success} title="Diskusi Kelompok" />
-      <DiscussionBanner contract={contract} className="silse-discussion-banner" label="Instruksi" title={content.groupInstruction || 'Diskusikan dalam kelompok'} body={content.discussionPrompt || 'Pertanyaan diskusi'} icon="👥" accentColor={contract.palette.success} />
-      <TimerBlock contract={contract} className="silse-discussion-timer" seconds={300} />
-      <ResponseInputBlock contract={contract} className="silse-discussion-input" placeholder={content.responseInput || 'Tulis hasil diskusi kelompokmu...'} />
+      <div className="silse-premium-discussion-banner-wrap" style={{ borderRadius: contract.card.radius, boxShadow: premiumShadow }}>
+        <DiscussionBanner contract={contract} className="silse-discussion-banner silse-premium-discussion-banner" label="Instruksi" title={content.groupInstruction || 'Diskusikan dalam kelompok'} body={content.discussionPrompt || 'Pertanyaan diskusi'} icon="👥" accentColor={contract.palette.success} />
+      </div>
+      <div className="silse-premium-discussion-timer-wrap" style={{ borderRadius: contract.card.radius, boxShadow: premiumShadow }}>
+        <TimerBlock contract={contract} className="silse-discussion-timer silse-premium-discussion-timer" seconds={300} />
+      </div>
+      <div className="silse-premium-discussion-input-wrap" style={{ borderRadius: contract.card.radius, boxShadow: premiumShadow }}>
+        <ResponseInputBlock contract={contract} className="silse-discussion-input silse-premium-discussion-input" placeholder={content.responseInput || 'Tulis hasil diskusi kelompokmu...'} />
+      </div>
       <ActionButtonBlock contract={contract} label="Simpan Jawaban" variant="primary" />
     </SceneShell>
   );
@@ -239,16 +246,23 @@ export function ReflectionJournalComposer({
   contract: MpiDesignContract;
   content: { reflectionPrompts?: string[]; commitmentInput?: string; portfolioSummary?: { label: string; value: string }[]; nextTask?: string };
 }) {
+  const premiumShadow = contract.card.shadow || '0 2px 8px rgba(0,0,0,0.08)';
   return (
-    <SceneShell contract={contract} className="silse-scene-reflection-journal">
+    <SceneShell contract={contract} className="silse-scene-reflection-journal" style={{ overflow: 'hidden' }}>
       <SceneHeader contract={contract} chipIcon="📝" chipLabel="Refleksi · ±8 Menit" chipColor={contract.palette.secondary} title="Refleksi Diri" />
       {content.portfolioSummary && content.portfolioSummary.length > 0 && (
-        <PortfolioBlock contract={contract} className="silse-reflection-portfolio" title="Portofolio Diskusi" items={content.portfolioSummary} />
+        <div className="silse-premium-reflection-portfolio-wrap" style={{ borderRadius: contract.card.radius, boxShadow: premiumShadow }}>
+          <PortfolioBlock contract={contract} className="silse-reflection-portfolio silse-premium-reflection-portfolio" title="Portofolio Diskusi" items={content.portfolioSummary} />
+        </div>
       )}
-      <ReflectionPromptBlock contract={contract} className="silse-reflection-prompt" prompts={content.reflectionPrompts || ['Refleksikan pembelajaran hari ini']} />
-      <ResponseInputBlock contract={contract} className="silse-reflection-input" placeholder={content.commitmentInput || 'Tulis komitmenmu...'} />
+      <div className="silse-premium-reflection-prompt-wrap" style={{ borderRadius: contract.card.radius, boxShadow: premiumShadow, borderLeft: `4px solid ${contract.palette.secondary}` }}>
+        <ReflectionPromptBlock contract={contract} className="silse-reflection-prompt silse-premium-reflection-prompt" prompts={content.reflectionPrompts || ['Refleksikan pembelajaran hari ini']} />
+      </div>
+      <div className="silse-premium-reflection-input-wrap" style={{ borderRadius: contract.card.radius, boxShadow: premiumShadow }}>
+        <ResponseInputBlock contract={contract} className="silse-reflection-input silse-premium-reflection-input" placeholder={content.commitmentInput || 'Tulis komitmenmu...'} />
+      </div>
       {content.nextTask && (
-        <ScenePanel contract={contract} className="silse-reflection-next-task" title="Tugas Pertemuan Berikutnya">
+        <ScenePanel contract={contract} className="silse-reflection-next-task silse-premium-reflection-next-task" title="Tugas Pertemuan Berikutnya">
           <div style={{ fontSize: 14, lineHeight: 1.6, color: contract.palette.text }}>{content.nextTask}</div>
         </ScenePanel>
       )}
@@ -343,35 +357,44 @@ export function ClassificationGameComposer({
 
   const remainingItems = items.filter(i => !state.placedItems[i.id]);
 
+  const premiumItemShadow = contract.card.shadow || '0 2px 8px rgba(0,0,0,0.08)';
+
   return (
-    <SceneShell contract={contract} className="silse-scene-classification-game">
+    <SceneShell contract={contract} className="silse-scene-classification-game" style={{ overflow: 'hidden' }}>
       <SceneHeader contract={contract} chipIcon="🎮" chipLabel="Game Sortir · ±15 Menit" chipColor={contract.palette.success} title="Game Sortir Norma" />
       {content.instruction && (
-        <div className="silse-classification-instruction" style={{
+        <div className="silse-classification-instruction silse-premium-game-instruction" style={{
           background: `${contract.palette.success}11`, border: `1px solid ${contract.palette.success}40`,
-          borderRadius: 13, padding: '13px 15px', fontSize: 14, lineHeight: 1.6, color: contract.palette.text,
+          borderRadius: contract.card.radius, padding: '13px 15px', fontSize: 14, lineHeight: 1.6, color: contract.palette.text,
+          boxShadow: premiumItemShadow,
         }}>
           {content.instruction}
         </div>
       )}
 
       {/* Score */}
-      <div className="silse-classification-score" style={{
+      <div className="silse-classification-score silse-premium-game-score" style={{
         display: 'flex', alignItems: 'center', gap: 10, fontSize: 16, fontWeight: 800,
         color: contract.palette.gold,
+        padding: '8px 14px', borderRadius: 999, alignSelf: 'flex-start',
+        background: `${contract.palette.gold}11`, border: `1px solid ${contract.palette.gold}33`,
+        boxShadow: premiumItemShadow,
       }}>
-        🏆 Skor: <span data-testid="game-score">{state.score}</span>
+        <span style={{ fontSize: 18 }}>🏆</span> Skor: <span data-testid="game-score">{state.score}</span>
         {state.completed && <span data-testid="game-completed" style={{ color: contract.palette.success }}>✓ Selesai!</span>}
       </div>
 
       {/* Feedback */}
       {state.feedback && (
-        <div className="silse-classification-feedback" data-testid="game-feedback" style={{
-          padding: '10px 14px', borderRadius: 10, fontSize: 14, fontWeight: 700,
+        <div className="silse-classification-feedback silse-premium-game-feedback" data-testid="game-feedback" style={{
+          padding: '10px 14px', borderRadius: contract.card.radius, fontSize: 14, fontWeight: 700,
           background: state.feedback.correct ? `${contract.palette.success}11` : `${contract.palette.danger}11`,
           border: `1px solid ${state.feedback.correct ? contract.palette.success : contract.palette.danger}40`,
           color: state.feedback.correct ? contract.palette.success : contract.palette.danger,
+          display: 'flex', alignItems: 'center', gap: 8,
+          boxShadow: premiumItemShadow,
         }}>
+          <span style={{ fontSize: 16 }}>{state.feedback.correct ? '✓' : '✗'}</span>
           {state.feedback.text}
         </div>
       )}
@@ -382,18 +405,32 @@ export function ClassificationGameComposer({
           <div style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', color: contract.palette.mutedText, marginBottom: 8 }}>
             Pilih Item {state.selectedItem && '→ Lalu klik kolom'}
           </div>
-          <div className="silse-classification-pool" data-testid="classification-pool" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <div className="silse-classification-pool silse-premium-game-pool" data-testid="classification-pool" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {remainingItems.map(item => (
               <button
                 key={item.id}
                 data-testid={`item-${item.id}`}
                 data-item-id={item.id}
                 onClick={() => handleSelectItem(item.id)}
+                onMouseEnter={(e) => {
+                  if (state.selectedItem === item.id) return;
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.borderColor = `${contract.palette.gold}aa`;
+                  e.currentTarget.style.boxShadow = premiumItemShadow;
+                }}
+                onMouseLeave={(e) => {
+                  if (state.selectedItem === item.id) return;
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.borderColor = contract.card.border;
+                  e.currentTarget.style.boxShadow = state.selectedItem === item.id ? premiumItemShadow : 'none';
+                }}
+                className="silse-premium-game-item"
                 style={{
                   padding: '10px 16px', borderRadius: 999, fontSize: 14, fontWeight: 700,
                   border: state.selectedItem === item.id ? `2px solid ${contract.palette.gold}` : contract.card.border,
                   background: state.selectedItem === item.id ? `${contract.palette.gold}22` : contract.card.background,
-                  color: contract.palette.text, cursor: 'pointer', transition: 'all 0.15s',
+                  color: contract.palette.text, cursor: 'pointer', transition: 'all 0.18s ease',
+                  boxShadow: state.selectedItem === item.id ? premiumItemShadow : 'none',
                 }}
               >
                 {item.label}
@@ -404,7 +441,7 @@ export function ClassificationGameComposer({
       )}
 
       {/* Category Columns */}
-      <div className="silse-classification-column-grid" data-testid="classification-columns" style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(categories.length, 4)}, 1fr)`, gap: 10 }}>
+      <div className="silse-classification-column-grid silse-premium-game-columns" data-testid="classification-columns" style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(categories.length, 4)}, 1fr)`, gap: 10 }}>
         {categories.map(cat => {
           const placedInCategory = items.filter(i => state.placedItems[i.id] === cat);
           return (
@@ -413,22 +450,28 @@ export function ClassificationGameComposer({
               data-testid={`column-${cat}`}
               data-category={cat}
               onClick={() => handlePlaceItem(cat)}
-              className="silse-classification-column"
+              className="silse-classification-column silse-premium-game-column"
               style={{
-                background: contract.card.background, border: contract.card.border,
+                background: contract.card.background,
+                border: state.selectedItem
+                  ? `2px dashed ${contract.palette.gold}aa`
+                  : contract.card.border,
                 borderRadius: contract.card.radius, padding: contract.card.padding,
                 minHeight: 120, cursor: state.selectedItem ? 'pointer' : 'default',
-                transition: 'border 0.15s',
-                borderColor: state.selectedItem ? `${contract.palette.gold}66` : contract.card.border,
+                transition: 'all 0.18s ease',
+                boxShadow: premiumItemShadow,
               }}
             >
               <div style={{ fontSize: 13, fontWeight: 800, color: contract.palette.gold, marginBottom: 10, textAlign: 'center' }}>{cat}</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {placedInCategory.map(item => (
-                  <div key={item.id} className="silse-classification-placed-item" data-testid={`placed-${item.id}`} style={{
+                  <div key={item.id} className="silse-classification-placed-item silse-premium-game-placed" data-testid={`placed-${item.id}`} style={{
                     padding: '6px 12px', borderRadius: 999, fontSize: 13, fontWeight: 600,
                     background: item.correctCategory === cat ? `${contract.palette.success}22` : `${contract.palette.danger}22`,
                     color: item.correctCategory === cat ? contract.palette.success : contract.palette.danger,
+                    transform: 'scale(1.02)', transformOrigin: 'left center',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+                    transition: 'all 0.18s ease',
                   }}>
                     {item.label}
                   </div>
@@ -444,10 +487,11 @@ export function ClassificationGameComposer({
         <ActionButtonBlock contract={contract} label="↺ Reset" onClick={handleReset} variant="secondary" />
       </div>
       {state.completed && content.completionMessage && (
-        <div data-testid="completion-message" style={{
+        <div data-testid="completion-message" className="silse-premium-game-completion" style={{
           padding: '16px', borderRadius: contract.card.radius, textAlign: 'center',
           background: `${contract.palette.success}11`, border: `1px solid ${contract.palette.success}40`,
           fontSize: 16, fontWeight: 800, color: contract.palette.success,
+          boxShadow: premiumItemShadow,
         }}>
           {content.completionMessage}
         </div>
@@ -592,18 +636,38 @@ export function MatchingGameComposer({
     if (sceneId && onSceneReset) onSceneReset(sceneId);
   };
 
+  const premiumShadow = contract.card.shadow || '0 2px 8px rgba(0,0,0,0.08)';
+
   return (
-    <SceneShell contract={contract} className="silse-scene-matching-game">
+    <SceneShell contract={contract} className="silse-scene-matching-game" style={{ overflow: 'hidden' }}>
       <SceneHeader contract={contract} chipIcon="🔗" chipLabel="Game Mencocokkan" chipColor={contract.palette.success} title="Game Mencocokkan" />
       {content.instruction && (
-        <div style={{ fontSize: 14, lineHeight: 1.6, color: contract.palette.text, padding: '8px 12px', background: `${contract.palette.success}11`, borderRadius: 10 }}>{content.instruction}</div>
+        <div className="silse-premium-matching-instruction" style={{ fontSize: 14, lineHeight: 1.6, color: contract.palette.text, padding: '8px 12px', background: `${contract.palette.success}11`, borderRadius: contract.card.radius, boxShadow: premiumShadow }}>{content.instruction}</div>
       )}
-      <div className="silse-matching-score" style={{ fontSize: 16, fontWeight: 800, color: contract.palette.gold }}>🏆 Skor: <span data-testid="matching-score">{score}</span></div>
+      <div className="silse-matching-score silse-premium-matching-score" style={{
+        display: 'inline-flex', alignItems: 'center', gap: 8,
+        fontSize: 16, fontWeight: 800, color: contract.palette.gold,
+        padding: '8px 14px', borderRadius: 999, alignSelf: 'flex-start',
+        background: `${contract.palette.gold}11`, border: `1px solid ${contract.palette.gold}33`,
+        boxShadow: premiumShadow,
+      }}>
+        <span style={{ fontSize: 18 }}>🏆</span> Skor: <span data-testid="matching-score">{score}</span>
+      </div>
       {feedback && (
-        <div data-testid="matching-feedback" style={{ padding: '10px 14px', borderRadius: 10, fontSize: 14, fontWeight: 700, background: feedback.correct ? `${contract.palette.success}11` : `${contract.palette.danger}11`, color: feedback.correct ? contract.palette.success : contract.palette.danger }}>{feedback.text}</div>
+        <div className="silse-premium-matching-feedback" data-testid="matching-feedback" style={{
+          padding: '10px 14px', borderRadius: contract.card.radius, fontSize: 14, fontWeight: 700,
+          background: feedback.correct ? `${contract.palette.success}11` : `${contract.palette.danger}11`,
+          border: `1px solid ${feedback.correct ? contract.palette.success : contract.palette.danger}40`,
+          color: feedback.correct ? contract.palette.success : contract.palette.danger,
+          display: 'flex', alignItems: 'center', gap: 8,
+          boxShadow: premiumShadow,
+        }}>
+          <span style={{ fontSize: 16 }}>{feedback.correct ? '✓' : '✗'}</span>
+          {feedback.text}
+        </div>
       )}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        <div className="silse-matching-left">
+        <div className="silse-matching-left silse-premium-matching-left">
           <div style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', color: contract.palette.mutedText, marginBottom: 8 }}>Kolom Kiri</div>
           {leftItems.map((item) => {
             const paired = pairs[item.id];
@@ -613,18 +677,31 @@ export function MatchingGameComposer({
                 data-testid={`left-${item.id}`}
                 data-left-id={item.id}
                 onClick={() => handleLeftClick(item.id)}
+                onMouseEnter={(e) => {
+                  if (paired || selectedLeft === item.id) return;
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.borderColor = `${contract.palette.gold}aa`;
+                }}
+                onMouseLeave={(e) => {
+                  if (paired || selectedLeft === item.id) return;
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.borderColor = contract.card.border;
+                }}
+                className="silse-premium-matching-pair"
                 style={{
                   display: 'block', width: '100%', textAlign: 'left', marginBottom: 6,
-                  padding: '10px 14px', minHeight: 44, borderRadius: 10, cursor: 'pointer',
+                  padding: '10px 14px', minHeight: 44, borderRadius: contract.card.radius, cursor: 'pointer',
                   border: selectedLeft === item.id ? `2px solid ${contract.palette.gold}` : paired ? `2px solid ${contract.palette.success}` : contract.card.border,
                   background: selectedLeft === item.id ? `${contract.palette.gold}22` : paired ? `${contract.palette.success}11` : contract.card.background,
                   color: contract.palette.text, fontSize: 14, fontWeight: 600,
+                  transition: 'all 0.18s ease',
+                  boxShadow: (selectedLeft === item.id || paired) ? premiumShadow : 'none',
                 }}
-              >{item.label}{paired && ' ✓'}</button>
+              >{item.label}{paired && <span style={{ marginLeft: 4, color: contract.palette.success, fontWeight: 800 }}>✓</span>}</button>
             );
           })}
         </div>
-        <div className="silse-matching-right">
+        <div className="silse-matching-right silse-premium-matching-right">
           <div style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', color: contract.palette.mutedText, marginBottom: 8 }}>Kolom Kanan</div>
           {rightItems.map((item) => {
             const paired = Object.values(pairs).includes(item.id);
@@ -635,12 +712,25 @@ export function MatchingGameComposer({
                 data-right-id={item.id}
                 onClick={() => handleRightClick(item.id)}
                 disabled={paired}
+                onMouseEnter={(e) => {
+                  if (paired) return;
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.borderColor = `${contract.palette.gold}aa`;
+                }}
+                onMouseLeave={(e) => {
+                  if (paired) return;
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.borderColor = contract.card.border;
+                }}
+                className="silse-premium-matching-pair"
                 style={{
                   display: 'block', width: '100%', textAlign: 'left', marginBottom: 6,
-                  padding: '10px 14px', minHeight: 44, borderRadius: 10, cursor: paired ? 'default' : 'pointer',
+                  padding: '10px 14px', minHeight: 44, borderRadius: contract.card.radius, cursor: paired ? 'default' : 'pointer',
                   border: paired ? `2px solid ${contract.palette.success}` : contract.card.border,
                   background: paired ? `${contract.palette.success}11` : contract.card.background,
                   color: contract.palette.text, fontSize: 14, fontWeight: 600, opacity: paired ? 0.7 : 1,
+                  transition: 'all 0.18s ease',
+                  boxShadow: paired ? premiumShadow : 'none',
                 }}
               >{item.label}</button>
             );
@@ -720,33 +810,54 @@ export function SequencingGameComposer({
     if (sceneId && onSceneReset) onSceneReset(sceneId);
   };
 
+  const premiumShadow = contract.card.shadow || '0 2px 8px rgba(0,0,0,0.08)';
+
   return (
-    <SceneShell contract={contract} className="silse-scene-sequencing-game">
+    <SceneShell contract={contract} className="silse-scene-sequencing-game" style={{ overflow: 'hidden' }}>
       <SceneHeader contract={contract} chipIcon="📋" chipLabel="Game Urutkan" chipColor={contract.palette.accent} title="Game Mengurutkan" />
       {content.instruction && (
-        <div style={{ fontSize: 14, lineHeight: 1.6, color: contract.palette.text, padding: '8px 12px', background: `${contract.palette.accent}11`, borderRadius: 10 }}>{content.instruction}</div>
+        <div className="silse-premium-sequence-instruction" style={{ fontSize: 14, lineHeight: 1.6, color: contract.palette.text, padding: '8px 12px', background: `${contract.palette.accent}11`, borderRadius: contract.card.radius, boxShadow: premiumShadow }}>{content.instruction}</div>
       )}
-      <div style={{ fontSize: 16, fontWeight: 800, color: contract.palette.gold }}>🏆 Skor: <span data-testid="sequence-score">{score}</span></div>
+      <div className="silse-premium-sequence-score" style={{
+        display: 'inline-flex', alignItems: 'center', gap: 8,
+        fontSize: 16, fontWeight: 800, color: contract.palette.gold,
+        padding: '8px 14px', borderRadius: 999, alignSelf: 'flex-start',
+        background: `${contract.palette.gold}11`, border: `1px solid ${contract.palette.gold}33`,
+        boxShadow: premiumShadow,
+      }}>
+        <span style={{ fontSize: 18 }}>🏆</span> Skor: <span data-testid="sequence-score">{score}</span>
+      </div>
       {feedback && (
-        <div className="silse-sequence-feedback" data-testid="sequence-feedback" style={{ padding: '10px 14px', borderRadius: 10, fontSize: 14, fontWeight: 700, background: feedback.correct ? `${contract.palette.success}11` : `${contract.palette.danger}11`, color: feedback.correct ? contract.palette.success : contract.palette.danger }}>{feedback.text}</div>
+        <div className="silse-sequence-feedback silse-premium-sequence-feedback" data-testid="sequence-feedback" style={{
+          padding: '10px 14px', borderRadius: contract.card.radius, fontSize: 14, fontWeight: 700,
+          background: feedback.correct ? `${contract.palette.success}11` : `${contract.palette.danger}11`,
+          border: `1px solid ${feedback.correct ? contract.palette.success : contract.palette.danger}40`,
+          color: feedback.correct ? contract.palette.success : contract.palette.danger,
+          display: 'flex', alignItems: 'center', gap: 8,
+          boxShadow: premiumShadow,
+        }}>
+          <span style={{ fontSize: 16 }}>{feedback.correct ? '✓' : '✗'}</span>
+          {feedback.text}
+        </div>
       )}
       {order.map((id, idx) => {
         const item = items.find((i) => i.id === id);
         if (!item) return null;
         return (
-          <div key={id} className="silse-sequence-item" data-testid={`sequence-item-${id}`} style={{
+          <div key={id} className="silse-sequence-item silse-premium-sequence-item" data-testid={`sequence-item-${id}`} style={{
             display: 'flex', alignItems: 'center', gap: 10,
-            padding: '10px 14px', borderRadius: 10, background: contract.card.background, border: contract.card.border,
+            padding: '10px 14px', borderRadius: contract.card.radius, background: contract.card.background, border: contract.card.border,
+            boxShadow: premiumShadow, transition: 'all 0.18s ease',
           }}>
             <span style={{ fontSize: 18, fontWeight: 800, color: contract.palette.gold, minWidth: 28 }}>{idx + 1}.</span>
             <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: contract.palette.text }}>{item.label}</span>
-            <button data-testid={`sequence-up-${id}`} className="silse-sequence-up" onClick={() => moveUp(idx)} disabled={idx === 0} style={{ padding: '6px 12px', minHeight: 36, borderRadius: 8, border: 'none', background: idx === 0 ? 'rgba(255,255,255,0.08)' : contract.palette.primary, color: '#fff', cursor: idx === 0 ? 'not-allowed' : 'pointer', fontWeight: 700 }}>↑</button>
-            <button data-testid={`sequence-down-${id}`} className="silse-sequence-down" onClick={() => moveDown(idx)} disabled={idx === order.length - 1} style={{ padding: '6px 12px', minHeight: 36, borderRadius: 8, border: 'none', background: idx === order.length - 1 ? 'rgba(255,255,255,0.08)' : contract.palette.primary, color: '#fff', cursor: idx === order.length - 1 ? 'not-allowed' : 'pointer', fontWeight: 700 }}>↓</button>
+            <button data-testid={`sequence-up-${id}`} className="silse-sequence-up silse-premium-sequence-up" onClick={() => moveUp(idx)} disabled={idx === 0} onMouseEnter={(e) => { if (idx === 0) return; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = premiumShadow; }} onMouseLeave={(e) => { if (idx === 0) return; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }} style={{ padding: '6px 12px', minHeight: 36, borderRadius: 8, border: 'none', background: idx === 0 ? 'rgba(255,255,255,0.08)' : contract.palette.primary, color: '#fff', cursor: idx === 0 ? 'not-allowed' : 'pointer', fontWeight: 700, transition: 'all 0.18s ease' }}>↑</button>
+            <button data-testid={`sequence-down-${id}`} className="silse-sequence-down silse-premium-sequence-down" onClick={() => moveDown(idx)} disabled={idx === order.length - 1} onMouseEnter={(e) => { if (idx === order.length - 1) return; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = premiumShadow; }} onMouseLeave={(e) => { if (idx === order.length - 1) return; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }} style={{ padding: '6px 12px', minHeight: 36, borderRadius: 8, border: 'none', background: idx === order.length - 1 ? 'rgba(255,255,255,0.08)' : contract.palette.primary, color: '#fff', cursor: idx === order.length - 1 ? 'not-allowed' : 'pointer', fontWeight: 700, transition: 'all 0.18s ease' }}>↓</button>
           </div>
         );
       })}
       <div style={{ display: 'flex', gap: 10 }}>
-        <button className="silse-sequence-check" data-testid="sequence-check" onClick={checkAnswer} style={{ padding: '10px 18px', minHeight: 44, borderRadius: 999, border: 'none', background: contract.palette.success, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>✓ Cek Jawaban</button>
+        <button className="silse-sequence-check silse-premium-sequence-check" data-testid="sequence-check" onClick={checkAnswer} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = premiumShadow; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }} style={{ padding: '10px 18px', minHeight: 44, borderRadius: 999, border: 'none', background: contract.palette.success, color: '#fff', fontWeight: 800, cursor: 'pointer', transition: 'all 0.18s ease', boxShadow: premiumShadow }}>✓ Cek Jawaban</button>
         <ActionButtonBlock contract={contract} label="↺ Reset" onClick={handleReset} variant="secondary" />
       </div>
     </SceneShell>
