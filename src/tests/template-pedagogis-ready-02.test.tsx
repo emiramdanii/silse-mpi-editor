@@ -89,8 +89,8 @@ describe('TEMPLATE-PEDAGOGIS-READY-02 — Scope B: Template Picker UI', () => {
   it('7. quality status badges appear', () => {
     const { container } = render(<TemplatePickerDialog onClose={() => {}} />);
     const status = container.querySelector('[data-testid^="template-status-"]');
-    expect(status?.textContent).toContain('Blueprint Valid');
-    expect(status?.textContent).toContain('Content Quality');
+    expect(status?.textContent).toContain('Valid');
+    expect(status?.textContent).toContain('Quality');
     expect(status?.textContent).toContain('Cover');
     expect(status?.textContent).toContain('Closing');
   });
@@ -102,7 +102,18 @@ describe('TEMPLATE-PEDAGOGIS-READY-02 — Scope B: Template Picker UI', () => {
 
 describe('TEMPLATE-PEDAGOGIS-READY-02 — Scope C: Apply Template', () => {
   beforeEach(() => {
-    useEditorStore.setState({ project: createSamplePpknProject(), selectedComponentId: null });
+    // PATCH A: use empty project so overwrite confirm doesn't block
+    useEditorStore.setState({
+      project: {
+        ...createSamplePpknProject(),
+        pages: [{
+          id: 'empty', title: 'New', role: 'cover', layoutId: 'blank',
+          background: { type: 'color', color: '#fff' }, components: [],
+        }],
+        currentPageId: 'empty',
+      },
+      selectedComponentId: null,
+    });
   });
 
   it('8. click Gunakan Template creates 12-page project in store', () => {

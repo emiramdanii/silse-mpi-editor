@@ -1,8 +1,10 @@
 /**
- * TemplatePickerDialog — TEMPLATE-PEDAGOGIS-READY-02
+ * TemplatePickerDialog — TEMPLATE-PEDAGOGIS-READY-02 PATCH A
  *
  * Modal untuk pilih template pedagogis siap pakai.
  * Guru pilih template → generate MPI 12 scene → load ke editor.
+ *
+ * PATCH A: overwrite guard + premium UI polish + 16:9 fit.
  */
 
 import { useState, useEffect } from 'react';
@@ -19,8 +21,10 @@ import { checkBlueprintContentQuality } from '../core/content-quality-guard';
 
 export function TemplatePickerDialog({ onClose }: { onClose: () => void }) {
   const setProject = useEditorStore((s) => s.setProject);
+  const currentProject = useEditorStore((s) => s.project);
   const [selectedMapel, setSelectedMapel] = useState<string>('all');
   const [applied, setApplied] = useState(false);
+  const [confirmOverwrite, setConfirmOverwrite] = useState<PedagogicalTemplate | null>(null);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -31,13 +35,25 @@ export function TemplatePickerDialog({ onClose }: { onClose: () => void }) {
   const mapelList = ['all', ...getUniqueTemplateMapelList()];
   const templates = selectedMapel === 'all' ? PEDAGOGICAL_TEMPLATES : getTemplatesByMapel(selectedMapel);
 
-  const handleApply = (template: PedagogicalTemplate) => {
+  const hasExistingContent = (currentProject.pages.length > 1) ||
+    currentProject.pages.some((p) => p.components.length > 0 || p.sceneType);
+
+  const doApply = (template: PedagogicalTemplate) => {
     const bp = templateToBlueprint(template);
     const project = aiBlueprintToSimpleProject(bp);
     project.currentPageId = project.pages[0]?.id ?? '';
     setProject(project);
     setApplied(true);
-    setTimeout(() => onClose(), 500);
+    setConfirmOverwrite(null);
+    setTimeout(() => onClose(), 400);
+  };
+
+  const handleApply = (template: PedagogicalTemplate) => {
+    if (hasExistingContent) {
+      setConfirmOverwrite(template);
+    } else {
+      doApply(template);
+    }
   };
 
   const getQualityStatus = (template: PedagogicalTemplate) => {
@@ -50,8 +66,21 @@ export function TemplatePickerDialog({ onClose }: { onClose: () => void }) {
       sceneCount: bp.scenes.length,
       hasCover: bp.scenes[0]?.sceneType === 'cover-hero',
       hasClosing: bp.scenes[bp.scenes.length - 1]?.sceneType === 'closing-award',
-      errors: [...validationErrors.map((e) => e.message), ...qualityResult.errors.map((e) => e.message)],
     };
+  };
+
+  const getGameType = (template: PedagogicalTemplate): string => {
+    const gameScene = template.scenes.find((s) =>
+      ['classification-game', 'matching-game', 'sequencing-game', 'game-mission'].includes(s.sceneType)
+    );
+    if (!gameScene) return '';
+    const labels: Record<string, string> = {
+      'classification-game': '🎮 Game Sortir',
+      'matching-game': '🔗 Game Cocokkan',
+      'sequencing-game': '📋 Game Urutkan',
+      'game-mission': '🎯 Game Misi',
+    };
+    return labels[gameScene.sceneType] || gameScene.sceneType;
   };
 
   return (
@@ -63,7 +92,8 @@ export function TemplatePickerDialog({ onClose }: { onClose: () => void }) {
       aria-label="Pilih Template Pedagogis"
       style={{
         position: 'fixed', inset: 0, zIndex: 1000,
-        background: 'rgba(0,0,0,0.5)', display: 'grid', placeItems: 'center',
+        background: 'rgba(14,28,47,0.7)', backdropFilter: 'blur(4px)',
+        display: 'grid', placeItems: 'center',
       }}
       onClick={onClose}
     >
@@ -71,103 +101,180 @@ export function TemplatePickerDialog({ onClose }: { onClose: () => void }) {
         className="template-picker-dialog"
         data-testid="template-picker-dialog"
         style={{
-          background: '#fff', borderRadius: 16, padding: 28, maxWidth: 720, width: '90%',
-          maxHeight: '80vh', overflow: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+          background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
+          borderRadius: 20, padding: 32, maxWidth: 760, width: '92%',
+          maxHeight: '82vh', overflow: 'auto',
+          boxShadow: '0 12px 48px rgba(0,0,0,0.25), 0 4px 16px rgba(0,0,0,0.1)',
+          border: '1px solid rgba(255,255,255,0.2)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#1f2937' }}>📋 Template Pedagogis Siap Pakai</h2>
-          <button
-            data-testid="template-picker-close"
-            onClick={onClose}
-            aria-label="Tutup"
-            style={{ border: 'none', background: 'transparent', fontSize: 20, cursor: 'pointer', color: '#6b7280' }}
-          >✕</button>
+        {/* Header */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <h2 style={{ margin: '0 0 4px 0', fontSize: 22, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>
+                📋 Template Pedagogis
+              </h2>
+              <p style={{ margin: 0, fontSize: 14, color: '#64748b' }}>
+                Pilih template siap pakai — 12 scene lengkap, langsung bisa diedit.
+              </p>
+            </div>
+            <button
+              data-testid="template-picker-close"
+              onClick={onClose}
+              aria-label="Tutup"
+              style={{
+                border: 'none', background: '#f1f5f9', fontSize: 18, cursor: 'pointer',
+                color: '#64748b', borderRadius: 8, width: 32, height: 32, display: 'grid', placeItems: 'center',
+                transition: 'all 0.15s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = '#e2e8f0'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = '#f1f5f9'; }}
+            >✕</button>
+          </div>
         </div>
 
         {/* Filter */}
-        <div data-testid="template-filter" style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+        <div data-testid="template-filter" style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
           {mapelList.map((m) => (
             <button
               key={m}
               data-testid={`filter-${m}`}
               onClick={() => setSelectedMapel(m)}
               style={{
-                padding: '6px 14px', borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                border: selectedMapel === m ? '2px solid #1d3557' : '2px solid #e5e7eb',
+                padding: '7px 16px', borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                border: selectedMapel === m ? '2px solid #1d3557' : '2px solid #e2e8f0',
                 background: selectedMapel === m ? '#1d3557' : '#fff',
-                color: selectedMapel === m ? '#fff' : '#374151',
+                color: selectedMapel === m ? '#fff' : '#475569',
+                transition: 'all 0.15s',
               }}
-            >{m === 'all' ? 'Semua' : m}</button>
+            >{m === 'all' ? '📊 Semua Mapel' : m}</button>
           ))}
         </div>
 
         {/* Template cards */}
-        <div data-testid="template-list" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div data-testid="template-list" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {templates.map((template) => {
             const status = getQualityStatus(template);
+            const gameType = getGameType(template);
             return (
               <div
                 key={template.id}
                 data-testid={`template-card-${template.id}`}
                 style={{
-                  border: '1px solid #e5e7eb', borderRadius: 12, padding: 16,
-                  background: '#f9fafb',
+                  border: '1px solid #e2e8f0', borderRadius: 14, padding: 18,
+                  background: '#fff',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                  transition: 'box-shadow 0.18s, border-color 0.18s',
                 }}
+                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                  <div>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: '#1f2937' }}>{template.name}</div>
-                    <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>
-                      {template.mapel} · Kelas {template.grade} · Fase {template.phase} · {template.topic}
+                {/* Title row */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em' }}>{template.name}</div>
+                    <div style={{ fontSize: 13, color: '#64748b', marginTop: 3 }}>
+                      {template.mapel} · Kelas {template.grade} · Fase {template.phase}
                     </div>
                   </div>
+                  {/* Mapel badge */}
+                  <span style={{
+                    fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 999,
+                    background: '#1d3557', color: '#fff', letterSpacing: '0.04em', textTransform: 'uppercase',
+                    whiteSpace: 'nowrap', flexShrink: 0,
+                  }}>{template.mapel}</span>
                 </div>
-                <div style={{ fontSize: 13, color: '#374151', marginBottom: 8 }}>{template.description}</div>
 
-                {/* Quality status */}
-                <div data-testid={`template-status-${template.id}`} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-                  <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: status.valid ? '#d1fae5' : '#fee2e2', color: status.valid ? '#065f46' : '#991b1b', fontWeight: 700 }}>
-                    {status.valid ? '✓ Blueprint Valid' : '✗ Blueprint Invalid'}
+                {/* Description */}
+                <div style={{ fontSize: 14, color: '#334155', lineHeight: 1.5, marginBottom: 12 }}>{template.description}</div>
+
+                {/* Badges row */}
+                <div data-testid={`template-status-${template.id}`} style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+                  <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 6, background: status.valid ? '#dcfce7' : '#fef2f2', color: status.valid ? '#166534' : '#991b1b', fontWeight: 700 }}>
+                    {status.valid ? '✓ Valid' : '✗ Invalid'}
                   </span>
-                  <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: status.qualityPass ? '#d1fae5' : '#fee2e2', color: status.qualityPass ? '#065f46' : '#991b1b', fontWeight: 700 }}>
-                    {status.qualityPass ? '✓ Content Quality' : '✗ Content Issues'}
+                  <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 6, background: status.qualityPass ? '#dcfce7' : '#fef2f2', color: status.qualityPass ? '#166534' : '#991b1b', fontWeight: 700 }}>
+                    {status.qualityPass ? '✓ Quality' : '✗ Issues'}
                   </span>
-                  <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: '#dbeafe', color: '#1e40af', fontWeight: 700 }}>
+                  <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 6, background: '#dbeafe', color: '#1e40af', fontWeight: 700 }}>
                     {status.sceneCount} Scene
                   </span>
-                  {status.hasCover && <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: '#dbeafe', color: '#1e40af', fontWeight: 700 }}>✓ Cover</span>}
-                  {status.hasClosing && <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: '#dbeafe', color: '#1e40af', fontWeight: 700 }}>✓ Closing</span>}
+                  {status.hasCover && <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 6, background: '#dbeafe', color: '#1e40af', fontWeight: 700 }}>Cover</span>}
+                  {status.hasClosing && <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 6, background: '#dbeafe', color: '#1e40af', fontWeight: 700 }}>Closing</span>}
+                  {gameType && <span data-testid={`template-game-type-${template.id}`} style={{ fontSize: 11, padding: '3px 9px', borderRadius: 6, background: '#fef3c7', color: '#92400e', fontWeight: 700 }}>{gameType}</span>}
                 </div>
 
-                {/* Game type */}
-                <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 10 }}>
-                  {(() => {
-                    const gameScene = template.scenes.find((s) => ['classification-game', 'matching-game', 'sequencing-game', 'game-mission'].includes(s.sceneType));
-                    return gameScene ? `🎮 Aktivitas: ${gameScene.sceneType}` : '';
-                  })()}
-                </div>
-
+                {/* CTA */}
                 <button
                   data-testid={`template-apply-${template.id}`}
                   onClick={() => handleApply(template)}
                   disabled={applied}
                   style={{
-                    padding: '8px 18px', borderRadius: 8, border: 'none',
-                    background: applied ? '#9ca3af' : '#1d3557', color: '#fff',
-                    fontWeight: 700, fontSize: 14, cursor: applied ? 'default' : 'pointer',
+                    padding: '10px 20px', borderRadius: 10, border: 'none',
+                    background: applied ? '#94a3b8' : 'linear-gradient(135deg, #1d3557 0%, #264c7d 100%)',
+                    color: '#fff', fontWeight: 700, fontSize: 14, cursor: applied ? 'default' : 'pointer',
+                    boxShadow: applied ? 'none' : '0 2px 8px rgba(29,53,87,0.3)',
+                    transition: 'all 0.18s',
                   }}
-                >{applied ? '✓ Diterapkan' : 'Gunakan Template'}</button>
+                  onMouseEnter={(e) => { if (!applied) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(29,53,87,0.4)'; } }}
+                  onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(29,53,87,0.3)'; }}
+                >{applied ? '✓ Diterapkan' : 'Gunakan Template →'}</button>
               </div>
             );
           })}
         </div>
 
         {templates.length === 0 && (
-          <div style={{ textAlign: 'center', padding: 20, color: '#9ca3af' }}>Tidak ada template untuk mapel ini.</div>
+          <div style={{ textAlign: 'center', padding: 32, color: '#94a3b8', fontSize: 14 }}>
+            Belum ada template untuk mapel ini.
+          </div>
         )}
       </div>
+
+      {/* Overwrite confirmation */}
+      {confirmOverwrite && (
+        <div
+          data-testid="overwrite-confirm"
+          style={{
+            position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(0,0,0,0.5)',
+            display: 'grid', placeItems: 'center',
+          }}
+          onClick={() => setConfirmOverwrite(null)}
+        >
+          <div
+            style={{
+              background: '#fff', borderRadius: 16, padding: 28, maxWidth: 420, width: '88%',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>⚠️ Ganti Project?</div>
+            <div style={{ fontSize: 14, color: '#475569', lineHeight: 1.5, marginBottom: 20 }}>
+              Project saat ini akan diganti oleh template "{confirmOverwrite.name}". Perubahan yang belum disimpan akan hilang.
+            </div>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button
+                data-testid="overwrite-cancel"
+                onClick={() => setConfirmOverwrite(null)}
+                style={{
+                  padding: '8px 18px', borderRadius: 8, border: '2px solid #e2e8f0',
+                  background: '#fff', color: '#475569', fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                }}
+              >Batal</button>
+              <button
+                data-testid="overwrite-ok"
+                onClick={() => doApply(confirmOverwrite)}
+                style={{
+                  padding: '8px 18px', borderRadius: 8, border: 'none',
+                  background: '#dc2626', color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                }}
+              >Ya, Ganti</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
