@@ -320,8 +320,11 @@ function checkSceneContent(page: SimplePage): ContentQualityIssue[] {
             if (!hasNonEmptyField(c, 'id')) issues.push({ sceneId: sid, sceneType: st, field: `questionSet[${i}].choices[${ci}].id`, message: `Q#${i + 1} Choice #${ci + 1} id kosong.`, severity: 'error' });
             if (!hasNonEmptyField(c, 'text')) issues.push({ sceneId: sid, sceneType: st, field: `questionSet[${i}].choices[${ci}].text`, message: `Q#${i + 1} Choice #${ci + 1} text kosong.`, severity: 'error' });
           });
-          const qCorrectId = q?.correctChoiceId as string | undefined;
-          if (qCorrectId && !qChoices.some((c) => c.id === qCorrectId)) {
+          // PATCH B: correctChoiceId must be non-empty AND exist in choices
+          const qCorrectId = q?.correctChoiceId;
+          if (!isNonEmptyString(qCorrectId)) {
+            issues.push({ sceneId: sid, sceneType: st, field: `questionSet[${i}].correctChoiceId`, message: `Q#${i + 1} correctChoiceId kosong atau hilang.`, severity: 'error' });
+          } else if (!qChoices.some((c) => c.id === qCorrectId)) {
             issues.push({ sceneId: sid, sceneType: st, field: `questionSet[${i}].correctChoiceId`, message: `Q#${i + 1} correctChoiceId "${qCorrectId}" tidak ada di choices.`, severity: 'error' });
           }
         }
