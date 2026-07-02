@@ -41,7 +41,7 @@ export type PedagogicalTemplate = {
     role: string;
     sceneType: string;
     title: string;
-    content: Record<string, unknown>;
+    content: AiBlueprintSlotContent;
   }>;
 };
 
@@ -70,11 +70,6 @@ function makeScene(id: string, role: string, sceneType: string, title: string, c
     title,
     slots: [makeSlot('primary', content)],
   };
-}
-
-// Helper for content kinds not yet in AiBlueprintSlotContent schema union
-function makeSceneAny(id: string, role: string, sceneType: string, title: string, content: Record<string, unknown>): AiBlueprintScene {
-  return makeScene(id, role, sceneType, title, content as unknown as AiBlueprintSlotContent);
 }
 
 // ---------------------------------------------------------------------------
@@ -228,7 +223,7 @@ export function getUniqueTemplateMapelList(): string[] {
 
 export function templateToBlueprint(template: PedagogicalTemplate): AiMpiBlueprint {
   const scenes: AiBlueprintScene[] = template.scenes.map((s) =>
-    makeSceneAny(s.id, s.role, s.sceneType, s.title, s.content as Record<string, unknown>),
+    makeScene(s.id, s.role, s.sceneType, s.title, s.content),
   );
 
   return {

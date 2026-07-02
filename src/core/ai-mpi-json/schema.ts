@@ -172,7 +172,29 @@ export type AiBlueprintSlotContent =
       scorePerItem?: number;
       feedback?: string;
       completionMessage?: string;
-    };
+    }
+  // TEMPLATE-PEDAGOGIS-READY-02: schema sync — all content kinds now in blueprint schema
+  | { kind: 'curriculum-guide'; curriculumTitle?: string; competency?: string; learningFlow?: string; profileTags?: string[] }
+  | { kind: 'objectives-path'; objectiveList?: string[]; successCriteria?: string; activityPath?: string[] }
+  | { kind: 'starter-review'; priorLearning?: string; triggerQuestion?: string; bridgeToNewTopic?: string; discussionPrompt?: string }
+  | { kind: 'discussion-scene'; discussionPrompt?: string; groupInstruction?: string; responseInput?: string }
+  | { kind: 'case-analysis'; caseText?: string; analysisPrompt?: string; revealExplanation?: string; discussionPrompt?: string }
+  | { kind: 'result-summary'; scoreSummary?: { score: number; maxScore: number }; achievementLevel?: string; breakdown?: { label: string; value: string }[]; reviewCards?: { title: string; body: string }[] }
+  | { kind: 'reflection-journal'; reflectionPrompts?: string[]; commitmentInput?: string; portfolioSummary?: { label: string; value: string }[]; nextTask?: string }
+  | { kind: 'hotspot-map'; backgroundVisual?: string; guidingQuestion?: string; hotspots?: { id: string; x: number; y: number; label: string; info: string }[]; caption?: string }
+  | { kind: 'matching-game'; instruction?: string; leftItems?: { id: string; label: string }[]; rightItems?: { id: string; label: string }[]; correctPairs?: { leftId: string; rightId: string }[]; scorePerPair?: number; completionMessage?: string }
+  | { kind: 'sequencing-game'; instruction?: string; items?: { id: string; label: string }[]; correctOrder?: string[]; scorePerItem?: number; completionMessage?: string }
+  | { kind: 'media-focus'; mediaAsset?: { src: string; alt?: string; objectFit?: 'cover' | 'contain' }; guidingQuestion?: string; caption?: string; responseInput?: string }
+  | { kind: 'diagnostic-check'; diagnosticPrompt?: string; questionSet?: { id: string; prompt: string; choices: { id: string; text: string }[]; correctChoiceId: string }[]; recommendation?: string; readinessLevels?: { level: string; minScore: number; description: string }[] }
+  | { kind: 'remedial-practice'; misconception?: string; reteachExplanation?: string; guidedPractice?: { id: string; prompt: string; choices: { id: string; text: string }[]; correctChoiceId: string; hint?: string }[]; retryQuestion?: string }
+  | { kind: 'enrichment-challenge'; challengeContext?: string; advancedTask?: string; responseInput?: string; rubricPreview?: { criterion: string; descriptor: string }[]; completionMessage?: string }
+  | { kind: 'worksheet-activity'; instruction?: string; taskSteps?: { id: string; prompt: string; responsePlaceholder?: string }[]; inputFields?: { id: string; label: string; placeholder?: string }[] }
+  | { kind: 'rubric-panel'; criteria?: { id: string; name: string; description: string }[]; levels?: { id: string; name: string; score: number; descriptor: string }[]; scoreGuide?: string }
+  | { kind: 'timeline-story'; title?: string; events?: { id: string; label: string; description: string }[]; checkpointQuestion?: string; checkpointAnswer?: string }
+  | { kind: 'branching-scenario'; scenarioPrompt?: string; choices?: { id: string; label: string; consequence: string; isCorrect?: boolean }[]; resetLabel?: string }
+  | { kind: 'glossary-cards'; title?: string; terms?: { id: string; term: string; definition: string; example?: string }[] }
+  | { kind: 'teacher-guide'; title?: string; teacherInstruction?: string; facilitationTips?: string[]; timeAllocation?: string; assessmentNotes?: string }
+  | { kind: 'accessibility-help'; title?: string; readingGuide?: string; keyboardGuide?: string; contrastOption?: string };
 
 // ---------------------------------------------------------------------------
 // Slot
@@ -200,7 +222,28 @@ export type AiBlueprintSceneType =
   | 'game-mission'
   | 'quiz-challenge'
   | 'reflection-journal'
-  | 'closing-award';
+  | 'closing-award'
+  // TEMPLATE-PEDAGOGIS-READY-02: schema sync — all 27 scene types
+  | 'curriculum-guide'
+  | 'starter-review'
+  | 'discussion-scene'
+  | 'case-analysis'
+  | 'result-summary'
+  | 'classification-game'
+  | 'hotspot-map'
+  | 'matching-game'
+  | 'sequencing-game'
+  | 'media-focus'
+  | 'diagnostic-check'
+  | 'remedial-practice'
+  | 'enrichment-challenge'
+  | 'worksheet-activity'
+  | 'rubric-panel'
+  | 'timeline-story'
+  | 'branching-scenario'
+  | 'glossary-cards'
+  | 'teacher-guide'
+  | 'accessibility-help';
 
 export type AiBlueprintSceneRole =
   | 'cover'
@@ -212,7 +255,8 @@ export type AiBlueprintSceneRole =
   | 'game'
   | 'quiz'
   | 'reflection'
-  | 'closing';
+  | 'closing'
+  | 'activity'; // TEMPLATE-PEDAGOGIS-READY-02: used by classification/sequencing/matching games
 
 export type AiBlueprintSceneNavigation = {
   nextSceneId?: string;

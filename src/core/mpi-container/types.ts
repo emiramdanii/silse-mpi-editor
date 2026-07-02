@@ -114,7 +114,8 @@ export type MpiSceneRole =
   | 'game'
   | 'quiz'
   | 'reflection'
-  | 'closing';
+  | 'closing'
+  | 'activity'; // TEMPLATE-PEDAGOGIS-READY-02: used by classification/sequencing/matching games
 
 export type MpiSceneType =
   | 'cover-hero'
