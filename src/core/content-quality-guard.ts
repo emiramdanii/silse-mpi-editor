@@ -40,6 +40,23 @@ export type ContentQualityIssue = {
 };
 
 // ---------------------------------------------------------------------------
+// PATCH A: Helper validators
+// ---------------------------------------------------------------------------
+
+function isNonEmptyString(v: unknown): boolean {
+  return typeof v === 'string' && v.trim().length > 0;
+}
+
+function hasNonEmptyField(item: unknown, field: string): boolean {
+  if (typeof item !== 'object' || item === null) return false;
+  return isNonEmptyString((item as Record<string, unknown>)[field]);
+}
+
+function isNumInRange(v: unknown, min: number, max: number): boolean {
+  return typeof v === 'number' && v >= min && v <= max;
+}
+
+// ---------------------------------------------------------------------------
 // Required fields per scene type (content-level, not just structure)
 // ---------------------------------------------------------------------------
 
@@ -214,7 +231,6 @@ function checkPedagogicalFlow(pages: SimplePage[]): ContentQualityIssue[] {
 function checkSceneContent(page: SimplePage): ContentQualityIssue[] {
   const issues: ContentQualityIssue[] = [];
   if (!page.sceneType || !page.sceneContent) {
-    // Legacy page — no scene content to check
     return issues;
   }
 
@@ -222,82 +238,209 @@ function checkSceneContent(page: SimplePage): ContentQualityIssue[] {
   if (!required) return issues;
 
   const content = page.sceneContent as Record<string, unknown>;
+  const sid = page.id;
+  const st = page.sceneType;
+  const title = page.title;
 
+  // Basic required field checks
   for (const field of required) {
     const value = content[field.key];
     if (!field.check(value)) {
-      issues.push({
-        sceneId: page.id,
-        sceneType: page.sceneType,
-        field: field.key,
-        message: `${field.label} kosong atau tidak valid pada scene "${page.title}".`,
-        severity: 'error',
+      issues.push({ sceneId: sid, sceneType: st, field: field.key, message: `${field.label} kosong atau tidak valid pada scene "${title}".`, severity: 'error' });
+    }
+  }
+
+  // PATCH A: Deep item validation per scene type
+
+  if (st === 'objectives-path') {
+    const list = content.objectiveList as unknown[];
+    if (Array.isArray(list)) {
+      list.forEach((obj, i) => {
+        if (!isNonEmptyString(obj)) {
+          issues.push({ sceneId: sid, sceneType: st, field: `objectiveList[${i}]`, message: `Objective #${i + 1} kosong pada scene "${title}".`, severity: 'error' });
+        }
       });
     }
   }
 
-  // Scene-specific extra checks
-  if (page.sceneType === 'quiz-challenge') {
-    const choices = content.choices as Array<{ id: string; text: string }> | undefined;
+  if (st === 'classification-game') {
+    const items = content.items as Array<Record<string, unknown>> | undefined;
+    const categories = content.categories as unknown[] | undefined;
+    if (Array.isArray(items)) {
+      items.forEach((item, i) => {
+        if (!hasNonEmptyField(item, 'id')) issues.push({ sceneId: sid, sceneType: st, field: `items[${i}].id`, message: `Item #${i + 1} id kosong.`, severity: 'error' });
+        if (!hasNonEmptyField(item, 'label')) issues.push({ sceneId: sid, sceneType: st, field: `items[${i}].label`, message: `Item #${i + 1} label kosong.`, severity: 'error' });
+        if (!hasNonEmptyField(item, 'correctCategory')) issues.push({ sceneId: sid, sceneType: st, field: `items[${i}].correctCategory`, message: `Item #${i + 1} correctCategory kosong.`, severity: 'error' });
+      });
+      // Check correctCategory exists in categories
+      if (Array.isArray(categories) && categories.every((c) => isNonEmptyString(c))) {
+        const catSet = new Set(categories);
+        items.forEach((item, i) => {
+          const cc = item?.correctCategory;
+          if (isNonEmptyString(cc) && !catSet.has(cc)) {
+            issues.push({ sceneId: sid, sceneType: st, field: `items[${i}].correctCategory`, message: `correctCategory "${cc}" tidak ada di categories.`, severity: 'error' });
+          }
+        });
+      }
+    }
+    if (Array.isArray(categories)) {
+      categories.forEach((cat, i) => {
+        if (!isNonEmptyString(cat)) issues.push({ sceneId: sid, sceneType: st, field: `categories[${i}]`, message: `Category #${i + 1} kosong.`, severity: 'error' });
+      });
+    }
+  }
+
+  if (st === 'quiz-challenge') {
+    const choices = content.choices as Array<Record<string, unknown>> | undefined;
     const correctId = content.correctChoiceId as string | undefined;
-    if (choices && correctId && !choices.some((c) => c.id === correctId)) {
-      issues.push({
-        sceneId: page.id,
-        sceneType: page.sceneType,
-        field: 'correctChoiceId',
-        message: `Correct choice ID "${correctId}" tidak ada di choices.`,
-        severity: 'error',
+    if (Array.isArray(choices)) {
+      if (choices.length < 2) {
+        issues.push({ sceneId: sid, sceneType: st, field: 'choices', message: `Quiz harus memiliki minimal 2 choices.`, severity: 'error' });
+      }
+      choices.forEach((c, i) => {
+        if (!hasNonEmptyField(c, 'id')) issues.push({ sceneId: sid, sceneType: st, field: `choices[${i}].id`, message: `Choice #${i + 1} id kosong.`, severity: 'error' });
+        if (!hasNonEmptyField(c, 'text')) issues.push({ sceneId: sid, sceneType: st, field: `choices[${i}].text`, message: `Choice #${i + 1} text kosong.`, severity: 'error' });
+      });
+      if (correctId && !choices.some((c) => c.id === correctId)) {
+        issues.push({ sceneId: sid, sceneType: st, field: 'correctChoiceId', message: `Correct choice ID "${correctId}" tidak ada di choices.`, severity: 'error' });
+      }
+    }
+  }
+
+  if (st === 'diagnostic-check') {
+    const qs = content.questionSet as Array<Record<string, unknown>> | undefined;
+    if (Array.isArray(qs)) {
+      qs.forEach((q, i) => {
+        if (!hasNonEmptyField(q, 'id')) issues.push({ sceneId: sid, sceneType: st, field: `questionSet[${i}].id`, message: `Question #${i + 1} id kosong.`, severity: 'error' });
+        if (!hasNonEmptyField(q, 'prompt')) issues.push({ sceneId: sid, sceneType: st, field: `questionSet[${i}].prompt`, message: `Question #${i + 1} prompt kosong.`, severity: 'error' });
+        const qChoices = q?.choices as Array<Record<string, unknown>> | undefined;
+        if (!Array.isArray(qChoices) || qChoices.length < 2) issues.push({ sceneId: sid, sceneType: st, field: `questionSet[${i}].choices`, message: `Question #${i + 1} harus memiliki minimal 2 choices.`, severity: 'error' });
+        if (Array.isArray(qChoices)) {
+          qChoices.forEach((c, ci) => {
+            if (!hasNonEmptyField(c, 'id')) issues.push({ sceneId: sid, sceneType: st, field: `questionSet[${i}].choices[${ci}].id`, message: `Q#${i + 1} Choice #${ci + 1} id kosong.`, severity: 'error' });
+            if (!hasNonEmptyField(c, 'text')) issues.push({ sceneId: sid, sceneType: st, field: `questionSet[${i}].choices[${ci}].text`, message: `Q#${i + 1} Choice #${ci + 1} text kosong.`, severity: 'error' });
+          });
+          const qCorrectId = q?.correctChoiceId as string | undefined;
+          if (qCorrectId && !qChoices.some((c) => c.id === qCorrectId)) {
+            issues.push({ sceneId: sid, sceneType: st, field: `questionSet[${i}].correctChoiceId`, message: `Q#${i + 1} correctChoiceId "${qCorrectId}" tidak ada di choices.`, severity: 'error' });
+          }
+        }
       });
     }
   }
 
-  if (page.sceneType === 'matching-game') {
-    const leftItems = content.leftItems as Array<{ id: string }> | undefined;
-    const rightItems = content.rightItems as Array<{ id: string }> | undefined;
+  if (st === 'matching-game') {
+    const leftItems = content.leftItems as Array<Record<string, unknown>> | undefined;
+    const rightItems = content.rightItems as Array<Record<string, unknown>> | undefined;
     const correctPairs = content.correctPairs as Array<{ leftId: string; rightId: string }> | undefined;
-    if (leftItems && rightItems && correctPairs) {
+    if (Array.isArray(leftItems)) leftItems.forEach((item, i) => {
+      if (!hasNonEmptyField(item, 'id')) issues.push({ sceneId: sid, sceneType: st, field: `leftItems[${i}].id`, message: `Left item #${i + 1} id kosong.`, severity: 'error' });
+      if (!hasNonEmptyField(item, 'label')) issues.push({ sceneId: sid, sceneType: st, field: `leftItems[${i}].label`, message: `Left item #${i + 1} label kosong.`, severity: 'error' });
+    });
+    if (Array.isArray(rightItems)) rightItems.forEach((item, i) => {
+      if (!hasNonEmptyField(item, 'id')) issues.push({ sceneId: sid, sceneType: st, field: `rightItems[${i}].id`, message: `Right item #${i + 1} id kosong.`, severity: 'error' });
+      if (!hasNonEmptyField(item, 'label')) issues.push({ sceneId: sid, sceneType: st, field: `rightItems[${i}].label`, message: `Right item #${i + 1} label kosong.`, severity: 'error' });
+    });
+    if (Array.isArray(leftItems) && Array.isArray(rightItems) && Array.isArray(correctPairs)) {
       const leftIds = new Set(leftItems.map((i) => i.id));
       const rightIds = new Set(rightItems.map((i) => i.id));
-      for (const pair of correctPairs) {
-        if (!leftIds.has(pair.leftId)) {
-          issues.push({
-            sceneId: page.id,
-            sceneType: page.sceneType,
-            field: 'correctPairs',
-            message: `Pair leftId "${pair.leftId}" tidak ada di leftItems.`,
-            severity: 'error',
-          });
-        }
-        if (!rightIds.has(pair.rightId)) {
-          issues.push({
-            sceneId: page.id,
-            sceneType: page.sceneType,
-            field: 'correctPairs',
-            message: `Pair rightId "${pair.rightId}" tidak ada di rightItems.`,
-            severity: 'error',
-          });
-        }
+      const pairKeys = new Set<string>();
+      correctPairs.forEach((pair, pi) => {
+        if (!leftIds.has(pair.leftId)) issues.push({ sceneId: sid, sceneType: st, field: `correctPairs[${pi}].leftId`, message: `Pair #${pi + 1} leftId "${pair.leftId}" tidak ada di leftItems.`, severity: 'error' });
+        if (!rightIds.has(pair.rightId)) issues.push({ sceneId: sid, sceneType: st, field: `correctPairs[${pi}].rightId`, message: `Pair #${pi + 1} rightId "${pair.rightId}" tidak ada di rightItems.`, severity: 'error' });
+        const key = `${pair.leftId}:${pair.rightId}`;
+        if (pairKeys.has(key)) issues.push({ sceneId: sid, sceneType: st, field: `correctPairs[${pi}]`, message: `Pair #${pi + 1} duplikat.`, severity: 'error' });
+        pairKeys.add(key);
+      });
+    }
+  }
+
+  if (st === 'sequencing-game') {
+    const items = content.items as Array<Record<string, unknown>> | undefined;
+    const correctOrder = content.correctOrder as string[] | undefined;
+    if (Array.isArray(items)) items.forEach((item, i) => {
+      if (!hasNonEmptyField(item, 'id')) issues.push({ sceneId: sid, sceneType: st, field: `items[${i}].id`, message: `Item #${i + 1} id kosong.`, severity: 'error' });
+      if (!hasNonEmptyField(item, 'label')) issues.push({ sceneId: sid, sceneType: st, field: `items[${i}].label`, message: `Item #${i + 1} label kosong.`, severity: 'error' });
+    });
+    if (Array.isArray(items) && Array.isArray(correctOrder)) {
+      const itemIds = new Set(items.map((i) => i.id));
+      correctOrder.forEach((orderId) => {
+        if (!itemIds.has(orderId)) issues.push({ sceneId: sid, sceneType: st, field: 'correctOrder', message: `Order ID "${orderId}" tidak ada di items.`, severity: 'error' });
+      });
+      // Warning: correctOrder length should match items length
+      if (correctOrder.length !== items.length) {
+        issues.push({ sceneId: sid, sceneType: st, field: 'correctOrder', message: `correctOrder panjang ${correctOrder.length}, items panjang ${items.length}. Sebaiknya sama.`, severity: 'warning' });
       }
     }
   }
 
-  if (page.sceneType === 'sequencing-game') {
-    const items = content.items as Array<{ id: string }> | undefined;
-    const correctOrder = content.correctOrder as string[] | undefined;
-    if (items && correctOrder) {
-      const itemIds = new Set(items.map((i) => i.id));
-      for (const orderId of correctOrder) {
-        if (!itemIds.has(orderId)) {
-          issues.push({
-            sceneId: page.id,
-            sceneType: page.sceneType,
-            field: 'correctOrder',
-            message: `Order ID "${orderId}" tidak ada di items.`,
-            severity: 'error',
-          });
-        }
+  if (st === 'hotspot-map') {
+    const hotspots = content.hotspots as Array<Record<string, unknown>> | undefined;
+    if (Array.isArray(hotspots)) hotspots.forEach((hs, i) => {
+      if (!hasNonEmptyField(hs, 'id')) issues.push({ sceneId: sid, sceneType: st, field: `hotspots[${i}].id`, message: `Hotspot #${i + 1} id kosong.`, severity: 'error' });
+      if (!hasNonEmptyField(hs, 'label')) issues.push({ sceneId: sid, sceneType: st, field: `hotspots[${i}].label`, message: `Hotspot #${i + 1} label kosong.`, severity: 'error' });
+      if (!hasNonEmptyField(hs, 'info')) issues.push({ sceneId: sid, sceneType: st, field: `hotspots[${i}].info`, message: `Hotspot #${i + 1} info kosong.`, severity: 'error' });
+      if (!isNumInRange(hs?.x, 0, 100)) issues.push({ sceneId: sid, sceneType: st, field: `hotspots[${i}].x`, message: `Hotspot #${i + 1} x harus number 0–100.`, severity: 'error' });
+      if (!isNumInRange(hs?.y, 0, 100)) issues.push({ sceneId: sid, sceneType: st, field: `hotspots[${i}].y`, message: `Hotspot #${i + 1} y harus number 0–100.`, severity: 'error' });
+    });
+  }
+
+  if (st === 'branching-scenario') {
+    const choices = content.choices as Array<Record<string, unknown>> | undefined;
+    if (Array.isArray(choices)) {
+      choices.forEach((c, i) => {
+        if (!hasNonEmptyField(c, 'id')) issues.push({ sceneId: sid, sceneType: st, field: `choices[${i}].id`, message: `Choice #${i + 1} id kosong.`, severity: 'error' });
+        if (!hasNonEmptyField(c, 'label')) issues.push({ sceneId: sid, sceneType: st, field: `choices[${i}].label`, message: `Choice #${i + 1} label kosong.`, severity: 'error' });
+        if (!hasNonEmptyField(c, 'consequence')) issues.push({ sceneId: sid, sceneType: st, field: `choices[${i}].consequence`, message: `Choice #${i + 1} consequence kosong.`, severity: 'error' });
+      });
+      // At least one isCorrect === true
+      const hasCorrect = choices.some((c) => c?.isCorrect === true);
+      if (!hasCorrect) {
+        issues.push({ sceneId: sid, sceneType: st, field: 'choices', message: `Minimal satu choice harus isCorrect=true.`, severity: 'warning' });
       }
     }
+  }
+
+  if (st === 'glossary-cards') {
+    const terms = content.terms as Array<Record<string, unknown>> | undefined;
+    if (Array.isArray(terms)) terms.forEach((t, i) => {
+      if (!hasNonEmptyField(t, 'id')) issues.push({ sceneId: sid, sceneType: st, field: `terms[${i}].id`, message: `Term #${i + 1} id kosong.`, severity: 'error' });
+      if (!hasNonEmptyField(t, 'term')) issues.push({ sceneId: sid, sceneType: st, field: `terms[${i}].term`, message: `Term #${i + 1} term kosong.`, severity: 'error' });
+      if (!hasNonEmptyField(t, 'definition')) issues.push({ sceneId: sid, sceneType: st, field: `terms[${i}].definition`, message: `Term #${i + 1} definition kosong.`, severity: 'error' });
+    });
+  }
+
+  if (st === 'timeline-story') {
+    const events = content.events as Array<Record<string, unknown>> | undefined;
+    if (Array.isArray(events)) events.forEach((e, i) => {
+      if (!hasNonEmptyField(e, 'id')) issues.push({ sceneId: sid, sceneType: st, field: `events[${i}].id`, message: `Event #${i + 1} id kosong.`, severity: 'error' });
+      if (!hasNonEmptyField(e, 'label')) issues.push({ sceneId: sid, sceneType: st, field: `events[${i}].label`, message: `Event #${i + 1} label kosong.`, severity: 'error' });
+      if (!hasNonEmptyField(e, 'description')) issues.push({ sceneId: sid, sceneType: st, field: `events[${i}].description`, message: `Event #${i + 1} description kosong.`, severity: 'error' });
+    });
+  }
+
+  if (st === 'worksheet-activity') {
+    const steps = content.taskSteps as Array<Record<string, unknown>> | undefined;
+    if (Array.isArray(steps)) steps.forEach((s, i) => {
+      if (!hasNonEmptyField(s, 'id')) issues.push({ sceneId: sid, sceneType: st, field: `taskSteps[${i}].id`, message: `Step #${i + 1} id kosong.`, severity: 'error' });
+      if (!hasNonEmptyField(s, 'prompt')) issues.push({ sceneId: sid, sceneType: st, field: `taskSteps[${i}].prompt`, message: `Step #${i + 1} prompt kosong.`, severity: 'error' });
+    });
+  }
+
+  if (st === 'rubric-panel') {
+    const criteria = content.criteria as Array<Record<string, unknown>> | undefined;
+    if (Array.isArray(criteria)) criteria.forEach((c, i) => {
+      if (!hasNonEmptyField(c, 'id')) issues.push({ sceneId: sid, sceneType: st, field: `criteria[${i}].id`, message: `Criterion #${i + 1} id kosong.`, severity: 'error' });
+      if (!hasNonEmptyField(c, 'name')) issues.push({ sceneId: sid, sceneType: st, field: `criteria[${i}].name`, message: `Criterion #${i + 1} name kosong.`, severity: 'error' });
+      if (!hasNonEmptyField(c, 'description')) issues.push({ sceneId: sid, sceneType: st, field: `criteria[${i}].description`, message: `Criterion #${i + 1} description kosong.`, severity: 'error' });
+    });
+    const levels = content.levels as Array<Record<string, unknown>> | undefined;
+    if (Array.isArray(levels)) levels.forEach((l, i) => {
+      if (!hasNonEmptyField(l, 'id')) issues.push({ sceneId: sid, sceneType: st, field: `levels[${i}].id`, message: `Level #${i + 1} id kosong.`, severity: 'error' });
+      if (!hasNonEmptyField(l, 'name')) issues.push({ sceneId: sid, sceneType: st, field: `levels[${i}].name`, message: `Level #${i + 1} name kosong.`, severity: 'error' });
+      if (typeof l?.score !== 'number') issues.push({ sceneId: sid, sceneType: st, field: `levels[${i}].score`, message: `Level #${i + 1} score harus number.`, severity: 'error' });
+      if (!hasNonEmptyField(l, 'descriptor')) issues.push({ sceneId: sid, sceneType: st, field: `levels[${i}].descriptor`, message: `Level #${i + 1} descriptor kosong.`, severity: 'error' });
+    });
   }
 
   return issues;
