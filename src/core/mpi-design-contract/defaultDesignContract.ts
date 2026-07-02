@@ -53,9 +53,14 @@ export const DEFAULT_DESIGN_CONTRACT: MpiDesignContract = {
   },
 
   typography: {
+    // FONT-EDU-SAFETY-01: max 2-3 distinct font family tokens.
+    // heroFont: Trebuchet MS (title) + Segoe UI fallback.
+    // bodyFont: Segoe UI (body) + Arial fallback.
+    // Distinct named families: Trebuchet MS, Segoe UI, Arial = 3 tokens (within max 3).
     heroFont: "'Trebuchet MS', 'Segoe UI', Arial, sans-serif",
-    bodyFont: "'Segoe UI', Arial, Helvetica, sans-serif",
-    titleSize: 48,
+    bodyFont: "'Segoe UI', Arial, sans-serif",
+    // FONT-EDU-SAFETY-01: title 28-44px safe range for projector 16:9
+    titleSize: 44,
     subtitleSize: 20,
     bodySize: 16,
     labelSize: 13,
@@ -286,8 +291,12 @@ export const DESIGN_CONTRACTS: Record<DesignContractId, MpiDesignContract> = {
     },
     typography: {
       ...DEFAULT_DESIGN_CONTRACT.typography,
-      heroFont: "'Fredoka One', 'Trebuchet MS', cursive",
-      bodyFont: "'Nunito', 'Segoe UI', sans-serif",
+      // FONT-EDU-SAFETY-01: replaced the old decorative display font + cursive
+      // fallback (forbidden by education-friendly typography guard) with the
+      // same clean sans-serif heroFont as the default contract. Mission mood
+      // is conveyed via dark palette + bold weight, not decorative font.
+      heroFont: "'Trebuchet MS', 'Segoe UI', Arial, sans-serif",
+      bodyFont: "'Segoe UI', Arial, sans-serif",
       titleSize: 42,
       // VISUAL-QUALITY-GUARD: heading weight >= 600
       titleWeight: 700,

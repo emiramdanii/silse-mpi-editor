@@ -116,7 +116,10 @@ export const CIVIC_WARM_PACK: StylePack = {
     danger: '#dc2626',
   },
   typography: {
-    fontFamily: 'Georgia, "Times New Roman", serif',
+    // FONT-EDU-SAFETY-01: replaced Georgia serif with a clean sans-serif
+    // stack. Body text must be sans-serif per education-friendly rule.
+    // Civic warmth is now conveyed via color palette, not font choice.
+    fontFamily: '"Segoe UI", Tahoma, Geneva, sans-serif',
     titleSize: 48,
     subtitleSize: 28,
     bodySize: 18,
@@ -158,7 +161,10 @@ export const BRIGHT_KIDS_PACK: StylePack = {
     danger: '#dc2626',
   },
   typography: {
-    fontFamily: '"Comic Sans MS", "Trebuchet MS", sans-serif',
+    // FONT-EDU-SAFETY-01: replaced the old comic-style font (forbidden by
+    // education-friendly typography guard) with a clean rounded-friendly
+    // sans-serif stack. Trebuchet MS is warm but still readable on projector.
+    fontFamily: '"Trebuchet MS", "Segoe UI", Tahoma, sans-serif',
     titleSize: 56,
     subtitleSize: 32,
     bodySize: 20,
@@ -242,7 +248,10 @@ export const MINIMAL_WORKSHEET_PACK: StylePack = {
     danger: '#dc2626',
   },
   typography: {
-    fontFamily: '"Courier New", monospace',
+    // FONT-EDU-SAFETY-01: replaced the old monospace body font (display font,
+    // hard to read for long worksheet text) with a clean sans-serif stack.
+    // Worksheet readability > monospace aesthetic.
+    fontFamily: '"Segoe UI", Arial, Helvetica, sans-serif',
     titleSize: 32,
     subtitleSize: 24,
     bodySize: 16,

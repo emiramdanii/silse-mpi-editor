@@ -126,7 +126,7 @@ const PROFILES: Record<StylePackIdV1, PremiumExportProfile> = {
     },
     typography: {
       heroFont: "'Trebuchet MS', 'Segoe UI', Arial, sans-serif",
-      bodyFont: "'Segoe UI', Arial, Helvetica, sans-serif",
+      bodyFont: "'Segoe UI', Arial, sans-serif",
       heroWeight: 950,
       bodyWeight: 560,
       heroLetterSpacing: '-0.025em',
@@ -159,7 +159,7 @@ const PROFILES: Record<StylePackIdV1, PremiumExportProfile> = {
     },
     typography: {
       heroFont: "'Trebuchet MS', 'Segoe UI', Arial, sans-serif",
-      bodyFont: "'Segoe UI', Arial, Helvetica, sans-serif",
+      bodyFont: "'Segoe UI', Arial, sans-serif",
       heroWeight: 900,
       bodyWeight: 580,
       heroLetterSpacing: '-0.02em',
@@ -192,7 +192,7 @@ const PROFILES: Record<StylePackIdV1, PremiumExportProfile> = {
     },
     typography: {
       heroFont: "'Trebuchet MS', 'Segoe UI', Arial, sans-serif",
-      bodyFont: "'Segoe UI', Arial, Helvetica, sans-serif",
+      bodyFont: "'Segoe UI', Arial, sans-serif",
       heroWeight: 1000,
       bodyWeight: 600,
       heroLetterSpacing: '-0.03em',
