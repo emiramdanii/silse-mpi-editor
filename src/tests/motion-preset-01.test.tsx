@@ -281,14 +281,17 @@ describe('MOTION-PRESET-01 — Scope D: export parity', () => {
   it('16. export HTML has prefers-reduced-motion block that disables motion', () => {
     const project = createSamplePpknProject();
     const html = exportProjectToHtml(project);
-    // Find the motion-specific reduced-motion block
-    const idx = html.indexOf('MOTION-PRESET-01');
+    // Find the motion-specific reduced-motion block (search for the marker that
+    // buildMotionPresetCss emits — case-sensitive, stable).
+    const idx = html.indexOf('PREFERS-REDUCED-MOTION: disable ALL motion');
     expect(idx).toBeGreaterThan(-1);
     const block = html.substring(idx, idx + 4000);
     expect(block).toContain('prefers-reduced-motion: reduce');
-    expect(block).toContain('animation:none !important');
-    expect(block).toContain('transition:none !important');
-    expect(block).toContain('transform:none !important');
+    // Allow optional whitespace between property and value (buildMotionPresetCss uses spaces,
+    // older hardcoded version used no spaces — both should pass).
+    expect(block).toMatch(/animation:\s*none\s*!important/);
+    expect(block).toMatch(/transition:\s*none\s*!important/);
+    expect(block).toMatch(/transform:\s*none\s*!important/);
   });
 
   it('17. export ScenePanel/ActionButton/Reveal/ScoreSummary builders attach motion classes', () => {
@@ -404,5 +407,155 @@ describe('MOTION-PRESET-01 — Scope E: discipline', () => {
     expect(DEFAULT_MOTION_PROFILE.classForPreset['reward-pop']).toBe('silse-motion-reward-pop');
     expect(DEFAULT_MOTION_PROFILE.classForPreset['correct-burst']).toBe('silse-motion-correct-burst');
     expect(DEFAULT_MOTION_PROFILE.classForPreset['none']).toBe('');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// SCOPE F — PATCH A: single source of truth (no manual CSS duplication in export)
+// ---------------------------------------------------------------------------
+
+describe('MOTION-PRESET-01 PATCH A — single source of truth', () => {
+  it('23. export-html.ts imports buildMotionPresetCss from motion-preset', () => {
+    const src = readFileSync(
+      resolve(__dirname, '../export/export-html.ts'),
+      'utf-8',
+    );
+    expect(src).toContain("import { buildMotionPresetCss } from '../core/style-packs/motion-preset';");
+    expect(src).toContain('buildMotionPresetCss()');
+  });
+
+  it('24. export-html.ts does NOT hardcode motion keyframes (no manual duplication)', () => {
+    // After PATCH A, the motion keyframes must come exclusively from buildMotionPresetCss().
+    // The source file should NOT contain hardcoded @keyframes silse-motion-* definitions.
+    const src = readFileSync(
+      resolve(__dirname, '../export/export-html.ts'),
+      'utf-8',
+    );
+    // These keyframe names should NOT appear as hardcoded @keyframes definitions
+    // (they only appear in the buildMotionPresetCss() output, which is in motion-preset.ts).
+    const motionKeyframes = [
+      '@keyframes silse-motion-entrance-fade-kf',
+      '@keyframes silse-motion-entrance-slide-up-kf',
+      '@keyframes silse-motion-soft-fade-kf',
+      '@keyframes silse-motion-slide-up-kf',
+      '@keyframes silse-motion-pulse-kf',
+      '@keyframes silse-motion-reward-pop-kf',
+      '@keyframes silse-motion-correct-burst-kf',
+      '@keyframes silse-motion-feedback-pop-kf',
+    ];
+    motionKeyframes.forEach((kf) => {
+      expect(
+        src,
+        `${kf} must NOT be hardcoded in export-html.ts — must come from buildMotionPresetCss()`,
+      ).not.toContain(kf);
+    });
+  });
+
+  it('25. export HTML contains @keyframes silse-motion-entrance-fade-kf', () => {
+    const html = exportProjectToHtml(createSamplePpknProject());
+    expect(html).toContain('@keyframes silse-motion-entrance-fade-kf');
+  });
+
+  it('26. export HTML contains @keyframes silse-motion-feedback-pop-kf', () => {
+    const html = exportProjectToHtml(createSamplePpknProject());
+    expect(html).toContain('@keyframes silse-motion-feedback-pop-kf');
+  });
+
+  it('27. export HTML contains @keyframes silse-motion-reward-pop-kf', () => {
+    const html = exportProjectToHtml(createSamplePpknProject());
+    expect(html).toContain('@keyframes silse-motion-reward-pop-kf');
+  });
+
+  it('28. export HTML contains .silse-motion-hover-lift class definition', () => {
+    const html = exportProjectToHtml(createSamplePpknProject());
+    expect(html).toContain('.silse-motion-hover-lift');
+  });
+
+  it('29. export HTML contains prefers-reduced-motion: reduce', () => {
+    const html = exportProjectToHtml(createSamplePpknProject());
+    expect(html).toContain('prefers-reduced-motion: reduce');
+  });
+
+  it('30. export HTML contains animation: none !important (whitespace-tolerant)', () => {
+    const html = exportProjectToHtml(createSamplePpknProject());
+    expect(html).toMatch(/animation:\s*none\s*!important/);
+  });
+
+  it('31. export HTML contains transition: none !important (whitespace-tolerant)', () => {
+    const html = exportProjectToHtml(createSamplePpknProject());
+    expect(html).toMatch(/transition:\s*none\s*!important/);
+  });
+
+  it('32. export HTML contains all motion classes used by export builders', () => {
+    // The 5 export builders that attach motion classes:
+    const requiredClasses = [
+      'silse-motion-entrance-slide-up', // exportHeader
+      'silse-motion-entrance-fade',      // exportPanel
+      'silse-motion-hover-lift',         // exportPanel + exportActionButton
+      'silse-motion-feedback-pop',       // exportRevealBlock
+      'silse-motion-reward-pop',         // exportScoreSummary
+    ];
+    const html = exportProjectToHtml(createSamplePpknProject());
+    requiredClasses.forEach((cls) => {
+      // Class definition appears in <style>
+      expect(html, `${cls} class definition must be in <style>`).toContain(`.${cls}`);
+      // Class usage appears in className assignment (JS)
+      expect(html, `${cls} must be referenced in JS builder`).toContain(cls);
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// SCOPE G — PATCH A: dead-class guard (every motion class appears in 3 places)
+// ---------------------------------------------------------------------------
+
+describe('MOTION-PRESET-01 PATCH A — dead-class guard', () => {
+  it('33. every motion class appears in buildMotionPresetCss(), styles.css, AND export HTML', () => {
+    const motionClasses = getAllMotionClassNames();
+    expect(motionClasses.length).toBeGreaterThan(0);
+
+    const motionCss = buildMotionPresetCss();
+    const stylesCss = readFileSync(resolve(__dirname, '../styles.css'), 'utf-8');
+    const exportHtml = exportProjectToHtml(createSamplePpknProject());
+
+    motionClasses.forEach((cls) => {
+      // 1. In buildMotionPresetCss() output
+      expect(
+        motionCss,
+        `${cls} must be defined in buildMotionPresetCss()`,
+      ).toContain(`.${cls}`);
+      // 2. In editor styles.css
+      expect(
+        stylesCss,
+        `${cls} must be defined in styles.css (editor)`,
+      ).toContain(`.${cls}`);
+      // 3. In export HTML (because generateCSS appends buildMotionPresetCss())
+      expect(
+        exportHtml,
+        `${cls} must be present in export HTML`,
+      ).toContain(`.${cls}`);
+    });
+  });
+
+  it('34. every motion keyframe appears in buildMotionPresetCss(), styles.css, AND export HTML', () => {
+    const motionKeyframes = [
+      'silse-motion-entrance-fade-kf',
+      'silse-motion-entrance-slide-up-kf',
+      'silse-motion-soft-fade-kf',
+      'silse-motion-slide-up-kf',
+      'silse-motion-pulse-kf',
+      'silse-motion-reward-pop-kf',
+      'silse-motion-correct-burst-kf',
+      'silse-motion-feedback-pop-kf',
+    ];
+    const motionCss = buildMotionPresetCss();
+    const stylesCss = readFileSync(resolve(__dirname, '../styles.css'), 'utf-8');
+    const exportHtml = exportProjectToHtml(createSamplePpknProject());
+
+    motionKeyframes.forEach((kf) => {
+      expect(motionCss, `@keyframes ${kf} in buildMotionPresetCss()`).toContain(`@keyframes ${kf}`);
+      expect(stylesCss, `@keyframes ${kf} in styles.css`).toContain(`@keyframes ${kf}`);
+      expect(exportHtml, `@keyframes ${kf} in export HTML`).toContain(`@keyframes ${kf}`);
+    });
   });
 });

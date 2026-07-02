@@ -269,7 +269,15 @@ describe('CELEBRATION-EFFECT-V1 — quality + regression', () => {
     const html = exportProjectToHtml(applyStylePack(project, 'modern-clean'));
     const styleMatch = html.match(/<style>([\s\S]*?)<\/style>/);
     if (styleMatch) {
-      const celebSection = styleMatch[1].substring(styleMatch[1].indexOf('CELEBRATION-EFFECT'));
+      // MOTION-PRESET-01 PATCH A: motion CSS is appended after celebration,
+      // and silse-motion-pulse is intentionally 2000ms infinite. Scope the
+      // celebration section to stop at the MOTION-PRESET marker so the
+      // pulse doesn't get miscounted as a celebration animation.
+      const startIdx = styleMatch[1].indexOf('CELEBRATION-EFFECT');
+      const endIdx = styleMatch[1].indexOf('MOTION-PRESET', startIdx);
+      const celebSection = endIdx === -1
+        ? styleMatch[1].substring(startIdx)
+        : styleMatch[1].substring(startIdx, endIdx);
       // Celebration should not have infinite animation.
       expect(celebSection).not.toMatch(/infinite/);
     }
@@ -280,7 +288,12 @@ describe('CELEBRATION-EFFECT-V1 — quality + regression', () => {
     const html = exportProjectToHtml(applyStylePack(project, 'modern-clean'));
     const styleMatch = html.match(/<style>([\s\S]*?)<\/style>/);
     if (styleMatch) {
-      const celebSection = styleMatch[1].substring(styleMatch[1].indexOf('CELEBRATION-EFFECT'));
+      // MOTION-PRESET-01 PATCH A: scope to celebration-only (stop at MOTION-PRESET).
+      const startIdx = styleMatch[1].indexOf('CELEBRATION-EFFECT');
+      const endIdx = styleMatch[1].indexOf('MOTION-PRESET', startIdx);
+      const celebSection = endIdx === -1
+        ? styleMatch[1].substring(startIdx)
+        : styleMatch[1].substring(startIdx, endIdx);
       const durations = celebSection.match(/(\d+)ms/g);
       if (durations) {
         const maxDur = Math.max(...durations.map(d => parseInt(d)));

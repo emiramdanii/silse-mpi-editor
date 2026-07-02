@@ -24,6 +24,7 @@ import { getBackgroundPatternForStylePack } from '../core/style-packs/background
 import { getCoverClassForStylePack, getAllCoverClassNames } from '../core/style-packs/cover-decoration';
 import { getMicroAnimationForStylePack } from '../core/style-packs/micro-animation';
 import { getCelebrationEffectForStylePack } from '../core/style-packs/celebration-effect';
+import { buildMotionPresetCss } from '../core/style-packs/motion-preset';
 import { getPremiumExportProfile, type PremiumExportProfile } from '../core/style-packs/premium-export-profile';
 import { buildSceneRenderPlanForPage, type SceneRenderPlan } from '../core/scene-renderer';
 
@@ -299,7 +300,7 @@ function generateCSS(cssVars: Record<string, string>, profile: PremiumExportProf
     ? `0 22px 54px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.04)`
     : `0 22px 54px rgba(29,53,87,0.18), 0 4px 12px rgba(29,53,87,0.06)`;
 
-  return `
+  const baseCss = `
 :root {
 ${varsStr}
   --silse-navy: ${c.navy};
@@ -644,31 +645,7 @@ body {
   .silse-anim-feedback-soft,.silse-anim-feedback-warm,.silse-anim-feedback-mission { animation:none !important; }
   .silse-anim-game-mission.silse-game-mission { animation:none !important; }
 }
-/* MOTION-PRESET-01: controlled premium motion (editor === export parity) */
-@keyframes silse-motion-entrance-fade-kf { from { opacity:0; } to { opacity:1; } }
-.silse-motion-entrance-fade { animation:silse-motion-entrance-fade-kf 220ms ease-out; }
-@keyframes silse-motion-entrance-slide-up-kf { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
-.silse-motion-entrance-slide-up { animation:silse-motion-entrance-slide-up-kf 260ms ease-out; }
-.silse-motion-hover-lift { transition: transform 160ms ease-out, box-shadow 160ms ease-out; }
-.silse-motion-hover-lift:hover { transform: translateY(-2px); }
-@keyframes silse-motion-soft-fade-kf { from { opacity:0; } to { opacity:1; } }
-.silse-motion-soft-fade { animation:silse-motion-soft-fade-kf 220ms ease-out; }
-@keyframes silse-motion-slide-up-kf { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-.silse-motion-slide-up { animation:silse-motion-slide-up-kf 260ms ease-out; }
-@keyframes silse-motion-pulse-kf { 0%,100% { box-shadow:0 0 0 0 rgba(249,193,46,0); } 50% { box-shadow:0 0 0 6px rgba(249,193,46,0.18); } }
-.silse-motion-pulse { animation:silse-motion-pulse-kf 2000ms ease-in-out infinite; }
-@keyframes silse-motion-reward-pop-kf { 0% { opacity:0; transform:scale(0.85); } 60% { opacity:1; transform:scale(1.04); } 100% { transform:scale(1); } }
-.silse-motion-reward-pop { animation:silse-motion-reward-pop-kf 400ms ease-out; }
-@keyframes silse-motion-correct-burst-kf { 0% { box-shadow:0 0 0 0 rgba(34,197,94,0.55); } 100% { box-shadow:0 0 0 14px rgba(34,197,94,0); } }
-.silse-motion-correct-burst { animation:silse-motion-correct-burst-kf 600ms ease-out; }
-@keyframes silse-motion-feedback-pop-kf { from { opacity:0; transform:translateY(-2px) scale(0.98); } to { opacity:1; transform:translateY(0) scale(1); } }
-.silse-motion-feedback-pop { animation:silse-motion-feedback-pop-kf 200ms ease-out; }
-@media (prefers-reduced-motion: reduce) {
-  .silse-motion-entrance-fade,.silse-motion-entrance-slide-up,.silse-motion-soft-fade,
-  .silse-motion-slide-up,.silse-motion-pulse,.silse-motion-reward-pop,
-  .silse-motion-correct-burst,.silse-motion-feedback-pop { animation:none !important; }
-  .silse-motion-hover-lift,.silse-motion-hover-lift:hover { transition:none !important; transform:none !important; }
-}
+/* MOTION-PRESET-01: motion CSS is injected by buildMotionPresetCss() at the end of generateCSS — single source of truth. */
 /* CELEBRATION-EFFECT-V1: CSS-only celebration on correct answer */
 @keyframes silse-celebrate-burst-ring { 0%{opacity:0.8;transform:scale(0.5)} 100%{opacity:0;transform:scale(1.4)} }
 @keyframes silse-celebrate-sparkle { 0%,100%{opacity:0} 30%{opacity:1} 60%{opacity:0.5} }
@@ -980,6 +957,12 @@ body {
    (animation-duration:0.01ms !important; animation-iteration-count:1 !important;
     transition-duration:0.01ms !important on *,*::before,*::after). */
 `.trim();
+
+  // MOTION-PRESET-01 PATCH A: append motion CSS from a single source of truth.
+  // Do NOT duplicate keyframes/class definitions inline — always go through
+  // buildMotionPresetCss() so editor and export stay 1:1 in sync.
+  const motionCss = buildMotionPresetCss();
+  return motionCss ? `${baseCss}\n\n${motionCss}` : baseCss;
 }
 
 // ---------------------------------------------------------------------------
