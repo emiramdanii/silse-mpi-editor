@@ -20,6 +20,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import type { MpiDesignContract } from '../../core/mpi-design-contract';
+import {
+  resolveMotionProfile,
+  type MotionPresetProfile,
+} from '../../core/style-packs/motion-preset';
 
 // ---------------------------------------------------------------------------
 // Shared types
@@ -31,6 +35,13 @@ export type BlockProps = {
   className?: string;
   style?: CSSProperties;
 };
+
+// ---------------------------------------------------------------------------
+// MOTION-PRESET-01: shared motion profile
+// Resolved once at module load — stable class names, no per-render churn.
+// ---------------------------------------------------------------------------
+
+const MOTION: MotionPresetProfile = resolveMotionProfile();
 
 // ---------------------------------------------------------------------------
 // 1. SceneShell
@@ -68,8 +79,9 @@ export function SceneHeader({
   title: string; subtitle?: string;
 }) {
   // PREMIUM-STYLE-AFTER-FOUNDATION-01: stronger hierarchy with accent line + letter spacing
+  // MOTION-PRESET-01: entrance slide-up on header
   return (
-    <div className={`silse-block-header ${className}`.trim()} style={{ borderBottom: `2px solid ${chipColor || contract.palette.gold}33`, paddingBottom: 10, marginBottom: 4 }}>
+    <div className={`silse-block-header ${MOTION.entranceSlideUpClass} ${className}`.trim()} style={{ borderBottom: `2px solid ${chipColor || contract.palette.gold}33`, paddingBottom: 10, marginBottom: 4 }}>
       {chipLabel && (
         <div className="silse-block-chip" style={{
           display: 'inline-flex', alignItems: 'center', gap: 5,
@@ -107,7 +119,7 @@ export function SceneChip({ contract, label, icon, color, className = '' }: Bloc
   label: string; icon?: string; color?: string;
 }) {
   return (
-    <span className={`silse-block-chip ${className}`.trim()} style={{
+    <span className={`silse-block-chip ${MOTION.hoverLiftClass} ${className}`.trim()} style={{
       display: 'inline-flex', alignItems: 'center', gap: 5,
       padding: '4px 12px', borderRadius: contract.badge.radius,
       background: color ? `${color}22` : contract.badge.background,
@@ -126,8 +138,9 @@ export function SceneChip({ contract, label, icon, color, className = '' }: Bloc
 
 export function ScenePanel({ contract, children, className = '', style, title }: BlockProps & { title?: string }) {
   // PREMIUM-STYLE-AFTER-FOUNDATION-01: depth shadow from contract.card.shadow
+  // MOTION-PRESET-01: entrance fade + hover lift (both reduced-motion safe via CSS)
   return (
-    <div className={`silse-block-panel ${className}`.trim()} style={{
+    <div className={`silse-block-panel ${MOTION.entranceFadeClass} ${MOTION.hoverLiftClass} ${className}`.trim()} style={{
       background: contract.card.background,
       border: contract.card.border,
       borderRadius: contract.card.radius,
@@ -364,7 +377,7 @@ export function RevealBlock({ contract, label, text, revealed: externalRevealed,
   const revealed = externalRevealed !== undefined ? externalRevealed : internalRevealed;
 
   return (
-    <div className={`silse-block-reveal ${className}`.trim()} data-testid="silse-block-reveal" onClick={() => { if (externalRevealed === undefined) setInternalRevealed(!internalRevealed); }} style={{
+    <div className={`silse-block-reveal ${revealed ? MOTION.feedbackPopClass : ''} ${className}`.trim()} data-testid="silse-block-reveal" onClick={() => { if (externalRevealed === undefined) setInternalRevealed(!internalRevealed); }} style={{
       borderRadius: contract.card.radius, padding: contract.card.padding,
       background: `${contract.palette.success}11`, border: `1px solid ${contract.palette.success}40`,
       cursor: externalRevealed === undefined ? 'pointer' : 'default',
@@ -385,7 +398,7 @@ export function ScoreSummaryBlock({ contract, score, maxScore, level, className 
 }) {
   const pct = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
   return (
-    <div className={`silse-block-score-summary ${className}`.trim()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+    <div className={`silse-block-score-summary ${MOTION.classForPreset['reward-pop']} ${className}`.trim()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
       <div style={{
         width: 120, height: 120, borderRadius: '50%',
         display: 'grid', placeItems: 'center',
@@ -468,19 +481,19 @@ export function ActionButtonBlock({ contract, label, onClick, variant = 'primary
   label: string; onClick?: () => void; variant?: 'primary' | 'secondary' | 'gold';
 }) {
   const btn = contract.button[variant] || contract.button.primary;
-  // PREMIUM-STYLE-AFTER-FOUNDATION-01: shadow + hover lift via onMouseEnter/Leave
+  // PREMIUM-STYLE-AFTER-FOUNDATION-01: shadow + hover lift
+  // MOTION-PRESET-01: replaced inline enter/leave handlers with class-based motion
+  // (silse-motion-hover-lift). respects prefers-reduced-motion via CSS.
   return (
     <button
-      className={`silse-block-action ${className}`.trim()}
+      className={`silse-block-action ${MOTION.hoverLiftClass} ${className}`.trim()}
       onClick={onClick}
-      onMouseEnter={(e) => { if (onClick) e.currentTarget.style.transform = 'translateY(-1px)'; }}
-      onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; }}
       style={{
         display: 'inline-flex', alignItems: 'center', gap: 6,
         padding: `${btn.padding.top}px ${btn.padding.right}px`,
         borderRadius: btn.radius, background: btn.background, color: btn.color,
         border: 'none', fontWeight: btn.fontWeight, fontSize: 14,
-        cursor: onClick ? 'pointer' : 'default', transition: 'all 0.18s ease',
+        cursor: onClick ? 'pointer' : 'default',
         boxShadow: btn.shadow || '0 2px 6px rgba(0,0,0,0.12)',
       }}
     >

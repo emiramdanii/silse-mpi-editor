@@ -249,11 +249,14 @@ describe('MICRO-ANIMATION-SYSTEM-V1 — render + quality', () => {
     const html = exportProjectToHtml(applyStylePack(project, 'modern-clean'));
     const styleMatch = html.match(/<style>([\s\S]*?)<\/style>/);
     if (styleMatch) {
-      // Only check silse-anim-* classes, not silse-celebrate-* (which can be up to 900ms).
-      const animSection = styleMatch[1].substring(
-        styleMatch[1].indexOf('MICRO-ANIMATION'),
-        styleMatch[1].indexOf('CELEBRATION-EFFECT'),
-      );
+      // Only check silse-anim-* classes — exclude silse-celebrate-* (up to 900ms)
+      // and silse-motion-* (MOTION-PRESET-01 — pulse is intentionally 2000ms).
+      // Scope the substring to the MICRO-ANIMATION block only, ending at the
+      // next /* ... */ section header.
+      const startIdx = styleMatch[1].indexOf('MICRO-ANIMATION');
+      const endIdx = styleMatch[1].indexOf('MOTION-PRESET', startIdx);
+      const safeEnd = endIdx === -1 ? styleMatch[1].indexOf('CELEBRATION-EFFECT', startIdx) : endIdx;
+      const animSection = styleMatch[1].substring(startIdx, safeEnd === -1 ? undefined : safeEnd);
       const animDurations = animSection.match(/(\d+)ms/g);
       if (animDurations) {
         const maxDur = Math.max(...animDurations.map(d => parseInt(d)));

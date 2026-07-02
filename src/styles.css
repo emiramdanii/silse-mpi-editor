@@ -3598,6 +3598,112 @@ textarea {
 }
 
 /* =========================================================================
+   MOTION-PRESET-01 — Controlled Premium Motion
+   Stable class names (silse-motion-*) resolved by core/style-packs/motion-preset.ts.
+   Editor CSS === export CSS (buildMotionPresetCss() returns this exact block).
+   ========================================================================= */
+
+/* 1. Entrance fade — 220ms */
+@keyframes silse-motion-entrance-fade-kf {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.silse-motion-entrance-fade {
+  animation: silse-motion-entrance-fade-kf 220ms ease-out;
+}
+
+/* 2. Entrance slide-up — 260ms, 6px */
+@keyframes silse-motion-entrance-slide-up-kf {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.silse-motion-entrance-slide-up {
+  animation: silse-motion-entrance-slide-up-kf 260ms ease-out;
+}
+
+/* 3. Hover lift — transition, not keyframe. 1px translate + shadow. */
+.silse-motion-hover-lift {
+  transition: transform 160ms ease-out, box-shadow 160ms ease-out;
+}
+.silse-motion-hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+/* 4. Soft fade — 220ms */
+@keyframes silse-motion-soft-fade-kf {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.silse-motion-soft-fade {
+  animation: silse-motion-soft-fade-kf 220ms ease-out;
+}
+
+/* 5. Slide up — 260ms (separate name from entrance for clarity) */
+@keyframes silse-motion-slide-up-kf {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.silse-motion-slide-up {
+  animation: silse-motion-slide-up-kf 260ms ease-out;
+}
+
+/* 6. Pulse — 2000ms, subtle. Used for mission-game emphasis. */
+@keyframes silse-motion-pulse-kf {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(249, 193, 46, 0.0); }
+  50% { box-shadow: 0 0 0 6px rgba(249, 193, 46, 0.18); }
+}
+.silse-motion-pulse {
+  animation: silse-motion-pulse-kf 2000ms ease-in-out infinite;
+}
+
+/* 7. Reward pop — 400ms, scale + fade */
+@keyframes silse-motion-reward-pop-kf {
+  0% { opacity: 0; transform: scale(0.85); }
+  60% { opacity: 1; transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+.silse-motion-reward-pop {
+  animation: silse-motion-reward-pop-kf 400ms ease-out;
+}
+
+/* 8. Correct burst — 600ms, ring expansion */
+@keyframes silse-motion-correct-burst-kf {
+  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.55); }
+  100% { box-shadow: 0 0 0 14px rgba(34, 197, 94, 0); }
+}
+.silse-motion-correct-burst {
+  animation: silse-motion-correct-burst-kf 600ms ease-out;
+}
+
+/* 9. Feedback pop — 200ms, gentle translate + fade */
+@keyframes silse-motion-feedback-pop-kf {
+  from { opacity: 0; transform: translateY(-2px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.silse-motion-feedback-pop {
+  animation: silse-motion-feedback-pop-kf 200ms ease-out;
+}
+
+/* PREFERS-REDUCED-MOTION: disable ALL motion preset classes */
+@media (prefers-reduced-motion: reduce) {
+  .silse-motion-entrance-fade,
+  .silse-motion-entrance-slide-up,
+  .silse-motion-soft-fade,
+  .silse-motion-slide-up,
+  .silse-motion-pulse,
+  .silse-motion-reward-pop,
+  .silse-motion-correct-burst,
+  .silse-motion-feedback-pop {
+    animation: none !important;
+  }
+  .silse-motion-hover-lift,
+  .silse-motion-hover-lift:hover {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* =========================================================================
    CELEBRATION-EFFECT-V1 — CSS-only celebration on correct answer
    ========================================================================= */
 

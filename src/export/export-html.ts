@@ -644,6 +644,31 @@ body {
   .silse-anim-feedback-soft,.silse-anim-feedback-warm,.silse-anim-feedback-mission { animation:none !important; }
   .silse-anim-game-mission.silse-game-mission { animation:none !important; }
 }
+/* MOTION-PRESET-01: controlled premium motion (editor === export parity) */
+@keyframes silse-motion-entrance-fade-kf { from { opacity:0; } to { opacity:1; } }
+.silse-motion-entrance-fade { animation:silse-motion-entrance-fade-kf 220ms ease-out; }
+@keyframes silse-motion-entrance-slide-up-kf { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+.silse-motion-entrance-slide-up { animation:silse-motion-entrance-slide-up-kf 260ms ease-out; }
+.silse-motion-hover-lift { transition: transform 160ms ease-out, box-shadow 160ms ease-out; }
+.silse-motion-hover-lift:hover { transform: translateY(-2px); }
+@keyframes silse-motion-soft-fade-kf { from { opacity:0; } to { opacity:1; } }
+.silse-motion-soft-fade { animation:silse-motion-soft-fade-kf 220ms ease-out; }
+@keyframes silse-motion-slide-up-kf { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+.silse-motion-slide-up { animation:silse-motion-slide-up-kf 260ms ease-out; }
+@keyframes silse-motion-pulse-kf { 0%,100% { box-shadow:0 0 0 0 rgba(249,193,46,0); } 50% { box-shadow:0 0 0 6px rgba(249,193,46,0.18); } }
+.silse-motion-pulse { animation:silse-motion-pulse-kf 2000ms ease-in-out infinite; }
+@keyframes silse-motion-reward-pop-kf { 0% { opacity:0; transform:scale(0.85); } 60% { opacity:1; transform:scale(1.04); } 100% { transform:scale(1); } }
+.silse-motion-reward-pop { animation:silse-motion-reward-pop-kf 400ms ease-out; }
+@keyframes silse-motion-correct-burst-kf { 0% { box-shadow:0 0 0 0 rgba(34,197,94,0.55); } 100% { box-shadow:0 0 0 14px rgba(34,197,94,0); } }
+.silse-motion-correct-burst { animation:silse-motion-correct-burst-kf 600ms ease-out; }
+@keyframes silse-motion-feedback-pop-kf { from { opacity:0; transform:translateY(-2px) scale(0.98); } to { opacity:1; transform:translateY(0) scale(1); } }
+.silse-motion-feedback-pop { animation:silse-motion-feedback-pop-kf 200ms ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .silse-motion-entrance-fade,.silse-motion-entrance-slide-up,.silse-motion-soft-fade,
+  .silse-motion-slide-up,.silse-motion-pulse,.silse-motion-reward-pop,
+  .silse-motion-correct-burst,.silse-motion-feedback-pop { animation:none !important; }
+  .silse-motion-hover-lift,.silse-motion-hover-lift:hover { transition:none !important; transform:none !important; }
+}
 /* CELEBRATION-EFFECT-V1: CSS-only celebration on correct answer */
 @keyframes silse-celebrate-burst-ring { 0%{opacity:0.8;transform:scale(0.5)} 100%{opacity:0;transform:scale(1.4)} }
 @keyframes silse-celebrate-sparkle { 0%,100%{opacity:0} 30%{opacity:1} 60%{opacity:0.5} }
@@ -1778,7 +1803,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
   function exportHeader(plan, chipLabel, chipColor, title, subtitle) {
     var p = plan.palette || {}; var ty = plan.typography || {};
     var el = document.createElement('div');
-    el.className = 'silse-block-header';
+    // MOTION-PRESET-01: entrance slide-up on header (reduced-motion safe via CSS)
+    el.className = 'silse-block-header silse-motion-entrance-slide-up';
     // PREMIUM-STYLE-AFTER-FOUNDATION-01: accent border bottom + letter spacing
     el.style.cssText = 'border-bottom:2px solid ' + (chipColor || p.gold || '#f9c12e') + '33;padding-bottom:10px;margin-bottom:4px;';
     if (chipLabel) {
@@ -1804,7 +1830,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
   function exportPanel(plan, title, body, className) {
     var p = plan.palette || {};
     var el = document.createElement('div');
-    el.className = 'silse-block-panel ' + (className || '');
+    // MOTION-PRESET-01: entrance fade + hover lift (both reduced-motion safe via CSS)
+    el.className = 'silse-block-panel silse-motion-entrance-fade silse-motion-hover-lift ' + (className || '');
     // PREMIUM-STYLE-AFTER-FOUNDATION-01: depth shadow + uppercase title
     el.style.cssText = 'background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';border-radius:16px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);';
     if (title) {
@@ -1908,7 +1935,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
   function exportRevealBlock(plan, label, text, revealed) {
     var p = plan.palette || {};
     var el = document.createElement('div');
-    el.className = 'silse-block-reveal';
+    // MOTION-PRESET-01: feedback pop on reveal (reduced-motion safe via CSS)
+    el.className = 'silse-block-reveal' + (revealed ? ' silse-motion-feedback-pop' : '');
     el.style.cssText = 'border-radius:16px;padding:20px;background:' + (p.success || '#34d399') + '11;border:1px solid ' + (p.success || '#34d399') + '40;cursor:pointer;';
     var l = document.createElement('div');
     l.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.success || '#34d399') + ';margin-bottom:8px;';
@@ -1933,7 +1961,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var p = plan.palette || {};
     var pct = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
     var el = document.createElement('div');
-    el.className = 'silse-block-score-summary';
+    // MOTION-PRESET-01: reward pop entrance (reduced-motion safe via CSS)
+    el.className = 'silse-block-score-summary silse-motion-reward-pop';
     el.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:10px;';
     var circle = document.createElement('div');
     circle.className = 'silse-result-circle';
@@ -2006,7 +2035,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
   function exportActionButton(plan, label, variant) {
     var p = plan.palette || {};
     var el = document.createElement('button');
-    el.className = 'silse-block-action';
+    // MOTION-PRESET-01: hover lift (reduced-motion safe via CSS)
+    el.className = 'silse-block-action silse-motion-hover-lift';
     var bg = p.gold || '#f9c12e'; var color = p.primary || '#0e1c2f';
     if (variant === 'secondary') { bg = p.secondary || '#3ecfcf'; }
     el.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:999px;background:' + bg + ';color:' + color + ';border:none;font-weight:800;font-size:14px;cursor:pointer;';
