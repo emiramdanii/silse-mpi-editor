@@ -28,6 +28,7 @@ import {
   formatExportReadySummaryText,
 } from '../core/export-ready-summary';
 import { GuidedFlowDialog } from './GuidedFlowDialog';
+import { TemplatePickerDialog } from './TemplatePickerDialog';
 
 export function Topbar() {
   const project = useEditorStore((s) => s.project);
@@ -38,6 +39,7 @@ export function Topbar() {
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(project.title);
   const [showGuidedFlow, setShowGuidedFlow] = useState(false);
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
 
   // EXPORT-READY-SUMMARY-01: compute export ready summary (memoized).
   const exportReadySummary = useMemo(
@@ -172,6 +174,15 @@ export function Topbar() {
           🎯 Buat MPI dari Topik
         </button>
         <button
+          onClick={() => setShowTemplatePicker(true)}
+          className="editor-topbar__action editor-topbar__action--template"
+          title="Pilih template pedagogis siap pakai (12 scene lengkap)"
+          data-action="template-picker"
+          data-testid="topbar-template-picker"
+        >
+          📋 Template Pedagogis
+        </button>
+        <button
           onClick={() => {
             if (window.confirm('Buat MPI baru? Perubahan saat ini akan hilang jika belum disimpan.')) {
               newProject();
@@ -187,6 +198,9 @@ export function Topbar() {
       </div>
       {showGuidedFlow && (
         <GuidedFlowDialog onClose={() => setShowGuidedFlow(false)} />
+      )}
+      {showTemplatePicker && (
+        <TemplatePickerDialog onClose={() => setShowTemplatePicker(false)} />
       )}
     </header>
   );
