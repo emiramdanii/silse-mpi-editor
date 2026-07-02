@@ -218,6 +218,223 @@ export function getUniqueTemplateMapelList(): string[] {
 }
 
 // ---------------------------------------------------------------------------
+// TEMPLATE-PEDAGOGIS-READY-02 PATCH B: 16:9 Density Guard
+// ---------------------------------------------------------------------------
+//
+// Pure helper that audits every scene in a template against explicit
+// character/length limits chosen so content fits a 1280×720 (16:9) slide
+// WITHOUT relying on `overflow:hidden` as a crutch. Content itself must be
+// concise. Returns an `issues` array — empty means the template fits 16:9.
+//
+// Layer: core/guided-flow (pure data + pure function, no React/DOM).
+// Safe to import from tests AND from the picker (used for quality badges).
+
+export type TemplateDensityIssue = {
+  templateId: string;
+  sceneId: string;
+  field: string;
+  message: string;
+};
+
+export type TemplateDensityLimits = {
+  // learning-material
+  learningExplanationMax: number;
+  examplesMax: number;
+  keyPointsMax: number;
+  keyPointItemMax: number;
+  // discussion-scene
+  discussionPromptMax: number;
+  groupInstructionMax: number;
+  // case-analysis
+  caseTextMax: number;
+  revealExplanationMax: number;
+  // quiz-question
+  quizPromptMax: number;
+  quizChoiceTextMax: number;
+  // reflection-journal
+  reflectionPromptsMax: number;
+  reflectionPromptItemMax: number;
+  // closing-award
+  closingSummaryMax: number;
+  // games (classification + sequencing)
+  gameInstructionMax: number;
+  gameItemLabelMax: number;
+  classificationItemsMax: number;
+  sequencingItemsMax: number;
+};
+
+export const DEFAULT_TEMPLATE_DENSITY_LIMITS: TemplateDensityLimits = {
+  learningExplanationMax: 350,
+  examplesMax: 2,
+  keyPointsMax: 3,
+  keyPointItemMax: 90,
+  discussionPromptMax: 180,
+  groupInstructionMax: 140,
+  caseTextMax: 220,
+  revealExplanationMax: 260,
+  quizPromptMax: 160,
+  quizChoiceTextMax: 80,
+  reflectionPromptsMax: 2,
+  reflectionPromptItemMax: 120,
+  closingSummaryMax: 180,
+  gameInstructionMax: 140,
+  gameItemLabelMax: 60,
+  classificationItemsMax: 6,
+  sequencingItemsMax: 6,
+};
+
+type AnyContent = Record<string, unknown>;
+
+function asString(value: unknown): string | null {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return String(value);
+  return null;
+}
+
+function pushLenIssue(
+  issues: TemplateDensityIssue[],
+  tplId: string,
+  sceneId: string,
+  field: string,
+  value: string,
+  maxLen: number,
+): void {
+  if (value.length > maxLen) {
+    issues.push({
+      templateId: tplId,
+      sceneId,
+      field,
+      message: `${field} length ${value.length} exceeds max ${maxLen} (value: "${value.slice(0, 40)}…")`,
+    });
+  }
+}
+
+function pushCountIssue(
+  issues: TemplateDensityIssue[],
+  tplId: string,
+  sceneId: string,
+  field: string,
+  count: number,
+  max: number,
+): void {
+  if (count > max) {
+    issues.push({
+      templateId: tplId,
+      sceneId,
+      field,
+      message: `${field} count ${count} exceeds max ${max}`,
+    });
+  }
+}
+
+export function checkTemplateDensity(
+  template: PedagogicalTemplate,
+  limits: TemplateDensityLimits = DEFAULT_TEMPLATE_DENSITY_LIMITS,
+): TemplateDensityIssue[] {
+  const issues: TemplateDensityIssue[] = [];
+
+  for (const scene of template.scenes) {
+    const content = scene.content as AnyContent;
+    const kind = content.kind;
+    const ctx = { tplId: template.id, sceneId: scene.id };
+
+    if (kind === 'learning-material') {
+      const explanation = asString(content.explanation);
+      if (explanation) pushLenIssue(issues, ctx.tplId, ctx.sceneId, 'explanation', explanation, limits.learningExplanationMax);
+
+      const examples = content.examples;
+      if (Array.isArray(examples)) pushCountIssue(issues, ctx.tplId, ctx.sceneId, 'examples', examples.length, limits.examplesMax);
+
+      const keyPoints = content.keyPoints;
+      if (Array.isArray(keyPoints)) {
+        pushCountIssue(issues, ctx.tplId, ctx.sceneId, 'keyPoints', keyPoints.length, limits.keyPointsMax);
+        keyPoints.forEach((kp, i) => {
+          const s = asString(kp);
+          if (s) pushLenIssue(issues, ctx.tplId, ctx.sceneId, `keyPoints[${i}]`, s, limits.keyPointItemMax);
+        });
+      }
+    } else if (kind === 'discussion-scene') {
+      const prompt = asString(content.discussionPrompt);
+      if (prompt) pushLenIssue(issues, ctx.tplId, ctx.sceneId, 'discussionPrompt', prompt, limits.discussionPromptMax);
+
+      const gi = asString(content.groupInstruction);
+      if (gi) pushLenIssue(issues, ctx.tplId, ctx.sceneId, 'groupInstruction', gi, limits.groupInstructionMax);
+    } else if (kind === 'case-analysis') {
+      const ct = asString(content.caseText);
+      if (ct) pushLenIssue(issues, ctx.tplId, ctx.sceneId, 'caseText', ct, limits.caseTextMax);
+
+      const re = asString(content.revealExplanation);
+      if (re) pushLenIssue(issues, ctx.tplId, ctx.sceneId, 'revealExplanation', re, limits.revealExplanationMax);
+
+      const dp = asString(content.discussionPrompt);
+      if (dp) pushLenIssue(issues, ctx.tplId, ctx.sceneId, 'discussionPrompt', dp, limits.discussionPromptMax);
+    } else if (kind === 'quiz-question') {
+      const p = asString(content.prompt);
+      if (p) pushLenIssue(issues, ctx.tplId, ctx.sceneId, 'prompt', p, limits.quizPromptMax);
+
+      const choices = content.choices;
+      if (Array.isArray(choices)) {
+        choices.forEach((c, i) => {
+          const cObj = c as AnyContent;
+          const t = asString(cObj.text);
+          if (t) pushLenIssue(issues, ctx.tplId, ctx.sceneId, `choices[${i}].text`, t, limits.quizChoiceTextMax);
+        });
+      }
+    } else if (kind === 'reflection-journal') {
+      const prompts = content.reflectionPrompts;
+      if (Array.isArray(prompts)) {
+        pushCountIssue(issues, ctx.tplId, ctx.sceneId, 'reflectionPrompts', prompts.length, limits.reflectionPromptsMax);
+        prompts.forEach((rp, i) => {
+          const s = asString(rp);
+          if (s) pushLenIssue(issues, ctx.tplId, ctx.sceneId, `reflectionPrompts[${i}]`, s, limits.reflectionPromptItemMax);
+        });
+      }
+    } else if (kind === 'closing-award') {
+      const s = asString(content.summary);
+      if (s) pushLenIssue(issues, ctx.tplId, ctx.sceneId, 'summary', s, limits.closingSummaryMax);
+    } else if (kind === 'classification-game') {
+      const ins = asString(content.instruction);
+      if (ins) pushLenIssue(issues, ctx.tplId, ctx.sceneId, 'instruction', ins, limits.gameInstructionMax);
+
+      const items = content.items;
+      if (Array.isArray(items)) {
+        pushCountIssue(issues, ctx.tplId, ctx.sceneId, 'items', items.length, limits.classificationItemsMax);
+        items.forEach((it, i) => {
+          const itObj = it as AnyContent;
+          const label = asString(itObj.label);
+          if (label) pushLenIssue(issues, ctx.tplId, ctx.sceneId, `items[${i}].label`, label, limits.gameItemLabelMax);
+        });
+      }
+    } else if (kind === 'sequencing-game') {
+      const ins = asString(content.instruction);
+      if (ins) pushLenIssue(issues, ctx.tplId, ctx.sceneId, 'instruction', ins, limits.gameInstructionMax);
+
+      const items = content.items;
+      if (Array.isArray(items)) {
+        pushCountIssue(issues, ctx.tplId, ctx.sceneId, 'items', items.length, limits.sequencingItemsMax);
+        items.forEach((it, i) => {
+          const itObj = it as AnyContent;
+          const label = asString(itObj.label);
+          if (label) pushLenIssue(issues, ctx.tplId, ctx.sceneId, `items[${i}].label`, label, limits.gameItemLabelMax);
+        });
+      }
+    }
+    // Other content kinds (cover-hero, curriculum-guide, objectives-path,
+    // starter-review, result-summary) are intentionally not length-checked
+    // — they have flexible layout blocks that wrap naturally on 16:9.
+  }
+
+  return issues;
+}
+
+export function checkAllTemplatesDensity(
+  templates: readonly PedagogicalTemplate[] = PEDAGOGICAL_TEMPLATES,
+  limits: TemplateDensityLimits = DEFAULT_TEMPLATE_DENSITY_LIMITS,
+): TemplateDensityIssue[] {
+  return templates.flatMap((t) => checkTemplateDensity(t, limits));
+}
+
+// ---------------------------------------------------------------------------
 // Convert template to AiMpiBlueprint
 // ---------------------------------------------------------------------------
 

@@ -1768,7 +1768,9 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var el = document.createElement('div');
     el.className = 'silse-block-shell ' + (className || '');
     // PREMIUM-STYLE-AFTER-FOUNDATION-01: subtle radial gradient + more gap + padding
-    el.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;gap:16px;padding:28px;box-sizing:border-box;overflow:auto;background:radial-gradient(ellipse at top,' + (p.surface || '#182d45') + ' 0%,' + (p.background || '#0e1c2f') + ' 70%);color:' + p.text + ';font-family:' + (ty.bodyFont || 'sans-serif') + ';';
+    // TEMPLATE-PEDAGOGIS-READY-02 PATCH B: explicit overflow — vertical auto,
+    // horizontal hidden. Parity with the in-app SceneShell.
+    el.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;gap:16px;padding:28px;box-sizing:border-box;overflow-x:hidden;overflow-y:auto;background:radial-gradient(ellipse at top,' + (p.surface || '#182d45') + ' 0%,' + (p.background || '#0e1c2f') + ' 70%);color:' + p.text + ';font-family:' + (ty.bodyFont || 'sans-serif') + ';';
     for (var i = 0; i < children.length; i++) { if (children[i]) el.appendChild(children[i]); }
     return el;
   }

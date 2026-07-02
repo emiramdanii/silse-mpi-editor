@@ -38,12 +38,15 @@ export type BlockProps = {
 
 export function SceneShell({ contract, children, className = '', style }: BlockProps) {
   // PREMIUM-STYLE-AFTER-FOUNDATION-01: subtle radial gradient + depth via contract palette
+  // TEMPLATE-PEDAGOGIS-READY-02 PATCH B: explicit overflow — vertical auto,
+  // horizontal hidden. Content must NEVER cause horizontal scroll on 16:9.
   const bgColor = contract.palette.background;
   const surfaceColor = contract.palette.surface;
   return (
     <div className={`silse-block-shell ${className}`.trim()} style={{
       width: '100%', height: '100%', display: 'flex', flexDirection: 'column',
-      gap: 16, padding: 28, boxSizing: 'border-box', overflow: 'auto',
+      gap: 16, padding: 28, boxSizing: 'border-box',
+      overflowX: 'hidden', overflowY: 'auto',
       background: `radial-gradient(ellipse at top, ${surfaceColor} 0%, ${bgColor} 70%)`,
       color: contract.palette.text,
       fontFamily: contract.typography.bodyFont,
