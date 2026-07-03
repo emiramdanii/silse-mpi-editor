@@ -361,17 +361,25 @@ describe('TEACHER-READY-TEMPLATE-QUALITY — Scope F: export parity', () => {
     });
   });
 
-  it('34. export HTML contains teacher-guide rendered content (Panduan Guru)', () => {
+  it('34. export HTML excludes teacher-guide from student-facing export (TEMPLATE-CLEANUP-01)', () => {
+    // TEMPLATE-CLEANUP-01: teacher-guide is teacher-preparation content,
+    // NOT student-facing. It must be excluded from the standalone student export.
     PEDAGOGICAL_TEMPLATES.forEach((t) => {
       const bp = templateToBlueprint(t);
       const project = aiBlueprintToSimpleProject(bp);
       const html = exportProjectToHtml(project);
-      // The teacher-guide title should appear in the rendered HTML
       const tg = t.scenes.find((s) => s.sceneType === 'teacher-guide');
       if (tg) {
         const c = tg.content as any;
         if (c.title) {
-          expect(html, `${t.id} export should contain teacher-guide title`).toContain(c.title);
+          // Teacher-guide title should NOT appear in student export
+          expect(html, `${t.id} student export must NOT contain teacher-guide title`).not.toContain(c.title);
+        }
+        if (c.teacherInstruction) {
+          expect(html, `${t.id} student export must NOT contain teacherInstruction`).not.toContain(c.teacherInstruction);
+        }
+        if (c.assessmentNotes) {
+          expect(html, `${t.id} student export must NOT contain assessmentNotes`).not.toContain(c.assessmentNotes);
         }
       }
     });

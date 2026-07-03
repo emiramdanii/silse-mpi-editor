@@ -1,5 +1,5 @@
 /**
- * Template Pedagogis Ready (TEMPLATE-PEDAGOGIS-READY-01).
+ * Template Pedagogis Ready (TEMPLATE-PEDAGOGIS-READY-01 + TEACHER-READY-TEMPLATE-QUALITY-01).
  *
  * Layer: core/guided-flow (pure data + pure function, no React/DOM)
  * Allowed imports: ../types, ../ids, ../ai-mpi-json, ./mpi-topic-catalog
@@ -9,7 +9,14 @@
  *   via the bridge. Guru pilih template → dapat MPI utuh dengan sceneType + sceneContent.
  *
  *   Templates use the NEW scene system (not legacy component types).
- *   Each template produces 12 scenes matching golden reference flow.
+ *   Each template follows the 12-scene golden reference flow as a spine
+ *   (cover → CP/TP → objectives → review → material → discussion → game →
+ *    analysis → quiz → result → reflection → closing). Teacher-ready
+ *   templates add teacher-pedagogy scenes around the spine:
+ *     - teacher-guide (all 3 templates)
+ *     - rubric-panel (all 3 templates)
+ *     - diagnostic-check + remedial-practice + enrichment-challenge (PPKn)
+ *   Current scene counts: PPKn=17, IPA=14, MTK=14.
  *
  *   Prinsip:
  *     - Pure function, no DOM, no React, no store.

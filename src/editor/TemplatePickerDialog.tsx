@@ -2,7 +2,8 @@
  * TemplatePickerDialog — TEMPLATE-PEDAGOGIS-READY-02 PATCH A
  *
  * Modal untuk pilih template pedagogis siap pakai.
- * Guru pilih template → generate MPI 12 scene → load ke editor.
+ * Guru pilih template → generate MPI dengan scene dinamis → load ke editor.
+ * Scene count per template: PPKn=17, IPA=14, MTK=14 (TEACHER-READY-TEMPLATE-QUALITY-01).
  *
  * PATCH A: overwrite guard + premium UI polish + 16:9 fit.
  */
@@ -117,7 +118,7 @@ export function TemplatePickerDialog({ onClose }: { onClose: () => void }) {
                 📋 Template Pedagogis
               </h2>
               <p style={{ margin: 0, fontSize: 14, color: '#64748b' }}>
-                Pilih template siap pakai — 12 scene lengkap, langsung bisa diedit.
+                Pilih template siap pakai — lengkap dengan panduan guru, rubrik, dan jalur diferensiasi.
               </p>
             </div>
             <button

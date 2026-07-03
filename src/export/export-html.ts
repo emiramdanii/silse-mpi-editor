@@ -128,7 +128,7 @@ type ExportRenderComponent = {
 function buildExportRenderModel(project: SimpleProject): ExportRenderModel {
   const cssVariables = generateCssVariablesMap(project.style);
 
-  const pages: ExportRenderPage[] = project.pages.map((page) => ({
+  const allPages: ExportRenderPage[] = project.pages.map((page) => ({
     id: page.id,
     title: page.title,
     role: page.role,
@@ -139,6 +139,15 @@ function buildExportRenderModel(project: SimpleProject): ExportRenderModel {
     // FOUNDATION-INTEGRATION-01: build scene render plan if page is scene-renderable
     scenePlan: buildSceneRenderPlanForPage(project, page),
   }));
+
+  // TEMPLATE-CLEANUP-01: teacher-guide is teacher-preparation content, NOT
+  // student-facing. Exclude it from the standalone student export so students
+  // don't see facilitation tips, assessment notes, or time allocation.
+  // The teacher-guide scene remains in the editor (guru can see it) and in
+  // the project data (can be included in a future "teacher export" mode).
+  const pages: ExportRenderPage[] = allPages.filter(
+    (page) => page.scenePlan?.sceneType !== 'teacher-guide',
+  );
 
   return {
     title: project.title,
@@ -2517,7 +2526,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
 
   function renderRemedialPracticeExport(slot, content, plan) {
     var p = plan.palette || {};
-    var children = [exportHeader(plan, '🔧 Remedial', p.warning, 'Remedial Practice')];
+    var children = [exportHeader(plan, '🔧 Penguatan Konsep', p.warning, 'Penguatan Konsep')];
     if (content.misconception) {
       var mc = document.createElement('div');
       mc.style.cssText = 'padding:12px;border-radius:10px;background:' + (p.danger || '#ff6b6b') + '11;border:1px solid ' + (p.danger || '#ff6b6b') + '33;font-size:14px;color:' + (p.text || '#fff') + ';';
@@ -2574,7 +2583,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
 
   function renderEnrichmentChallengeExport(slot, content, plan) {
     var p = plan.palette || {};
-    var children = [exportHeader(plan, '🚀 Enrichment', p.secondary, 'Enrichment Challenge')];
+    var children = [exportHeader(plan, '🚀 Tantangan Lanjutan', p.secondary, 'Tantangan Lanjutan')];
     if (content.challengeContext) children.push(exportPanel(plan, 'Konteks Challenge', content.challengeContext));
     if (content.advancedTask) {
       var task = document.createElement('div');

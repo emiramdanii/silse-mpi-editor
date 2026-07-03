@@ -236,12 +236,19 @@ describe('PERFECT-MPI-RENDER-COMPLETE-02 — Scope D: Teacher Guide', () => {
     expect(container.querySelector('[data-testid="teacher-tip-1"]')).toBeInTheDocument();
   });
 
-  it('14. teacher-guide export actual scene', () => {
+  it('14. teacher-guide excluded from student export (TEMPLATE-CLEANUP-01)', () => {
+    // TEMPLATE-CLEANUP-01: teacher-guide is teacher-preparation content,
+    // excluded from the standalone student-facing export.
     const project = build5SceneProject();
     const html = exportProjectToHtml(project);
-    expect(html).toContain('silse-scene-teacher-guide');
-    expect(html).toContain('"sceneType":"teacher-guide"');
-    expect(html).toContain('silse-teacher-tips');
+    // The teacher-guide scene's content must NOT appear as rendered text.
+    // (The JS renderer function still exists in <script>, but the page is
+    //  filtered out before rendering, so the content is never emitted.)
+    expect(html).not.toContain('Do this'); // teacherInstruction from the test project
+    expect(html).not.toContain('Tip 1'); // facilitationTips
+    expect(html).not.toContain('15 min'); // timeAllocation
+    // The teacher-guide page title 'Teacher' should not appear as a rendered page
+    // (other text may contain 'Teacher' in JS comments, but not as a rendered page title)
   });
 });
 

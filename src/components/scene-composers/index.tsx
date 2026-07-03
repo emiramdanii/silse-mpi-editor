@@ -1006,7 +1006,7 @@ export function RemedialPracticeComposer({
 
   return (
     <SceneShell contract={contract} className="silse-scene-remedial-practice">
-      <SceneHeader contract={contract} chipIcon="🔧" chipLabel="Remedial" chipColor={contract.palette.warning} title="Remedial Practice" />
+      <SceneHeader contract={contract} chipIcon="🔧" chipLabel="Penguatan Konsep" chipColor={contract.palette.warning} title="Penguatan Konsep" />
       {content.misconception && (
         <div style={{ padding: 12, borderRadius: 10, background: `${contract.palette.danger}11`, border: `1px solid ${contract.palette.danger}33`, fontSize: 14, color: contract.palette.text }}>
           <strong style={{ color: contract.palette.danger }}>⚠️ Miskonsepsi:</strong> {content.misconception}
@@ -1087,7 +1087,7 @@ export function EnrichmentChallengeComposer({
   const [completed, setCompleted] = useState(false);
   return (
     <SceneShell contract={contract} className="silse-scene-enrichment-challenge">
-      <SceneHeader contract={contract} chipIcon="🚀" chipLabel="Enrichment" chipColor={contract.palette.secondary} title="Enrichment Challenge" />
+      <SceneHeader contract={contract} chipIcon="🚀" chipLabel="Tantangan Lanjutan" chipColor={contract.palette.secondary} title="Tantangan Lanjutan" />
       {content.challengeContext && (
         <ScenePanel contract={contract} title="Konteks Challenge">
           <div style={{ fontSize: 14, lineHeight: 1.6, color: contract.palette.text }}>{content.challengeContext}</div>
