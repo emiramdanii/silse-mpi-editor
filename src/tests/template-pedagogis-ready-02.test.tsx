@@ -83,7 +83,8 @@ describe('TEMPLATE-PEDAGOGIS-READY-02 — Scope B: Template Picker UI', () => {
     const firstCard = container.querySelector('[data-testid^="template-card-"]')!;
     expect(firstCard.textContent).toContain('PPKn');
     expect(firstCard.textContent).toContain('Macam-Macam Norma');
-    expect(firstCard.textContent).toContain('12 Scene');
+    // PPKn template now has 17 scenes (12 golden + 5 teacher-pedagogy)
+    expect(firstCard.textContent).toContain('17 Scene');
   });
 
   it('7. quality status badges appear', () => {
@@ -116,12 +117,13 @@ describe('TEMPLATE-PEDAGOGIS-READY-02 — Scope C: Apply Template', () => {
     });
   });
 
-  it('8. click Gunakan Template creates 12-page project in store', () => {
+  it('8. click Gunakan Template creates project with matching scene count in store', () => {
     const { container } = render(<TemplatePickerDialog onClose={() => {}} />);
     const applyBtn = container.querySelector('[data-testid="template-apply-tpl-ppkn-norma"]') as HTMLElement;
     fireEvent.click(applyBtn);
     const project = useEditorStore.getState().project;
-    expect(project.pages).toHaveLength(12);
+    // PPKn template has 17 scenes (12 golden + 5 teacher-pedagogy)
+    expect(project.pages).toHaveLength(17);
   });
 
   it('9. all pages have sceneType after apply', () => {

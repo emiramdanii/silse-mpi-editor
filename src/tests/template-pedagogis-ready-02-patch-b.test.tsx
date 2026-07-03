@@ -308,9 +308,15 @@ describe('PATCH B — Scope C: structural regressions', () => {
     });
   });
 
-  it('17. all 3 templates produce exactly 12 scenes', () => {
+  it('17. all 3 templates produce scenes matching their template definition', () => {
+    // TEACHER-READY-TEMPLATE-QUALITY: templates now have 14-17 scenes
+    // (12 golden + teacher-pedagogy scenes). The exact count per template
+    // is verified in teacher-ready-template-quality-01.test.tsx.
+    // Here we verify blueprint scene count == template scene count.
     PEDAGOGICAL_TEMPLATES.forEach((t) => {
-      expect(t.scenes.length, `${t.id} scene count`).toBe(12);
+      const bp = templateToBlueprint(t);
+      expect(bp.scenes.length, `${t.id} blueprint scene count`).toBe(t.scenes.length);
+      expect(t.scenes.length, `${t.id} template has >= 12 scenes`).toBeGreaterThanOrEqual(12);
     });
   });
 
@@ -322,11 +328,11 @@ describe('PATCH B — Scope C: structural regressions', () => {
     });
   });
 
-  it('19. every template applies to a 12-page SimpleProject with sceneType on every page', () => {
+  it('19. every template applies to a SimpleProject with sceneType on every page', () => {
     PEDAGOGICAL_TEMPLATES.forEach((t) => {
       const bp = templateToBlueprint(t);
       const project = aiBlueprintToSimpleProject(bp);
-      expect(project.pages.length).toBe(12);
+      expect(project.pages.length).toBe(t.scenes.length);
       project.pages.forEach((p, i) => {
         expect(p.sceneType, `${t.id} page[${i}] sceneType`).toBeTruthy();
       });

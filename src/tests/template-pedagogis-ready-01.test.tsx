@@ -49,9 +49,9 @@ describe('TEMPLATE-PEDAGOGIS-READY-01 — Blueprint Generation', () => {
     });
   });
 
-  it('6. blueprint has 12 scenes', () => {
+  it('6. blueprint has same scene count as template', () => {
     const bp = templateToBlueprint(PEDAGOGICAL_TEMPLATES[0]);
-    expect(bp.scenes).toHaveLength(12);
+    expect(bp.scenes).toHaveLength(PEDAGOGICAL_TEMPLATES[0].scenes.length);
   });
 
   it('7. blueprint preserves curriculum metadata', () => {
@@ -74,12 +74,12 @@ describe('TEMPLATE-PEDAGOGIS-READY-01 — Content Quality', () => {
 });
 
 describe('TEMPLATE-PEDAGOGIS-READY-01 — Render + Export', () => {
-  it('9. template project renders all 12 scenes', () => {
+  it('9. template project renders all scenes', () => {
     PEDAGOGICAL_TEMPLATES.forEach((template) => {
       const bp = templateToBlueprint(template);
       const normalized = normalizeBlueprint(bp);
       const container = aiJsonToMpiContainer(normalized);
-      expect(container.scenes).toHaveLength(12);
+      expect(container.scenes).toHaveLength(template.scenes.length);
       container.scenes.forEach((scene) => {
         const plan = renderScenePlan(scene, contract);
         expect(plan.sceneClass).toContain('silse-scene');
@@ -98,11 +98,11 @@ describe('TEMPLATE-PEDAGOGIS-READY-01 — Render + Export', () => {
     });
   });
 
-  it('11. template project via bridge produces 12 pages', () => {
+  it('11. template project via bridge produces pages matching scene count', () => {
     PEDAGOGICAL_TEMPLATES.forEach((template) => {
       const bp = templateToBlueprint(template);
       const project = aiBlueprintToSimpleProject(bp);
-      expect(project.pages).toHaveLength(12);
+      expect(project.pages).toHaveLength(template.scenes.length);
       // All pages should have sceneType
       project.pages.forEach((page) => {
         expect(page.sceneType, `${template.id} page ${page.id}`).toBeDefined();

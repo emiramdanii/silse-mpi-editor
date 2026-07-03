@@ -57,8 +57,8 @@ describe('PATCH A — Connect + Overwrite + Fit + Polish', () => {
     fireEvent.click(container.querySelector('[data-testid="template-apply-tpl-ppkn-norma"]')!);
     // No confirm dialog
     expect(container.querySelector('[data-testid="overwrite-confirm"]')).not.toBeInTheDocument();
-    // Project replaced
-    expect(useEditorStore.getState().project.pages).toHaveLength(12);
+    // Project replaced — PPKn template has 17 scenes (12 golden + 5 teacher-pedagogy)
+    expect(useEditorStore.getState().project.pages).toHaveLength(17);
   });
 
   it('5. apply on project with content shows confirm', () => {
@@ -76,11 +76,12 @@ describe('PATCH A — Connect + Overwrite + Fit + Polish', () => {
     expect(useEditorStore.getState().project.pages).toHaveLength(originalPages);
   });
 
-  it('7. OK confirm creates 12 pages', () => {
+  it('7. OK confirm creates pages matching template scene count', () => {
     const { container } = render(<TemplatePickerDialog onClose={() => {}} />);
     fireEvent.click(container.querySelector('[data-testid="template-apply-tpl-ppkn-norma"]')!);
     fireEvent.click(container.querySelector('[data-testid="overwrite-ok"]')!);
-    expect(useEditorStore.getState().project.pages).toHaveLength(12);
+    // PPKn template has 17 scenes (12 golden + 5 teacher-pedagogy)
+    expect(useEditorStore.getState().project.pages).toHaveLength(17);
   });
 
   it('8. current page is cover after apply', () => {
