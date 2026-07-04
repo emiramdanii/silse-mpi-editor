@@ -23,6 +23,11 @@ vi.mock('../export/export-download', () => ({
   downloadHtmlFile: vi.fn(),
 }));
 
+// OPTIMASI-01: Mock export-html for dynamic import in handleExport
+vi.mock('../export/export-html', () => ({
+  exportProjectToHtml: vi.fn(() => '<!doctype html><html><body>mock</body></html>'),
+}));
+
 // =========================================================================
 // Helpers
 // =========================================================================
@@ -151,7 +156,7 @@ describe('TEACHER-MAIN-FLOW-POLISH-01 — flow', () => {
     expect(exportBtn).not.toBeNull();
   });
 
-  it('13. Healthy generated project export without confirm', () => {
+  it('13. Healthy generated project export without confirm', async () => {
     const topic = getTopicById('ppkn-7-norma')!;
     const { project } = generateMpiFromTopic(topic);
     useEditorStore.getState().setProject(project);
@@ -162,17 +167,19 @@ describe('TEACHER-MAIN-FLOW-POLISH-01 — flow', () => {
 
     const { container } = render(React.createElement(Topbar));
     fireEvent.click(container.querySelector('[data-testid="topbar-export"]') as HTMLButtonElement);
+    await new Promise(resolve => setTimeout(resolve, 0)); // OPTIMASI-01: flush dynamic import macrotask
 
     expect(confirmSpy).not.toHaveBeenCalled();
     expect(downloadSpy).toHaveBeenCalled();
     confirmSpy.mockRestore();
   });
 
-  it('14. Broken/default project export with confirm', () => {
+  it('14. Broken/default project export with confirm', async () => {
     // Default project (newProject) → NO_OBJECTIVES → fatal → confirm.
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
     const { container } = render(React.createElement(Topbar));
     fireEvent.click(container.querySelector('[data-testid="topbar-export"]') as HTMLButtonElement);
+    await new Promise(resolve => setTimeout(resolve, 0)); // OPTIMASI-01: flush dynamic import macrotask
     expect(confirmSpy).toHaveBeenCalled();
     confirmSpy.mockRestore();
   });

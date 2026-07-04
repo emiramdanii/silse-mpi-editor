@@ -29,6 +29,11 @@ vi.mock('../export/export-download', () => ({
   downloadHtmlFile: vi.fn(),
 }));
 
+// OPTIMASI-01: Mock export-html for dynamic import in handleExport
+vi.mock('../export/export-html', () => ({
+  exportProjectToHtml: vi.fn(() => '<!doctype html><html><body>mock</body></html>'),
+}));
+
 // =========================================================================
 // Helper Tests (1-16)
 // =========================================================================
@@ -351,7 +356,7 @@ describe('EXPORT-READY-SUMMARY-01 — Topbar UI', () => {
     expect(chip?.getAttribute('data-status')).toBe('ready');
   });
 
-  it('22. Export button behavior unchanged: healthy no confirm, broken confirm', () => {
+  it('22. Export button behavior unchanged: healthy no confirm, broken confirm', async () => {
     // Test healthy → no confirm.
     const topic = getTopicById('ppkn-7-norma')!;
     const { project } = generateMpiFromTopic(topic);
@@ -363,6 +368,7 @@ describe('EXPORT-READY-SUMMARY-01 — Topbar UI', () => {
 
     const { container: healthyContainer } = render(React.createElement(Topbar));
     fireEvent.click(healthyContainer.querySelector('[data-testid="topbar-export"]') as HTMLButtonElement);
+    await new Promise(resolve => setTimeout(resolve, 0)); // OPTIMASI-01: flush dynamic import macrotask
     expect(confirmSpy).not.toHaveBeenCalled();
     expect(downloadSpy).toHaveBeenCalled();
 
@@ -373,6 +379,7 @@ describe('EXPORT-READY-SUMMARY-01 — Topbar UI', () => {
     const confirmSpy2 = vi.spyOn(window, 'confirm').mockReturnValue(true);
     const { container: brokenContainer } = render(React.createElement(Topbar));
     fireEvent.click(brokenContainer.querySelector('[data-testid="topbar-export"]') as HTMLButtonElement);
+    await new Promise(resolve => setTimeout(resolve, 0)); // OPTIMASI-01: flush dynamic import macrotask
     expect(confirmSpy2).toHaveBeenCalled();
     confirmSpy2.mockRestore();
   });

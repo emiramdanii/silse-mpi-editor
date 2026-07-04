@@ -31,6 +31,11 @@ vi.mock('../export/export-download', () => ({
   downloadHtmlFile: vi.fn(),
 }));
 
+// OPTIMASI-01: Mock export-html for dynamic import in handleExport
+vi.mock('../export/export-html', () => ({
+  exportProjectToHtml: vi.fn(() => '<!doctype html><html><body>mock</body></html>'),
+}));
+
 // =========================================================================
 // Helper Tests (1-11)
 // =========================================================================
@@ -465,6 +470,7 @@ describe('TEACHER-FRIENDLY-ISSUE-COPY-01 — regression', () => {
     const { container } = render(React.createElement(Topbar));
     const exportBtn = container.querySelector('[data-testid="topbar-export"]') as HTMLButtonElement;
     fireEvent.click(exportBtn);
+    await new Promise(resolve => setTimeout(resolve, 0)); // OPTIMASI-01: flush dynamic import macrotask
 
     expect(confirmSpy).not.toHaveBeenCalled();
     expect(downloadSpy).toHaveBeenCalled();
@@ -484,6 +490,7 @@ describe('TEACHER-FRIENDLY-ISSUE-COPY-01 — regression', () => {
     const { container } = render(React.createElement(Topbar));
     const exportBtn = container.querySelector('[data-testid="topbar-export"]') as HTMLButtonElement;
     fireEvent.click(exportBtn);
+    await new Promise(resolve => setTimeout(resolve, 0)); // OPTIMASI-01: flush dynamic import macrotask
 
     expect(confirmSpy).toHaveBeenCalled();
     confirmSpy.mockRestore();

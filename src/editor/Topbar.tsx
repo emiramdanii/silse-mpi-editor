@@ -15,11 +15,10 @@
  *   konteks aksi dekat dengan kanvas.
  */
 
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo, Suspense } from 'react';
 import { useEditorStore } from '../store/editor-store';
 import { MpiProgressStrip } from './MpiProgressStrip';
 import { usePreviewStore } from '../preview/preview-store';
-import { exportProjectToHtml } from '../export/export-html';
 import { downloadHtmlFile } from '../export/export-download';
 import { checkExportQuality, formatExportQualityMessage } from '../core/export-quality-gate';
 import {
@@ -28,7 +27,14 @@ import {
   formatExportReadySummaryText,
 } from '../core/export-ready-summary';
 import { GuidedFlowDialog } from './GuidedFlowDialog';
-import { TemplatePickerDialog } from './TemplatePickerDialog';
+
+// OPTIMASI-01: lazy-load heavy modules that are only needed on user action.
+// TemplatePickerDialog is a modal — only loaded when user clicks "Template Pedagogis".
+// export-html is only needed when user clicks "Export HTML".
+// This removes ~150KB+ from the initial bundle.
+const TemplatePickerDialog = React.lazy(() =>
+  import('./TemplatePickerDialog').then((m) => ({ default: m.TemplatePickerDialog })),
+);
 
 export function Topbar() {
   const project = useEditorStore((s) => s.project);
@@ -61,7 +67,7 @@ export function Topbar() {
     setTitleDraft(project.title);
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
     const current = useEditorStore.getState().project;
     // EXPORT-QUALITY-GATE-01: Aggregate all quality checks (MPI standard + layout + alignment + visual).
     // Warning/confirm dulu, bukan blokir brutal. Healthy project → no confirm, langsung export.
@@ -71,6 +77,8 @@ export function Topbar() {
       const proceed = window.confirm(message);
       if (!proceed) return;
     }
+    // OPTIMASI-01: dynamic import export-html — only loaded when user exports
+    const { exportProjectToHtml } = await import('../export/export-html');
     const html = exportProjectToHtml(current);
     downloadHtmlFile(current.title, html);
   };
@@ -200,7 +208,9 @@ export function Topbar() {
         <GuidedFlowDialog onClose={() => setShowGuidedFlow(false)} />
       )}
       {showTemplatePicker && (
-        <TemplatePickerDialog onClose={() => setShowTemplatePicker(false)} />
+        <Suspense fallback={<div style={{ padding: 20, textAlign: 'center', color: '#64748b' }}>Memuat template…</div>}>
+          <TemplatePickerDialog onClose={() => setShowTemplatePicker(false)} />
+        </Suspense>
       )}
     </header>
   );

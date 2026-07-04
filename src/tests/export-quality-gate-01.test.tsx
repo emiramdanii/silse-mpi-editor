@@ -34,6 +34,12 @@ vi.mock('../export/export-download', () => ({
   downloadHtmlFile: vi.fn(),
 }));
 
+// OPTIMASI-01: Mock export-html so the dynamic import in handleExport resolves
+// synchronously in tests (no need to await real module loading).
+vi.mock('../export/export-html', () => ({
+  exportProjectToHtml: vi.fn(() => '<!doctype html><html><body>mock</body></html>'),
+}));
+
 // Import Topbar AFTER mock so it picks up the mocked download.
 import { Topbar } from '../editor/Topbar';
 import { useEditorStore } from '../store/editor-store';
@@ -316,7 +322,7 @@ describe('EXPORT-QUALITY-GATE-01 — Topbar healthy export', () => {
     useEditorStore.getState().newProject();
   });
 
-  it('8. Clean project (generated PPKn) export does NOT call confirm', () => {
+  it('8. Clean project (generated PPKn) export does NOT call confirm', async () => {
     // Use generated PPKn (fully clean) — sample PPKn has a minor layout warning.
     const topic = getTopicById('ppkn-7-norma')!;
     const { project } = generateMpiFromTopic(topic);
@@ -329,6 +335,7 @@ describe('EXPORT-QUALITY-GATE-01 — Topbar healthy export', () => {
     const { container } = render(React.createElement(Topbar));
     const exportBtn = container.querySelector('[data-testid="topbar-export"]') as HTMLButtonElement;
     fireEvent.click(exportBtn);
+    await new Promise(resolve => setTimeout(resolve, 0)); // OPTIMASI-01: flush dynamic import macrotask
 
     expect(confirmSpy).not.toHaveBeenCalled();
     expect(downloadSpy).toHaveBeenCalled();
@@ -345,18 +352,19 @@ describe('EXPORT-QUALITY-GATE-01 — Topbar broken export', () => {
     useEditorStore.getState().newProject();
   });
 
-  it('9. Broken project (no objectives) export calls confirm', () => {
+  it('9. Broken project (no objectives) export calls confirm', async () => {
     // Default project from newProject() has no curriculum → NO_OBJECTIVES fatal
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
     const { container } = render(React.createElement(Topbar));
     const exportBtn = container.querySelector('[data-testid="topbar-export"]') as HTMLButtonElement;
     fireEvent.click(exportBtn);
+    await new Promise(resolve => setTimeout(resolve, 0)); // OPTIMASI-01: flush dynamic import macrotask
 
     expect(confirmSpy).toHaveBeenCalled();
     confirmSpy.mockRestore();
   });
 
-  it('10. Confirm cancel → no export (downloadHtmlFile NOT called)', () => {
+  it('10. Confirm cancel → no export (downloadHtmlFile NOT called)', async () => {
     // Default project → broken → confirm → cancel → export should NOT proceed.
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
     const downloadSpy = vi.mocked(downloadHtmlFile);
@@ -365,6 +373,7 @@ describe('EXPORT-QUALITY-GATE-01 — Topbar broken export', () => {
     const { container } = render(React.createElement(Topbar));
     const exportBtn = container.querySelector('[data-testid="topbar-export"]') as HTMLButtonElement;
     fireEvent.click(exportBtn);
+    await new Promise(resolve => setTimeout(resolve, 0)); // OPTIMASI-01: flush dynamic import macrotask
 
     expect(confirmSpy).toHaveBeenCalled();
     // CRITICAL: download must NOT be called when user cancels.
@@ -372,7 +381,7 @@ describe('EXPORT-QUALITY-GATE-01 — Topbar broken export', () => {
     confirmSpy.mockRestore();
   });
 
-  it('11. Confirm OK → export proceeds (downloadHtmlFile called)', () => {
+  it('11. Confirm OK → export proceeds (downloadHtmlFile called)', async () => {
     // Default project → broken → confirm → OK → export should proceed.
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
     const downloadSpy = vi.mocked(downloadHtmlFile);
@@ -381,6 +390,7 @@ describe('EXPORT-QUALITY-GATE-01 — Topbar broken export', () => {
     const { container } = render(React.createElement(Topbar));
     const exportBtn = container.querySelector('[data-testid="topbar-export"]') as HTMLButtonElement;
     fireEvent.click(exportBtn);
+    await new Promise(resolve => setTimeout(resolve, 0)); // OPTIMASI-01: flush dynamic import macrotask
 
     expect(confirmSpy).toHaveBeenCalled();
     // CRITICAL: download MUST be called when user confirms.
