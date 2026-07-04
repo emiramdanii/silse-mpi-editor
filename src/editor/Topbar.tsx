@@ -30,10 +30,14 @@ import { GuidedFlowDialog } from './GuidedFlowDialog';
 
 // OPTIMASI-01: lazy-load heavy modules that are only needed on user action.
 // TemplatePickerDialog is a modal — only loaded when user clicks "Template Pedagogis".
+// AiImportDialog is a modal — only loaded when user clicks "Import dari AI".
 // export-html is only needed when user clicks "Export HTML".
 // This removes ~150KB+ from the initial bundle.
 const TemplatePickerDialog = React.lazy(() =>
   import('./TemplatePickerDialog').then((m) => ({ default: m.TemplatePickerDialog })),
+);
+const AiImportDialog = React.lazy(() =>
+  import('./AiImportDialog').then((m) => ({ default: m.AiImportDialog })),
 );
 
 export function Topbar() {
@@ -46,6 +50,7 @@ export function Topbar() {
   const [titleDraft, setTitleDraft] = useState(project.title);
   const [showGuidedFlow, setShowGuidedFlow] = useState(false);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+  const [showAiImport, setShowAiImport] = useState(false);
 
   // EXPORT-READY-SUMMARY-01: compute export ready summary (memoized).
   const exportReadySummary = useMemo(
@@ -191,6 +196,15 @@ export function Topbar() {
           📋 Template Pedagogis
         </button>
         <button
+          onClick={() => setShowAiImport(true)}
+          className="editor-topbar__action editor-topbar__action--ai-import"
+          title="Import desain dari AI (blueprint JSON)"
+          data-action="ai-import"
+          data-testid="topbar-ai-import"
+        >
+          🤖 Import dari AI
+        </button>
+        <button
           onClick={() => {
             if (window.confirm('Buat MPI baru? Perubahan saat ini akan hilang jika belum disimpan.')) {
               newProject();
@@ -210,6 +224,11 @@ export function Topbar() {
       {showTemplatePicker && (
         <Suspense fallback={<div style={{ padding: 20, textAlign: 'center', color: '#64748b' }}>Memuat template…</div>}>
           <TemplatePickerDialog onClose={() => setShowTemplatePicker(false)} />
+        </Suspense>
+      )}
+      {showAiImport && (
+        <Suspense fallback={<div style={{ padding: 20, textAlign: 'center', color: '#64748b' }}>Memuat import AI…</div>}>
+          <AiImportDialog onClose={() => setShowAiImport(false)} />
         </Suspense>
       )}
     </header>
