@@ -56,11 +56,43 @@ export type AiBlueprintStyleIntent = {
   intent?: string;
 };
 
+export type AiBlueprintDesignSystemOverrides = {
+  typography?: {
+    fontFamily?: string;
+    headingFontFamily?: string;
+    fontSizeBase?: number;
+    lineHeightBase?: number;
+  };
+  colors?: {
+    primary?: string;
+    secondary?: string;
+    background?: string;
+    text?: string;
+    accent?: string;
+    success?: string;
+    warning?: string;
+    error?: string;
+  };
+  spacing?: {
+    unit?: number;
+    scale?: number;
+  };
+  radius?: {
+    default?: number;
+    large?: number;
+    small?: number;
+  };
+  shadow?: {
+    default?: string;
+    large?: string;
+  };
+};
+
 export type AiBlueprintDesignSystem = {
   contractId: string; // reference ke design contract
   paletteName?: string;
   typographyName?: string;
-  overrides?: Record<string, string | number | boolean>;
+  overrides?: AiBlueprintDesignSystemOverrides;
 };
 
 // ---------------------------------------------------------------------------

@@ -106,7 +106,7 @@ function mapSceneToPage(scene: AiBlueprintScene): SimplePage {
  */
 function applyDesignSystemOverrides(
   baseStyle: ProjectStyle,
-  overrides?: Record<string, string | number | boolean>,
+  overrides?: import('./schema').AiBlueprintDesignSystemOverrides,
 ): ProjectStyle {
   if (!overrides || Object.keys(overrides).length === 0) {
     return baseStyle;
@@ -114,33 +114,90 @@ function applyDesignSystemOverrides(
 
   const tokens: StyleTokens = { ...baseStyle.tokens };
 
-  // Terapkan overrides ke tokens
-  // Contoh overrides dari AI:
-  // - "typography.fontFamily": "Comic Sans MS"
-  // - "colors.primary": "#FF5733"
-  // - "spacing.pagePadding": 48
-  
-  for (const [key, value] of Object.entries(overrides)) {
-    const parts = key.split('.');
-    if (parts.length !== 2) continue;
+  // Terapkan overrides typography
+  if (overrides.typography) {
+    tokens.typography = { ...tokens.typography };
+    if (overrides.typography.fontFamily) {
+      tokens.typography.fontFamily = overrides.typography.fontFamily;
+    }
+    // Map fontSizeBase ke bodySize jika ada
+    if (overrides.typography.fontSizeBase) {
+      tokens.typography.bodySize = overrides.typography.fontSizeBase;
+    }
+    // Map lineHeightBase ke lineHeight jika ada
+    if (overrides.typography.lineHeightBase) {
+      tokens.typography.lineHeight = overrides.typography.lineHeightBase;
+    }
+  }
 
-    const [category, tokenName] = parts;
+  // Terapkan overrides colors
+  if (overrides.colors) {
+    tokens.colors = { ...tokens.colors };
+    if (overrides.colors.primary) {
+      tokens.colors.primary = overrides.colors.primary;
+    }
+    if (overrides.colors.secondary) {
+      tokens.colors.secondary = overrides.colors.secondary;
+    }
+    if (overrides.colors.background) {
+      tokens.colors.background = overrides.colors.background;
+    }
+    if (overrides.colors.text) {
+      tokens.colors.text = overrides.colors.text;
+    }
+    // Map accent ke secondary jika tidak ada field accent
+    if (overrides.colors.accent) {
+      tokens.colors.secondary = overrides.colors.accent;
+    }
+    if (overrides.colors.success) {
+      tokens.colors.success = overrides.colors.success;
+    }
+    if (overrides.colors.warning) {
+      tokens.colors.warning = overrides.colors.warning;
+    }
+    // Map error ke danger jika tidak ada field error
+    if (overrides.colors.error) {
+      tokens.colors.danger = overrides.colors.error;
+    }
+  }
 
-    if (category === 'typography' && tokens.typography) {
-      tokens.typography = { ...tokens.typography };
-      (tokens.typography as any)[tokenName] = value;
-    } else if (category === 'colors' && tokens.colors) {
-      tokens.colors = { ...tokens.colors };
-      (tokens.colors as any)[tokenName] = value;
-    } else if (category === 'spacing' && tokens.spacing) {
-      tokens.spacing = { ...tokens.spacing };
-      (tokens.spacing as any)[tokenName] = value;
-    } else if (category === 'radius' && tokens.radius) {
-      tokens.radius = { ...tokens.radius };
-      (tokens.radius as any)[tokenName] = value;
-    } else if (category === 'shadow' && tokens.shadow) {
-      tokens.shadow = { ...tokens.shadow };
-      (tokens.shadow as any)[tokenName] = value;
+  // Terapkan overrides spacing
+  if (overrides.spacing) {
+    tokens.spacing = { ...tokens.spacing };
+    // Map unit ke pagePadding jika tidak ada field unit
+    if (overrides.spacing.unit) {
+      tokens.spacing.pagePadding = overrides.spacing.unit;
+    }
+    // Map scale ke componentGap jika tidak ada field scale
+    if (overrides.spacing.scale) {
+      tokens.spacing.componentGap = overrides.spacing.scale;
+    }
+  }
+
+  // Terapkan overrides radius
+  if (overrides.radius) {
+    tokens.radius = { ...tokens.radius };
+    // Map default ke medium jika tidak ada field default
+    if (overrides.radius.default) {
+      tokens.radius.medium = overrides.radius.default;
+    }
+    if (overrides.radius.large) {
+      tokens.radius.large = overrides.radius.large;
+    }
+    if (overrides.radius.small) {
+      tokens.radius.small = overrides.radius.small;
+    }
+  }
+
+  // Terapkan overrides shadow
+  if (overrides.shadow) {
+    tokens.shadow = { ...tokens.shadow };
+    // Map default ke soft jika tidak ada field default
+    if (overrides.shadow.default) {
+      tokens.shadow.soft = overrides.shadow.default;
+    }
+    if (overrides.shadow.large) {
+      tokens.shadow.medium = overrides.shadow.large;
     }
   }
 

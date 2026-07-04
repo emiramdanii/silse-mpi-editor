@@ -76,8 +76,8 @@ export type MpiStyleIntent = {
 export type MpiDesignSystem = {
   /** Reference ke design contract ID (Scope 3). */
   contractId: string;
-  /** Override tokens (partial). Key = token path, value = token value. */
-  overrides?: Record<string, string | number | boolean>;
+  /** Override tokens (partial). Structured overrides for typography, colors, spacing, radius, shadow. */
+  overrides?: import('../ai-mpi-json/schema').AiBlueprintDesignSystemOverrides;
   /** Palette name (e.g. "navy-crimson-gold"). */
   paletteName?: string;
   /** Typography name (e.g. "trebuchet-hero"). */

@@ -18,6 +18,7 @@ export type {
   AiBlueprintCurriculumObjective,
   AiBlueprintStyleIntent,
   AiBlueprintDesignSystem,
+  AiBlueprintDesignSystemOverrides,
   AiBlueprintFlow,
   AiBlueprintFlowStep,
   AiBlueprintPlacement,

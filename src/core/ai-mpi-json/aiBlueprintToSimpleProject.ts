@@ -89,6 +89,13 @@ function mapSceneToPage(scene: AiBlueprintScene): SimplePage {
 export function aiBlueprintToSimpleProject(blueprint: AiMpiBlueprint): SimpleProject {
   const stylePackId = blueprint.styleIntent?.styleId ?? 'modern-clean';
   const stylePack = resolveStylePackV1(stylePackId);
+  let baseStyle = stylePackToProjectStyle(stylePack);
+  
+  // Apply designSystem.overrides jika ada
+  if (blueprint.designSystem?.overrides) {
+    baseStyle = applyDesignSystemOverrides(baseStyle, blueprint.designSystem.overrides);
+  }
+  
   const pages: SimplePage[] = blueprint.scenes.map(mapSceneToPage);
 
   const curriculum: Curriculum | undefined = blueprint.curriculum
@@ -110,11 +117,81 @@ export function aiBlueprintToSimpleProject(blueprint: AiMpiBlueprint): SimplePro
     version: PROJECT_VERSION,
     currentPageId: pages[0]?.id ?? '',
     stylePackId,
-    style: stylePackToProjectStyle(stylePack),
+    style: baseStyle,
     curriculum,
     pages,
     // CORE-MPI-UX-FOUNDATION-01: preserve assets from blueprint (for image/media rendering).
     // Stored as metadata on the project — assets are referenced by slot content via src URL.
     assets: blueprint.assets.map((a) => ({ id: a.id, type: a.type, src: a.src, alt: a.alt })),
+  };
+}
+
+function applyDesignSystemOverrides(
+  baseStyle: import('../style-types').ProjectStyle,
+  overrides: import('./schema').AiBlueprintDesignSystemOverrides
+): import('../style-types').ProjectStyle {
+  const tokens = { ...baseStyle.tokens };
+  
+  // Apply typography overrides
+  if (overrides.typography) {
+    tokens.typography = { ...tokens.typography };
+    if (overrides.typography.fontFamily) {
+      tokens.typography.fontFamily = overrides.typography.fontFamily;
+    }
+    if (overrides.typography.headingFontFamily) {
+      // Map headingFontFamily ke fontFamily untuk consistency
+      tokens.typography.fontFamily = overrides.typography.headingFontFamily;
+    }
+    if (overrides.typography.fontSizeBase) {
+      // Scale font sizes based on base
+      const scale = overrides.typography.fontSizeBase / 16;
+      tokens.typography.titleSize = Math.round(tokens.typography.titleSize * scale);
+      tokens.typography.subtitleSize = Math.round(tokens.typography.subtitleSize * scale);
+      tokens.typography.bodySize = Math.round(tokens.typography.bodySize * scale);
+      tokens.typography.smallSize = Math.round(tokens.typography.smallSize * scale);
+    }
+    if (overrides.typography.lineHeightBase) {
+      tokens.typography.lineHeight = overrides.typography.lineHeightBase;
+    }
+  }
+  
+  // Apply color overrides
+  if (overrides.colors) {
+    tokens.colors = { ...tokens.colors };
+    if (overrides.colors.primary) tokens.colors.primary = overrides.colors.primary;
+    if (overrides.colors.secondary) tokens.colors.secondary = overrides.colors.secondary;
+    if (overrides.colors.background) tokens.colors.background = overrides.colors.background;
+    if (overrides.colors.text) tokens.colors.text = overrides.colors.text;
+    if (overrides.colors.success) tokens.colors.success = overrides.colors.success;
+    if (overrides.colors.warning) tokens.colors.warning = overrides.colors.warning;
+    if (overrides.colors.error) {
+      tokens.colors.danger = overrides.colors.error;
+    }
+  }
+  
+  // Apply spacing overrides
+  if (overrides.spacing) {
+    tokens.spacing = { ...tokens.spacing };
+    if (overrides.spacing.unit) {
+      const scale = overrides.spacing.unit / 8;
+      tokens.spacing.pagePadding = Math.round(tokens.spacing.pagePadding * scale);
+      tokens.spacing.componentGap = Math.round(tokens.spacing.componentGap * scale);
+      tokens.spacing.cardPadding = Math.round(tokens.spacing.cardPadding * scale);
+    }
+  }
+  
+  // Apply radius overrides
+  if (overrides.radius) {
+    tokens.radius = { ...tokens.radius };
+    if (overrides.radius.default) {
+      tokens.radius.small = overrides.radius.default;
+      tokens.radius.medium = Math.round(overrides.radius.default * 1.5);
+      tokens.radius.large = Math.round(overrides.radius.default * 2);
+    }
+  }
+  
+  return {
+    ...baseStyle,
+    tokens
   };
 }
