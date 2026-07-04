@@ -21,6 +21,7 @@ import type {
   CurriculumObjective,
 } from '../types';
 import { PROJECT_VERSION } from '../types';
+import type { ProjectStyle, StyleTokens } from '../style-types';
 import { createProjectId } from '../ids';
 import { resolveStylePackV1 } from '../style-packs/style-pack-registry';
 import { stylePackToProjectStyle } from '../style-presets';
@@ -86,9 +87,63 @@ function mapSceneToPage(scene: AiBlueprintScene): SimplePage {
   };
 }
 
+/**
+ * Apply designSystem.overrides to ProjectStyle.
+ * BUG FIX V1 (from Qwen PR): Previously overrides from AI were ignored.
+ * Now AI custom styles (font, color, spacing, radius, shadow) are applied.
+ *
+ * Override key format: "category.tokenName" e.g. "typography.fontFamily",
+ * "colors.primary", "spacing.pagePadding".
+ */
+function applyDesignSystemOverrides(
+  baseStyle: ProjectStyle,
+  overrides?: Record<string, string | number | boolean>,
+): ProjectStyle {
+  if (!overrides || Object.keys(overrides).length === 0) {
+    return baseStyle;
+  }
+
+  const tokens: StyleTokens = { ...baseStyle.tokens };
+
+  for (const [key, value] of Object.entries(overrides)) {
+    const parts = key.split('.');
+    if (parts.length !== 2) continue;
+
+    const [category, tokenName] = parts;
+
+    if (category === 'typography' && tokens.typography) {
+      tokens.typography = { ...tokens.typography };
+      (tokens.typography as Record<string, unknown>)[tokenName] = value;
+    } else if (category === 'colors' && tokens.colors) {
+      tokens.colors = { ...tokens.colors };
+      (tokens.colors as Record<string, unknown>)[tokenName] = value;
+    } else if (category === 'spacing' && tokens.spacing) {
+      tokens.spacing = { ...tokens.spacing };
+      (tokens.spacing as Record<string, unknown>)[tokenName] = value;
+    } else if (category === 'radius' && tokens.radius) {
+      tokens.radius = { ...tokens.radius };
+      (tokens.radius as Record<string, unknown>)[tokenName] = value;
+    } else if (category === 'shadow' && tokens.shadow) {
+      tokens.shadow = { ...tokens.shadow };
+      (tokens.shadow as Record<string, unknown>)[tokenName] = value;
+    }
+  }
+
+  return {
+    ...baseStyle,
+    tokens,
+  };
+}
+
 export function aiBlueprintToSimpleProject(blueprint: AiMpiBlueprint): SimpleProject {
   const stylePackId = blueprint.styleIntent?.styleId ?? 'modern-clean';
   const stylePack = resolveStylePackV1(stylePackId);
+  let style = stylePackToProjectStyle(stylePack);
+
+  // BUG FIX V1 (from Qwen PR): Apply designSystem.overrides so AI custom styles
+  // (font, color, spacing) are not ignored during import.
+  style = applyDesignSystemOverrides(style, blueprint.designSystem?.overrides);
+
   const pages: SimplePage[] = blueprint.scenes.map(mapSceneToPage);
 
   const curriculum: Curriculum | undefined = blueprint.curriculum
@@ -110,7 +165,7 @@ export function aiBlueprintToSimpleProject(blueprint: AiMpiBlueprint): SimplePro
     version: PROJECT_VERSION,
     currentPageId: pages[0]?.id ?? '',
     stylePackId,
-    style: stylePackToProjectStyle(stylePack),
+    style,
     curriculum,
     pages,
     // CORE-MPI-UX-FOUNDATION-01: preserve assets from blueprint (for image/media rendering).
