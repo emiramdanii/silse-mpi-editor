@@ -31,6 +31,7 @@ export {
   DEFAULT_DESIGN_CONTRACT_ID,
   DESIGN_CONTRACTS,
   getDesignContract,
+  getDesignContractWithProjectStyle,
 } from './defaultDesignContract';
 
 export {

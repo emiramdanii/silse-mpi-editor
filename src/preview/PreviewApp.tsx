@@ -28,7 +28,7 @@ import { getPremiumExportProfile, getPremiumCssVariables, getHeroKickerText } fr
 import { buildSceneRenderPlanForPage } from '../core/scene-renderer';
 import { SceneRendererView } from '../components/SceneRendererView';
 import { NavigationToolbarBlock, ProgressBarBlock } from '../components/scene-blocks';
-import { getDesignContract } from '../core/mpi-design-contract';
+import { getDesignContractWithProjectStyle } from '../core/mpi-design-contract';
 import type { GameComponent, NavigationComponent, QuestionComponent } from '../core/types';
 
 const CANVAS_WIDTH = 1280;
@@ -136,7 +136,7 @@ export function PreviewApp() {
         {useSceneRenderer && (
           <>
             <NavigationToolbarBlock
-              contract={getDesignContract(project.stylePackId)}
+              contract={getDesignContractWithProjectStyle(project.stylePackId, project.style)}
               currentSceneIndex={currentIdx}
               totalScenes={project.pages.length}
               sceneTitle={currentPage.title}
@@ -146,7 +146,7 @@ export function PreviewApp() {
               canNext={!isLast}
             />
             <ProgressBarBlock
-              contract={getDesignContract(project.stylePackId)}
+              contract={getDesignContractWithProjectStyle(project.stylePackId, project.style)}
               currentSceneIndex={currentIdx}
               totalScenes={project.pages.length}
             />
@@ -206,7 +206,7 @@ export function PreviewApp() {
             <div data-testid="scene-renderer-mount-preview" style={{ position: 'absolute', inset: 0, zIndex: 2 }}>
               <SceneRendererView
                 plan={sceneRenderPlan}
-                contract={getDesignContract(project.stylePackId)}
+                contract={getDesignContractWithProjectStyle(project.stylePackId, project.style)}
                 interactive={true}
                 onGameAction={(_slotId, actionIndex) => {
                   // Find the game component for this slot and trigger answer

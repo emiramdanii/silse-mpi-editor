@@ -354,3 +354,69 @@ export function getDesignContract(id?: DesignContractId): MpiDesignContract {
   if (!id) return DEFAULT_DESIGN_CONTRACT;
   return DESIGN_CONTRACTS[id] ?? DEFAULT_DESIGN_CONTRACT;
 }
+
+/**
+ * STYLE-PARITY-01: Get design contract dengan project.style.tokens overrides applied.
+ *
+ * Problem sebelumnya: CanvasStage pakai getDesignContract(stylePackId) yang
+ * TIDAK baca project.style.tokens. Akibatnya, AI overrides (yang sudah di-apply
+ * ke project.style.tokens oleh aiBlueprintToSimpleProject) diabaikan di editor.
+ * Editor tampil dengan style LAMA, export tampil dengan style BARU → parity broken.
+ *
+ * Solution: helper ini merge base contract dengan project.style.tokens overrides.
+ * CanvasStage & PreviewApp pakai helper ini, export-html sudah baca project.style
+ * langsung via generateCssVariablesMap.
+ */
+export function getDesignContractWithProjectStyle(
+  stylePackId: string | undefined,
+  projectStyle?: { tokens?: {
+    colors?: Record<string, string>;
+    typography?: Record<string, unknown>;
+    spacing?: Record<string, number>;
+    radius?: Record<string, number>;
+    shadow?: Record<string, string>;
+  } } | null,
+): MpiDesignContract {
+  const base = getDesignContract(stylePackId as DesignContractId);
+  if (!projectStyle?.tokens) return base;
+
+  const { colors, typography, spacing, radius } = projectStyle.tokens;
+
+  return {
+    ...base,
+    palette: colors ? {
+      ...base.palette,
+      primary: colors.primary ?? base.palette.primary,
+      secondary: colors.secondary ?? base.palette.secondary,
+      background: colors.background ?? base.palette.background,
+      surface: colors.surface ?? base.palette.surface,
+      text: colors.text ?? base.palette.text,
+      mutedText: colors.mutedText ?? base.palette.mutedText,
+      border: colors.border ?? base.palette.border,
+      success: colors.success ?? base.palette.success,
+      warning: colors.warning ?? base.palette.warning,
+      danger: colors.danger ?? base.palette.danger,
+    } : base.palette,
+    typography: typography ? {
+      ...base.typography,
+      // ProjectStyle.tokens.typography uses fontFamily (single), DesignTypography uses heroFont + bodyFont (separate).
+      // AI override "typography.fontFamily" applies to BOTH heroFont + bodyFont.
+      heroFont: (typography.heroFont as string) ?? (typography.fontFamily as string) ?? base.typography.heroFont,
+      bodyFont: (typography.bodyFont as string) ?? (typography.fontFamily as string) ?? base.typography.bodyFont,
+      titleSize: (typography.titleSize as number) ?? base.typography.titleSize,
+      subtitleSize: (typography.subtitleSize as number) ?? base.typography.subtitleSize,
+      bodySize: (typography.bodySize as number) ?? base.typography.bodySize,
+      labelSize: (typography.labelSize as number) ?? base.typography.labelSize,
+      titleWeight: (typography.titleWeight as number) ?? base.typography.titleWeight,
+      bodyWeight: (typography.bodyWeight as number) ?? base.typography.bodyWeight,
+      lineHeight: (typography.lineHeight as number) ?? base.typography.lineHeight,
+      letterSpacing: (typography.letterSpacing as number) ?? base.typography.letterSpacing,
+      uppercase: (typography.uppercase as boolean) ?? base.typography.uppercase,
+    } : base.typography,
+    card: {
+      ...base.card,
+      radius: radius?.medium ?? base.card.radius,
+      padding: spacing?.cardPadding ?? base.card.padding,
+    },
+  };
+}

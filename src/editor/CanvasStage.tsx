@@ -35,7 +35,7 @@ import { getPremiumExportProfile, getPremiumCssVariables, getHeroKickerText } fr
 import { getResolvedComponentStyle } from '../core/style/resolveComponentStyle';
 import { buildSceneRenderPlanForPage } from '../core/scene-renderer';
 import { SceneRendererView } from '../components/SceneRendererView';
-import { getDesignContract } from '../core/mpi-design-contract';
+import { getDesignContractWithProjectStyle } from '../core/mpi-design-contract';
 import { snapToGrid, clampRectToCanvas, CANVAS_WIDTH, CANVAS_HEIGHT, type Rect } from '../core/geometry';
 import { Toolbar } from './Toolbar';
 import { getRoleInfo } from './mpi-standard-roles';
@@ -194,7 +194,7 @@ export function CanvasStage() {
       {/* CORE-MPI-UX-FOUNDATION-01: Navigation toolbar for scene-renderable projects */}
       {useSceneRenderer && currentPage && (
         <NavigationToolbarBlock
-          contract={getDesignContract(project.stylePackId)}
+          contract={getDesignContractWithProjectStyle(project.stylePackId, project.style)}
           currentSceneIndex={project.pages.findIndex((p) => p.id === currentPage.id)}
           totalScenes={project.pages.length}
           sceneTitle={currentPage.title}
@@ -278,7 +278,7 @@ export function CanvasStage() {
             <div data-testid="scene-renderer-mount" style={{ position: 'absolute', inset: 0, zIndex: 2 }}>
               <SceneRendererView
                 plan={sceneRenderPlan}
-                contract={getDesignContract(project.stylePackId)}
+                contract={getDesignContractWithProjectStyle(project.stylePackId, project.style)}
                 interactive={false}
                 onSlotClick={(slotId) => selectComponent(slotId)}
                 selectedSlotId={selectedComponentId ?? undefined}
