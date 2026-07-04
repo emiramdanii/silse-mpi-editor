@@ -17,7 +17,10 @@
 import type { CSSProperties } from 'react';
 import type { GameComponent } from '../core/types';
 import type { ResolvedComponentStyle } from '../core/style/resolveComponentStyle';
-import { isGameMissionScene } from '../core/ai-mpi-json';
+
+function isGameMissionScene(component: GameComponent): boolean {
+  return component.sceneMetadata?.scene === 'game-mission';
+}
 
 export type GameComponentViewProps = {
   component: GameComponent;

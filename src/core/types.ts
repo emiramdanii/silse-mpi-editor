@@ -58,6 +58,9 @@ export type SimpleProject = {
   assets?: Array<{ id: string; type: 'image' | 'audio' | 'video'; src: string; alt?: string }>;
 };
 
+// Re-export style types for convenience
+export type { ProjectStyle, StyleTokens } from './style-types';
+
 // ---------------------------------------------------------------------------
 // Page Role — peran pedagogis halaman
 // (lihat docs/CORE_PRODUCT_CONTRACT.md section 4 "Kontrak Struktur Pembelajaran")
