@@ -3538,10 +3538,17 @@ textarea {
 }
 
 /* Glow aura behind title (modern AI look) */
-.silse-cover-clean .silse-block-shell > *:first-child,
-.silse-cover-soft .silse-block-shell > *:first-child,
-.silse-cover-mission .silse-block-shell > *:first-child {
+.silse-cover-clean .silse-block-shell,
+.silse-cover-soft .silse-block-shell,
+.silse-cover-mission .silse-block-shell {
   position: relative;
+  isolation: isolate;
+}
+.silse-cover-clean .silse-block-header,
+.silse-cover-soft .silse-block-header,
+.silse-cover-mission .silse-block-header {
+  position: relative;
+  z-index: 2;
 }
 .silse-cover-clean .silse-block-header::before,
 .silse-cover-soft .silse-block-header::before,
@@ -3588,6 +3595,7 @@ textarea {
 
 /* Multi-layer shadow for panels (ambient + key + rim) */
 .silse-block-panel {
+  position: relative;
   box-shadow:
     0 1px 2px rgba(0,0,0,0.04),
     0 4px 12px rgba(0,0,0,0.06),
