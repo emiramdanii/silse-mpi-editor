@@ -5,15 +5,19 @@ node_modules/
 # Build artifacts
 dist/
 build/
-*.js.map
-*.tsbuildinfo
 
 # Vite specific
-.vite/
+.node_modules/.vite/
+
+# TypeScript
+tsconfig.tsbuildinfo
 
 # Temporary files
-.tmp/
 *.tmp
+*.temp
+
+# Logs
+*.log
 
 # Environment variables
 .env
@@ -24,15 +28,7 @@ build/
 .vscode/
 .idea/
 
-# Logs
-*.log
-
-# Coverage
-coverage/
-htmlcov/
-
 # OS
 .DS_Store
 Thumbs.db
-
 ```

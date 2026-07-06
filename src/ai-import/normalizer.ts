@@ -366,14 +366,54 @@ export function normalizeAiImportPayload(payload: unknown): NormalizeResult {
 
 /**
  * Parse and normalize AI JSON string.
- * Convenience function that combines JSON.parse + normalizeAiImportPayload.
+ * Convenience function that combines robust JSON parsing + normalizeAiImportPayload.
+ * Handles common AI output issues like markdown code blocks, extra text, etc.
  */
 export function parseAndNormalizeAiJson(jsonString: string): NormalizeResult {
   let parsed: unknown;
+  
   try {
-    parsed = JSON.parse(jsonString);
+    // Clean up common AI output issues
+    let cleaned = jsonString.trim();
+    
+    // Remove markdown code blocks if present
+    if (cleaned.startsWith('```json')) {
+      cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleaned.startsWith('```')) {
+      cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+    
+    // Try to find JSON object/array in the string if there's extra text
+    const jsonStart = cleaned.indexOf('{');
+    const jsonEnd = cleaned.lastIndexOf('}');
+    
+    if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+      cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
+    } else {
+      // Try array
+      const arrayStart = cleaned.indexOf('[');
+      const arrayEnd = cleaned.lastIndexOf(']');
+      if (arrayStart !== -1 && arrayEnd !== -1 && arrayEnd > arrayStart) {
+        cleaned = cleaned.substring(arrayStart, arrayEnd + 1);
+      }
+    }
+
+    parsed = JSON.parse(cleaned);
   } catch (e) {
-    return { ok: false, errors: [`Invalid JSON: ${e instanceof Error ? e.message : 'parse error'}`] };
+    const errorMessage = e instanceof Error ? e.message : 'Unknown parsing error';
+    
+    // Provide helpful error messages
+    let friendlyError = 'Gagal membaca JSON. ';
+    
+    if (errorMessage.includes('Unexpected token')) {
+      friendlyError += 'Format JSON tidak valid. Pastikan tidak ada koma berlebih atau teks di luar JSON.';
+    } else if (errorMessage.includes('Expected')) {
+      friendlyError += `Struktur JSON salah: ${errorMessage}`;
+    } else {
+      friendlyError += errorMessage;
+    }
+    
+    return { ok: false, errors: [friendlyError] };
   }
 
   return normalizeAiImportPayload(parsed);

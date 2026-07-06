@@ -138,10 +138,8 @@ function applyDesignSystemOverrides(
     if (overrides.typography.fontFamily) {
       tokens.typography.fontFamily = overrides.typography.fontFamily;
     }
-    if (overrides.typography.headingFontFamily) {
-      // Map headingFontFamily ke fontFamily untuk consistency
-      tokens.typography.fontFamily = overrides.typography.headingFontFamily;
-    }
+    // headingFontFamily untuk heading saja (tidak menimpa fontFamily utama)
+    // Catatan: Jika schema mendukung headingFontFamily terpisah, bisa ditambahkan nanti
     if (overrides.typography.fontSizeBase) {
       // Scale font sizes based on base
       const scale = overrides.typography.fontSizeBase / 16;
