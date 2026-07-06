@@ -125,6 +125,60 @@ describe('STYLE-PARITY-01 — Scope D: Export parity (editor === export)', () =>
   });
 });
 
+describe('STYLE-PARITY-01 — Scope F: Structured override format (from Qwen PR)', () => {
+  it('14. structured typography override (fontFamily) applies', () => {
+    const bp = templateToBlueprint(TEMPLATE_PPKN_NORMA);
+    bp.designSystem = {
+      ...bp.designSystem,
+      overrides: { typography: { fontFamily: 'Georgia, serif' } } as any,
+    };
+    const project = aiBlueprintToSimpleProject(bp);
+    expect(project.style?.tokens?.typography?.fontFamily).toBe('Georgia, serif');
+  });
+
+  it('15. structured color override (accent → secondary) applies', () => {
+    const bp = templateToBlueprint(TEMPLATE_PPKN_NORMA);
+    bp.designSystem = {
+      ...bp.designSystem,
+      overrides: { colors: { accent: '#ec4899' } } as any,
+    };
+    const project = aiBlueprintToSimpleProject(bp);
+    expect(project.style?.tokens?.colors?.secondary).toBe('#ec4899');
+  });
+
+  it('16. structured color override (error → danger) applies', () => {
+    const bp = templateToBlueprint(TEMPLATE_PPKN_NORMA);
+    bp.designSystem = {
+      ...bp.designSystem,
+      overrides: { colors: { error: '#ff0000' } } as any,
+    };
+    const project = aiBlueprintToSimpleProject(bp);
+    expect(project.style?.tokens?.colors?.danger).toBe('#ff0000');
+  });
+
+  it('17. structured typography.fontSizeBase scales all font sizes', () => {
+    const bp = templateToBlueprint(TEMPLATE_PPKN_NORMA);
+    const baseProject = aiBlueprintToSimpleProject(bp);
+    const baseTitleSize = baseProject.style!.tokens!.typography.titleSize;
+    bp.designSystem = {
+      ...bp.designSystem,
+      overrides: { typography: { fontSizeBase: 20 } } as any, // scale 1.25
+    };
+    const project = aiBlueprintToSimpleProject(bp);
+    expect(project.style?.tokens?.typography?.titleSize).toBe(Math.round(baseTitleSize * 1.25));
+  });
+
+  it('18. flat key format still works (backward compatible)', () => {
+    const bp = templateToBlueprint(TEMPLATE_PPKN_NORMA);
+    bp.designSystem = {
+      ...bp.designSystem,
+      overrides: { 'colors.primary': '#8b5cf6' } as any,
+    };
+    const project = aiBlueprintToSimpleProject(bp);
+    expect(project.style?.tokens?.colors?.primary).toBe('#8b5cf6');
+  });
+});
+
 describe('STYLE-PARITY-01 — Scope E: Prompt AI documents overrides', () => {
   it('11. buildMpiPromptText mentions designSystem.overrides', () => {
     const prompt = buildMpiPromptText();

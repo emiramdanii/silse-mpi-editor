@@ -89,43 +89,124 @@ function mapSceneToPage(scene: AiBlueprintScene): SimplePage {
 
 /**
  * Apply designSystem.overrides to ProjectStyle.
- * BUG FIX V1 (from Qwen PR): Previously overrides from AI were ignored.
- * Now AI custom styles (font, color, spacing, radius, shadow) are applied.
  *
- * Override key format: "category.tokenName" e.g. "typography.fontFamily",
- * "colors.primary", "spacing.pagePadding".
+ * Supports TWO override formats (backward compatible):
+ *
+ * 1. Flat key string (original): { "colors.primary": "#hex", "typography.fontFamily": "..." }
+ * 2. Structured object (from Qwen PR): { typography: { fontFamily: "..." }, colors: { primary: "#hex" } }
+ *
+ * Field mapping (from Qwen PR — AI field names → SILSE field names):
+ *   typography.fontSizeBase → scale all font sizes proportionally
+ *   typography.lineHeightBase → lineHeight
+ *   typography.headingFontFamily → fontFamily (alias)
+ *   colors.accent → secondary
+ *   colors.error → danger
+ *   spacing.unit → scale all spacing proportionally
+ *   spacing.scale → componentGap
+ *   radius.default → small/medium/large (scaled)
+ *   shadow.default → soft, shadow.large → medium
  */
 function applyDesignSystemOverrides(
   baseStyle: ProjectStyle,
-  overrides?: Record<string, string | number | boolean>,
+  overrides?: Record<string, unknown>,
 ): ProjectStyle {
   if (!overrides || Object.keys(overrides).length === 0) {
     return baseStyle;
   }
 
-  const tokens: StyleTokens = { ...baseStyle.tokens };
+  const tokens: StyleTokens = {
+    ...baseStyle.tokens,
+    typography: { ...baseStyle.tokens.typography },
+    colors: { ...baseStyle.tokens.colors },
+    spacing: { ...baseStyle.tokens.spacing },
+    radius: { ...baseStyle.tokens.radius },
+    shadow: { ...baseStyle.tokens.shadow },
+  };
 
-  for (const [key, value] of Object.entries(overrides)) {
-    const parts = key.split('.');
-    if (parts.length !== 2) continue;
+  // Detect format: if any value is an object, it's structured; otherwise flat string keys
+  const isStructured = Object.values(overrides).some(
+    (v) => typeof v === 'object' && v !== null && !Array.isArray(v),
+  );
 
-    const [category, tokenName] = parts;
+  if (isStructured) {
+    // Structured format: { typography: { fontFamily: "..." }, colors: { primary: "#hex" } }
+    const o = overrides as {
+      typography?: Record<string, unknown>;
+      colors?: Record<string, unknown>;
+      spacing?: Record<string, unknown>;
+      radius?: Record<string, unknown>;
+      shadow?: Record<string, unknown>;
+    };
 
-    if (category === 'typography' && tokens.typography) {
-      tokens.typography = { ...tokens.typography };
-      (tokens.typography as Record<string, unknown>)[tokenName] = value;
-    } else if (category === 'colors' && tokens.colors) {
-      tokens.colors = { ...tokens.colors };
-      (tokens.colors as Record<string, unknown>)[tokenName] = value;
-    } else if (category === 'spacing' && tokens.spacing) {
-      tokens.spacing = { ...tokens.spacing };
-      (tokens.spacing as Record<string, unknown>)[tokenName] = value;
-    } else if (category === 'radius' && tokens.radius) {
-      tokens.radius = { ...tokens.radius };
-      (tokens.radius as Record<string, unknown>)[tokenName] = value;
-    } else if (category === 'shadow' && tokens.shadow) {
-      tokens.shadow = { ...tokens.shadow };
-      (tokens.shadow as Record<string, unknown>)[tokenName] = value;
+    if (o.typography) {
+      const t = o.typography;
+      if (typeof t.fontFamily === 'string') tokens.typography.fontFamily = t.fontFamily;
+      if (typeof t.headingFontFamily === 'string') tokens.typography.fontFamily = t.headingFontFamily;
+      if (typeof t.fontSizeBase === 'number') {
+        const scale = t.fontSizeBase / 16;
+        tokens.typography.titleSize = Math.round(tokens.typography.titleSize * scale);
+        tokens.typography.subtitleSize = Math.round(tokens.typography.subtitleSize * scale);
+        tokens.typography.bodySize = Math.round(tokens.typography.bodySize * scale);
+        tokens.typography.smallSize = Math.round(tokens.typography.smallSize * scale);
+      }
+      if (typeof t.lineHeightBase === 'number') tokens.typography.lineHeight = t.lineHeightBase;
+    }
+
+    if (o.colors) {
+      const c = o.colors;
+      if (typeof c.primary === 'string') tokens.colors.primary = c.primary;
+      if (typeof c.secondary === 'string') tokens.colors.secondary = c.secondary;
+      if (typeof c.accent === 'string') tokens.colors.secondary = c.accent;
+      if (typeof c.background === 'string') tokens.colors.background = c.background;
+      if (typeof c.text === 'string') tokens.colors.text = c.text;
+      if (typeof c.success === 'string') tokens.colors.success = c.success;
+      if (typeof c.warning === 'string') tokens.colors.warning = c.warning;
+      if (typeof c.error === 'string') tokens.colors.danger = c.error;
+    }
+
+    if (o.spacing) {
+      const s = o.spacing;
+      if (typeof s.unit === 'number') {
+        const scale = s.unit / 8;
+        tokens.spacing.pagePadding = Math.round(tokens.spacing.pagePadding * scale);
+        tokens.spacing.componentGap = Math.round(tokens.spacing.componentGap * scale);
+        tokens.spacing.cardPadding = Math.round(tokens.spacing.cardPadding * scale);
+      }
+      if (typeof s.scale === 'number') tokens.spacing.componentGap = s.scale;
+    }
+
+    if (o.radius) {
+      const r = o.radius;
+      if (typeof r.default === 'number') {
+        tokens.radius.small = r.default;
+        tokens.radius.medium = Math.round(r.default * 1.5);
+        tokens.radius.large = Math.round(r.default * 2);
+      }
+    }
+
+    if (o.shadow) {
+      const sh = o.shadow;
+      if (typeof sh.default === 'string') tokens.shadow.soft = sh.default;
+      if (typeof sh.large === 'string') tokens.shadow.medium = sh.large;
+    }
+  } else {
+    // Flat key string format: { "colors.primary": "#hex" }
+    for (const [key, value] of Object.entries(overrides)) {
+      const parts = key.split('.');
+      if (parts.length !== 2) continue;
+      const [category, tokenName] = parts;
+
+      if (category === 'typography' && tokens.typography) {
+        (tokens.typography as Record<string, unknown>)[tokenName] = value;
+      } else if (category === 'colors' && tokens.colors) {
+        (tokens.colors as Record<string, unknown>)[tokenName] = value;
+      } else if (category === 'spacing' && tokens.spacing) {
+        (tokens.spacing as Record<string, unknown>)[tokenName] = value;
+      } else if (category === 'radius' && tokens.radius) {
+        (tokens.radius as Record<string, unknown>)[tokenName] = value;
+      } else if (category === 'shadow' && tokens.shadow) {
+        (tokens.shadow as Record<string, unknown>)[tokenName] = value;
+      }
     }
   }
 
