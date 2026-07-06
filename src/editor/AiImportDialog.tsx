@@ -19,6 +19,8 @@ import { validateAiMpiJson } from '../core/ai-mpi-json/validateAiMpiJson';
 import { normalizeAiMpiJson } from '../core/ai-mpi-json/normalizeAiMpiJson';
 import { aiBlueprintToSimpleProject } from '../core/ai-mpi-json/aiBlueprintToSimpleProject';
 import { checkBlueprintContentQuality } from '../core/content-quality-guard';
+import { collectImportWarnings, formatImportWarnings } from '../core/ai-mpi-json/silent-failure-handler';
+import { translateErrors, formatHumanReadableErrors } from '../core/ai-mpi-json/human-readable-errors';
 import type { BlueprintValidationError } from '../core/ai-mpi-json/validateAiMpiJson';
 
 type Tab = 'prompt' | 'import';
@@ -54,6 +56,7 @@ export function AiImportDialog({ onClose }: { onClose: () => void }) {
   const [copied, setCopied] = useState(false);
   const [errors, setErrors] = useState<BlueprintValidationError[] | null>(null);
   const [qualityWarnings, setQualityWarnings] = useState<string[]>([]);
+  const [importWarnings, setImportWarnings] = useState<string[]>([]);
   const [applied, setApplied] = useState(false);
 
   const promptText = useMemo(() => buildMpiPromptText(), []);
@@ -82,6 +85,7 @@ export function AiImportDialog({ onClose }: { onClose: () => void }) {
   const handleValidate = () => {
     setApplied(false);
     setQualityWarnings([]);
+    setImportWarnings([]);
     if (!jsonInput.trim()) {
       setErrors([{ message: 'JSON tidak boleh kosong. Paste hasil JSON dari AI.' } as BlueprintValidationError]);
       return;
@@ -102,6 +106,10 @@ export function AiImportDialog({ onClose }: { onClose: () => void }) {
     }
 
     setErrors(null);
+
+    // C-03: Collect import warnings (silent failure handler)
+    const warnings = collectImportWarnings(parsed);
+    setImportWarnings(formatImportWarnings(warnings));
 
     // Validasi content quality (warning, bukan blocker)
     try {
@@ -281,10 +289,21 @@ export function AiImportDialog({ onClose }: { onClose: () => void }) {
 
               {errors && errors.length > 0 && (
                 <div data-testid="ai-import-errors" style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: 12, marginTop: 12 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#991b1b', marginBottom: 6 }}>❌ JSON tidak valid:</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#991b1b', marginBottom: 6 }}>❌ Ada masalah dengan JSON dari AI:</div>
                   <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12, color: '#7f1d1d', lineHeight: 1.6 }}>
-                    {errors.map((e, i) => (
-                      <li key={i}>{e.message}</li>
+                    {formatHumanReadableErrors(translateErrors(errors)).map((msg, i) => (
+                      <li key={i}>{msg}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {errors === null && jsonInput.trim() && importWarnings.length > 0 && (
+                <div data-testid="ai-import-silent-warnings" style={{ background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 8, padding: 12, marginTop: 12 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#92400e', marginBottom: 6 }}>⚠️ Elemen tidak dikenali (tetap bisa diapply):</div>
+                  <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12, color: '#78350f', lineHeight: 1.6 }}>
+                    {importWarnings.map((w, i) => (
+                      <li key={i}>{w}</li>
                     ))}
                   </ul>
                 </div>
