@@ -366,14 +366,43 @@ export function normalizeAiImportPayload(payload: unknown): NormalizeResult {
 
 /**
  * Parse and normalize AI JSON string.
- * Convenience function that combines JSON.parse + normalizeAiImportPayload.
+ * Robust parsing: handles markdown code blocks, extra text, and AI preamble.
+ * (from Qwen PR — cherry-picked, cleaned up)
  */
 export function parseAndNormalizeAiJson(jsonString: string): NormalizeResult {
   let parsed: unknown;
   try {
-    parsed = JSON.parse(jsonString);
+    // Clean up common AI output issues
+    let cleaned = jsonString.trim();
+
+    // Remove markdown code blocks if present (```json ... ``` or ``` ... ```)
+    if (cleaned.startsWith('```json')) {
+      cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleaned.startsWith('```')) {
+      cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+
+    // Try to extract JSON object/array from string with extra text
+    const jsonStart = cleaned.indexOf('{');
+    const jsonEnd = cleaned.lastIndexOf('}');
+    if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+      cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
+    } else {
+      // Try array
+      const arrayStart = cleaned.indexOf('[');
+      const arrayEnd = cleaned.lastIndexOf(']');
+      if (arrayStart !== -1 && arrayEnd !== -1 && arrayEnd > arrayStart) {
+        cleaned = cleaned.substring(arrayStart, arrayEnd + 1);
+      }
+    }
+
+    parsed = JSON.parse(cleaned);
   } catch (e) {
-    return { ok: false, errors: [`Invalid JSON: ${e instanceof Error ? e.message : 'parse error'}`] };
+    const errorMessage = e instanceof Error ? e.message : 'Unknown parsing error';
+    return {
+      ok: false,
+      errors: [`JSON tidak valid: ${errorMessage}. Pastikan Anda paste JSON murni dari AI tanpa teks tambahan.`],
+    };
   }
 
   return normalizeAiImportPayload(parsed);

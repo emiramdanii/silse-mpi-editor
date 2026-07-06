@@ -38,7 +38,6 @@ import {
 import { DEFAULT_STYLE_PACK, stylePackToProjectStyle } from '../core/style-presets';
 import { getPatternById } from '../editor/content-patterns';
 import { createSamplePpknProject } from '../core/sample-project';
-import { LearningBridgeComponentView } from '../components/LearningBridgeComponentView';
 import type { SimplePage, LearningBridgeComponent } from '../core/types';
 import { createPageId } from '../core/ids';
 

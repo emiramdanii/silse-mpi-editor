@@ -98,7 +98,7 @@ function mapSceneToPage(scene: AiBlueprintScene): SimplePage {
  * Field mapping (from Qwen PR — AI field names → SILSE field names):
  *   typography.fontSizeBase → scale all font sizes proportionally
  *   typography.lineHeightBase → lineHeight
- *   typography.headingFontFamily → fontFamily (alias)
+ *   typography.headingFontFamily → (ignored — would override fontFamily, bug fix from Qwen PR)
  *   colors.accent → secondary
  *   colors.error → danger
  *   spacing.unit → scale all spacing proportionally
@@ -141,7 +141,9 @@ function applyDesignSystemOverrides(
     if (o.typography) {
       const t = o.typography;
       if (typeof t.fontFamily === 'string') tokens.typography.fontFamily = t.fontFamily;
-      if (typeof t.headingFontFamily === 'string') tokens.typography.fontFamily = t.headingFontFamily;
+      // headingFontFamily: DO NOT override fontFamily (bug fix from Qwen PR #3)
+      // Previously headingFontFamily would replace the main fontFamily, breaking body text.
+      // If schema later supports separate heading font, this can be re-enabled.
       if (typeof t.fontSizeBase === 'number') {
         const scale = t.fontSizeBase / 16;
         tokens.typography.titleSize = Math.round(tokens.typography.titleSize * scale);

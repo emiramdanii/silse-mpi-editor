@@ -23,6 +23,28 @@ import type { BlueprintValidationError } from '../core/ai-mpi-json/validateAiMpi
 
 type Tab = 'prompt' | 'import';
 
+/**
+ * Robust JSON cleanup: removes markdown code blocks, extracts JSON from
+ * strings with extra text/preamble (common AI output issues).
+ * (from Qwen PR — cherry-picked)
+ */
+function cleanJsonInput(raw: string): string {
+  let cleaned = raw.trim();
+  // Remove markdown code blocks
+  if (cleaned.startsWith('```json')) {
+    cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+  } else if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
+  }
+  // Extract JSON object from string with extra text
+  const jsonStart = cleaned.indexOf('{');
+  const jsonEnd = cleaned.lastIndexOf('}');
+  if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+    cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
+  }
+  return cleaned;
+}
+
 export function AiImportDialog({ onClose }: { onClose: () => void }) {
   const setProject = useEditorStore((s) => s.setProject);
   const currentProject = useEditorStore((s) => s.project);
@@ -67,7 +89,7 @@ export function AiImportDialog({ onClose }: { onClose: () => void }) {
 
     let parsed: unknown;
     try {
-      parsed = JSON.parse(jsonInput);
+      parsed = JSON.parse(cleanJsonInput(jsonInput));
     } catch (e) {
       setErrors([{ message: `JSON tidak valid: ${(e as Error).message}. Pastikan Anda paste JSON murni tanpa teks tambahan.` } as BlueprintValidationError]);
       return;
@@ -101,7 +123,7 @@ export function AiImportDialog({ onClose }: { onClose: () => void }) {
   const handleApply = () => {
     if (!jsonInput.trim()) return;
     try {
-      const parsed = JSON.parse(jsonInput);
+      const parsed = JSON.parse(cleanJsonInput(jsonInput));
       const validationErrors = validateAiMpiJson(parsed);
       if (validationErrors.length > 0) {
         setErrors(validationErrors);
