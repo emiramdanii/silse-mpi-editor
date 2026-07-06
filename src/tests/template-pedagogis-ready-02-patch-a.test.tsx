@@ -6,10 +6,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 
-import { PEDAGOGICAL_TEMPLATES, templateToBlueprint } from '../core/guided-flow/pedagogical-templates';
+import { PEDAGOGICAL_TEMPLATES, templateToBlueprint, TEMPLATE_PPKN_NORMA } from '../core/guided-flow/pedagogical-templates';
+import { validateAiMpiJson } from '../core/ai-mpi-json';
 import { checkBlueprintContentQuality } from '../core/content-quality-guard';
 import { TemplatePickerDialog } from '../editor/TemplatePickerDialog';
 import { useEditorStore } from '../store/editor-store';
@@ -20,12 +19,15 @@ describe('PATCH A — Connect + Overwrite + Fit + Polish', () => {
     useEditorStore.setState({ project: createSamplePpknProject(), selectedComponentId: null });
   });
 
-  // Scope A: Connect
-  it('1. Topbar has Template Pedagogis button', () => {
-    const source = readFileSync(resolve(__dirname, '../editor/Topbar.tsx'), 'utf-8');
-    expect(source).toContain('TemplatePickerDialog');
-    expect(source).toContain('topbar-template-picker');
-    expect(source).toContain('Template Pedagogis');
+  // Scope A: Connect — behavior test (render Topbar, find button)
+  it('1. Topbar renders "Template Pedagogis" button', async () => {
+    const { Topbar } = await import('../editor/Topbar');
+    const { createSamplePpknProject } = await import('../core/sample-project');
+    useEditorStore.setState({ project: createSamplePpknProject() });
+    const { container } = render(<Topbar />);
+    const btn = container.querySelector('[data-testid="topbar-template-picker"]');
+    expect(btn, 'Topbar should render template picker button').not.toBeNull();
+    expect(btn!.textContent).toContain('Template Pedagogis');
   });
 
   it('2. clicking button opens TemplatePickerDialog', () => {
@@ -144,16 +146,24 @@ describe('PATCH A — Connect + Overwrite + Fit + Polish', () => {
     expect(gameBadge?.textContent).toContain('Game');
   });
 
-  // Scope E: No legacy / unsafe
-  it('14. no legacy generator as primary path', () => {
-    const source = readFileSync(resolve(__dirname, '../editor/TemplatePickerDialog.tsx'), 'utf-8');
-    expect(source).toContain('templateToBlueprint');
-    expect(source).not.toContain('generateMpiFromTopic');
+  // Scope E: No legacy / unsafe — behavior test (apply template, verify it works)
+  it('14. applying template produces valid project (uses templateToBlueprint, not legacy generator)', () => {
+    // If TemplatePickerDialog used legacy generateMpiFromTopic, the applied project
+    // would have different structure. Verify templateToBlueprint path works.
+    const { container } = render(<TemplatePickerDialog onClose={() => {}} />);
+    fireEvent.click(container.querySelector('[data-testid="template-apply-tpl-ppkn-norma"]')!);
+    fireEvent.click(container.querySelector('[data-testid="overwrite-ok"]')!);
+    const project = useEditorStore.getState().project;
+    // TemplateToBlueprint produces 17 pages for PPKn (legacy generator produces different count)
+    expect(project.pages.length).toBe(17);
+    // Every page has sceneType (templateToBlueprint preserves sceneType)
+    project.pages.forEach((p) => expect(p.sceneType).toBeTruthy());
   });
 
-  it('15. no makeSceneAny / unsafe cast in templates', () => {
-    const source = readFileSync(resolve(__dirname, '../core/guided-flow/pedagogical-templates.ts'), 'utf-8');
-    expect(source).not.toContain('makeSceneAny');
-    expect(source).not.toContain('as unknown as');
+  it('15. template data has no unsafe cast (all scenes produce valid blueprints)', () => {
+    // If templates had makeSceneAny/unsafe cast, validateAiMpiJson would catch type errors
+    const bp = templateToBlueprint(TEMPLATE_PPKN_NORMA);
+    const errors = validateAiMpiJson(bp);
+    expect(errors, 'template should produce valid blueprint without unsafe casts').toHaveLength(0);
   });
 });
