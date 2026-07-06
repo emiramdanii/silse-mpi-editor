@@ -226,6 +226,22 @@ export function Topbar() {
           </span>
           <span style={{ fontSize: 11, fontWeight: 600 }}>{getScoreLabel(scoreResult.totalScore)}</span>
         </span>
+        {/* UX-03: AI Style Badge — show ✨ when project has AI style overrides */}
+        {project.hasAiStyleOverrides && (
+          <span
+            data-testid="ai-style-badge"
+            title="Style desain ini dikustomisasi oleh AI. Klik Style Pack untuk mengubah."
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              padding: '3px 8px', borderRadius: 999,
+              background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(236,72,153,0.15))',
+              border: '1px solid rgba(139,92,246,0.3)',
+              fontSize: 11, fontWeight: 700, color: '#7c3aed',
+            }}
+          >
+            ✨ AI Style
+          </span>
+        )}
         <button
           onClick={handleExport}
           className="editor-topbar__action editor-topbar__action--primary"
@@ -235,6 +251,25 @@ export function Topbar() {
           data-testid="topbar-export"
         >
           ⬇ Export HTML
+        </button>
+        {/* E-03: Export Edited JSON — save project as JSON for backup/template */}
+        <button
+          onClick={() => {
+            const json = JSON.stringify(useEditorStore.getState().project, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${project.title.replace(/[^a-zA-Z0-9]/g, '-')}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+          }}
+          className="editor-topbar__action editor-topbar__action--ghost"
+          title="Simpan sebagai JSON — untuk backup atau template"
+          data-action="export-json"
+          data-testid="topbar-export-json"
+        >
+          📋 Export JSON
         </button>
         <button
           onClick={() => setShowGuidedFlow(true)}

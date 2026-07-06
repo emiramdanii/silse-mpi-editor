@@ -22,8 +22,11 @@
 
 import { StylePackPicker } from './StylePackPicker';
 import { LayoutPresetPicker } from './LayoutPresetPicker';
+import { useEditorStore } from '../store/editor-store';
 
 export function VisualSection() {
+  const hasAiStyle = useEditorStore((s) => s.project.hasAiStyleOverrides ?? false);
+
   return (
     <section
       className="inspector-visual-section"
@@ -38,6 +41,26 @@ export function VisualSection() {
           Aman dicoba — perubahan tampilan tidak mengubah isi materi.
         </p>
       </div>
+
+      {/* UX-04: AI Style section — show when project has AI overrides */}
+      {hasAiStyle && (
+        <div
+          data-testid="ai-style-section"
+          style={{
+            marginBottom: 12, padding: 10, borderRadius: 8,
+            background: 'linear-gradient(135deg, rgba(139,92,246,0.08), rgba(236,72,153,0.08))',
+            border: '1px solid rgba(139,92,246,0.2)',
+          }}
+        >
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#7c3aed', marginBottom: 4 }}>
+            ✨ Style dari AI
+          </div>
+          <p style={{ fontSize: 11, color: '#6b21a8', lineHeight: 1.5, margin: 0 }}>
+            Desain ini menggunakan kustomisasi warna/font dari AI.
+            Pilih style pack di bawah untuk mengganti ke style bawaan.
+          </p>
+        </div>
+      )}
 
       <div className="inspector-visual-section__pickers">
         <div className="inspector-visual-section__picker-group">

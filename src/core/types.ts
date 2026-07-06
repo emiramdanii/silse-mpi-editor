@@ -56,6 +56,12 @@ export type SimpleProject = {
    * Images/audio/video referenced by slot content via src URL.
    */
   assets?: Array<{ id: string; type: 'image' | 'audio' | 'video'; src: string; alt?: string }>;
+  /**
+   * UX-03: Flag bahwa project memiliki style override dari AI.
+   * Set true saat import dari AI dengan designSystem.overrides.
+   * Cleared saat user manually changes style pack.
+   */
+  hasAiStyleOverrides?: boolean;
 };
 
 // ---------------------------------------------------------------------------
