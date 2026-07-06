@@ -27,6 +27,7 @@ import {
   formatExportReadySummaryText,
 } from '../core/export-ready-summary';
 import { scoreProject, getScoreLabel, getScoreColor } from '../core/scoring/scoring-engine';
+import { undo, redo, canUndo, canRedo } from '../store/undo-redo';
 import { GuidedFlowDialog } from './GuidedFlowDialog';
 
 // OPTIMASI-01: lazy-load heavy modules that are only needed on user action.
@@ -160,6 +161,29 @@ export function Topbar() {
           data-testid="topbar-preview"
         >
           ▶ Pratinjau
+        </button>
+        {/* F-01: Undo/Redo buttons */}
+        <button
+          onClick={undo}
+          disabled={!canUndo()}
+          className="editor-topbar__action editor-topbar__action--ghost"
+          title="Batal (Ctrl+Z)"
+          data-action="undo"
+          data-testid="topbar-undo"
+          style={{ opacity: canUndo() ? 1 : 0.4, cursor: canUndo() ? 'pointer' : 'not-allowed' }}
+        >
+          ↶ Batal
+        </button>
+        <button
+          onClick={redo}
+          disabled={!canRedo()}
+          className="editor-topbar__action editor-topbar__action--ghost"
+          title="Ulangi (Ctrl+Y)"
+          data-action="redo"
+          data-testid="topbar-redo"
+          style={{ opacity: canRedo() ? 1 : 0.4, cursor: canRedo() ? 'pointer' : 'not-allowed' }}
+        >
+          ↷ Ulangi
         </button>
         {/* EXPORT-READY-SUMMARY-01: compact export ready chip */}
         <span

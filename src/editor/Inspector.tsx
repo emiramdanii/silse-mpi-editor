@@ -224,8 +224,15 @@ export function Inspector() {
       </div>
       <div className="inspector__body">
         {!currentPage ? (
-          <div className="inspector-placeholder">
-            <p>Tidak ada halaman terpilih. Pilih halaman di panel kiri untuk mengatur tampilannya.</p>
+          <div className="inspector-placeholder" data-testid="inspector-empty-state">
+            <div style={{ textAlign: 'center', padding: '24px 16px', color: '#64748b' }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>📄</div>
+              <p style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>Belum ada halaman dipilih</p>
+              <p style={{ fontSize: 12, lineHeight: 1.5 }}>Pilih halaman di panel kiri untuk mengatur tampilannya, atau buat halaman baru dengan tombol <strong>+ Tambah</strong>.</p>
+              <div style={{ marginTop: 12, padding: 8, borderRadius: 6, background: '#f0f9ff', fontSize: 11, color: '#0c4a6e' }}>
+                💡 Tips: Gunakan <strong>Template Pedagogis</strong> atau <strong>Import dari AI</strong> untuk mulai cepat.
+              </div>
+            </div>
           </div>
         ) : !selectedComponent ? (
           <>
