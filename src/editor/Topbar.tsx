@@ -26,6 +26,7 @@ import {
   getExportReadyChipLabel,
   formatExportReadySummaryText,
 } from '../core/export-ready-summary';
+import { scoreProject, getScoreLabel, getScoreColor } from '../core/scoring/scoring-engine';
 import { GuidedFlowDialog } from './GuidedFlowDialog';
 
 // OPTIMASI-01: lazy-load heavy modules that are only needed on user action.
@@ -57,6 +58,9 @@ export function Topbar() {
     () => buildExportReadySummary(checkExportQuality(project)),
     [project],
   );
+
+  // S-01/S-02: Real-time scoring (kelengkapan elemen wajib)
+  const scoreResult = useMemo(() => scoreProject(project), [project]);
 
   const startEditTitle = () => {
     setTitleDraft(project.title);
@@ -166,6 +170,37 @@ export function Topbar() {
           data-total-issues={exportReadySummary.totalIssues}
         >
           {getExportReadyChipLabel(exportReadySummary)}
+        </span>
+        {/* S-02/S-03: Real-time score + progress bar */}
+        <span
+          data-testid="score-display"
+          title={scoreResult.suggestions.length > 0 ? scoreResult.suggestions.join('\n') : 'Semua elemen wajib terisi'}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            padding: '4px 10px', borderRadius: 999,
+            background: `${getScoreColor(scoreResult.totalScore)}15`,
+            border: `1px solid ${getScoreColor(scoreResult.totalScore)}40`,
+            fontSize: 12, fontWeight: 700,
+            color: getScoreColor(scoreResult.totalScore),
+          }}
+        >
+          <span>{scoreResult.totalScore}</span>
+          {/* S-03: Progress bar */}
+          <span
+            data-testid="score-progress-bar"
+            style={{
+              display: 'inline-block', width: 60, height: 6,
+              borderRadius: 3, background: 'rgba(0,0,0,0.08)', overflow: 'hidden',
+            }}
+          >
+            <span style={{
+              display: 'block', height: '100%',
+              width: `${scoreResult.totalScore}%`,
+              background: getScoreColor(scoreResult.totalScore),
+              borderRadius: 3, transition: 'width 0.3s ease',
+            }} />
+          </span>
+          <span style={{ fontSize: 11, fontWeight: 600 }}>{getScoreLabel(scoreResult.totalScore)}</span>
         </span>
         <button
           onClick={handleExport}
