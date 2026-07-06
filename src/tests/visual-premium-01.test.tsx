@@ -7,8 +7,6 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 
 import { exportProjectToHtml } from '../export/export-html';
 import { createSamplePpknProject } from '../core/sample-project';
@@ -22,28 +20,30 @@ import { aiBlueprintToSimpleProject } from '../core/ai-mpi-json/aiBlueprintToSim
 // SCOPE 1 — Cover scene wow factor CSS exists in styles.css
 // ---------------------------------------------------------------------------
 
-describe('VISUAL-PREMIUM-01 — Scope 1: cover wow CSS in styles.css', () => {
-  const css = readFileSync(resolve(__dirname, '../styles.css'), 'utf-8');
+describe('VISUAL-PREMIUM-01 — Scope 1: cover wow CSS in export HTML (behavior test)', () => {
+  // styles.css is inlined into export HTML — check the rendered output
+  const html = exportProjectToHtml(createSamplePpknProject());
 
   it('1a. dot grid pattern overlay on cover (::before background-image)', () => {
-    expect(css).toMatch(/\.silse-cover-clean::before.*background-image:\s*radial-gradient\(circle,\s*rgba\(255,255,255,0\.04\)/s);
+    expect(html).toMatch(/\.silse-cover-clean::before.*background-image:\s*radial-gradient\(circle,\s*rgba\(255,255,255,0\.04\)/s);
   });
 
   it('1b. glow aura behind title (.silse-block-header::before with blur)', () => {
-    expect(css).toContain('.silse-cover-clean .silse-block-header::before');
-    expect(css).toMatch(/radial-gradient\(ellipse,\s*rgba\(249,193,46,0\.18\)/);
-    expect(css).toMatch(/filter:\s*blur\(20px\)/);
+    expect(html).toContain('.silse-cover-clean .silse-block-header::before');
+    expect(html).toMatch(/radial-gradient\(ellipse,\s*rgba\(249,193,46,0\.18\)/);
+    expect(html).toMatch(/filter:\s*blur\(20px\)/);
   });
 
   it('1c. second decorative blob (bottom-left, .silse-block-shell::after)', () => {
-    expect(css).toContain('.silse-cover-clean .silse-block-shell::after');
-    expect(css).toMatch(/bottom:\s*-40px;\s*left:\s*-40px/);
+    expect(html).toContain('.silse-cover-clean .silse-block-shell::after');
+    expect(html).toMatch(/bottom:\s*-40px;\s*left:\s*-40px/);
   });
 
   it('1d. geometric accent line (top-right, .silse-block-shell::before)', () => {
-    expect(css).toContain('.silse-cover-clean .silse-block-shell::before');
-    expect(css).toMatch(/top:\s*24px;\s*right:\s*24px/);
-    expect(css).toContain('linear-gradient(90deg, transparent, rgba(249,193,46,0.6), transparent)');
+    expect(html).toContain('.silse-cover-clean .silse-block-shell::before');
+    expect(html).toMatch(/top:\s*24px;\s*right:\s*24px/);
+    // Export CSS is minified (no spaces after commas) — use flexible pattern
+    expect(html).toMatch(/linear-gradient\(90deg,\s*transparent,\s*rgba\(249,193,46,0\.6\),\s*transparent\)/);
   });
 });
 
@@ -51,12 +51,12 @@ describe('VISUAL-PREMIUM-01 — Scope 1: cover wow CSS in styles.css', () => {
 // SCOPE 2 — Card/panel premium depth CSS in styles.css
 // ---------------------------------------------------------------------------
 
-describe('VISUAL-PREMIUM-01 — Scope 2: card depth CSS in styles.css', () => {
-  const css = readFileSync(resolve(__dirname, '../styles.css'), 'utf-8');
+describe('VISUAL-PREMIUM-01 — Scope 2: card depth CSS in export HTML (behavior test)', () => {
+  const html = exportProjectToHtml(createSamplePpknProject());
 
   it('2a. multi-layer box-shadow on .silse-block-panel (3 layers)', () => {
     // Must have 3 shadow layers: ambient (1px), key (4px), rim (12px)
-    const panelMatch = css.match(/\.silse-block-panel\s*\{[^}]*box-shadow:\s*([^;]+);/s);
+    const panelMatch = html.match(/\.silse-block-panel\s*\{[^}]*box-shadow:\s*([^;]+);/s);
     expect(panelMatch).toBeDefined();
     const shadow = panelMatch![1];
     // Count shadow layers (comma-separated)
@@ -65,8 +65,8 @@ describe('VISUAL-PREMIUM-01 — Scope 2: card depth CSS in styles.css', () => {
   });
 
   it('2b. inner highlight on .silse-block-panel::before (top edge glass)', () => {
-    expect(css).toContain('.silse-block-panel::before');
-    expect(css).toMatch(/\.silse-block-panel::before[^}]*linear-gradient\(90deg,\s*transparent,\s*rgba\(255,255,255,0\.12\)/s);
+    expect(html).toContain('.silse-block-panel::before');
+    expect(html).toMatch(/\.silse-block-panel::before[^}]*linear-gradient\(90deg,\s*transparent,\s*rgba\(255,255,255,0\.12\)/s);
   });
 });
 
@@ -74,12 +74,12 @@ describe('VISUAL-PREMIUM-01 — Scope 2: card depth CSS in styles.css', () => {
 // SCOPE 3 — Choice/feedback/badge polish CSS in styles.css
 // ---------------------------------------------------------------------------
 
-describe('VISUAL-PREMIUM-01 — Scope 3: choice/badge polish CSS in styles.css', () => {
-  const css = readFileSync(resolve(__dirname, '../styles.css'), 'utf-8');
+describe('VISUAL-PREMIUM-01 — Scope 3: choice/badge polish CSS in export HTML (behavior test)', () => {
+  const html = exportProjectToHtml(createSamplePpknProject());
   // Extract only the VISUAL-PREMIUM-01 block (between marker and MICRO-ANIMATION)
-  const vpStart = css.indexOf('VISUAL-PREMIUM-01');
-  const vpEnd = css.indexOf('MICRO-ANIMATION-SYSTEM-V1', vpStart);
-  const vpBlock = css.substring(vpStart, vpEnd);
+  const vpStart = html.indexOf('VISUAL-PREMIUM-01');
+  const vpEnd = html.indexOf('MICRO-ANIMATION-SYSTEM-V1', vpStart);
+  const vpBlock = html.substring(vpStart, vpEnd);
 
   it('3a. choice-selected has gradient background + multi-layer shadow', () => {
     const selMatch = vpBlock.match(/\.silse-choice-selected\s*\{[^}]+\}/s);

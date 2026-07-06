@@ -251,16 +251,16 @@ describe('PREMIUM-STYLE-P2 PATCH A — Overflow Guard', () => {
     });
   });
 
-  it('18. no hardcoded width > 1280 in scene-blocks source', () => {
-    const source = readFileSync(resolve(__dirname, '../components/scene-blocks/index.tsx'), 'utf-8');
-    // Check for width values > 1280 (unlikely but guard)
-    const widths = source.match(/width:\s*(\d+)/g);
-    if (widths) {
-      widths.forEach((w) => {
-        const num = parseInt(w.match(/\d+/)![0], 10);
-        expect(num).toBeLessThanOrEqual(1280);
-      });
-    }
+  it('18. export HTML has no hardcoded width > 1280 in inline styles (behavior test)', () => {
+    // Check the rendered export output for width values > 1280
+    const bp = normalizeBlueprint(loadGoldenRef());
+    const project = aiBlueprintToSimpleProject(bp);
+    const html = exportProjectToHtml(project);
+    const widths = html.match(/width:\s*(\d+)/g) || [];
+    widths.forEach((w) => {
+      const num = parseInt(w.match(/\d+/)![0], 10);
+      expect(num, `width ${num} exceeds 1280`).toBeLessThanOrEqual(1280);
+    });
   });
 
   it('19. export has no external CSS/JS', () => {
