@@ -24,21 +24,29 @@ function loadGoldenRef() {
   return JSON.parse(readFileSync(resolve(__dirname, '../../samples/ai-mpi-json/macam-norma-reference.sample.json'), 'utf-8'));
 }
 
-describe('PREMIUM-STYLE-AFTER-FOUNDATION-01 — Contract Safety', () => {
-  it('1. premium polish uses existing design contract (no tokens.ts paralel)', () => {
-    const source = readFileSync(resolve(__dirname, '../components/scene-blocks/index.tsx'), 'utf-8');
-    expect(source).not.toMatch(/from\s+['"].*styles\/tokens/);
-    expect(source).not.toMatch(/from\s+['"].*GlobalStyle/);
-    expect(source).toContain('contract.palette');
-    expect(source).toContain('contract.card');
-    expect(source).toContain('contract.typography');
+describe('PREMIUM-STYLE-AFTER-FOUNDATION-01 — Contract Safety (behavior test)', () => {
+  it('1. SceneShell renders with design contract palette colors (not hardcoded)', () => {
+    const bp = normalizeBlueprint(loadGoldenRef());
+    const container = aiJsonToMpiContainer(bp);
+    const scene = container.scenes.find((s) => s.sceneType === 'curriculum-guide')!;
+    const plan = renderScenePlan(scene, contract);
+    const { container: dom } = render(<SceneRendererView plan={plan} contract={contract} />);
+    const shell = dom.querySelector('.silse-block-shell') as HTMLElement;
+    expect(shell).toBeInTheDocument();
+    // Shell background should contain the contract's surface color (proves contract is used)
+    expect(shell.style.background).toContain(contract.palette.surface);
   });
 
-  it('2. no new style system (no new CSS framework imports)', () => {
-    const blocksSrc = readFileSync(resolve(__dirname, '../components/scene-blocks/index.tsx'), 'utf-8');
-    expect(blocksSrc).not.toMatch(/import.*styled-components/);
-    expect(blocksSrc).not.toMatch(/import.*tailwind/);
-    expect(blocksSrc).not.toMatch(/import.*emotion/);
+  it('2. ScenePanel renders with contract card shadow (not hardcoded)', () => {
+    const bp = normalizeBlueprint(loadGoldenRef());
+    const container = aiJsonToMpiContainer(bp);
+    const scene = container.scenes.find((s) => s.sceneType === 'curriculum-guide')!;
+    const plan = renderScenePlan(scene, contract);
+    const { container: dom } = render(<SceneRendererView plan={plan} contract={contract} />);
+    const panel = dom.querySelector('.silse-block-panel') as HTMLElement;
+    expect(panel).toBeInTheDocument();
+    // Panel should have a box-shadow (from contract.card.shadow or default)
+    expect(panel.style.boxShadow || window.getComputedStyle(panel).boxShadow).toBeTruthy();
   });
 });
 

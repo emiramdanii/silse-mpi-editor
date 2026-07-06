@@ -225,13 +225,23 @@ describe('AI-IMPORT-01 — Scope E: Export parity (AI → Editor → Export)', (
   });
 });
 
-describe('AI-IMPORT-01 — Scope F: Topbar integration', () => {
-  it('19. Topbar has "Import dari AI" button', async () => {
-    const { readFileSync } = await import('node:fs');
-    const { resolve } = await import('node:path');
-    const src = readFileSync(resolve(__dirname, '../editor/Topbar.tsx'), 'utf-8');
-    expect(src).toContain('topbar-ai-import');
-    expect(src).toContain('Import dari AI');
-    expect(src).toContain('AiImportDialog');
+describe('AI-IMPORT-01 — Scope F: Topbar integration (behavior test)', () => {
+  it('19. Topbar renders "Import dari AI" button that opens AiImportDialog', async () => {
+    const { createSamplePpknProject } = await import('../core/sample-project');
+    const { Topbar } = await import('../editor/Topbar');
+    useEditorStore.setState({ project: createSamplePpknProject() });
+
+    const { container } = render(<Topbar />);
+    const aiBtn = container.querySelector('[data-testid="topbar-ai-import"]') as HTMLButtonElement | null;
+    expect(aiBtn, 'Topbar should render the AI import button').not.toBeNull();
+    expect(aiBtn!.textContent).toContain('Import dari AI');
+
+    // Click should open the dialog (lazy-loaded via React.lazy + Suspense)
+    fireEvent.click(aiBtn!);
+    // Wait for lazy component or Suspense fallback to appear
+    await new Promise(resolve => setTimeout(resolve, 100));
+    const dialogOrFallback = container.querySelector('[data-testid="ai-import-dialog"]') ||
+      container.querySelector('div[style*="Memuat"]');
+    expect(dialogOrFallback, 'Clicking AI import button should open dialog or show loading').not.toBeNull();
   });
 });
