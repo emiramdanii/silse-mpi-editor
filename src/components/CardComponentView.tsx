@@ -42,7 +42,7 @@ export function CardComponentView({
         flexDirection: 'column',
         gap: 8,
         overflow: 'hidden',
-        outline: selected ? '2px solid #2563eb' : 'none',
+        outline: selected ? '2px solid var(--silse-color-primary, #2563eb)' : 'none',
         outlineOffset: 2,
         cursor: 'pointer',
       }
@@ -58,7 +58,7 @@ export function CardComponentView({
         flexDirection: 'column',
         gap: 8,
         overflow: 'hidden',
-        outline: selected ? '2px solid #2563eb' : 'none',
+        outline: selected ? '2px solid var(--silse-color-primary, #2563eb)' : 'none',
         outlineOffset: 2,
         cursor: 'pointer',
       };

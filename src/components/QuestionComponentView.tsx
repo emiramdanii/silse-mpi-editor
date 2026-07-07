@@ -58,7 +58,7 @@ export function QuestionComponentView({
         flexDirection: 'column',
         gap: 8,
         overflow: 'auto',
-        outline: selected ? '2px solid #2563eb' : 'none',
+        outline: selected ? '2px solid var(--silse-color-primary, #2563eb)' : 'none',
         outlineOffset: 2,
         cursor: 'pointer',
       }
@@ -74,7 +74,7 @@ export function QuestionComponentView({
         flexDirection: 'column',
         gap: 8,
         overflow: 'auto',
-        outline: selected ? '2px solid #2563eb' : 'none',
+        outline: selected ? '2px solid var(--silse-color-primary, #2563eb)' : 'none',
         outlineOffset: 2,
         cursor: 'pointer',
       };
@@ -84,7 +84,7 @@ export function QuestionComponentView({
     padding: '10px 14px',
     minHeight: 44,
     height: 'auto',
-    border: '1px solid #d1d5db',
+    border: '1px solid var(--silse-color-border, #d1d5db)',
     borderRadius: 6,
     cursor: onAnswer ? 'pointer' : 'default',
     fontSize: 14,

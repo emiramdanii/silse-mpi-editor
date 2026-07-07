@@ -176,7 +176,7 @@ function SlotView({ slot, contract, interactive, onSlotClick, onGameAction, onQu
     width: slot.placement.width,
     height: slot.placement.height,
     zIndex: slot.placement.zIndex ?? 1,
-    outline: selected ? '2px solid #2563eb' : 'none',
+    outline: selected ? '2px solid var(--silse-color-primary, #2563eb)' : 'none',
     outlineOffset: 2,
     cursor: interactive ? 'pointer' : 'default',
   };
@@ -358,7 +358,7 @@ function ContentRenderer({
         padding: 12, borderRadius: 10,
         background: fb?.background ?? '#f3f4f6',
         color: fb?.color,
-        borderLeft: '4px solid ' + (fb?.borderColor ?? '#d1d5db'),
+        borderLeft: '4px solid ' + (fb?.borderColor ?? 'var(--silse-color-border, #d1d5db)'),
       }}>
         {c.icon && <span style={{ marginRight: 6 }}>{c.icon}</span>}
         {c.text}
@@ -464,7 +464,7 @@ function GameMissionContent({
               padding: 14,
               borderRadius: 12,
               background: '#fff',
-              border: '2px solid #d1d5db',
+              border: '2px solid var(--silse-color-border, #d1d5db)',
               cursor: interactive ? 'pointer' : 'default',
               fontSize: 14,
               fontWeight: 600,
@@ -478,7 +478,7 @@ function GameMissionContent({
               <span style={{ display: 'inline-grid', placeItems: 'center', minWidth: 28, height: 28, borderRadius: 8, background: contract.palette.primary, color: '#fff', fontSize: 13, fontWeight: 900 }}>
                 {String.fromCharCode(65 + idx)}
               </span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase' }}>Aksi</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--silse-color-muted-text, #6b7280)', textTransform: 'uppercase' }}>Aksi</span>
             </div>
             <span>{action.label}</span>
           </div>
