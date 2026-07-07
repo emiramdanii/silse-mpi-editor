@@ -185,6 +185,18 @@ export function buildMpiPromptText(): string {
   }
   lines.push('');
 
+  lines.push('## CUSTOM STYLE (customStyle)');
+  lines.push('Setiap slot bisa punya field "customStyle" untuk CSS tambahan dari AI.');
+  lines.push('Format: { "elementKey": { "cssProperty": "value" } }');
+  lines.push('Element keys yang didukung: "shell" (scene background/container), "header" (judul), "panel" (kartu materi).');
+  lines.push('Contoh:');
+  lines.push('  "customStyle": {');
+  lines.push('    "shell": { "background": "linear-gradient(135deg, #667eea, #764ba2)" },');
+  lines.push('    "panel": { "borderRadius": "24px", "boxShadow": "0 20px 60px rgba(0,0,0,0.3)" }');
+  lines.push('  }');
+  lines.push('Batasan: fontFamily TIDAK boleh font dekoratif (Comic Sans, cursive) atau eksternal (Google Fonts).');
+  lines.push('');
+
   lines.push('## OUTPUT FORMAT');
   lines.push('Outputkan JSON valid dengan struktur:');
   lines.push('{');

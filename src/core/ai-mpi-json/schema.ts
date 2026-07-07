@@ -196,6 +196,18 @@ export type AiBlueprintSlotContent =
   | { kind: 'teacher-guide'; title?: string; teacherInstruction?: string; facilitationTips?: string[]; timeAllocation?: string; assessmentNotes?: string }
   | { kind: 'accessibility-help'; title?: string; readingGuide?: string; keyboardGuide?: string; contrastOption?: string };
 
+/**
+ * CUSTOM-STYLE-01: Custom CSS style object from AI.
+ * AI can send arbitrary CSS properties (camelCase) to enhance scene visuals
+ * beyond the design contract. Applied as inline style on scene elements.
+ *
+ * Structure: { elementKey: { cssProperty: value } }
+ * Example: { "heroTitle": { "background": "linear-gradient(...)", "borderRadius": "24px" } }
+ *
+ * Font guard: fontFamily in customStyle is filtered — only system fonts allowed.
+ */
+export type CustomStyleMap = Record<string, Record<string, string>>;
+
 // ---------------------------------------------------------------------------
 // Slot
 // ---------------------------------------------------------------------------
@@ -206,6 +218,8 @@ export type AiBlueprintSlot = {
   placement: AiBlueprintPlacement;
   designTokenKey?: string;
   content: AiBlueprintSlotContent;
+  /** CUSTOM-STYLE-01: Custom CSS from AI for visual enhancement */
+  customStyle?: CustomStyleMap;
 };
 
 // ---------------------------------------------------------------------------

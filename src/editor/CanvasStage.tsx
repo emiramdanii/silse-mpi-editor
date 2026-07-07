@@ -379,6 +379,7 @@ export function CanvasStage() {
                 interactive={false}
                 onSlotClick={(slotId) => selectComponent(slotId)}
                 selectedSlotId={selectedComponentId ?? undefined}
+                customStyle={currentPage?.sceneCustomStyle}
                 // PATCH A: Editor mode does NOT wire score/completion — prevents accidental score changes during editing.
               />
             </div>

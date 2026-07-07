@@ -147,6 +147,8 @@ export type SimplePage = {
   scenePlacement?: { x: number; y: number; width: number; height: number; zIndex?: number };
   /** BASELINE-SYNC: Optional scene slot role (used when sceneType override is set). */
   sceneSlotRole?: string;
+  /** CUSTOM-STYLE-01: Custom CSS from AI for visual enhancement */
+  sceneCustomStyle?: Record<string, Record<string, string>>;
 };
 
 // ---------------------------------------------------------------------------

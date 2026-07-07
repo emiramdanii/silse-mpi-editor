@@ -84,6 +84,8 @@ function mapSceneToPage(scene: AiBlueprintScene): SimplePage {
         }
       : undefined,
     sceneSlotRole: primarySlot?.role,
+    // CUSTOM-STYLE-01: pass customStyle from AI to page
+    sceneCustomStyle: primarySlot?.customStyle,
   };
 }
 

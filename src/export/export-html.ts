@@ -60,6 +60,8 @@ type ExportRenderPage = {
   components: ExportRenderComponent[];
   /** FOUNDATION-INTEGRATION-01: scene render plan (jika page scene-renderable). Null = fallback ke legacy. */
   scenePlan?: SceneRenderPlan | null;
+  /** CUSTOM-STYLE-01: Custom CSS from AI */
+  customStyle?: Record<string, Record<string, string>>;
 };
 
 type ExportRenderComponent = {
@@ -138,6 +140,8 @@ function buildExportRenderModel(project: SimpleProject): ExportRenderModel {
     ),
     // FOUNDATION-INTEGRATION-01: build scene render plan if page is scene-renderable
     scenePlan: buildSceneRenderPlanForPage(project, page),
+    // CUSTOM-STYLE-01: pass customStyle from page to render model
+    customStyle: page.sceneCustomStyle,
   }));
 
   // TEMPLATE-CLEANUP-01: teacher-guide is teacher-preparation content, NOT
@@ -1114,7 +1118,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     // FOUNDATION-INTEGRATION-01: jika page punya scenePlan, render via scene renderer.
     // Jalur lama tetap fallback untuk page tanpa scenePlan.
     if (page.scenePlan) {
-      var sceneEl = renderSceneFromPlan(page.scenePlan);
+      var sceneEl = renderSceneFromPlan(page.scenePlan, page);
       if (sceneEl) canvas.appendChild(sceneEl);
     } else {
       // Render components — style from resolvedStyle, NO switch (legacy path)
@@ -1133,7 +1137,19 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
   // FOUNDATION-INTEGRATION-01 + DESIGN-CONTRACT-RENDER-PARITY-01 + PATCH B:
   // render scene dari SceneRenderPlan (bukan flat components[]).
   // PATCH B: Route by plan.sceneType first, then fall through to content.kind for generic slots.
-  function renderSceneFromPlan(plan) {
+  function renderSceneFromPlan(plan, page) {
+    // CUSTOM-STYLE-01: Apply customStyle.shell to scene element
+    var customShellStyle = '';
+    if (page && page.customStyle && page.customStyle.shell) {
+      var shellStyle = page.customStyle.shell;
+      for (var prop in shellStyle) {
+        if (shellStyle.hasOwnProperty(prop)) {
+          var cssProp = prop.replace(/([A-Z])/g, '-$1').toLowerCase();
+          customShellStyle += cssProp + ':' + shellStyle[prop] + ';';
+        }
+      }
+    }
+
     // PATCH B: Check sceneType for scene-level composers
     var sceneTypeRenderers = {
       'curriculum-guide': function(p) { return p.slots[0] ? renderCurriculumGuideExport(p.slots[0], p.slots[0].content, p) : null; },
@@ -1161,7 +1177,13 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     };
     if (sceneTypeRenderers[plan.sceneType]) {
       var renderedEl = sceneTypeRenderers[plan.sceneType](plan);
-      if (renderedEl) return renderedEl;
+      if (renderedEl) {
+        // CUSTOM-STYLE-01: Apply customStyle.shell to rendered scene element
+        if (customShellStyle && renderedEl.style) {
+          renderedEl.style.cssText += customShellStyle;
+        }
+        return renderedEl;
+      }
     }
 
     // Fall through to slot-by-slot rendering for generic scenes

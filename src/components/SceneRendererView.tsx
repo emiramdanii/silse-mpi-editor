@@ -102,6 +102,8 @@ export type SceneRendererViewProps = {
   onSceneComplete?: (sceneId: string) => void;
   /** PATCH A: Reset scene runtime (clears score + completion) */
   onSceneReset?: (sceneId: string) => void;
+  /** CUSTOM-STYLE-01: Custom CSS from AI for visual enhancement */
+  customStyle?: Record<string, Record<string, string>>;
 };
 
 export function SceneRendererView({
@@ -115,13 +117,43 @@ export function SceneRendererView({
   onScoreSet,
   onSceneComplete,
   onSceneReset,
+  customStyle,
 }: SceneRendererViewProps) {
+  // CUSTOM-STYLE-01: Filter font guard — no external/decorative fonts
+  const filterCustomStyle = (style?: Record<string, Record<string, string>>) => {
+    if (!style) return undefined;
+    const filtered: Record<string, Record<string, string>> = {};
+    for (const [key, css] of Object.entries(style)) {
+      filtered[key] = { ...css };
+      // Remove fontFamily if it contains forbidden fonts
+      if (filtered[key].fontFamily) {
+        const forbidden = ['comic sans', 'fredoka', 'cursive', 'fantasy', 'poppins', 'inter', 'google'];
+        const lower = filtered[key].fontFamily!.toLowerCase();
+        if (forbidden.some((f) => lower.includes(f))) {
+          delete filtered[key].fontFamily;
+        }
+      }
+    }
+    return filtered;
+  };
+
+  const safeCustomStyle = filterCustomStyle(customStyle);
+
   // PATCH B: Route by sceneType first, not content.kind.
   const sceneComposer = getSceneComposer(plan.sceneType);
   if (sceneComposer) {
     const primarySlot = plan.slots[0];
     if (primarySlot) {
-      return sceneComposer({ plan, contract, slot: primarySlot, interactive, onSlotClick, onGameAction, onQuizAnswer, selectedSlotId, sceneId: plan.sceneId, onScoreSet, onSceneComplete, onSceneReset });
+      const result = sceneComposer({ plan, contract, slot: primarySlot, interactive, onSlotClick, onGameAction, onQuizAnswer, selectedSlotId, sceneId: plan.sceneId, onScoreSet, onSceneComplete, onSceneReset });
+      // CUSTOM-STYLE-01: If customStyle has 'shell' key, wrap result with custom style
+      if (safeCustomStyle?.shell) {
+        return (
+          <div style={{ width: '100%', height: '100%', ...safeCustomStyle.shell }}>
+            {result}
+          </div>
+        );
+      }
+      return result;
     }
   }
 
@@ -134,6 +166,8 @@ export function SceneRendererView({
     overflow: plan.frame.overflow as CSSProperties['overflow'],
     borderRadius: plan.frame.stageRadius,
     background: plan.background.gradient ?? plan.background.color,
+    // CUSTOM-STYLE-01: merge customStyle.shell if present
+    ...(safeCustomStyle?.shell as CSSProperties),
   };
 
   return (

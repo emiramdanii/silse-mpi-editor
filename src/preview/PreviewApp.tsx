@@ -225,6 +225,7 @@ export function PreviewApp() {
                 onScoreSet={(sceneId, score) => useEditorStore.getState().setSceneScore(sceneId, score)}
                 onSceneComplete={(sceneId) => useEditorStore.getState().markSceneCompleted(sceneId)}
                 onSceneReset={(sceneId) => useEditorStore.getState().resetSceneRuntime(sceneId)}
+                customStyle={currentPage?.sceneCustomStyle}
               />
             </div>
           )}
