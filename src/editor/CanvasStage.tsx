@@ -90,22 +90,42 @@ export function CanvasStage() {
 
   const canvasRef = useRef<HTMLDivElement>(null);
 
-  // Keyboard delete
+  // Keyboard delete + duplicate
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Delete' && e.key !== 'Backspace') return;
       // Skip if user is typing in input/textarea/select
       const target = e.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
         return;
       }
-      // Skip if target is contentEditable
       if (target.isContentEditable) return;
 
       const selectedId = useEditorStore.getState().selectedComponentId;
-      if (selectedId) {
+
+      // F-03: Ctrl+D = duplicate selected component
+      if ((e.ctrlKey || e.metaKey) && e.key === 'd' && selectedId) {
         e.preventDefault();
-        removeComponent(selectedId);
+        const state = useEditorStore.getState();
+        const page = state.project.pages.find((p) => p.id === state.project.currentPageId);
+        const comp = page?.components.find((c) => c.id === selectedId);
+        if (comp) {
+          // Deep copy with new ID + offset position
+          const copy = JSON.parse(JSON.stringify(comp)) as typeof comp;
+          copy.id = `comp-${Date.now()}`;
+          copy.x = comp.x + 20;
+          copy.y = comp.y + 20;
+          state.addComponentsToPage(page!.id, [copy]);
+          state.selectComponent(copy.id);
+        }
+        return;
+      }
+
+      // Delete/Backspace = remove selected component
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (selectedId) {
+          e.preventDefault();
+          removeComponent(selectedId);
+        }
       }
     };
 
