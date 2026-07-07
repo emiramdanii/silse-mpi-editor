@@ -46,6 +46,34 @@ export function CanvasStage() {
   const selectedComponentId = useEditorStore((s) => s.selectedComponentId);
   // UX-02: selected component for drag feedback
   const selectedComponent = currentPage?.components.find((c) => c.id === selectedComponentId) ?? null;
+
+  // UX-06: Zoom & Pan state
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const panStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
+
+  const zoomIn = () => setZoom((z) => Math.min(z + 0.1, 2));
+  const zoomOut = () => setZoom((z) => Math.max(z - 0.1, 0.3));
+  const zoomReset = () => { setZoom(1); setPan({ x: 0, y: 0 }); };
+
+  const handlePanStart = (e: React.PointerEvent) => {
+    // Middle mouse button (button === 1) or space+drag
+    if (e.button === 1 || (e.button === 0 && e.altKey)) {
+      e.preventDefault();
+      setIsPanning(true);
+      panStart.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y };
+    }
+  };
+
+  const handlePanMove = (e: React.PointerEvent) => {
+    if (!isPanning) return;
+    const dx = e.clientX - panStart.current.x;
+    const dy = e.clientY - panStart.current.y;
+    setPan({ x: panStart.current.panX + dx, y: panStart.current.panY + dy });
+  };
+
+  const handlePanEnd = () => setIsPanning(false);
   const selectComponent = useEditorStore((s) => s.selectComponent);
   const updateComponentGeometry = useEditorStore((s) => s.updateComponentGeometry);
   const removeComponent = useEditorStore((s) => s.removeComponent);
@@ -206,7 +234,54 @@ export function CanvasStage() {
           canNext={project.pages.findIndex((p) => p.id === currentPage.id) < project.pages.length - 1}
         />
       )}
-      <div className="canvas-stage__canvas-area">
+      {/* UX-06: Zoom controls */}
+      <div
+        data-testid="zoom-controls"
+        style={{
+          display: 'flex', alignItems: 'center', gap: 4,
+          padding: '4px 8px', background: '#fff', borderRadius: 6,
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)', position: 'absolute',
+          top: 60, right: 16, zIndex: 100,
+        }}
+      >
+        <button
+          onClick={zoomOut}
+          data-testid="zoom-out"
+          title="Zoom out"
+          style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 16, padding: '2px 6px' }}
+        >−</button>
+        <span
+          data-testid="zoom-level"
+          style={{ fontSize: 11, fontWeight: 700, color: '#1e293b', minWidth: 36, textAlign: 'center' }}
+        >
+          {Math.round(zoom * 100)}%
+        </span>
+        <button
+          onClick={zoomIn}
+          data-testid="zoom-in"
+          title="Zoom in"
+          style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 16, padding: '2px 6px' }}
+        >+</button>
+        <button
+          onClick={zoomReset}
+          data-testid="zoom-reset"
+          title="Reset zoom (100%)"
+          style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 11, padding: '2px 6px', color: '#64748b' }}
+        >↺</button>
+      </div>
+      <div
+        className="canvas-stage__canvas-area"
+        onPointerDown={handlePanStart}
+        onPointerMove={handlePanMove}
+        onPointerUp={handlePanEnd}
+        onPointerLeave={handlePanEnd}
+        style={{
+          transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+          transformOrigin: 'center center',
+          cursor: isPanning ? 'grabbing' : 'default',
+          transition: isPanning ? 'none' : 'transform 0.15s ease-out',
+        }}
+      >
         <div
           ref={canvasRef}
           className={`canvas-frame silse-premium-stage ${bgPattern.pageClass} ${bgPattern.patternClass} ${coverClass} ${animProfile.pageEnterClass}`.trim()}
