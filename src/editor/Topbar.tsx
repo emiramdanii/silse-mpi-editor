@@ -271,6 +271,55 @@ export function Topbar() {
         >
           📋 Export JSON
         </button>
+        {/* E-04: Copy HTML to Clipboard */}
+        <button
+          onClick={async () => {
+            const current = useEditorStore.getState().project;
+            const { exportProjectToHtml } = await import('../export/export-html');
+            const html = exportProjectToHtml(current);
+            try {
+              await navigator.clipboard.writeText(html);
+              alert('Kode HTML berhasil disalin ke clipboard!');
+            } catch {
+              // Fallback: download as HTML file
+              downloadHtmlFile(current.title, html);
+              alert('Clipboard tidak tersedia. File HTML diunduh sebagai gantinya.');
+            }
+          }}
+          className="editor-topbar__action editor-topbar__action--ghost"
+          title="Salin kode HTML ke clipboard"
+          data-action="copy-html"
+          data-testid="topbar-copy-html"
+        >
+          📎 Salin HTML
+        </button>
+        {/* E-01: Export PNG — screenshot current canvas */}
+        <button
+          onClick={async () => {
+            const current = useEditorStore.getState().project;
+            const { exportProjectToHtml } = await import('../export/export-html');
+            const html = exportProjectToHtml(current);
+            // Open export HTML in new window, then trigger browser print-to-PNG
+            const w = window.open('', '_blank');
+            if (!w) {
+              alert('Popup diblokir. Izinkan popup untuk export PNG.');
+              return;
+            }
+            w.document.write(html);
+            w.document.close();
+            // Wait for render, then trigger print dialog
+            setTimeout(() => {
+              w.focus();
+              w.print();
+            }, 1000);
+          }}
+          className="editor-topbar__action editor-topbar__action--ghost"
+          title="Cetak / Simpan sebagai PNG (via dialog print browser)"
+          data-action="export-png"
+          data-testid="topbar-export-png"
+        >
+          🖼️ Export PNG
+        </button>
         <button
           onClick={() => setShowGuidedFlow(true)}
           className="editor-topbar__action editor-topbar__action--guided"
