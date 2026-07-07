@@ -219,6 +219,54 @@ export function getPremiumExportProfile(stylePackId?: string): PremiumExportProf
   return PROFILES[pack.id] ?? PROFILES['modern-clean'];
 }
 
+/**
+ * PARITY-FIX: Get premium export profile WITH project.style overrides applied.
+ *
+ * Previously getPremiumExportProfile(stylePackId) ignored project.style.tokens,
+ * meaning AI style overrides (colors, fonts) were lost in:
+ * - Cover/closing gradients (hardcoded in profile)
+ * - Stage outer background
+ * - Typography (heroFont, bodyFont)
+ *
+ * This function merges project.style.tokens overrides into the base profile.
+ */
+export function getPremiumExportProfileWithProjectStyle(
+  stylePackId?: string,
+  projectStyle?: { tokens?: {
+    colors?: Record<string, string>;
+    typography?: Record<string, unknown>;
+  } } | null,
+): PremiumExportProfile {
+  const base = getPremiumExportProfile(stylePackId);
+  if (!projectStyle?.tokens) return base;
+
+  const { colors, typography } = projectStyle.tokens;
+  const profile: PremiumExportProfile = { ...base };
+
+  if (colors) {
+    profile.colors = {
+      ...base.colors,
+      navy: colors.primary ?? base.colors.navy,
+      blue: colors.secondary ?? base.colors.blue,
+      gold: colors.warning ?? base.colors.gold,
+      red: colors.danger ?? base.colors.red,
+    };
+    profile.darkStage = colors.background
+      ? parseInt(colors.background.slice(1, 3), 16) < 128
+      : base.darkStage;
+  }
+
+  if (typography) {
+    profile.typography = {
+      ...base.typography,
+      heroFont: (typography.fontFamily as string) ?? (typography.heroFont as string) ?? base.typography.heroFont,
+      bodyFont: (typography.fontFamily as string) ?? (typography.bodyFont as string) ?? base.typography.bodyFont,
+    };
+  }
+
+  return profile;
+}
+
 // ---------------------------------------------------------------------------
 // Helper: get gradient for a specific page role
 // ---------------------------------------------------------------------------

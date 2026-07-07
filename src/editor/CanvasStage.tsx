@@ -31,7 +31,7 @@ import { getSkinClassForComponent } from '../core/style-packs/component-skin';
 import { getBackgroundPatternForStylePack } from '../core/style-packs/background-pattern';
 import { getCoverClassForStylePack } from '../core/style-packs/cover-decoration';
 import { getMicroAnimationForStylePack } from '../core/style-packs/micro-animation';
-import { getPremiumExportProfile, getPremiumCssVariables, getHeroKickerText } from '../core/style-packs/premium-export-profile';
+import { getPremiumExportProfileWithProjectStyle, getPremiumCssVariables, getHeroKickerText } from '../core/style-packs/premium-export-profile';
 import { getResolvedComponentStyle } from '../core/style/resolveComponentStyle';
 import { buildSceneRenderPlanForPage } from '../core/scene-renderer';
 import { SceneRendererView } from '../components/SceneRendererView';
@@ -213,7 +213,7 @@ export function CanvasStage() {
   const animProfile = getMicroAnimationForStylePack(project.stylePackId);
 
   // PATCH-1: Premium visual profile shared with export + preview.
-  const premiumProfile = getPremiumExportProfile(project.stylePackId);
+  const premiumProfile = getPremiumExportProfileWithProjectStyle(project.stylePackId, project.style);
   const premiumCssVars = getPremiumCssVariables(premiumProfile);
   const heroKickerText = currentPage?.role === 'cover'
     ? getHeroKickerText(project.curriculum?.subject, project.curriculum?.grade, currentPage.title)

@@ -160,10 +160,14 @@ function applyDesignSystemOverrides(
       if (typeof c.secondary === 'string') tokens.colors.secondary = c.secondary;
       if (typeof c.accent === 'string') tokens.colors.secondary = c.accent;
       if (typeof c.background === 'string') tokens.colors.background = c.background;
+      if (typeof c.surface === 'string') tokens.colors.surface = c.surface;
       if (typeof c.text === 'string') tokens.colors.text = c.text;
+      if (typeof c.mutedText === 'string') tokens.colors.mutedText = c.mutedText;
+      if (typeof c.border === 'string') tokens.colors.border = c.border;
       if (typeof c.success === 'string') tokens.colors.success = c.success;
       if (typeof c.warning === 'string') tokens.colors.warning = c.warning;
       if (typeof c.error === 'string') tokens.colors.danger = c.error;
+      if (typeof c.danger === 'string') tokens.colors.danger = c.danger;
     }
 
     if (o.spacing) {

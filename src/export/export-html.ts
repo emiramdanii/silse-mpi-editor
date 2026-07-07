@@ -25,7 +25,7 @@ import { getCoverClassForStylePack, getAllCoverClassNames } from '../core/style-
 import { getMicroAnimationForStylePack } from '../core/style-packs/micro-animation';
 import { getCelebrationEffectForStylePack } from '../core/style-packs/celebration-effect';
 import { buildMotionPresetCss } from '../core/style-packs/motion-preset';
-import { getPremiumExportProfile, type PremiumExportProfile } from '../core/style-packs/premium-export-profile';
+import { getPremiumExportProfileWithProjectStyle, type PremiumExportProfile } from '../core/style-packs/premium-export-profile';
 import { buildSceneRenderPlanForPage, type SceneRenderPlan } from '../core/scene-renderer';
 
 const CANVAS_WIDTH = 1280;
@@ -1244,7 +1244,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var btn = rs.button || {};
       var bCss = 'width:100%;height:100%;border:0;cursor:pointer;';
       bCss += 'border-radius:' + (btn.radius != null ? btn.radius : 8) + 'px;';
-      bCss += 'background:' + (btn.background || '#1d3557') + ';';
+      bCss += 'background:' + (btn.background || 'var(--silse-color-primary)') + ';';
       bCss += 'color:' + (btn.color || '#fff') + ';';
       bCss += 'font-weight:' + (btn.fontWeight || 600) + ';';
       if (btn.padding) {
@@ -1491,7 +1491,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         // Choice letter badge
         var letterBadge = document.createElement('span');
         letterBadge.className = 'silse-quiz-choice-badge silse-premium-quiz-badge';
-        letterBadge.style.cssText = 'display:inline-grid;place-items:center;min-width:32px;height:32px;border-radius:' + (badge.radius != null ? badge.radius : 8) + 'px;background:' + (badge.background || '#1d3557') + ';color:' + (badge.color || '#fff') + ';font-size:14px;font-weight:900;flex-shrink:0;';
+        letterBadge.style.cssText = 'display:inline-grid;place-items:center;min-width:32px;height:32px;border-radius:' + (badge.radius != null ? badge.radius : 8) + 'px;background:' + (badge.background || 'var(--silse-color-primary)') + ';color:' + (badge.color || '#fff') + ';font-size:14px;font-weight:900;flex-shrink:0;';
         letterBadge.textContent = String.fromCharCode(65 + choiceIdx);
         card.appendChild(letterBadge);
 
@@ -1803,7 +1803,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     // PREMIUM-STYLE-AFTER-FOUNDATION-01: subtle radial gradient + more gap + padding
     // TEMPLATE-PEDAGOGIS-READY-02 PATCH B: explicit overflow — vertical auto,
     // horizontal hidden. Parity with the in-app SceneShell.
-    el.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;gap:16px;padding:28px;box-sizing:border-box;overflow-x:hidden;overflow-y:auto;background:radial-gradient(ellipse at top,' + (p.surface || '#182d45') + ' 0%,' + (p.background || '#0e1c2f') + ' 70%);color:' + p.text + ';font-family:' + (ty.bodyFont || 'sans-serif') + ';';
+    el.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;gap:16px;padding:28px;box-sizing:border-box;overflow-x:hidden;overflow-y:auto;background:radial-gradient(ellipse at top,' + (p.surface || 'var(--silse-color-surface)') + ' 0%,' + (p.background || 'var(--silse-color-background)') + ' 70%);color:' + p.text + ';font-family:' + (ty.bodyFont || 'sans-serif') + ';';
     for (var i = 0; i < children.length; i++) { if (children[i]) el.appendChild(children[i]); }
     return el;
   }
@@ -1814,7 +1814,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     // MOTION-PRESET-01: entrance slide-up on header (reduced-motion safe via CSS)
     el.className = 'silse-block-header silse-motion-entrance-slide-up';
     // PREMIUM-STYLE-AFTER-FOUNDATION-01: accent border bottom + letter spacing
-    el.style.cssText = 'border-bottom:2px solid ' + (chipColor || p.gold || '#f9c12e') + '33;padding-bottom:10px;margin-bottom:4px;';
+    el.style.cssText = 'border-bottom:2px solid ' + (chipColor || p.gold || 'var(--silse-color-gold, #f9c12e)') + '33;padding-bottom:10px;margin-bottom:4px;';
     if (chipLabel) {
       var chip = document.createElement('div');
       chip.className = 'silse-block-chip';
@@ -1841,7 +1841,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     // MOTION-PRESET-01: entrance fade + hover lift (both reduced-motion safe via CSS)
     el.className = 'silse-block-panel silse-motion-entrance-fade silse-motion-hover-lift ' + (className || '');
     // PREMIUM-STYLE-AFTER-FOUNDATION-01: depth shadow + uppercase title
-    el.style.cssText = 'background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';border-radius:16px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);';
+    el.style.cssText = 'background:' + (p.surface || 'var(--silse-color-surface)') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';border-radius:16px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);';
     if (title) {
       var t = document.createElement('div');
       t.style.cssText = 'font-weight:800;font-size:13px;margin-bottom:8px;color:' + (p.mutedText || '#6e90b5') + ';text-transform:uppercase;letter-spacing:0.04em;';
@@ -1886,21 +1886,21 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     el.className = 'silse-block-timer';
     el.setAttribute('data-running', 'false');
     el.setAttribute('data-remaining', '300');
-    el.style.cssText = 'display:flex;align-items:center;gap:10px;background:' + (p.gold || '#f9c12e') + '14;border:1px solid ' + (p.gold || '#f9c12e') + '33;border-radius:10px;padding:8px 14px;';
+    el.style.cssText = 'display:flex;align-items:center;gap:10px;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '14;border:1px solid ' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '33;border-radius:10px;padding:8px 14px;';
     var time = document.createElement('span');
     time.className = 'silse-timer-display';
-    time.style.cssText = 'font-size:20px;color:' + (p.gold || '#f9c12e') + ';min-width:42px;font-weight:800;';
+    time.style.cssText = 'font-size:20px;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';min-width:42px;font-weight:800;';
     time.textContent = '5:00';
     el.appendChild(time);
     var bar = document.createElement('div');
     bar.style.cssText = 'flex:1;height:5px;background:rgba(255,255,255,0.08);border-radius:99px;overflow:hidden;';
     var fill = document.createElement('div');
-    fill.style.cssText = 'height:100%;background:' + (p.gold || '#f9c12e') + ';border-radius:99px;width:50%;';
+    fill.style.cssText = 'height:100%;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';border-radius:99px;width:50%;';
     bar.appendChild(fill);
     el.appendChild(bar);
     var toggleBtn = document.createElement('button');
     toggleBtn.setAttribute('data-action', 'timer-toggle');
-    toggleBtn.style.cssText = 'padding:8px 14px;min-height:44px;border-radius:999px;border:none;background:' + (p.gold || '#f9c12e') + ';color:' + (p.primary || '#0e1c2f') + ';font-weight:800;cursor:pointer;';
+    toggleBtn.style.cssText = 'padding:8px 14px;min-height:44px;border-radius:999px;border:none;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';color:' + (p.primary || 'var(--silse-color-background)') + ';font-weight:800;cursor:pointer;';
     toggleBtn.textContent = '▶';
     el.appendChild(toggleBtn);
     var resetBtn = document.createElement('button');
@@ -1915,7 +1915,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var p = plan.palette || {};
     var el = document.createElement('div');
     el.className = 'silse-block-input';
-    el.style.cssText = 'border-radius:16px;padding:20px;background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
+    el.style.cssText = 'border-radius:16px;padding:20px;background:' + (p.surface || 'var(--silse-color-surface)') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
     var label = document.createElement('div');
     label.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + p.mutedText + ';margin-bottom:8px;';
     label.textContent = 'Jawaban Kamu';
@@ -1928,7 +1928,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     saveRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-top:8px;';
     var saveBtn = document.createElement('button');
     saveBtn.setAttribute('data-action', 'save-response');
-    saveBtn.style.cssText = 'padding:10px 18px;min-height:44px;border-radius:999px;border:none;background:' + (p.gold || '#f9c12e') + ';color:' + (p.primary || '#0e1c2f') + ';font-weight:800;cursor:pointer;';
+    saveBtn.style.cssText = 'padding:10px 18px;min-height:44px;border-radius:999px;border:none;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';color:' + (p.primary || 'var(--silse-color-background)') + ';font-weight:800;cursor:pointer;';
     saveBtn.textContent = 'Simpan Jawaban';
     saveRow.appendChild(saveBtn);
     var badge = document.createElement('span');
@@ -1974,11 +1974,11 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     el.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:10px;';
     var circle = document.createElement('div');
     circle.className = 'silse-result-circle';
-    circle.style.cssText = 'width:120px;height:120px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(' + (p.gold || '#f9c12e') + ' ' + (pct * 3.6) + 'deg, rgba(255,255,255,0.08) 0deg);position:relative;';
+    circle.style.cssText = 'width:120px;height:120px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ' ' + (pct * 3.6) + 'deg, rgba(255,255,255,0.08) 0deg);position:relative;';
     var inner = document.createElement('div');
-    inner.style.cssText = 'width:96px;height:96px;border-radius:50%;display:grid;place-items:center;background:' + (p.surface || '#182d45') + ';';
+    inner.style.cssText = 'width:96px;height:96px;border-radius:50%;display:grid;place-items:center;background:' + (p.surface || 'var(--silse-color-surface)') + ';';
     var num = document.createElement('span');
-    num.style.cssText = 'font-size:32px;color:' + (p.gold || '#f9c12e') + ';font-weight:800;';
+    num.style.cssText = 'font-size:32px;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';font-weight:800;';
     num.textContent = String(score);
     inner.appendChild(num);
     circle.appendChild(inner);
@@ -1986,7 +1986,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (level) {
       var badge = document.createElement('div');
       badge.className = 'silse-result-level-badge';
-      badge.style.cssText = 'padding:6px 16px;border-radius:999px;background:' + (p.gold || '#f9c12e') + ';color:' + (p.primary || '#0e1c2f') + ';font-size:14px;font-weight:800;';
+      badge.style.cssText = 'padding:6px 16px;border-radius:999px;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';color:' + (p.primary || 'var(--silse-color-background)') + ';font-size:14px;font-weight:800;';
       badge.textContent = level;
       el.appendChild(badge);
     }
@@ -1997,7 +1997,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var p = plan.palette || {};
     var el = document.createElement('div');
     el.className = 'silse-block-portfolio';
-    el.style.cssText = 'border-radius:16px;padding:20px;background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
+    el.style.cssText = 'border-radius:16px;padding:20px;background:' + (p.surface || 'var(--silse-color-surface)') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
     var t = document.createElement('div');
     t.style.cssText = 'font-weight:800;font-size:14px;margin-bottom:10px;color:' + p.text + ';';
     t.textContent = title;
@@ -2021,16 +2021,16 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var p = plan.palette || {};
     var el = document.createElement('div');
     el.className = 'silse-block-reflection';
-    el.style.cssText = 'border-radius:16px;padding:20px;background:' + (p.gold || '#f9c12e') + '0A;border:1px solid ' + (p.gold || '#f9c12e') + '33;';
+    el.style.cssText = 'border-radius:16px;padding:20px;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '0A;border:1px solid ' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '33;';
     var label = document.createElement('div');
-    label.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.gold || '#f9c12e') + ';margin-bottom:10px;';
+    label.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';margin-bottom:10px;';
     label.textContent = '📝 Refleksi Diri';
     el.appendChild(label);
     for (var i = 0; i < prompts.length; i++) {
       var row = document.createElement('div');
       row.style.cssText = 'display:flex;gap:8;font-size:14px;line-height:1.6;color:' + p.text + ';';
       var num = document.createElement('span');
-      num.style.cssText = 'font-weight:800;color:' + (p.gold || '#f9c12e') + ';flex-shrink:0;';
+      num.style.cssText = 'font-weight:800;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';flex-shrink:0;';
       num.textContent = (i + 1) + '.';
       var text = document.createElement('span');
       text.textContent = prompts[i];
@@ -2045,7 +2045,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var el = document.createElement('button');
     // MOTION-PRESET-01: hover lift (reduced-motion safe via CSS)
     el.className = 'silse-block-action silse-motion-hover-lift';
-    var bg = p.gold || '#f9c12e'; var color = p.primary || '#0e1c2f';
+    var bg = p.gold || 'var(--silse-color-gold, #f9c12e)'; var color = p.primary || 'var(--silse-color-background)';
     if (variant === 'secondary') { bg = p.secondary || '#3ecfcf'; }
     el.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:999px;background:' + bg + ';color:' + color + ';border:none;font-weight:800;font-size:14px;cursor:pointer;';
     el.textContent = label;
@@ -2061,7 +2061,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var tab = document.createElement('button');
       tab.setAttribute('data-tab-id', tabs[i].id);
       var isActive = tabs[i].id === activeTab;
-      tab.style.cssText = 'padding:8px 16px;min-height:40px;border-radius:999px;font-size:13px;font-weight:800;cursor:pointer;border:none;background:' + (isActive ? (p.gold || '#f9c12e') : 'rgba(255,255,255,0.04)') + ';color:' + (isActive ? (p.primary || '#0e1c2f') : p.mutedText) + ';';
+      tab.style.cssText = 'padding:8px 16px;min-height:40px;border-radius:999px;font-size:13px;font-weight:800;cursor:pointer;border:none;background:' + (isActive ? (p.gold || 'var(--silse-color-gold, #f9c12e)') : 'rgba(255,255,255,0.04)') + ';color:' + (isActive ? (p.primary || 'var(--silse-color-background)') : p.mutedText) + ';';
       tab.textContent = tabs[i].label;
       el.appendChild(tab);
     }
@@ -2220,7 +2220,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var scoreEl = document.createElement('div');
     scoreEl.className = 'silse-classification-score silse-premium-game-score';
     scoreEl.setAttribute('data-testid', 'game-score');
-    scoreEl.style.cssText = 'display:inline-flex;align-items:center;gap:10px;font-size:16px;font-weight:800;color:' + (p.gold || '#f9c12e') + ';padding:8px 14px;border-radius:999px;background:' + (p.gold || '#f9c12e') + '11;border:1px solid ' + (p.gold || '#f9c12e') + '33;box-shadow:' + premiumShadow + ';';
+    scoreEl.style.cssText = 'display:inline-flex;align-items:center;gap:10px;font-size:16px;font-weight:800;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';padding:8px 14px;border-radius:999px;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '11;border:1px solid ' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '33;box-shadow:' + premiumShadow + ';';
     scoreEl.innerHTML = '<span style="font-size:18px;">🏆</span> Skor: <span class="silse-game-score-val">0</span>';
     children.push(scoreEl);
     // Feedback area
@@ -2246,7 +2246,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
           btn.setAttribute('data-item-id', item.id);
           btn.setAttribute('data-correct-cat', item.correctCategory);
           btn.textContent = item.label;
-          btn.style.cssText = 'padding:10px 16px;border-radius:999px;font-size:14px;font-weight:700;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:' + (p.surface || '#182d45') + ';color:' + p.text + ';cursor:pointer;transition:all 0.18s ease;';
+          btn.style.cssText = 'padding:10px 16px;border-radius:999px;font-size:14px;font-weight:700;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:' + (p.surface || 'var(--silse-color-surface)') + ';color:' + p.text + ';cursor:pointer;transition:all 0.18s ease;';
           pool.appendChild(btn);
         })(content.items[ii]);
       }
@@ -2263,9 +2263,9 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
           var col = document.createElement('div');
           col.className = 'silse-classification-column silse-premium-game-column';
           col.setAttribute('data-category', cat);
-          col.style.cssText = 'background:' + (p.surface || '#182d45') + ';border:2px dashed ' + (p.gold || '#f9c12e') + 'aa;border-radius:16px;padding:20px;min-height:120px;box-shadow:' + premiumShadow + ';transition:all 0.18s ease;';
+          col.style.cssText = 'background:' + (p.surface || 'var(--silse-color-surface)') + ';border:2px dashed ' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + 'aa;border-radius:16px;padding:20px;min-height:120px;box-shadow:' + premiumShadow + ';transition:all 0.18s ease;';
           var colTitle = document.createElement('div');
-          colTitle.style.cssText = 'font-size:13px;font-weight:800;color:' + (p.gold || '#f9c12e') + ';margin-bottom:10px;text-align:center;';
+          colTitle.style.cssText = 'font-size:13px;font-weight:800;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';margin-bottom:10px;text-align:center;';
           colTitle.textContent = cat;
           col.appendChild(colTitle);
           var colItems = document.createElement('div');
@@ -2295,7 +2295,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     }
     var mapEl = document.createElement('div');
     mapEl.className = 'silse-hotspot-map';
-    mapEl.style.cssText = 'position:relative;width:100%;min-height:320px;border-radius:12px;overflow:hidden;background:' + (content.backgroundVisual ? 'url(' + content.backgroundVisual + ') center/cover' : (p.surface || '#182d45')) + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
+    mapEl.style.cssText = 'position:relative;width:100%;min-height:320px;border-radius:12px;overflow:hidden;background:' + (content.backgroundVisual ? 'url(' + content.backgroundVisual + ') center/cover' : (p.surface || 'var(--silse-color-surface)')) + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
     if (!content.backgroundVisual) {
       var fb = document.createElement('div');
       fb.style.cssText = 'position:absolute;inset:0;display:grid;place-items:center;color:' + (p.mutedText || '#6e90b5') + ';font-style:italic;';
@@ -2307,7 +2307,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var btn = document.createElement('button');
       btn.className = 'silse-hotspot-point';
       btn.setAttribute('data-hotspot-id', hotspots[i].id);
-      btn.style.cssText = 'position:absolute;left:' + hotspots[i].x + '%;top:' + hotspots[i].y + '%;width:28px;height:28px;border-radius:50%;border:3px solid ' + (p.primary || '#0e1c2f') + ';background:' + (p.primary || '#0e1c2f') + ';cursor:pointer;transform:translate(-50%,-50%);box-shadow:0 2px 8px rgba(0,0,0,0.3);';
+      btn.style.cssText = 'position:absolute;left:' + hotspots[i].x + '%;top:' + hotspots[i].y + '%;width:28px;height:28px;border-radius:50%;border:3px solid ' + (p.primary || 'var(--silse-color-background)') + ';background:' + (p.primary || 'var(--silse-color-background)') + ';cursor:pointer;transform:translate(-50%,-50%);box-shadow:0 2px 8px rgba(0,0,0,0.3);';
       var lbl = document.createElement('span');
       lbl.style.cssText = 'position:absolute;top:-24px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:800;color:' + (p.text || '#fff') + ';white-space:nowrap;';
       lbl.textContent = hotspots[i].label;
@@ -2317,7 +2317,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     children.push(mapEl);
     var panel = document.createElement('div');
     panel.className = 'silse-hotspot-panel';
-    panel.style.cssText = 'display:none;padding:16px;border-radius:12px;background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.gold || '#f9c12e') + '66;';
+    panel.style.cssText = 'display:none;padding:16px;border-radius:12px;background:' + (p.surface || 'var(--silse-color-surface)') + ';border:1px solid ' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '66;';
     panel.textContent = 'Klik titik untuk melihat informasi';
     children.push(panel);
     return exportShell(plan, 'silse-scene-hotspot-map', children);
@@ -2336,7 +2336,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     }
     var scoreEl = document.createElement('div');
     scoreEl.className = 'silse-matching-score silse-premium-matching-score';
-    scoreEl.style.cssText = 'display:inline-flex;align-items:center;gap:8px;font-size:16px;font-weight:800;color:' + (p.gold || '#f9c12e') + ';padding:8px 14px;border-radius:999px;background:' + (p.gold || '#f9c12e') + '11;border:1px solid ' + (p.gold || '#f9c12e') + '33;box-shadow:' + premiumShadow + ';';
+    scoreEl.style.cssText = 'display:inline-flex;align-items:center;gap:8px;font-size:16px;font-weight:800;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';padding:8px 14px;border-radius:999px;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '11;border:1px solid ' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '33;box-shadow:' + premiumShadow + ';';
     scoreEl.innerHTML = '<span style="font-size:18px;">🏆</span> Skor: <span class="silse-matching-score-val">0</span>';
     children.push(scoreEl);
     var fbEl = document.createElement('div');
@@ -2356,7 +2356,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var lbtn = document.createElement('button');
       lbtn.className = 'silse-matching-pair silse-premium-matching-pair';
       lbtn.setAttribute('data-left-id', leftItems[li].id);
-      lbtn.style.cssText = 'display:block;width:100%;text-align:left;margin-bottom:6px;padding:10px 14px;min-height:44px;border-radius:16px;cursor:pointer;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:' + (p.surface || '#182d45') + ';color:' + (p.text || '#fff') + ';font-size:14px;font-weight:600;transition:all 0.18s ease;';
+      lbtn.style.cssText = 'display:block;width:100%;text-align:left;margin-bottom:6px;padding:10px 14px;min-height:44px;border-radius:16px;cursor:pointer;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:' + (p.surface || 'var(--silse-color-surface)') + ';color:' + (p.text || '#fff') + ';font-size:14px;font-weight:600;transition:all 0.18s ease;';
       lbtn.textContent = leftItems[li].label;
       leftCol.appendChild(lbtn);
     }
@@ -2372,7 +2372,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var rbtn = document.createElement('button');
       rbtn.className = 'silse-matching-pair silse-premium-matching-pair';
       rbtn.setAttribute('data-right-id', rightItems[ri].id);
-      rbtn.style.cssText = 'display:block;width:100%;text-align:left;margin-bottom:6px;padding:10px 14px;min-height:44px;border-radius:16px;cursor:pointer;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:' + (p.surface || '#182d45') + ';color:' + (p.text || '#fff') + ';font-size:14px;font-weight:600;transition:all 0.18s ease;';
+      rbtn.style.cssText = 'display:block;width:100%;text-align:left;margin-bottom:6px;padding:10px 14px;min-height:44px;border-radius:16px;cursor:pointer;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:' + (p.surface || 'var(--silse-color-surface)') + ';color:' + (p.text || '#fff') + ';font-size:14px;font-weight:600;transition:all 0.18s ease;';
       rbtn.textContent = rightItems[ri].label;
       rightCol.appendChild(rbtn);
     }
@@ -2397,7 +2397,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     }
     var scoreEl = document.createElement('div');
     scoreEl.className = 'silse-premium-sequence-score';
-    scoreEl.style.cssText = 'display:inline-flex;align-items:center;gap:8px;font-size:16px;font-weight:800;color:' + (p.gold || '#f9c12e') + ';padding:8px 14px;border-radius:999px;background:' + (p.gold || '#f9c12e') + '11;border:1px solid ' + (p.gold || '#f9c12e') + '33;box-shadow:' + premiumShadow + ';';
+    scoreEl.style.cssText = 'display:inline-flex;align-items:center;gap:8px;font-size:16px;font-weight:800;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';padding:8px 14px;border-radius:999px;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '11;border:1px solid ' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '33;box-shadow:' + premiumShadow + ';';
     scoreEl.innerHTML = '<span style="font-size:18px;">🏆</span> Skor: <span class="silse-sequence-score-val">0</span>';
     children.push(scoreEl);
     var fbEl = document.createElement('div');
@@ -2409,10 +2409,10 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var row = document.createElement('div');
       row.className = 'silse-sequence-item silse-premium-sequence-item';
       row.setAttribute('data-seq-id', items[si].id);
-      row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:16px;background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';box-shadow:' + premiumShadow + ';transition:all 0.18s ease;';
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:16px;background:' + (p.surface || 'var(--silse-color-surface)') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';box-shadow:' + premiumShadow + ';transition:all 0.18s ease;';
       var num = document.createElement('span');
       num.className = 'silse-sequence-num';
-      num.style.cssText = 'font-size:18px;font-weight:800;color:' + (p.gold || '#f9c12e') + ';min-width:28px;';
+      num.style.cssText = 'font-size:18px;font-weight:800;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';min-width:28px;';
       num.textContent = (si + 1) + '.';
       var lbl = document.createElement('span');
       lbl.style.cssText = 'flex:1;font-size:14px;font-weight:600;color:' + (p.text || '#fff') + ';';
@@ -2421,13 +2421,13 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       upBtn.className = 'silse-sequence-up silse-premium-sequence-up';
       upBtn.setAttribute('data-action', 'seq-up');
       upBtn.setAttribute('data-seq-id', items[si].id);
-      upBtn.style.cssText = 'padding:6px 12px;min-height:36px;border-radius:8px;border:none;background:' + (p.primary || '#0e1c2f') + ';color:#fff;font-weight:700;cursor:pointer;transition:all 0.18s ease;';
+      upBtn.style.cssText = 'padding:6px 12px;min-height:36px;border-radius:8px;border:none;background:' + (p.primary || 'var(--silse-color-background)') + ';color:#fff;font-weight:700;cursor:pointer;transition:all 0.18s ease;';
       upBtn.textContent = '↑';
       var downBtn = document.createElement('button');
       downBtn.className = 'silse-sequence-down silse-premium-sequence-down';
       downBtn.setAttribute('data-action', 'seq-down');
       downBtn.setAttribute('data-seq-id', items[si].id);
-      downBtn.style.cssText = 'padding:6px 12px;min-height:36px;border-radius:8px;border:none;background:' + (p.primary || '#0e1c2f') + ';color:#fff;font-weight:700;cursor:pointer;transition:all 0.18s ease;';
+      downBtn.style.cssText = 'padding:6px 12px;min-height:36px;border-radius:8px;border:none;background:' + (p.primary || 'var(--silse-color-background)') + ';color:#fff;font-weight:700;cursor:pointer;transition:all 0.18s ease;';
       downBtn.textContent = '↓';
       row.appendChild(num); row.appendChild(lbl); row.appendChild(upBtn); row.appendChild(downBtn);
       children.push(row);
@@ -2472,9 +2472,9 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.guidingQuestion) {
       var q = document.createElement('div');
       q.className = 'silse-media-focus-question';
-      q.style.cssText = 'padding:16px;border-radius:12px;background:' + (p.gold || '#f9c12e') + '0A;border:1px solid ' + (p.gold || '#f9c12e') + '33;';
+      q.style.cssText = 'padding:16px;border-radius:12px;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '0A;border:1px solid ' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '33;';
       var qLabel = document.createElement('div');
-      qLabel.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.gold || '#f9c12e') + ';margin-bottom:6px;';
+      qLabel.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';margin-bottom:6px;';
       qLabel.textContent = '❓ Pertanyaan Pemandu';
       var qText = document.createElement('div');
       qText.style.cssText = 'font-size:15px;line-height:1.6;color:' + (p.text || '#fff') + ';font-weight:600;';
@@ -2497,7 +2497,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var qEl = document.createElement('div');
       qEl.className = 'silse-diagnostic-question';
       qEl.setAttribute('data-question-id', questions[qi].id);
-      qEl.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
+      qEl.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.surface || 'var(--silse-color-surface)') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
       var qPrompt = document.createElement('div');
       qPrompt.style.cssText = 'font-size:14px;font-weight:700;color:' + (p.text || '#fff') + ';margin-bottom:8px;';
       qPrompt.textContent = (qi + 1) + '. ' + questions[qi].prompt;
@@ -2521,12 +2521,12 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     children.push(submitBtn);
     var resultEl = document.createElement('div');
     resultEl.className = 'silse-diagnostic-result';
-    resultEl.style.cssText = 'display:none;padding:16px;border-radius:12px;background:' + (p.gold || '#f9c12e') + '0A;border:1px solid ' + (p.gold || '#f9c12e') + '33;text-align:center;';
+    resultEl.style.cssText = 'display:none;padding:16px;border-radius:12px;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '0A;border:1px solid ' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '33;text-align:center;';
     children.push(resultEl);
     // PATCH A: readiness level element (hidden until submit)
     var readinessEl = document.createElement('div');
     readinessEl.className = 'silse-diagnostic-readiness';
-    readinessEl.style.cssText = 'display:none;padding:12px;border-radius:10px;background:' + (p.secondary || '#457b9d') + '11;border:1px solid ' + (p.secondary || '#457b9d') + '33;font-size:14px;font-weight:700;color:' + (p.text || '#fff') + ';text-align:center;';
+    readinessEl.style.cssText = 'display:none;padding:12px;border-radius:10px;background:' + (p.secondary || 'var(--silse-color-secondary)') + '11;border:1px solid ' + (p.secondary || 'var(--silse-color-secondary)') + '33;font-size:14px;font-weight:700;color:' + (p.text || '#fff') + ';text-align:center;';
     children.push(readinessEl);
     // PATCH A: recommendation element (hidden until submit)
     var recEl = document.createElement('div');
@@ -2561,7 +2561,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var pEl = document.createElement('div');
       pEl.className = 'silse-remedial-question';
       pEl.setAttribute('data-question-id', practice[pi].id);
-      pEl.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
+      pEl.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.surface || 'var(--silse-color-surface)') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
       var pPrompt = document.createElement('div');
       pPrompt.style.cssText = 'font-size:14px;font-weight:700;color:' + (p.text || '#fff') + ';margin-bottom:8px;';
       pPrompt.textContent = (pi + 1) + '. ' + practice[pi].prompt;
@@ -2582,7 +2582,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         hintBtn.className = 'silse-remedial-hint';
         hintBtn.setAttribute('data-question-id', practice[pi].id);
         hintBtn.setAttribute('data-hint', practice[pi].hint);
-        hintBtn.style.cssText = 'margin-top:6px;padding:4px 10px;font-size:12px;border:none;background:transparent;color:' + (p.gold || '#f9c12e') + ';cursor:pointer;font-weight:700;';
+        hintBtn.style.cssText = 'margin-top:6px;padding:4px 10px;font-size:12px;border:none;background:transparent;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';cursor:pointer;font-weight:700;';
         hintBtn.textContent = '💡 Tampilkan Hint';
         pEl.appendChild(hintBtn);
       }
@@ -2604,9 +2604,9 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.advancedTask) {
       var task = document.createElement('div');
       task.className = 'silse-enrichment-task';
-      task.style.cssText = 'padding:16px;border-radius:12px;background:' + (p.secondary || '#457b9d') + '11;border:1px solid ' + (p.secondary || '#457b9d') + '33;';
+      task.style.cssText = 'padding:16px;border-radius:12px;background:' + (p.secondary || 'var(--silse-color-secondary)') + '11;border:1px solid ' + (p.secondary || 'var(--silse-color-secondary)') + '33;';
       var tLabel = document.createElement('div');
-      tLabel.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.secondary || '#457b9d') + ';margin-bottom:6px;';
+      tLabel.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.secondary || 'var(--silse-color-secondary)') + ';margin-bottom:6px;';
       tLabel.textContent = 'Tugas Lanjutan';
       var tText = document.createElement('div');
       tText.style.cssText = 'font-size:15px;line-height:1.6;color:' + (p.text || '#fff') + ';font-weight:600;';
@@ -2618,7 +2618,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.rubricPreview && content.rubricPreview.length) {
       var rubric = document.createElement('div');
       rubric.className = 'silse-enrichment-rubric';
-      rubric.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
+      rubric.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.surface || 'var(--silse-color-surface)') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
       var rLabel = document.createElement('div');
       rLabel.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.mutedText || '#6e90b5') + ';margin-bottom:8px;';
       rLabel.textContent = 'Rubrik Penilaian';
@@ -2627,7 +2627,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         var row = document.createElement('div');
         row.style.cssText = 'display:flex;gap:8px;padding:6px 0;border-bottom:' + (ri < content.rubricPreview.length - 1 ? '1px solid ' + (p.border || 'rgba(255,255,255,0.06)') : 'none') + ';';
         var cName = document.createElement('span');
-        cName.style.cssText = 'font-size:13px;font-weight:700;color:' + (p.gold || '#f9c12e') + ';min-width:100px;';
+        cName.style.cssText = 'font-size:13px;font-weight:700;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';min-width:100px;';
         cName.textContent = content.rubricPreview[ri].criterion;
         var cDesc = document.createElement('span');
         cDesc.style.cssText = 'font-size:13px;color:' + (p.mutedText || '#6e90b5') + ';';
@@ -2662,14 +2662,14 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var steps = content.taskSteps || [];
     var checklist = document.createElement('div');
     checklist.className = 'silse-worksheet-checklist';
-    checklist.style.cssText = 'font-size:13px;font-weight:700;color:' + (p.gold || '#f9c12e') + ';';
+    checklist.style.cssText = 'font-size:13px;font-weight:700;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';';
     checklist.textContent = '✓ Selesai: 0 / ' + steps.length;
     children.push(checklist);
     for (var si = 0; si < steps.length; si++) {
       var sEl = document.createElement('div');
       sEl.className = 'silse-worksheet-question';
       sEl.setAttribute('data-step-id', steps[si].id);
-      sEl.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
+      sEl.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.surface || 'var(--silse-color-surface)') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
       var sRow = document.createElement('div');
       sRow.style.cssText = 'display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;';
       var checkBtn = document.createElement('button');
@@ -2700,7 +2700,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.scoreGuide) {
       var sg = document.createElement('div');
       sg.className = 'silse-rubric-score-guide';
-      sg.style.cssText = 'padding:12px;border-radius:10px;background:' + (p.gold || '#f9c12e') + '0A;border:1px solid ' + (p.gold || '#f9c12e') + '33;font-size:14px;color:' + (p.text || '#fff') + ';';
+      sg.style.cssText = 'padding:12px;border-radius:10px;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '0A;border:1px solid ' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '33;font-size:14px;color:' + (p.text || '#fff') + ';';
       sg.textContent = '📋 ' + content.scoreGuide;
       children.push(sg);
     }
@@ -2711,10 +2711,10 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       for (var li = 0; li < levels.length; li++) {
         var lvl = document.createElement('div');
         lvl.className = 'silse-rubric-level';
-        lvl.style.cssText = 'padding:8px 14px;border-radius:999px;background:' + (p.gold || '#f9c12e') + '11;border:1px solid ' + (p.gold || '#f9c12e') + '33;text-align:center;';
+        lvl.style.cssText = 'padding:8px 14px;border-radius:999px;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '11;border:1px solid ' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '33;text-align:center;';
         // PATCH A: safe DOM — use appendChild instead of innerHTML
         var lvlName = document.createElement('div');
-        lvlName.style.cssText = 'font-size:14px;font-weight:800;color:' + (p.gold || '#f9c12e') + ';';
+        lvlName.style.cssText = 'font-size:14px;font-weight:800;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';';
         lvlName.textContent = levels[li].name;
         lvl.appendChild(lvlName);
         var lvlScore = document.createElement('div');
@@ -2729,7 +2729,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     for (var ci = 0; ci < criteria.length; ci++) {
       var cEl = document.createElement('div');
       cEl.className = 'silse-rubric-criterion';
-      cEl.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
+      cEl.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.surface || 'var(--silse-color-surface)') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
       var cName = document.createElement('div');
       cName.style.cssText = 'font-size:14px;font-weight:800;color:' + (p.text || '#fff') + ';margin-bottom:6px;';
       cName.textContent = criteria[ci].name;
@@ -2767,18 +2767,18 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     children.push(trackEl);
     var detailEl = document.createElement('div');
     detailEl.className = 'silse-timeline-event';
-    detailEl.style.cssText = 'padding:16px;border-radius:12px;background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
+    detailEl.style.cssText = 'padding:16px;border-radius:12px;background:' + (p.surface || 'var(--silse-color-surface)') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
     detailEl.textContent = 'Klik nomor untuk melihat detail';
     children.push(detailEl);
     var navRow = document.createElement('div');
     navRow.style.cssText = 'display:flex;gap:8px;';
     var prevBtn = document.createElement('button');
     prevBtn.setAttribute('data-action', 'timeline-prev');
-    prevBtn.style.cssText = 'padding:8px 16px;min-height:44px;border-radius:999px;border:none;background:' + (p.primary || '#0e1c2f') + ';color:#fff;font-weight:700;cursor:pointer;';
+    prevBtn.style.cssText = 'padding:8px 16px;min-height:44px;border-radius:999px;border:none;background:' + (p.primary || 'var(--silse-color-background)') + ';color:#fff;font-weight:700;cursor:pointer;';
     prevBtn.textContent = '← Prev';
     var nextBtn = document.createElement('button');
     nextBtn.setAttribute('data-action', 'timeline-next');
-    nextBtn.style.cssText = 'padding:8px 16px;min-height:44px;border-radius:999px;border:none;background:' + (p.primary || '#0e1c2f') + ';color:#fff;font-weight:700;cursor:pointer;';
+    nextBtn.style.cssText = 'padding:8px 16px;min-height:44px;border-radius:999px;border:none;background:' + (p.primary || 'var(--silse-color-background)') + ';color:#fff;font-weight:700;cursor:pointer;';
     nextBtn.textContent = 'Next →';
     navRow.appendChild(prevBtn);
     navRow.appendChild(nextBtn);
@@ -2810,7 +2810,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       cBtn.setAttribute('data-choice-id', choices[ci].id);
       cBtn.setAttribute('data-consequence', choices[ci].consequence);
       cBtn.setAttribute('data-is-correct', choices[ci].isCorrect ? 'true' : 'false');
-      cBtn.style.cssText = 'text-align:left;padding:12px 16px;min-height:44px;border-radius:10px;cursor:pointer;border:2px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:' + (p.surface || '#182d45') + ';color:' + (p.text || '#fff') + ';font-size:14px;font-weight:600;';
+      cBtn.style.cssText = 'text-align:left;padding:12px 16px;min-height:44px;border-radius:10px;cursor:pointer;border:2px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:' + (p.surface || 'var(--silse-color-surface)') + ';color:' + (p.text || '#fff') + ';font-size:14px;font-weight:600;';
       cBtn.textContent = choices[ci].label;
       choicesContainer.appendChild(cBtn);
     }
@@ -2838,9 +2838,9 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       card.setAttribute('data-term-id', terms[ti].id);
       card.setAttribute('data-definition', terms[ti].definition);
       if (terms[ti].example) card.setAttribute('data-example', terms[ti].example);
-      card.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.surface || '#182d45') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';cursor:pointer;';
+      card.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.surface || 'var(--silse-color-surface)') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';cursor:pointer;';
       var termEl = document.createElement('div');
-      termEl.style.cssText = 'font-size:15px;font-weight:800;color:' + (p.gold || '#f9c12e') + ';margin-bottom:6px;';
+      termEl.style.cssText = 'font-size:15px;font-weight:800;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';margin-bottom:6px;';
       termEl.textContent = terms[ti].term;
       card.appendChild(termEl);
       var hintEl = document.createElement('div');
@@ -2880,9 +2880,9 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.facilitationTips && content.facilitationTips.length) {
       var tipsEl = document.createElement('div');
       tipsEl.className = 'silse-teacher-tips';
-      tipsEl.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.gold || '#f9c12e') + '0A;border:1px solid ' + (p.gold || '#f9c12e') + '33;';
+      tipsEl.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '0A;border:1px solid ' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '33;';
       var tipsLabel = document.createElement('div');
-      tipsLabel.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.gold || '#f9c12e') + ';margin-bottom:8px;';
+      tipsLabel.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';margin-bottom:8px;';
       tipsLabel.textContent = '💡 Tips Fasilitasi';
       tipsEl.appendChild(tipsLabel);
       for (var fi = 0; fi < content.facilitationTips.length; fi++) {
@@ -2890,7 +2890,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         tipRow.className = 'silse-teacher-tip';
         tipRow.style.cssText = 'display:flex;gap:8px;padding:4px 0;font-size:13px;line-height:1.5;color:' + (p.text || '#fff') + ';';
         var tipNum = document.createElement('span');
-        tipNum.style.cssText = 'color:' + (p.gold || '#f9c12e') + ';font-weight:800;';
+        tipNum.style.cssText = 'color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';font-weight:800;';
         tipNum.textContent = (fi + 1) + '.';
         var tipText = document.createElement('span');
         tipText.textContent = content.facilitationTips[fi];
@@ -4433,7 +4433,7 @@ function escapeHTML(str: string): string {
 export function exportProjectToHtml(project: SimpleProject): string {
   const renderModel = buildExportRenderModel(project);
   const renderModelJson = serializeRenderModel(renderModel);
-  const profile = getPremiumExportProfile(project.stylePackId);
+  const profile = getPremiumExportProfileWithProjectStyle(project.stylePackId, project.style);
   const css = generateCSS(renderModel.cssVariables, profile);
   const animProfile = getMicroAnimationForStylePack(project.stylePackId);
   const celebrationProfile = getCelebrationEffectForStylePack(project.stylePackId);
