@@ -23,7 +23,7 @@
 import type { SimpleProject, SimplePage, GameComponent, QuestionComponent, CardComponent, TextComponent } from '../types';
 import type { MpiContainer } from '../mpi-container/types';
 import { simpleProjectToMpiContainer } from '../mpi-container/simpleProjectToMpiContainer';
-import { getDesignContract } from '../mpi-design-contract';
+import { getDesignContractWithProjectStyle } from '../mpi-design-contract';
 import { renderScenePlan, type SceneRenderPlan } from './renderScenePlan';
 
 // ---------------------------------------------------------------------------
@@ -127,7 +127,10 @@ export function buildSceneRenderPlanForPage(
   const scene = container.scenes.find((s) => s.pageId === page.id);
   if (!scene) return null;
 
-  const contract = getDesignContract(project.stylePackId);
+  // PARITY-FIX: Use getDesignContractWithProjectStyle so AI style overrides
+  // from project.style.tokens are applied to the scene render plan.
+  // Previously used getDesignContract(stylePackId) which ignored overrides.
+  const contract = getDesignContractWithProjectStyle(project.stylePackId, project.style);
   return renderScenePlan(scene, contract);
 }
 
@@ -168,7 +171,8 @@ export function buildContainerAndPlanForPage(
   const scene = container.scenes.find((s) => s.pageId === pageId);
   if (!scene) return null;
 
-  const contract = getDesignContract(project.stylePackId);
+  // PARITY-FIX: Same fix as buildSceneRenderPlanForPage
+  const contract = getDesignContractWithProjectStyle(project.stylePackId, project.style);
   const plan = renderScenePlan(scene, contract);
   return { container, plan };
 }
