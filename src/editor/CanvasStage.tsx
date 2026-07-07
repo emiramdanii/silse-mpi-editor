@@ -44,6 +44,8 @@ export function CanvasStage() {
   const project = useEditorStore((s) => s.project);
   const currentPage = project.pages.find((p) => p.id === project.currentPageId) ?? null;
   const selectedComponentId = useEditorStore((s) => s.selectedComponentId);
+  // UX-02: selected component for drag feedback
+  const selectedComponent = currentPage?.components.find((c) => c.id === selectedComponentId) ?? null;
   const selectComponent = useEditorStore((s) => s.selectComponent);
   const updateComponentGeometry = useEditorStore((s) => s.updateComponentGeometry);
   const removeComponent = useEditorStore((s) => s.removeComponent);
@@ -408,10 +410,73 @@ export function CanvasStage() {
                   }}
                 />
               )}
+
+              {/* UX-02: Drag/Resize feedback — dimension label */}
+              {isSelected && dragState.mode && (
+                <div
+                  data-testid="drag-dimension-label"
+                  style={{
+                    position: 'absolute',
+                    bottom: -24,
+                    left: 0,
+                    background: '#2563eb',
+                    color: '#fff',
+                    fontSize: 10,
+                    fontWeight: 700,
+                    padding: '2px 6px',
+                    borderRadius: 3,
+                    whiteSpace: 'nowrap',
+                    pointerEvents: 'none',
+                    zIndex: 10,
+                  }}
+                >
+                  {Math.round(component.width)} × {Math.round(component.height)} · ({Math.round(component.x)}, {Math.round(component.y)})
+                </div>
+              )}
             </div>
           );
         })}
         </div>
+
+        {/* UX-02: Drag/Resize feedback — alignment guide lines overlay */}
+        {dragState.mode && selectedComponent && (
+          <div
+            data-testid="drag-guides-overlay"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: 'none',
+              zIndex: 5,
+            }}
+          >
+            {/* Center vertical guide */}
+            <div
+              data-testid="drag-guide-center-v"
+              style={{
+                position: 'absolute',
+                left: '50%',
+                top: 0,
+                bottom: 0,
+                width: 1,
+                background: 'rgba(37, 99, 235, 0.3)',
+                borderLeft: '1px dashed rgba(37, 99, 235, 0.5)',
+              }}
+            />
+            {/* Center horizontal guide */}
+            <div
+              data-testid="drag-guide-center-h"
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: 0,
+                right: 0,
+                height: 1,
+                background: 'rgba(37, 99, 235, 0.3)',
+                borderTop: '1px dashed rgba(37, 99, 235, 0.5)',
+              }}
+            />
+          </div>
+        )}
       </div>
     </main>
   );
