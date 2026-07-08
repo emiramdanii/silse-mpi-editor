@@ -24,6 +24,7 @@ import {
   resolveMotionProfile,
   type MotionPresetProfile,
 } from '../../core/style-packs/motion-preset';
+import { sanitizeCustomStyle } from '../../core/style/sanitize';
 
 // ---------------------------------------------------------------------------
 // Shared types
@@ -82,9 +83,10 @@ export function SceneHeader({
 }) {
   // PREMIUM-STYLE-AFTER-FOUNDATION-01: stronger hierarchy with accent line + letter spacing
   // MOTION-PRESET-01: entrance slide-up on header
-  // CUSTOM-STYLE-01: AI can override header + chip styles
-  const headerStyle = customStyle?.header as CSSProperties | undefined;
-  const chipStyle = customStyle?.chip as CSSProperties | undefined;
+  // CUSTOM-STYLE-01: AI can override header + chip styles (sanitized)
+  const safeStyle = sanitizeCustomStyle(customStyle);
+  const headerStyle = safeStyle?.header as CSSProperties | undefined;
+  const chipStyle = safeStyle?.chip as CSSProperties | undefined;
   return (
     <div className={`silse-block-header ${MOTION.entranceSlideUpClass} ${className}`.trim()} style={{ borderBottom: `2px solid ${chipColor || contract.palette.gold}33`, paddingBottom: 10, marginBottom: 4, ...headerStyle }}>
       {chipLabel && (
@@ -145,8 +147,9 @@ export function SceneChip({ contract, label, icon, color, className = '' }: Bloc
 export function ScenePanel({ contract, children, className = '', style, title, customStyle }: BlockProps & { title?: string }) {
   // PREMIUM-STYLE-AFTER-FOUNDATION-01: depth shadow from contract.card.shadow
   // MOTION-PRESET-01: entrance fade + hover lift (both reduced-motion safe via CSS)
-  // CUSTOM-STYLE-01: AI can override panel styles (radius, shadow, border, bg)
-  const panelStyle = customStyle?.panel as CSSProperties | undefined;
+  // CUSTOM-STYLE-01: AI can override panel styles (radius, shadow, border, bg) — sanitized
+  const safeStyle = sanitizeCustomStyle(customStyle);
+  const panelStyle = safeStyle?.panel as CSSProperties | undefined;
   return (
     <div className={`silse-block-panel ${MOTION.entranceFadeClass} ${MOTION.hoverLiftClass} ${className}`.trim()} style={{
       background: contract.card.background,
@@ -490,8 +493,9 @@ export function ActionButtonBlock({ contract, label, onClick, variant = 'primary
   label: string; onClick?: () => void; variant?: 'primary' | 'secondary' | 'gold';
 }) {
   const btn = contract.button[variant] || contract.button.primary;
-  // CUSTOM-STYLE-01: AI can override button styles (bg, radius, shadow)
-  const buttonStyle = customStyle?.button as CSSProperties | undefined;
+  // CUSTOM-STYLE-01: AI can override button styles (bg, radius, shadow) — sanitized
+  const safeStyle = sanitizeCustomStyle(customStyle);
+  const buttonStyle = safeStyle?.button as CSSProperties | undefined;
   return (
     <button
       className={`silse-block-action ${MOTION.hoverLiftClass} ${className}`.trim()}

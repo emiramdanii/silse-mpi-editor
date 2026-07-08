@@ -27,6 +27,10 @@ import { getCelebrationEffectForStylePack } from '../core/style-packs/celebratio
 import { buildMotionPresetCss } from '../core/style-packs/motion-preset';
 import { getPremiumExportProfileWithProjectStyle, type PremiumExportProfile } from '../core/style-packs/premium-export-profile';
 import { buildSceneRenderPlanForPage, type SceneRenderPlan } from '../core/scene-renderer';
+import { sanitizeCustomStyle, styleMapToCssString } from '../core/style/sanitize';
+// FASE 3: Used in renderSceneFromPlan for sanitizing AI customStyle
+void sanitizeCustomStyle;
+void styleMapToCssString;
 
 const CANVAS_WIDTH = 1280;
 const CANVAS_HEIGHT = 720;
@@ -1138,16 +1142,11 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
   // render scene dari SceneRenderPlan (bukan flat components[]).
   // PATCH B: Route by plan.sceneType first, then fall through to content.kind for generic slots.
   function renderSceneFromPlan(plan, page) {
-    // CUSTOM-STYLE-01: Apply customStyle.shell to scene element
+    // FASE 3: Sanitize customStyle before applying (filter dangerous props)
+    var safeCustomStyle = sanitizeCustomStyle(page ? page.customStyle : undefined);
     var customShellStyle = '';
-    if (page && page.customStyle && page.customStyle.shell) {
-      var shellStyle = page.customStyle.shell;
-      for (var prop in shellStyle) {
-        if (shellStyle.hasOwnProperty(prop)) {
-          var cssProp = prop.replace(/([A-Z])/g, '-$1').toLowerCase();
-          customShellStyle += cssProp + ':' + shellStyle[prop] + ';';
-        }
-      }
+    if (safeCustomStyle && safeCustomStyle.shell) {
+      customShellStyle = styleMapToCssString(safeCustomStyle.shell);
     }
 
     // PATCH B: Check sceneType for scene-level composers

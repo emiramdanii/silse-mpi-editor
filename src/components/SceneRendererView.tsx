@@ -119,25 +119,9 @@ export function SceneRendererView({
   onSceneReset,
   customStyle,
 }: SceneRendererViewProps) {
-  // CUSTOM-STYLE-01: Filter font guard — no external/decorative fonts
-  const filterCustomStyle = (style?: Record<string, Record<string, string>>) => {
-    if (!style) return undefined;
-    const filtered: Record<string, Record<string, string>> = {};
-    for (const [key, css] of Object.entries(style)) {
-      filtered[key] = { ...css };
-      // Remove fontFamily if it contains forbidden fonts
-      if (filtered[key].fontFamily) {
-        const forbidden = ['comic sans', 'fredoka', 'cursive', 'fantasy', 'poppins', 'inter', 'google'];
-        const lower = filtered[key].fontFamily!.toLowerCase();
-        if (forbidden.some((f) => lower.includes(f))) {
-          delete filtered[key].fontFamily;
-        }
-      }
-    }
-    return filtered;
-  };
-
-  const safeCustomStyle = filterCustomStyle(customStyle);
+  // CUSTOM-STYLE-01 + FASE 3: Sanitize customStyle — filter dangerous props + fonts
+  const { sanitizeCustomStyle } = require('../core/style/sanitize');
+  const safeCustomStyle = sanitizeCustomStyle(customStyle);
 
   // PATCH B: Route by sceneType first, not content.kind.
   const sceneComposer = getSceneComposer(plan.sceneType);
