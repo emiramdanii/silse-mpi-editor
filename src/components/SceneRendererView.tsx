@@ -793,6 +793,22 @@ function LearningMaterialContent({
 // FOUNDATION-FINAL-LOCK-01 — CoverHeroContent (cover scene)
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// EXPORT-CONTRAST-01: Contrast-aware text color for scenes with dark backgrounds.
+// Cover/closing scenes often use dark gradient backgrounds, but contract.palette.text
+// is dark (#1f2937). This helper returns white text when the scene role is known
+// to have a dark background (cover, closing), ensuring readability.
+// ---------------------------------------------------------------------------
+
+const DARK_BACKGROUND_ROLES = new Set(['cover', 'closing']);
+
+function getContrastAwareTextColor(role: string | undefined, defaultColor: string): string {
+  if (role && DARK_BACKGROUND_ROLES.has(role)) {
+    return '#ffffff';
+  }
+  return defaultColor;
+}
+
 function CoverHeroContent({
   slot,
   content,
@@ -804,6 +820,10 @@ function CoverHeroContent({
 }) {
   const ty = slot.resolvedStyle?.typography;
   const btn = slot.resolvedStyle?.button;
+  // EXPORT-CONTRAST-01: cover scenes use dark gradient backgrounds.
+  // Force white text for title/subtitle to ensure readability.
+  const titleColor = getContrastAwareTextColor('cover', ty?.color ?? contract.palette.text);
+  const subtitleColor = getContrastAwareTextColor('cover', contract.palette.mutedText);
 
   return (
     <div className="silse-cover-scene" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 32, boxSizing: 'border-box' }}>
@@ -818,13 +838,13 @@ function CoverHeroContent({
       )}
       <div className="silse-cover-title" style={{
         fontFamily: ty?.fontFamily, fontSize: ty?.fontSize, fontWeight: ty?.fontWeight,
-        color: ty?.color, lineHeight: ty?.lineHeight, letterSpacing: ty?.letterSpacing,
+        color: titleColor, lineHeight: ty?.lineHeight, letterSpacing: ty?.letterSpacing,
         textTransform: ty?.uppercase ? 'uppercase' : 'none', textAlign: 'center',
       }}>
         {content.heroTitle}
       </div>
       {content.heroSubtitle && (
-        <div className="silse-cover-subtitle" style={{ fontSize: 20, color: contract.palette.mutedText, textAlign: 'center' }}>
+        <div className="silse-cover-subtitle" style={{ fontSize: 20, color: subtitleColor, textAlign: 'center' }}>
           {content.heroSubtitle}
         </div>
       )}
@@ -874,20 +894,27 @@ function ClosingAwardContent({
   const surf = slot.resolvedStyle?.surface;
   const rw = slot.resolvedStyle?.reward;
   const btn = slot.resolvedStyle?.button;
+  // EXPORT-CONTRAST-01: closing scenes use dark gradient backgrounds.
+  // Force white text for achievement/summary/nextLearning (direct on dark bg).
+  // Reward box and reflection panel have their own light backgrounds, so text
+  // inside them stays dark (contract.palette.text).
+  const achievementColor = getContrastAwareTextColor('closing', contract.palette.text);
+  const summaryColor = getContrastAwareTextColor('closing', contract.palette.mutedText);
+  const nextLearningColor = getContrastAwareTextColor('closing', contract.palette.mutedText);
 
   return (
     <div className="silse-closing-scene" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 32, boxSizing: 'border-box' }}>
       {content.achievement && (
         <div className="silse-closing-achievement" style={{
           fontFamily: contract.typography.heroFont, fontSize: contract.typography.titleSize,
-          fontWeight: contract.typography.titleWeight, color: contract.palette.text,
+          fontWeight: contract.typography.titleWeight, color: achievementColor,
           textAlign: 'center', textTransform: contract.typography.uppercase ? 'uppercase' : 'none',
         }}>
           {content.achievement}
         </div>
       )}
       {content.summary && (
-        <div className="silse-closing-summary" style={{ fontSize: 18, color: contract.palette.mutedText, textAlign: 'center', maxWidth: 800 }}>
+        <div className="silse-closing-summary" style={{ fontSize: 18, color: summaryColor, textAlign: 'center', maxWidth: 800 }}>
           {content.summary}
         </div>
       )}
@@ -913,7 +940,7 @@ function ClosingAwardContent({
         </div>
       )}
       {content.nextLearning && (
-        <div className="silse-closing-next-learning" style={{ fontSize: 13, color: contract.palette.mutedText }}>
+        <div className="silse-closing-next-learning" style={{ fontSize: 13, color: nextLearningColor }}>
           {content.nextLearning}
         </div>
       )}

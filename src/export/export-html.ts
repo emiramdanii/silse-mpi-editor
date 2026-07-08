@@ -459,6 +459,19 @@ body {
   box-shadow: 0 26px 70px rgba(0,0,0,0.42), 0 8px 22px rgba(0,0,0,0.22);
   flex-shrink: 0;
   isolation: isolate;
+  /* EXPORT-RESPONSIVE-01: transform-origin for responsive scaling */
+  transform-origin: center center;
+}
+
+/* EXPORT-RESPONSIVE-01: wrapper to absorb scaled canvas layout space.
+   The canvas itself uses transform:scale() which doesn't affect layout box,
+   so we need the wrapper to reserve the scaled dimensions for proper centering. */
+.silse-canvas-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 
 /* Page-role-aware background gradients (PREMIUM-EXPORT-OVERHAUL-01) */
@@ -1731,11 +1744,12 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     }
     var title = document.createElement('div');
     title.className = 'silse-cover-title';
-    var titleCss = 'text-align:center;';
+    // EXPORT-CONTRAST-01: cover scenes use dark gradient backgrounds.
+    // Force white text for title/subtitle to ensure readability.
+    var titleCss = 'text-align:center;color:#ffffff;';
     if (ty.fontFamily) titleCss += 'font-family:' + ty.fontFamily + ';';
     if (ty.fontSize) titleCss += 'font-size:' + ty.fontSize + 'px;';
     if (ty.fontWeight) titleCss += 'font-weight:' + ty.fontWeight + ';';
-    if (ty.color) titleCss += 'color:' + ty.color + ';';
     if (ty.uppercase) titleCss += 'text-transform:uppercase;';
     title.style.cssText = titleCss;
     title.textContent = content.heroTitle || '';
@@ -1744,7 +1758,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.heroSubtitle) {
       var subtitle = document.createElement('div');
       subtitle.className = 'silse-cover-subtitle';
-      subtitle.style.cssText = 'font-size:20px;color:' + palette.mutedText + ';text-align:center;';
+      // EXPORT-CONTRAST-01: white subtitle for dark cover background
+      subtitle.style.cssText = 'font-size:20px;color:#ffffff;text-align:center;';
       subtitle.textContent = content.heroSubtitle;
       wrapper.appendChild(subtitle);
     }
@@ -1789,14 +1804,16 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.achievement) {
       var ach = document.createElement('div');
       ach.className = 'silse-closing-achievement';
-      ach.style.cssText = 'font-family:' + ty.heroFont + ';font-size:' + ty.titleSize + 'px;font-weight:' + ty.titleWeight + ';color:' + palette.text + ';text-align:center;';
+      // EXPORT-CONTRAST-01: closing scenes use dark gradient backgrounds. Force white text.
+      ach.style.cssText = 'font-family:' + ty.heroFont + ';font-size:' + ty.titleSize + 'px;font-weight:' + ty.titleWeight + ';color:#ffffff;text-align:center;';
       ach.textContent = content.achievement;
       wrapper.appendChild(ach);
     }
     if (content.summary) {
       var sum = document.createElement('div');
       sum.className = 'silse-closing-summary';
-      sum.style.cssText = 'font-size:18px;color:' + palette.mutedText + ';text-align:center;max-width:800px;';
+      // EXPORT-CONTRAST-01: white summary for dark closing background
+      sum.style.cssText = 'font-size:18px;color:#ffffff;text-align:center;max-width:800px;';
       sum.textContent = content.summary;
       wrapper.appendChild(sum);
     }
@@ -1835,7 +1852,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.nextLearning) {
       var nl = document.createElement('div');
       nl.className = 'silse-closing-next-learning';
-      nl.style.cssText = 'font-size:13px;color:' + palette.mutedText + ';';
+      // EXPORT-CONTRAST-01: white nextLearning for dark closing background
+      nl.style.cssText = 'font-size:13px;color:#ffffff;';
       nl.textContent = content.nextLearning;
       wrapper.appendChild(nl);
     }
@@ -4509,6 +4527,35 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       }
     });
   }
+
+  // EXPORT-RESPONSIVE-01: responsive scaling — fit 1280x720 canvas to viewport
+  // while maintaining 16:9 aspect ratio. Canvas uses CSS transform:scale()
+  // so it never distorts. Works on resize, orientation change, and zoom.
+  function fitCanvasToViewport() {
+    var canvas = document.getElementById('silse-canvas');
+    if (!canvas) return;
+    var viewport = canvas.parentElement; // .silse-viewport
+    if (!viewport) return;
+    var vw = viewport.clientWidth;
+    var vh = viewport.clientHeight;
+    // Available space (with padding from .silse-viewport)
+    var availW = vw - 28; // 14px padding each side
+    var availH = vh - 28;
+    // Scale = min of horizontal and vertical fit, capped at 1.0 (no upscale beyond 1280x720)
+    var scaleX = availW / ${CANVAS_WIDTH};
+    var scaleY = availH / ${CANVAS_HEIGHT};
+    var scale = Math.min(scaleX, scaleY, 1.0);
+    // Clamp to reasonable minimum (10% — anything smaller is unusable)
+    if (scale < 0.1) scale = 0.1;
+    canvas.style.transform = 'scale(' + scale + ')';
+    // Store scale for accessibility/inspection
+    canvas.setAttribute('data-scale', scale.toFixed(3));
+  }
+
+  // Initial fit + listen to resize
+  fitCanvasToViewport();
+  window.addEventListener('resize', fitCanvasToViewport);
+  window.addEventListener('orientationchange', fitCanvasToViewport);
 
   wireInteractions();
 })();
