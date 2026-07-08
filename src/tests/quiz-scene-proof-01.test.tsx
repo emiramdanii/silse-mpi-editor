@@ -26,7 +26,7 @@ import {
   renderScenePlan,
 } from '../core/scene-renderer';
 import { simpleProjectToMpiContainer } from '../core/mpi-container';
-import { getDesignContract } from '../core/mpi-design-contract';
+import { getDesignContract, getDesignContractWithProjectStyle } from '../core/mpi-design-contract';
 import { SceneRendererView } from '../components/SceneRendererView';
 import { normalizeBlueprint, aiJsonToMpiContainer, validateAiMpiJson } from '../core/ai-mpi-json';
 
@@ -197,7 +197,8 @@ describe('QUIZ-SCENE-PROOF-01 — SceneRendererView quiz scene', () => {
     const project = createSceneProofProject();
     const quizPage = getQuizPage(project);
     const plan = buildSceneRenderPlanForPage(project, quizPage)!;
-    const contract = getDesignContract(project.stylePackId);
+    // CONTRACT-ALIGNMENT-FIX: use resolved contract (with project.style overrides)
+    const contract = getDesignContractWithProjectStyle(project.stylePackId, project.style);
     const { container } = render(<SceneRendererView plan={plan} contract={contract} />);
     const answerCard = container.querySelector('.silse-quiz-answer-card') as HTMLElement;
     const expectedRadius = contract.quiz.answerCard?.radius ?? contract.card.radius;
@@ -220,7 +221,8 @@ describe('QUIZ-SCENE-PROOF-01 — SceneRendererView quiz scene', () => {
     const project = createSceneProofProject();
     const quizPage = getQuizPage(project);
     const plan = buildSceneRenderPlanForPage(project, quizPage)!;
-    const contract = getDesignContract(project.stylePackId);
+    // CONTRACT-ALIGNMENT-FIX: use resolved contract (with project.style overrides)
+    const contract = getDesignContractWithProjectStyle(project.stylePackId, project.style);
     const { container } = render(<SceneRendererView plan={plan} contract={contract} />);
     const panel = container.querySelector('.silse-quiz-question-focus') as HTMLElement;
     const expectedRadius = contract.quiz.questionPanel?.radius ?? contract.card.radius;

@@ -24,7 +24,7 @@ import {
   renderScenePlan,
 } from '../core/scene-renderer';
 import { simpleProjectToMpiContainer } from '../core/mpi-container';
-import { getDesignContract, DEFAULT_DESIGN_CONTRACT } from '../core/mpi-design-contract';
+import { getDesignContract, DEFAULT_DESIGN_CONTRACT, getDesignContractWithProjectStyle } from '../core/mpi-design-contract';
 import { SceneRendererView } from '../components/SceneRendererView';
 import { normalizeBlueprint, aiJsonToMpiContainer } from '../core/ai-mpi-json';
 
@@ -69,19 +69,25 @@ describe('DESIGN-CONTRACT-RENDER-PARITY-01 — render plan carries visual instru
     const project = createSceneProofProject();
     const gamePage = project.pages.find((p) => p.role === 'activity')!;
     const plan = buildSceneRenderPlanForPage(project, gamePage)!;
+    // CONTRACT-ALIGNMENT-FIX: buildSceneRenderPlanForPage uses getDesignContractWithProjectStyle
+    // (merges project.style.tokens overrides). Test must compare against the same resolved contract,
+    // not DEFAULT_DESIGN_CONTRACT (which is the 'default' pack without overrides).
+    const resolvedContract = getDesignContractWithProjectStyle(project.stylePackId, project.style);
     expect(plan.palette).toBeDefined();
-    expect(plan.palette.primary).toBe(DEFAULT_DESIGN_CONTRACT.palette.primary);
-    expect(plan.palette.gold).toBe(DEFAULT_DESIGN_CONTRACT.palette.gold);
-    expect(plan.palette.background).toBe(DEFAULT_DESIGN_CONTRACT.palette.background);
+    expect(plan.palette.primary).toBe(resolvedContract.palette.primary);
+    expect(plan.palette.gold).toBe(resolvedContract.palette.gold);
+    expect(plan.palette.background).toBe(resolvedContract.palette.background);
   });
 
   it('3. renderScenePlan membawa typography tokens (heroFont, titleSize, dll)', () => {
     const project = createSceneProofProject();
     const gamePage = project.pages.find((p) => p.role === 'activity')!;
     const plan = buildSceneRenderPlanForPage(project, gamePage)!;
+    // CONTRACT-ALIGNMENT-FIX: compare against resolved contract (with project.style overrides)
+    const resolvedContract = getDesignContractWithProjectStyle(project.stylePackId, project.style);
     expect(plan.typography).toBeDefined();
-    expect(plan.typography.heroFont).toBe(DEFAULT_DESIGN_CONTRACT.typography.heroFont);
-    expect(plan.typography.titleSize).toBe(DEFAULT_DESIGN_CONTRACT.typography.titleSize);
+    expect(plan.typography.heroFont).toBe(resolvedContract.typography.heroFont);
+    expect(plan.typography.titleSize).toBe(resolvedContract.typography.titleSize);
   });
 
   it('4. renderScenePlan membawa background (pattern, color)', () => {

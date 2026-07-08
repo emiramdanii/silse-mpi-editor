@@ -24,7 +24,7 @@ import {
   isPageSceneRenderable,
   buildSceneRenderPlanForPage,
 } from '../core/scene-renderer';
-import { getDesignContract } from '../core/mpi-design-contract';
+import { getDesignContract, getDesignContractWithProjectStyle } from '../core/mpi-design-contract';
 import { SceneRendererView } from '../components/SceneRendererView';
 import { normalizeBlueprint, aiJsonToMpiContainer, validateAiMpiJson } from '../core/ai-mpi-json';
 
@@ -128,7 +128,10 @@ describe('MATERIAL-SCENE-PROOF-01 — render plan', () => {
     const plan = buildSceneRenderPlanForPage(project, materialPage)!;
     const learningSlot = plan.slots.find((s) => s.content.kind === 'learning-material')!;
     const surf = learningSlot.resolvedStyle?.surface;
-    const contract = getDesignContract('modern-clean');
+    // CONTRACT-ALIGNMENT-FIX: buildSceneRenderPlanForPage uses getDesignContractWithProjectStyle
+    // which merges project.style.tokens (radius.medium=8 overrides card.radius=12). Test must
+    // compare against the same resolved contract.
+    const contract = getDesignContractWithProjectStyle(project.stylePackId, project.style);
     expect(surf?.background).toBe(contract.card.background);
     expect(surf?.radius).toBe(contract.card.radius);
     expect(surf?.padding).toBe(contract.card.padding);
@@ -182,7 +185,8 @@ describe('MATERIAL-SCENE-PROOF-01 — SceneRendererView learning scene', () => {
     const project = createSceneProofProject();
     const materialPage = getMaterialPage(project);
     const plan = buildSceneRenderPlanForPage(project, materialPage)!;
-    const contract = getDesignContract(project.stylePackId);
+    // CONTRACT-ALIGNMENT-FIX: use resolved contract (with project.style overrides)
+    const contract = getDesignContractWithProjectStyle(project.stylePackId, project.style);
     const { container } = render(<SceneRendererView plan={plan} contract={contract} />);
     const explanation = container.querySelector('.silse-learning-explanation') as HTMLElement;
     expect(explanation.style.borderRadius).toBe(contract.card.radius + 'px');
@@ -193,7 +197,8 @@ describe('MATERIAL-SCENE-PROOF-01 — SceneRendererView learning scene', () => {
     const project = createSceneProofProject();
     const materialPage = getMaterialPage(project);
     const plan = buildSceneRenderPlanForPage(project, materialPage)!;
-    const contract = getDesignContract(project.stylePackId);
+    // CONTRACT-ALIGNMENT-FIX: use resolved contract (with project.style overrides)
+    const contract = getDesignContractWithProjectStyle(project.stylePackId, project.style);
     const { container } = render(<SceneRendererView plan={plan} contract={contract} />);
     const exampleCard = container.querySelector('.silse-learning-example-card') as HTMLElement;
     expect(exampleCard.style.borderRadius).toBe(contract.card.radius + 'px');
