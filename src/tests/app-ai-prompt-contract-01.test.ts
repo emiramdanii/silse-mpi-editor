@@ -161,4 +161,27 @@ describe('APP-AI-PROMPT-CONTRACT-01 — prompt contract builder', () => {
     expect(c).toBeDefined();
     // Pure data, no external calls
   });
+
+  // CONTRACT-CONTRAST-GUIDE: panduan kontras teks-background untuk AI
+  it('23. prompt text includes contrast guidance for dark backgrounds', () => {
+    const text = buildMpiPromptText();
+    expect(text).toMatch(/kontras/i);
+    expect(text).toMatch(/GELAP.*PUTIH|gelap.*putih/i);
+  });
+
+  it('24. prompt text includes contrast guidance for light backgrounds', () => {
+    const text = buildMpiPromptText();
+    expect(text).toMatch(/TERANG.*GELAP|terang.*gelap/i);
+  });
+
+  it('25. prompt text includes WCAG AA contrast ratio reference', () => {
+    const text = buildMpiPromptText();
+    expect(text).toMatch(/4\.5:1|WCAG/i);
+  });
+
+  it('26. prompt text shows correct vs incorrect contrast example', () => {
+    const text = buildMpiPromptText();
+    expect(text).toMatch(/Contoh benar/i);
+    expect(text).toMatch(/Contoh salah/i);
+  });
 });

@@ -204,6 +204,16 @@ export function buildMpiPromptText(): string {
   lines.push('  }');
   lines.push('Batasan: fontFamily TIDAK boleh font dekoratif (Comic Sans, cursive) atau eksternal (Google Fonts).');
   lines.push('');
+  lines.push('PANDUAN KONTRAS (WAJIB DIIKUTI):');
+  lines.push('Teks harus terbaca di atas background. Aturan kontras:');
+  lines.push('  - Jika background GELAP (gradient gelap, #0e1c2f, #1a0a2e, dll): gunakan teks PUTIH (#ffffff) atau terang (#f8fafc).');
+  lines.push('  - Jika background TERANG (#ffffff, #f9fafb, #f8fafc, dll): gunakan teks GELAP (#1f2937, #0e1c2f) atau kontrak palet.');
+  lines.push('  - Jika background GRADIENT: pilih warna teks berdasarkan warna dominan (gelap→putih, terang→gelap).');
+  lines.push('  - Untuk header.fontSize besar (>= 36px), pastikan rasio kontras >= 4.5:1 (WCAG AA).');
+  lines.push('  - Jika ragu, gunakan putih (#ffffff) di background gelap, dan gelap (#1f2937) di background terang.');
+  lines.push('Contoh benar: shell.background gelap → header.color #ffffff, chip.color #ffffff, button.color #ffffff.');
+  lines.push('Contoh salah: shell.background gelap + header.color #1f2937 (tidak terbaca).');
+  lines.push('');
 
   lines.push('## OUTPUT FORMAT');
   lines.push('Outputkan JSON valid dengan struktur:');
