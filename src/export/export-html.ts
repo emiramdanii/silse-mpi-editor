@@ -28,6 +28,7 @@ import { buildMotionPresetCss } from '../core/style-packs/motion-preset';
 import { getPremiumExportProfileWithProjectStyle, type PremiumExportProfile } from '../core/style-packs/premium-export-profile';
 import { buildSceneRenderPlanForPage, type SceneRenderPlan } from '../core/scene-renderer';
 import { sanitizeCustomStyle, styleMapToCssString } from '../core/style/sanitize';
+import { getDesignContractWithProjectStyle } from '../core/mpi-design-contract';
 // FASE 3: Used in renderSceneFromPlan for sanitizing AI customStyle
 void sanitizeCustomStyle;
 void styleMapToCssString;
@@ -4578,11 +4579,57 @@ function escapeHTML(str: string): string {
 // ---------------------------------------------------------------------------
 // Main export function
 // ---------------------------------------------------------------------------
+// EXPORT-CONTRAST-02: Resolve profile gradients based on contract palette.
+// If contract.palette.background is dark, override material/quiz/default
+// gradients to dark variants so text (which is light on dark contracts)
+// remains readable. This fixes parity bug where golden-reference (dark bg,
+// light text) fell back to modern-clean profile (white bg) → unreadable.
+// ---------------------------------------------------------------------------
+
+function isColorDark(hex: string): boolean {
+  // Parse hex color and compute relative luminance
+  const m = hex.match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  if (!m) return false;
+  const r = parseInt(m[1], 16);
+  const g = parseInt(m[2], 16);
+  const b = parseInt(m[3], 16);
+  // Simple luminance: 0.299R + 0.587G + 0.114B (Rec. 601)
+  const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+  return lum < 128;
+}
+
+function resolveProfileForContract(
+  profile: PremiumExportProfile,
+  stylePackId: string | undefined,
+  projectStyle: ProjectStyle | undefined,
+): PremiumExportProfile {
+  const contract = getDesignContractWithProjectStyle(stylePackId, projectStyle);
+  const bg = contract.palette.background;
+  if (!isColorDark(bg)) return profile;
+
+  // Contract has dark background → override gradients to dark variants
+  // so light text (contract.palette.text) remains readable.
+  return {
+    ...profile,
+    darkStage: true,
+    gradients: {
+      ...profile.gradients,
+      // Dark gradients matching mission-dark profile (which is designed for dark bg)
+      defaultBg: `linear-gradient(180deg, ${contract.palette.background} 0%, ${contract.palette.surface} 100%)`,
+      materialBg: `linear-gradient(180deg, ${contract.palette.background} 0%, ${contract.palette.surface} 100%)`,
+      quizBg: `linear-gradient(135deg, ${contract.palette.surface} 0%, ${contract.palette.background} 100%)`,
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
 
 export function exportProjectToHtml(project: SimpleProject): string {
   const renderModel = buildExportRenderModel(project);
   const renderModelJson = serializeRenderModel(renderModel);
-  const profile = getPremiumExportProfileWithProjectStyle(project.stylePackId, project.style);
+  const baseProfile = getPremiumExportProfileWithProjectStyle(project.stylePackId, project.style);
+  // EXPORT-CONTRAST-02: override gradients if contract has dark background
+  const profile = resolveProfileForContract(baseProfile, project.stylePackId, project.style);
   const css = generateCSS(renderModel.cssVariables, profile);
   const animProfile = getMicroAnimationForStylePack(project.stylePackId);
   const celebrationProfile = getCelebrationEffectForStylePack(project.stylePackId);

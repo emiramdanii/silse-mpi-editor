@@ -417,6 +417,12 @@ export function getDesignContractWithProjectStyle(
       ...base.card,
       radius: radius?.medium ?? base.card.radius,
       padding: spacing?.cardPadding ?? base.card.padding,
+      // EXPORT-CONTRAST-02: override card.background + border agar konsisten dengan palette override.
+      // Sebelumnya, jika AI override palette.background ke putih, card.background tetap gelap
+      // (dari base contract seperti golden-reference). Hasilnya: text gelap di card gelap = unreadable.
+      // Sekarang card.background mengikuti palette.surface, card.border mengikuti palette.border.
+      background: colors?.surface ?? base.palette.surface,
+      border: `1px solid ${colors?.border ?? base.palette.border}`,
     },
   };
 }
