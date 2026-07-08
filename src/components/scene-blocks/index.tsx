@@ -219,14 +219,22 @@ export function ScenePanel({ contract, children, className = '', style, title, c
 // 5. SceneGrid
 // ---------------------------------------------------------------------------
 
-export function SceneGrid({ children, className = '', columns, gap = 10 }: BlockProps & {
+export function SceneGrid({ children, className = '', columns, gap = 10, customStyle }: BlockProps & {
   columns?: string; gap?: number;
 }) {
+  // LAYOUT-STYLE-01: customStyle.grid from prop or context (prop wins)
+  // AI can override gridTemplateColumns, gap, display via grid key.
+  // Sanitizer ensures only safe patterns pass (repeat(N,1fr), minmax 100-500px, gap 0-100px).
+  const ctxStyle = useCustomStyleFromContext();
+  const merged = customStyle ?? ctxStyle;
+  const safeStyle = sanitizeCustomStyle(merged);
+  const gridOverlay = safeStyle?.grid as CSSProperties | undefined;
   return (
     <div className={`silse-block-card ${className}`.trim()} style={{
       display: 'grid',
       gridTemplateColumns: columns || 'repeat(auto-fill, minmax(240px, 1fr))',
       gap,
+      ...gridOverlay,
     }}>
       {children}
     </div>

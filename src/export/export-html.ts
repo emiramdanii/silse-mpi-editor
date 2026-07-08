@@ -68,13 +68,15 @@ type ExportRenderPage = {
   customStyle?: Record<string, Record<string, string>>;
   /** DEEP-STYLE-INJECTION-01: Pre-computed CSS strings per element key.
    *  Browser JS appends these directly to el.style.cssText — no runtime
-   *  conversion needed. Pre-computed at build time via styleMapToCssString. */
+   *  conversion needed. Pre-computed at build time via styleMapToCssString.
+   *  LAYOUT-STYLE-01: added 'grid' key for SceneGrid layout overrides. */
   customStyleCss?: {
     shell?: string;
     header?: string;
     panel?: string;
     chip?: string;
     button?: string;
+    grid?: string;
   };
 };
 
@@ -171,6 +173,7 @@ function buildExportRenderModel(project: SimpleProject): ExportRenderModel {
       if (sanitized.panel) result.panel = styleMapToCssString(sanitized.panel);
       if (sanitized.chip) result.chip = styleMapToCssString(sanitized.chip);
       if (sanitized.button) result.button = styleMapToCssString(sanitized.button);
+      if (sanitized.grid) result.grid = styleMapToCssString(sanitized.grid);
       return Object.keys(result).length > 0 ? result : undefined;
     })(),
   }));
@@ -2144,6 +2147,21 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     return el;
   }
 
+  // LAYOUT-STYLE-01: exportGrid — grid container with customStyle.grid overlay.
+  // Mirrors in-app SceneGrid. AI can override gridTemplateColumns/gap/display
+  // via customStyle.grid (pre-sanitized at build time, applied via closure).
+  function exportGrid(plan, className, children, columns, gap) {
+    var el = document.createElement('div');
+    el.className = 'silse-block-card ' + (className || '');
+    el.style.cssText = 'display:grid;grid-template-columns:' + (columns || 'repeat(auto-fill, minmax(240px, 1fr))') + ';gap:' + (gap != null ? gap : 10) + 'px;';
+    // LAYOUT-STYLE-01: apply customStyle.grid (pre-computed CSS string)
+    if (_sceneCustomStyleCss && _sceneCustomStyleCss.grid) {
+      el.style.cssText += _sceneCustomStyleCss.grid;
+    }
+    for (var i = 0; i < children.length; i++) { if (children[i]) el.appendChild(children[i]); }
+    return el;
+  }
+
   // ===========================================================================
   // GOLDEN-REFERENCE-RENDER-P1 PATCH A: 7 Scene Export Renderers
   // ===========================================================================
@@ -2239,6 +2257,14 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       }
       bdDiv.innerHTML = bdHtml;
       children.push(bdEl);
+    }
+    // LAYOUT-STYLE-01: render reviewCards via exportGrid (parity with in-app SceneGrid)
+    if (content.reviewCards && content.reviewCards.length > 0) {
+      var reviewChildren = [];
+      for (var rc = 0; rc < content.reviewCards.length; rc++) {
+        reviewChildren.push(exportPanel(plan, content.reviewCards[rc].title, content.reviewCards[rc].body));
+      }
+      children.push(exportGrid(plan, 'silse-result-review-card', reviewChildren));
     }
     children.push(exportActionButton(plan, 'Lanjut ke Refleksi'));
     return exportShell(plan, 'silse-scene-result-summary', children);
