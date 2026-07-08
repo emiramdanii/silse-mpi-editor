@@ -424,5 +424,37 @@ export function getDesignContractWithProjectStyle(
       background: colors?.surface ?? base.palette.surface,
       border: `1px solid ${colors?.border ?? base.palette.border}`,
     },
+    // EXPORT-CONTRAST-03: override panel backgrounds agar konsisten dengan palette override.
+    // Bug: learning.explanationPanel, learning.studentActionPanel, quiz.questionPanel, quiz.answerCard
+    // punya hardcoded dark background dari base contract (golden-reference). Saat palette di-override
+    // ke light theme, panel backgrounds tetap dark → text gelap di panel gelap = unreadable.
+    // Fix: panel backgrounds mengikuti palette.surface, borders mengikuti palette.border.
+    learning: base.learning ? {
+      ...base.learning,
+      explanationPanel: base.learning.explanationPanel ? {
+        ...base.learning.explanationPanel,
+        background: colors?.surface ?? base.palette.surface,
+        border: `1px solid ${colors?.border ?? base.palette.border}`,
+      } : base.learning.explanationPanel,
+      studentActionPanel: base.learning.studentActionPanel ? {
+        ...base.learning.studentActionPanel,
+        background: colors?.surface ?? base.palette.surface,
+        border: `1px solid ${colors?.border ?? base.palette.border}`,
+        labelColor: colors?.mutedText ?? base.palette.mutedText,
+      } : base.learning.studentActionPanel,
+    } : base.learning,
+    quiz: base.quiz ? {
+      ...base.quiz,
+      questionPanel: base.quiz.questionPanel ? {
+        ...base.quiz.questionPanel,
+        background: colors?.surface ?? base.palette.surface,
+        border: `1px solid ${colors?.border ?? base.palette.border}`,
+      } : base.quiz.questionPanel,
+      answerCard: base.quiz.answerCard ? {
+        ...base.quiz.answerCard,
+        background: colors?.surface ?? base.palette.surface,
+        border: `1px solid ${colors?.border ?? base.palette.border}`,
+      } : base.quiz.answerCard,
+    } : base.quiz,
   };
 }
