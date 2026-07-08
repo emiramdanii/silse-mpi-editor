@@ -23,6 +23,8 @@
 import type { CSSProperties, ReactNode } from 'react';
 import type { SceneRenderPlan, SceneRenderSlot } from '../core/scene-renderer';
 import type { MpiDesignContract } from '../core/mpi-design-contract';
+import { sanitizeCustomStyle } from '../core/style/sanitize';
+import { CustomStyleProvider } from './scene-blocks';
 import {
   CurriculumGuideComposer, ObjectivesPathComposer, StarterReviewComposer,
   DiscussionSceneComposer, CaseAnalysisComposer, ResultSummaryComposer,
@@ -120,7 +122,9 @@ export function SceneRendererView({
   customStyle,
 }: SceneRendererViewProps) {
   // CUSTOM-STYLE-01 + FASE 3: Sanitize customStyle — filter dangerous props + fonts
-  const { sanitizeCustomStyle } = require('../core/style/sanitize');
+  // DEEP-STYLE-INJECTION-01: Pass raw customStyle via CustomStyleProvider context.
+  // Blocks (SceneShell/Header/Panel/Chip/Button) consume context + sanitize internally.
+  // Generic fallback path still uses safeCustomStyle.shell directly.
   const safeCustomStyle = sanitizeCustomStyle(customStyle);
 
   // PATCH B: Route by sceneType first, not content.kind.
@@ -129,12 +133,14 @@ export function SceneRendererView({
     const primarySlot = plan.slots[0];
     if (primarySlot) {
       const result = sceneComposer({ plan, contract, slot: primarySlot, interactive, onSlotClick, onGameAction, onQuizAnswer, selectedSlotId, sceneId: plan.sceneId, onScoreSet, onSceneComplete, onSceneReset });
-      // CUSTOM-STYLE-01: If customStyle has 'shell' key, wrap result with custom style
-      if (safeCustomStyle?.shell) {
+      // DEEP-STYLE-INJECTION-01: Wrap with CustomStyleProvider so all blocks inside
+      // the composer (SceneShell/Header/Panel/Chip/Button) can consume customStyle
+      // via context. This replaces the old wrapper-div hack that only applied shell.
+      if (customStyle) {
         return (
-          <div style={{ width: '100%', height: '100%', ...safeCustomStyle.shell }}>
+          <CustomStyleProvider value={customStyle}>
             {result}
-          </div>
+          </CustomStyleProvider>
         );
       }
       return result;

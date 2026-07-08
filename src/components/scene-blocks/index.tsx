@@ -17,7 +17,7 @@
  *     contract.palette, contract.typography, contract.card, contract.button, dll.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import type { MpiDesignContract } from '../../core/mpi-design-contract';
 import {
@@ -25,6 +25,7 @@ import {
   type MotionPresetProfile,
 } from '../../core/style-packs/motion-preset';
 import { sanitizeCustomStyle } from '../../core/style/sanitize';
+import type { CustomStyleMap } from '../../core/style/sanitize';
 
 // ---------------------------------------------------------------------------
 // Shared types
@@ -40,6 +41,36 @@ export type BlockProps = {
 };
 
 // ---------------------------------------------------------------------------
+// DEEP-STYLE-INJECTION-01: CustomStyleContext
+// React Context yang menyediakan customStyle ke semua block di dalam scene.
+// Composer TIDAK perlu forward customStyle eksplisit — block konsumsi context.
+// Prioritas: explicit customStyle prop > context value.
+// Context menerima RAW customStyle (belum di-sanitize). Block sanitize sendiri
+// (idempotent — sanitize dari sanitized input menghasilkan output yang sama).
+// ---------------------------------------------------------------------------
+
+const CustomStyleContext = createContext<CustomStyleMap | undefined>(undefined);
+
+export function CustomStyleProvider({
+  value,
+  children,
+}: {
+  value: CustomStyleMap | undefined;
+  children: ReactNode;
+}) {
+  return (
+    <CustomStyleContext.Provider value={value}>
+      {children}
+    </CustomStyleContext.Provider>
+  );
+}
+
+/** Ambil customStyle dari context. Block pakai ini sebagai fallback. */
+function useCustomStyleFromContext(): CustomStyleMap | undefined {
+  return useContext(CustomStyleContext);
+}
+
+// ---------------------------------------------------------------------------
 // MOTION-PRESET-01: shared motion profile
 // Resolved once at module load — stable class names, no per-render churn.
 // ---------------------------------------------------------------------------
@@ -50,10 +81,15 @@ const MOTION: MotionPresetProfile = resolveMotionProfile();
 // 1. SceneShell
 // ---------------------------------------------------------------------------
 
-export function SceneShell({ contract, children, className = '', style }: BlockProps) {
+export function SceneShell({ contract, children, className = '', style, customStyle }: BlockProps) {
   // PREMIUM-STYLE-AFTER-FOUNDATION-01: subtle radial gradient + depth via contract palette
   // TEMPLATE-PEDAGOGIS-READY-02 PATCH B: explicit overflow — vertical auto,
   // horizontal hidden. Content must NEVER cause horizontal scroll on 16:9.
+  // DEEP-STYLE-INJECTION-01: customStyle.shell from prop or context (prop wins)
+  const ctxStyle = useCustomStyleFromContext();
+  const merged = customStyle ?? ctxStyle;
+  const safeStyle = sanitizeCustomStyle(merged);
+  const shellStyle = safeStyle?.shell as CSSProperties | undefined;
   const bgColor = contract.palette.background;
   const surfaceColor = contract.palette.surface;
   return (
@@ -65,6 +101,7 @@ export function SceneShell({ contract, children, className = '', style }: BlockP
       color: contract.palette.text,
       fontFamily: contract.typography.bodyFont,
       ...style,
+      ...shellStyle,
     }}>
       {children}
     </div>
@@ -84,7 +121,10 @@ export function SceneHeader({
   // PREMIUM-STYLE-AFTER-FOUNDATION-01: stronger hierarchy with accent line + letter spacing
   // MOTION-PRESET-01: entrance slide-up on header
   // CUSTOM-STYLE-01: AI can override header + chip styles (sanitized)
-  const safeStyle = sanitizeCustomStyle(customStyle);
+  // DEEP-STYLE-INJECTION-01: customStyle from prop or context (prop wins)
+  const ctxStyle = useCustomStyleFromContext();
+  const merged = customStyle ?? ctxStyle;
+  const safeStyle = sanitizeCustomStyle(merged);
   const headerStyle = safeStyle?.header as CSSProperties | undefined;
   const chipStyle = safeStyle?.chip as CSSProperties | undefined;
   return (
@@ -123,9 +163,14 @@ export function SceneHeader({
 // 3. SceneChip
 // ---------------------------------------------------------------------------
 
-export function SceneChip({ contract, label, icon, color, className = '' }: BlockProps & {
+export function SceneChip({ contract, label, icon, color, className = '', customStyle }: BlockProps & {
   label: string; icon?: string; color?: string;
 }) {
+  // DEEP-STYLE-INJECTION-01: customStyle.chip from prop or context (prop wins)
+  const ctxStyle = useCustomStyleFromContext();
+  const merged = customStyle ?? ctxStyle;
+  const safeStyle = sanitizeCustomStyle(merged);
+  const chipOverlay = safeStyle?.chip as CSSProperties | undefined;
   return (
     <span className={`silse-block-chip ${MOTION.hoverLiftClass} ${className}`.trim()} style={{
       display: 'inline-flex', alignItems: 'center', gap: 5,
@@ -133,6 +178,7 @@ export function SceneChip({ contract, label, icon, color, className = '' }: Bloc
       background: color ? `${color}22` : contract.badge.background,
       color: color || contract.badge.color,
       fontSize: 12, fontWeight: 800,
+      ...chipOverlay,
     }}>
       {icon && <span>{icon}</span>}
       {label}
@@ -148,7 +194,10 @@ export function ScenePanel({ contract, children, className = '', style, title, c
   // PREMIUM-STYLE-AFTER-FOUNDATION-01: depth shadow from contract.card.shadow
   // MOTION-PRESET-01: entrance fade + hover lift (both reduced-motion safe via CSS)
   // CUSTOM-STYLE-01: AI can override panel styles (radius, shadow, border, bg) — sanitized
-  const safeStyle = sanitizeCustomStyle(customStyle);
+  // DEEP-STYLE-INJECTION-01: customStyle from prop or context (prop wins)
+  const ctxStyle = useCustomStyleFromContext();
+  const merged = customStyle ?? ctxStyle;
+  const safeStyle = sanitizeCustomStyle(merged);
   const panelStyle = safeStyle?.panel as CSSProperties | undefined;
   return (
     <div className={`silse-block-panel ${MOTION.entranceFadeClass} ${MOTION.hoverLiftClass} ${className}`.trim()} style={{
@@ -494,7 +543,10 @@ export function ActionButtonBlock({ contract, label, onClick, variant = 'primary
 }) {
   const btn = contract.button[variant] || contract.button.primary;
   // CUSTOM-STYLE-01: AI can override button styles (bg, radius, shadow) — sanitized
-  const safeStyle = sanitizeCustomStyle(customStyle);
+  // DEEP-STYLE-INJECTION-01: customStyle from prop or context (prop wins)
+  const ctxStyle = useCustomStyleFromContext();
+  const merged = customStyle ?? ctxStyle;
+  const safeStyle = sanitizeCustomStyle(merged);
   const buttonStyle = safeStyle?.button as CSSProperties | undefined;
   return (
     <button

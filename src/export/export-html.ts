@@ -64,8 +64,18 @@ type ExportRenderPage = {
   components: ExportRenderComponent[];
   /** FOUNDATION-INTEGRATION-01: scene render plan (jika page scene-renderable). Null = fallback ke legacy. */
   scenePlan?: SceneRenderPlan | null;
-  /** CUSTOM-STYLE-01: Custom CSS from AI */
+  /** CUSTOM-STYLE-01: Custom CSS from AI (pre-sanitized at build time, camelCase keys). */
   customStyle?: Record<string, Record<string, string>>;
+  /** DEEP-STYLE-INJECTION-01: Pre-computed CSS strings per element key.
+   *  Browser JS appends these directly to el.style.cssText — no runtime
+   *  conversion needed. Pre-computed at build time via styleMapToCssString. */
+  customStyleCss?: {
+    shell?: string;
+    header?: string;
+    panel?: string;
+    chip?: string;
+    button?: string;
+  };
 };
 
 type ExportRenderComponent = {
@@ -144,8 +154,25 @@ function buildExportRenderModel(project: SimpleProject): ExportRenderModel {
     ),
     // FOUNDATION-INTEGRATION-01: build scene render plan if page is scene-renderable
     scenePlan: buildSceneRenderPlanForPage(project, page),
-    // CUSTOM-STYLE-01: pass customStyle from page to render model
-    customStyle: page.sceneCustomStyle,
+    // CUSTOM-STYLE-01 + DEEP-STYLE-INJECTION-01: pre-sanitize customStyle at build time.
+    // Browser JS in generateJS() does NOT have access to the sanitize module, so we
+    // sanitize here and embed the safe result. Browser only applies strings.
+    customStyle: sanitizeCustomStyle(page.sceneCustomStyle),
+    // DEEP-STYLE-INJECTION-01: pre-compute CSS strings per element key at build time.
+    // Browser JS appends these directly to el.style.cssText — no runtime conversion.
+    // This makes the export HTML testable (CSS strings visible in static HTML) and
+    // reduces browser work.
+    customStyleCss: (() => {
+      const sanitized = sanitizeCustomStyle(page.sceneCustomStyle);
+      if (!sanitized) return undefined;
+      const result: NonNullable<ExportRenderPage['customStyleCss']> = {};
+      if (sanitized.shell) result.shell = styleMapToCssString(sanitized.shell);
+      if (sanitized.header) result.header = styleMapToCssString(sanitized.header);
+      if (sanitized.panel) result.panel = styleMapToCssString(sanitized.panel);
+      if (sanitized.chip) result.chip = styleMapToCssString(sanitized.chip);
+      if (sanitized.button) result.button = styleMapToCssString(sanitized.button);
+      return Object.keys(result).length > 0 ? result : undefined;
+    })(),
   }));
 
   // TEMPLATE-CLEANUP-01: teacher-guide is teacher-preparation content, NOT
@@ -1019,6 +1046,13 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
   var gameStates = {};
   var layeredInfoStates = {};
 
+  // DEEP-STYLE-INJECTION-01: per-scene customStyleCss (pre-computed CSS strings).
+  // Set by renderSceneFromPlan before calling render*Export functions.
+  // Read by exportShell/exportHeader/exportPanel/exportActionButton to apply
+  // per-element styles (shell/header/panel/chip/button) for editor↔export parity.
+  // CSS strings are pre-computed at build time — browser just appends them.
+  var _sceneCustomStyleCss = undefined;
+
   var canvas = document.getElementById('silse-canvas');
   var prevBtn = document.getElementById('silse-nav-prev');
   var nextBtn = document.getElementById('silse-nav-next');
@@ -1142,12 +1176,11 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
   // render scene dari SceneRenderPlan (bukan flat components[]).
   // PATCH B: Route by plan.sceneType first, then fall through to content.kind for generic slots.
   function renderSceneFromPlan(plan, page) {
-    // FASE 3: Sanitize customStyle before applying (filter dangerous props)
-    var safeCustomStyle = sanitizeCustomStyle(page ? page.customStyle : undefined);
-    var customShellStyle = '';
-    if (safeCustomStyle && safeCustomStyle.shell) {
-      customShellStyle = styleMapToCssString(safeCustomStyle.shell);
-    }
+    // DEEP-STYLE-INJECTION-01: customStyleCss is pre-computed at build time
+    // (in buildExportRenderModel). Set closure variable so exportShell,
+    // exportHeader, exportPanel, exportActionButton can read and apply
+    // per-element CSS strings (shell/header/panel/chip/button).
+    _sceneCustomStyleCss = page ? page.customStyleCss : undefined;
 
     // PATCH B: Check sceneType for scene-level composers
     var sceneTypeRenderers = {
@@ -1177,10 +1210,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (sceneTypeRenderers[plan.sceneType]) {
       var renderedEl = sceneTypeRenderers[plan.sceneType](plan);
       if (renderedEl) {
-        // CUSTOM-STYLE-01: Apply customStyle.shell to rendered scene element
-        if (customShellStyle && renderedEl.style) {
-          renderedEl.style.cssText += customShellStyle;
-        }
+        // DEEP-STYLE-INJECTION-01: shell is applied inside exportShell via
+        // _sceneCustomStyle closure. No redundant append needed here.
         return renderedEl;
       }
     }
@@ -1192,6 +1223,10 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     sceneEl.setAttribute('data-scene-type', plan.sceneType);
     var sceneBg = (plan.background && plan.background.gradient) ? plan.background.gradient : (plan.background ? plan.background.color : '#ffffff');
     sceneEl.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;z-index:2;background:' + sceneBg + ';';
+    // DEEP-STYLE-INJECTION-01: apply customStyle.shell to generic scene element
+    if (_sceneCustomStyleCss && _sceneCustomStyleCss.shell) {
+      sceneEl.style.cssText += _sceneCustomStyleCss.shell;
+    }
 
     for (var si = 0; si < plan.slots.length; si++) {
       var slot = plan.slots[si];
@@ -1825,6 +1860,10 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     // TEMPLATE-PEDAGOGIS-READY-02 PATCH B: explicit overflow — vertical auto,
     // horizontal hidden. Parity with the in-app SceneShell.
     el.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;gap:16px;padding:28px;box-sizing:border-box;overflow-x:hidden;overflow-y:auto;background:radial-gradient(ellipse at top,' + (p.surface || 'var(--silse-color-surface)') + ' 0%,' + (p.background || 'var(--silse-color-background)') + ' 70%);color:' + p.text + ';font-family:' + (ty.bodyFont || 'sans-serif') + ';';
+    // DEEP-STYLE-INJECTION-01: apply customStyle.shell (pre-computed CSS string)
+    if (_sceneCustomStyleCss && _sceneCustomStyleCss.shell) {
+      el.style.cssText += _sceneCustomStyleCss.shell;
+    }
     for (var i = 0; i < children.length; i++) { if (children[i]) el.appendChild(children[i]); }
     return el;
   }
@@ -1836,10 +1875,18 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     el.className = 'silse-block-header silse-motion-entrance-slide-up';
     // PREMIUM-STYLE-AFTER-FOUNDATION-01: accent border bottom + letter spacing
     el.style.cssText = 'border-bottom:2px solid ' + (chipColor || p.gold || 'var(--silse-color-gold, #f9c12e)') + '33;padding-bottom:10px;margin-bottom:4px;';
+    // DEEP-STYLE-INJECTION-01: apply customStyle.header (pre-computed CSS string)
+    if (_sceneCustomStyleCss && _sceneCustomStyleCss.header) {
+      el.style.cssText += _sceneCustomStyleCss.header;
+    }
     if (chipLabel) {
       var chip = document.createElement('div');
       chip.className = 'silse-block-chip';
       chip.style.cssText = 'display:inline-flex;align-items:center;gap:5px;padding:4px 14px;border-radius:999px;background:' + (chipColor ? chipColor + '22' : (p.gold ? p.gold + '22' : 'rgba(255,255,255,0.1)')) + ';color:' + (chipColor || p.gold || '#fff') + ';font-size:11px;font-weight:800;margin-bottom:10px;letter-spacing:0.05em;text-transform:uppercase;';
+      // DEEP-STYLE-INJECTION-01: apply customStyle.chip to chip element
+      if (_sceneCustomStyleCss && _sceneCustomStyleCss.chip) {
+        chip.style.cssText += _sceneCustomStyleCss.chip;
+      }
       chip.textContent = chipLabel;
       el.appendChild(chip);
     }
@@ -1863,6 +1910,10 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     el.className = 'silse-block-panel silse-motion-entrance-fade silse-motion-hover-lift ' + (className || '');
     // PREMIUM-STYLE-AFTER-FOUNDATION-01: depth shadow + uppercase title
     el.style.cssText = 'background:' + (p.surface || 'var(--silse-color-surface)') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';border-radius:16px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);';
+    // DEEP-STYLE-INJECTION-01: apply customStyle.panel (pre-computed CSS string)
+    if (_sceneCustomStyleCss && _sceneCustomStyleCss.panel) {
+      el.style.cssText += _sceneCustomStyleCss.panel;
+    }
     if (title) {
       var t = document.createElement('div');
       t.style.cssText = 'font-weight:800;font-size:13px;margin-bottom:8px;color:' + (p.mutedText || '#6e90b5') + ';text-transform:uppercase;letter-spacing:0.04em;';
@@ -2069,6 +2120,10 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var bg = p.gold || 'var(--silse-color-gold, #f9c12e)'; var color = p.primary || 'var(--silse-color-background)';
     if (variant === 'secondary') { bg = p.secondary || '#3ecfcf'; }
     el.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:999px;background:' + bg + ';color:' + color + ';border:none;font-weight:800;font-size:14px;cursor:pointer;';
+    // DEEP-STYLE-INJECTION-01: apply customStyle.button (pre-computed CSS string)
+    if (_sceneCustomStyleCss && _sceneCustomStyleCss.button) {
+      el.style.cssText += _sceneCustomStyleCss.button;
+    }
     el.textContent = label;
     return el;
   }

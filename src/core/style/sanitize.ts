@@ -49,6 +49,10 @@ const ALLOWED_CSS_PROPERTIES = new Set([
   'borderTopRightRadius',
   'borderBottomLeftRadius',
   'borderBottomRightRadius',
+  'borderTop',
+  'borderRight',
+  'borderBottom',
+  'borderLeft',
   // Shadow
   'boxShadow',
   'textShadow',
