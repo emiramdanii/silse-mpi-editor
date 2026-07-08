@@ -34,6 +34,8 @@ export type BlockProps = {
   children?: ReactNode;
   className?: string;
   style?: CSSProperties;
+  /** CUSTOM-STYLE-01: AI custom CSS overlay per element */
+  customStyle?: Record<string, Record<string, string>>;
 };
 
 // ---------------------------------------------------------------------------
@@ -73,15 +75,18 @@ export function SceneShell({ contract, children, className = '', style }: BlockP
 // ---------------------------------------------------------------------------
 
 export function SceneHeader({
-  contract, chipIcon, chipLabel, chipColor, title, subtitle, className = '',
+  contract, chipIcon, chipLabel, chipColor, title, subtitle, className = '', customStyle,
 }: BlockProps & {
   chipIcon?: string; chipLabel?: string; chipColor?: string;
   title: string; subtitle?: string;
 }) {
   // PREMIUM-STYLE-AFTER-FOUNDATION-01: stronger hierarchy with accent line + letter spacing
   // MOTION-PRESET-01: entrance slide-up on header
+  // CUSTOM-STYLE-01: AI can override header + chip styles
+  const headerStyle = customStyle?.header as CSSProperties | undefined;
+  const chipStyle = customStyle?.chip as CSSProperties | undefined;
   return (
-    <div className={`silse-block-header ${MOTION.entranceSlideUpClass} ${className}`.trim()} style={{ borderBottom: `2px solid ${chipColor || contract.palette.gold}33`, paddingBottom: 10, marginBottom: 4 }}>
+    <div className={`silse-block-header ${MOTION.entranceSlideUpClass} ${className}`.trim()} style={{ borderBottom: `2px solid ${chipColor || contract.palette.gold}33`, paddingBottom: 10, marginBottom: 4, ...headerStyle }}>
       {chipLabel && (
         <div className="silse-block-chip" style={{
           display: 'inline-flex', alignItems: 'center', gap: 5,
@@ -89,6 +94,7 @@ export function SceneHeader({
           background: chipColor ? `${chipColor}22` : contract.badge.background,
           color: chipColor || contract.badge.color,
           fontSize: 11, fontWeight: 800, marginBottom: 10, letterSpacing: '0.05em', textTransform: 'uppercase',
+          ...chipStyle,
         }}>
           {chipIcon && <span>{chipIcon}</span>}
           {chipLabel}
@@ -136,9 +142,11 @@ export function SceneChip({ contract, label, icon, color, className = '' }: Bloc
 // 4. ScenePanel
 // ---------------------------------------------------------------------------
 
-export function ScenePanel({ contract, children, className = '', style, title }: BlockProps & { title?: string }) {
+export function ScenePanel({ contract, children, className = '', style, title, customStyle }: BlockProps & { title?: string }) {
   // PREMIUM-STYLE-AFTER-FOUNDATION-01: depth shadow from contract.card.shadow
   // MOTION-PRESET-01: entrance fade + hover lift (both reduced-motion safe via CSS)
+  // CUSTOM-STYLE-01: AI can override panel styles (radius, shadow, border, bg)
+  const panelStyle = customStyle?.panel as CSSProperties | undefined;
   return (
     <div className={`silse-block-panel ${MOTION.entranceFadeClass} ${MOTION.hoverLiftClass} ${className}`.trim()} style={{
       background: contract.card.background,
@@ -147,6 +155,7 @@ export function ScenePanel({ contract, children, className = '', style, title }:
       padding: contract.card.padding,
       boxShadow: contract.card.shadow || '0 2px 8px rgba(0,0,0,0.08)',
       ...style,
+      ...panelStyle,
     }}>
       {title && <div style={{ fontWeight: 800, fontSize: 13, marginBottom: 8, color: contract.palette.mutedText, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{title}</div>}
       {children}
@@ -477,13 +486,12 @@ export function ReflectionPromptBlock({ contract, prompts, className = '' }: Blo
 // 15. ActionButtonBlock
 // ---------------------------------------------------------------------------
 
-export function ActionButtonBlock({ contract, label, onClick, variant = 'primary', className = '' }: BlockProps & {
+export function ActionButtonBlock({ contract, label, onClick, variant = 'primary', className = '', customStyle }: BlockProps & {
   label: string; onClick?: () => void; variant?: 'primary' | 'secondary' | 'gold';
 }) {
   const btn = contract.button[variant] || contract.button.primary;
-  // PREMIUM-STYLE-AFTER-FOUNDATION-01: shadow + hover lift
-  // MOTION-PRESET-01: replaced inline enter/leave handlers with class-based motion
-  // (silse-motion-hover-lift). respects prefers-reduced-motion via CSS.
+  // CUSTOM-STYLE-01: AI can override button styles (bg, radius, shadow)
+  const buttonStyle = customStyle?.button as CSSProperties | undefined;
   return (
     <button
       className={`silse-block-action ${MOTION.hoverLiftClass} ${className}`.trim()}
@@ -495,6 +503,7 @@ export function ActionButtonBlock({ contract, label, onClick, variant = 'primary
         border: 'none', fontWeight: btn.fontWeight, fontSize: 14,
         cursor: onClick ? 'pointer' : 'default',
         boxShadow: btn.shadow || '0 2px 6px rgba(0,0,0,0.12)',
+        ...buttonStyle,
       }}
     >
       {label}
