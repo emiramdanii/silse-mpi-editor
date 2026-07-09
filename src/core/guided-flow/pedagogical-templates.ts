@@ -68,11 +68,26 @@ function makePlacement(x = 72, y = 64, width = 1136, height = 544, zIndex = 2) {
 }
 
 function makeSlot(role: string, content: AiBlueprintSlotContent): AiBlueprintSlot {
+  // AUDIT 8.2: Deep-clone content to prevent singleton template mutation.
+  // PedagogicalTemplate.scenes[i].content is a module-level singleton
+  // (TEMPLATE_PPKN_NORMA etc.). If we pass it by reference, the downstream
+  // aiBlueprintToSimpleProject.mapSceneToPage stores the same reference as
+  // page.sceneContent. When the user edits page.sceneContent in the editor,
+  // they mutate the original template object — the next teacher who picks
+  // the same template gets the mutated content.
+  //
+  // structuredClone is available in all modern browsers and Node 17+.
+  // Fallback to JSON clone for older environments (loses Date, RegExp, etc.
+  // but content here is plain JSON-serializable).
+  const contentClone: AiBlueprintSlotContent =
+    typeof structuredClone === 'function'
+      ? structuredClone(content)
+      : JSON.parse(JSON.stringify(content));
   return {
     id: `slot-${createComponentId().slice(5)}`,
     role,
     placement: makePlacement(),
-    content,
+    content: contentClone,
   };
 }
 
@@ -891,7 +906,11 @@ export function templateToBlueprint(template: PedagogicalTemplate): AiMpiBluepri
       phase: template.phase,
       topic: template.topic,
       cp: template.cp,
-      objectives: template.objectives,
+      // AUDIT 8.2: deep-clone objectives to prevent singleton mutation
+      // (same reasoning as makeSlot content clone above).
+      objectives: typeof structuredClone === 'function'
+        ? structuredClone(template.objectives)
+        : JSON.parse(JSON.stringify(template.objectives)),
     },
     styleIntent: {
       styleId: 'golden-reference',
