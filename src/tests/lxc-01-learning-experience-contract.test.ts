@@ -29,7 +29,7 @@ import {
   getScoringComponents,
   getProgressComponents,
   getAppreciationTriggerComponents,
-} from '../core/learning-experience-contract';
+} from './fixtures/learning-experience-contract';
 import type { PageRole } from '../core/types';
 
 const REPO_ROOT = resolve(__dirname, '../..');
@@ -397,7 +397,7 @@ describe('LXC-01 — Contract documentation', () => {
 
 describe('LXC-01 — Contract file is pure spec (no runtime leak)', () => {
   it('learning-experience-contract.ts does NOT import runtime modules', () => {
-    const path = resolve(__dirname, '../core/learning-experience-contract.ts');
+    const path = resolve(__dirname, './fixtures/learning-experience-contract.ts');
     const content = readFileSync(path, 'utf8');
     // Allowed: type-only imports from ./types
     // Forbidden: factory, store, react, etc.
@@ -579,7 +579,7 @@ describe('LXC-01 Patch-1 — Contract Alignment (layered-info, interactive-start
     });
 
     it('no runtime implementation added (contract file still pure spec)', () => {
-      const path = resolve(__dirname, '../core/learning-experience-contract.ts');
+      const path = resolve(__dirname, './fixtures/learning-experience-contract.ts');
       const content = readFileSync(path, 'utf8');
       expect(content).not.toMatch(/from ['"]\.\.\/component-factory['"]/);
       expect(content).not.toMatch(/from ['"]react['"]/);

@@ -21,7 +21,7 @@ import {
   MIN_ALIGNMENT_SCORE,
   MIN_PPKN_ALIGNMENT_SCORE,
   MIN_LAYOUT_SCORE,
-} from '../core/guided-flow/generator-quality-report';
+} from './fixtures/generator-quality-report';
 import { checkLearningGoalAlignment } from '../core/learning-goal-alignment';
 import { validateLayoutQuality } from '../core/design/layout-quality';
 import { checkMpiStandard } from '../core/mpi-quality-check';

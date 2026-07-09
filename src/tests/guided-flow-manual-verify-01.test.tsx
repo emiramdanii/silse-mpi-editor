@@ -14,7 +14,7 @@ import { createSamplePpknProject } from '../core/sample-project';
 import { getTopicById, MPI_TOPIC_CATALOG } from '../core/guided-flow/mpi-topic-catalog';
 import { generateMpiFromTopic } from '../core/guided-flow/generate-mpi-from-topic';
 import { checkLearningGoalAlignment } from '../core/learning-goal-alignment';
-import { checkGeneratedTopicQuality } from '../core/guided-flow/generator-quality-report';
+import { checkGeneratedTopicQuality } from './fixtures/generator-quality-report';
 
 // =========================================================================
 // Helpers
