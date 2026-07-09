@@ -128,3 +128,17 @@ export {
   normalizeAiMpiJson as normalizeAiMpiJsonLegacy,
   AiMpiJsonError,
 } from './legacy/normalize-ai-mpi-json';
+
+/**
+ * @deprecated Legacy → Foundation adapter (UNIFY strategy, AUDIT 5.9.5).
+ *
+ * Converts a legacy AiMpiJson (flat pages+blocks) into a foundation
+ * AiMpiBlueprint (scenes+slots) so legacy input can flow through the
+ * foundation pipeline. Exposed here for tools that need to migrate
+ * legacy JSON files to the new schema.
+ *
+ * Production AI import path (AiImportDialog) does NOT need this — it
+ * already accepts foundation blueprints directly. This adapter is for
+ * migrating legacy sample files or old saved projects.
+ */
+export { legacyToBlueprint } from './legacy/legacy-to-blueprint-adapter';
