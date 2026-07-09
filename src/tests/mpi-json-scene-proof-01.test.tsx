@@ -18,12 +18,19 @@ import '@testing-library/jest-dom';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { SimpleProject, GameComponent } from '../core/types';
+// AUDIT 5.9.1-5.9.4: Legacy pipeline imports moved to ./legacy/ subfolder.
+// Production barrel no longer exports these. isGameMissionScene +
+// AI_MPI_SCENE_GAME_MISSION remain in the production barrel (scene-helpers.ts).
 import {
   normalizeAiMpiJson,
+} from '../core/ai-mpi-json/legacy/normalize-ai-mpi-json';
+import {
   aiMpiJsonToProject,
+} from '../core/ai-mpi-json/legacy/ai-mpi-json-to-project';
+import type { AiMpiJson } from '../core/ai-mpi-json/legacy/ai-mpi-json-schema';
+import {
   isGameMissionScene,
   AI_MPI_SCENE_GAME_MISSION,
-  type AiMpiJson,
 } from '../core/ai-mpi-json';
 import { GameComponentView } from '../components/GameComponentView';
 import type { ResolvedComponentStyle } from '../core/style/resolveComponentStyle';

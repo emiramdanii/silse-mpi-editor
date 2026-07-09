@@ -46,7 +46,7 @@
  *   itu akan dilakukan saat implementasi runtime, setelah kontrak di-ACCEPT.
  */
 
-import type { PageRole } from './types';
+import type { PageRole } from '../../core/types';
 
 // =========================================================================
 // Types

@@ -13,11 +13,11 @@
  *   Tidak menyimpan state, tidak menulis ke store, tidak memanggil UI.
  */
 
-import { getTopicById, MPI_TOPIC_CATALOG, type MpiTopic } from './mpi-topic-catalog';
-import { generateMpiFromTopic } from './generate-mpi-from-topic';
-import { checkLearningGoalAlignment } from '../learning-goal-alignment';
-import { validateLayoutQuality } from '../design/layout-quality';
-import { checkMpiStandard } from '../mpi-quality-check';
+import { getTopicById, MPI_TOPIC_CATALOG, type MpiTopic } from '../../core/guided-flow/mpi-topic-catalog';
+import { generateMpiFromTopic } from '../../core/guided-flow/generate-mpi-from-topic';
+import { checkLearningGoalAlignment } from '../../core/learning-goal-alignment';
+import { validateLayoutQuality } from '../../core/design/layout-quality';
+import { checkMpiStandard } from '../../core/mpi-quality-check';
 
 // ---------------------------------------------------------------------------
 // Types

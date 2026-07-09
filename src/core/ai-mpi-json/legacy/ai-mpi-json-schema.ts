@@ -1,7 +1,13 @@
 /**
  * AI MPI JSON Schema (MPI-JSON-SCENE-PROOF-01).
  *
- * Layer: core/ai-mpi-json (pure types, no React/DOM)
+ * @deprecated LEGACY schema — proof-of-concept from MPI-JSON-SCENE-PROOF-01.
+ * Production code uses the foundation schema in ../schema.ts (AiMpiBlueprint
+ * with scenes[] + slots[] structure). This file is kept only for the legacy
+ * test mpi-json-scene-proof-01.test.tsx and will be deleted once that test
+ * is ported to the new schema.
+ *
+ * Layer: core/ai-mpi-json/legacy (pure types, no React/DOM)
  * Allowed imports: none (only TypeScript built-ins)
  *
  * Kontrak (MPI-JSON-SCENE-PROOF-01):

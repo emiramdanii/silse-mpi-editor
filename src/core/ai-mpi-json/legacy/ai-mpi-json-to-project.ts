@@ -1,24 +1,34 @@
 /**
  * AI MPI JSON → SimpleProject Converter (MPI-JSON-SCENE-PROOF-01).
  *
- * Layer: core/ai-mpi-json (pure function, no React/DOM)
- * Allowed imports: ../types, ../ids, ../style-presets, ../style-packs/style-pack-registry, ./ai-mpi-json-schema
+ * @deprecated LEGACY converter — kept only for mpi-json-scene-proof-01.test.tsx.
  *
- * Kontrak (MPI-JSON-SCENE-PROOF-01):
- *   Pure function yang mengkonversi AiMpiJson (input AI) menjadi SimpleProject
- *   (format internal app). Preserve scene intent di metadata tambahan:
- *     - page.scene → disimpan di page metadata (tidak ada field baru di SimplePage,
- *       jadi scene di-encode di title atau lewat component sceneMetadata)
- *     - game block briefing/missionTarget/reward → disimpan di GameComponent.sceneMetadata
- *     - game actions → dipetakan ke missions + choices (1:1 mapping)
- *     - quiz correctChoiceId → dipetakan ke correctChoiceIndex (cari index)
+ * UNIFY STRATEGY (AUDIT 5.9.5):
+ *   Production code uses the foundation pipeline:
+ *     normalizeAiMpiJson (camelCase) → aiBlueprintToSimpleProject
  *
- *   Prinsip:
- *     - Pure function, no DOM, no React, no store.
- *     - Tidak mengubah schema SimpleProject (field wajib tetap, field optional baru).
- *     - Tidak mengubah data konten (text, jawaban, feedback) — hanya mapping.
- *     - Preserve scene intent agar renderer bisa tampilkan sebagai scene.
- *     - Unknown styleId → fallback modern-clean.
+ *   This legacy converter is kept for the legacy test, which asserts that
+ *   GameComponent.sceneMetadata is populated (the foundation converter does
+ *   NOT do this — it sets page.sceneContent instead, which is the new model).
+ *
+ *   To eliminate duplicate logic, this converter now DELEGATES to the
+ *   foundation pipeline for curriculum + style resolution via the
+ *   legacyToBlueprint() adapter. Only the page/component mapping (which
+ *   produces GameComponent with sceneMetadata) remains legacy-specific.
+ *
+ *   Flow:
+ *     legacy AiMpiJson
+ *       → legacyToBlueprint()           [adapter: legacy → foundation shape]
+ *       → aiBlueprintToSimpleProject()  [foundation converter: curriculum + style]
+ *       → post-process: replace pages with legacy-mapped pages (with sceneMetadata)
+ *
+ *   This way, curriculum + style logic has ONE source of truth (foundation
+ *   converter). Only the GameComponent.sceneMetadata population is legacy-only.
+ *
+ * Layer: core/ai-mpi-json/legacy (pure function, no React/DOM)
+ * Allowed imports: ../../types, ../../ids, ../../style-presets,
+ *                  ../../style-packs/style-pack-registry, ./ai-mpi-json-schema,
+ *                  ./legacy-to-blueprint-adapter, ../aiBlueprintToSimpleProject
  */
 
 import type {
@@ -33,13 +43,8 @@ import type {
   PageBackground,
   PageRole,
   LayoutId,
-  Curriculum,
-  CurriculumObjective,
-} from '../types';
-import { PROJECT_VERSION } from '../types';
-import { createProjectId, createPageId, createComponentId } from '../ids';
-import { resolveStylePackV1 } from '../style-packs/style-pack-registry';
-import { stylePackToProjectStyle } from '../style-presets';
+} from '../../types';
+import { createPageId, createComponentId } from '../../ids';
 import type {
   AiMpiJson,
   AiMpiPage,
@@ -50,6 +55,8 @@ import type {
   AiMpiCardBlock,
 } from './ai-mpi-json-schema';
 import { AI_MPI_SCENE_GAME_MISSION } from './ai-mpi-json-schema';
+import { legacyToBlueprint } from './legacy-to-blueprint-adapter';
+import { aiBlueprintToSimpleProject } from '../aiBlueprintToSimpleProject';
 
 // ---------------------------------------------------------------------------
 // Layout defaults per page role
@@ -235,27 +242,14 @@ function mapAiPageToSimplePage(page: AiMpiPage): SimplePage {
 // ---------------------------------------------------------------------------
 // Curriculum mapping
 // ---------------------------------------------------------------------------
-
-function mapMetadataToCurriculum(json: AiMpiJson): Curriculum | undefined {
-  const m = json.metadata;
-  if (!m.subject && !m.grade && !m.phase && !m.topic && !m.cp && !m.objectives) {
-    return undefined;
-  }
-
-  const objectives: CurriculumObjective[] = (m.objectives ?? []).map((text) => ({
-    id: createComponentId(),
-    text,
-  }));
-
-  return {
-    subject: m.subject ?? '',
-    grade: m.grade ?? '',
-    phase: m.phase ?? '',
-    topic: m.topic ?? '',
-    cp: m.cp,
-    objectives,
-  };
-}
+// UNIFY (AUDIT 5.9.5): Curriculum mapping delegated to foundation converter
+// via legacyToBlueprint() adapter. The legacy mapMetadataToCurriculum()
+// function is removed — its logic now lives in legacyToBlueprint() which
+// maps metadata.subject/grade/phase/topic/cp/objectives → curriculum.*,
+// and aiBlueprintToSimpleProject() builds the final Curriculum object.
+//
+// This eliminates the duplicate curriculum-mapping logic that previously
+// existed in both legacy and foundation converters.
 
 // ---------------------------------------------------------------------------
 // Main: aiMpiJsonToProject
@@ -265,28 +259,32 @@ function mapMetadataToCurriculum(json: AiMpiJson): Curriculum | undefined {
  * Convert AI MPI JSON to SimpleProject.
  * Preserve scene intent (briefing, missionTarget, reward) di GameComponent.sceneMetadata.
  *
+ * UNIFY STRATEGY (AUDIT 5.9.5):
+ *   Curriculum + style resolution delegated to foundation converter via
+ *   legacyToBlueprint() adapter. Only page/component mapping (which produces
+ *   GameComponent with sceneMetadata) remains legacy-specific.
+ *
  * Pure function — no DOM, no store, no side effects.
  * Unknown styleId → fallback modern-clean.
  */
 export function aiMpiJsonToProject(json: AiMpiJson): SimpleProject {
+  // UNIFY: delegate curriculum + style to foundation converter via adapter.
+  // The foundation converter produces a SimpleProject with the correct
+  // curriculum + stylePackId + style, but with pages built from sceneContent
+  // (the new model). We discard those pages and replace with legacy-mapped
+  // pages that produce GameComponent with sceneMetadata (the legacy model
+  // that mpi-json-scene-proof-01.test.tsx asserts).
+  const blueprint = legacyToBlueprint(json);
+  const foundationProject = aiBlueprintToSimpleProject(blueprint);
+
+  // Legacy page mapping (produces GameComponent with sceneMetadata).
   const pages = json.pages.map(mapAiPageToSimplePage);
-  const firstPageId = pages[0]?.id ?? '';
-
-  const stylePackId = json.styleId ?? 'modern-clean';
-  const stylePack = resolveStylePackV1(stylePackId);
-  const style = stylePackToProjectStyle(stylePack);
-
-  const curriculum = mapMetadataToCurriculum(json);
+  const firstPageId = pages[0]?.id ?? foundationProject.currentPageId;
 
   return {
-    id: createProjectId(),
-    title: json.metadata.title,
-    version: PROJECT_VERSION,
+    ...foundationProject, // picks up id, title, version, stylePackId, style, curriculum
     currentPageId: firstPageId,
-    stylePackId,
-    style,
-    curriculum,
-    pages,
+    pages, // legacy-mapped pages with sceneMetadata
   };
 }
 
