@@ -234,9 +234,9 @@ export function Topbar() {
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 4,
               padding: '3px 8px', borderRadius: 999,
-              background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(236,72,153,0.15))',
-              border: '1px solid rgba(139,92,246,0.3)',
-              fontSize: 11, fontWeight: 700, color: '#7c3aed',
+              background: 'var(--color-ai-style-bg-gradient)',
+              border: '1px solid var(--color-ai-style-border)',
+              fontSize: 11, fontWeight: 700, color: 'var(--color-ai-style)',
             }}
           >
             ✨ AI Style

@@ -48,14 +48,14 @@ export function VisualSection() {
           data-testid="ai-style-section"
           style={{
             marginBottom: 12, padding: 10, borderRadius: 8,
-            background: 'linear-gradient(135deg, rgba(139,92,246,0.08), rgba(236,72,153,0.08))',
-            border: '1px solid rgba(139,92,246,0.2)',
+            background: 'var(--color-ai-style-bg-gradient)',
+            border: '1px solid var(--color-ai-style-border)',
           }}
         >
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#7c3aed', marginBottom: 4 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-ai-style)', marginBottom: 4 }}>
             ✨ Style dari AI
           </div>
-          <p style={{ fontSize: 11, color: '#6b21a8', lineHeight: 1.5, margin: 0 }}>
+          <p style={{ fontSize: 11, color: 'var(--color-ai-style-strong)', lineHeight: 1.5, margin: 0 }}>
             Desain ini menggunakan kustomisasi warna/font dari AI.
             Pilih style pack di bawah untuk mengganti ke style bawaan.
           </p>
