@@ -1610,11 +1610,11 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     feedback.style.cssText = 'display:none;';
     wrapper.appendChild(feedback);
 
-    // Progress indicator
+    // Progress indicator — DO NOT leak correctChoiceId to student (audit 6.2)
     var progress = document.createElement('div');
     progress.className = 'silse-quiz-progress silse-premium-quiz-progress';
     progress.style.cssText = 'font-size:12px;font-weight:700;margin-top:auto;';
-    progress.textContent = content.choices.length + ' pilihan · Correct: ' + (content.correctChoiceId || '');
+    progress.textContent = content.choices.length + ' pilihan';
     wrapper.appendChild(progress);
 
     return wrapper;
@@ -2424,7 +2424,9 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
           var btn = document.createElement('button');
           btn.className = 'silse-classification-item silse-premium-game-item';
           btn.setAttribute('data-item-id', item.id);
-          btn.setAttribute('data-correct-cat', item.correctCategory);
+          // DO NOT set data-correct-cat here — it leaks the answer via DOM inspection.
+          // The wireInteractions handler reads correctCategory from a JS lookup map
+          // built from page data (audit 6.2).
           btn.textContent = item.label;
           btn.style.cssText = 'padding:10px 16px;border-radius:999px;font-size:14px;font-weight:700;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:' + (p.surface || 'var(--silse-color-surface)') + ';color:' + p.text + ';cursor:pointer;transition:all 0.18s ease;';
           pool.appendChild(btn);
@@ -2677,6 +2679,9 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var qEl = document.createElement('div');
       qEl.className = 'silse-diagnostic-question';
       qEl.setAttribute('data-question-id', questions[qi].id);
+      // Store correctChoiceId on parent question (not on each choice button) to prevent
+      // answer leak via DOM inspection (audit 6.2). Handler reads from parent.
+      qEl.setAttribute('data-correct-choice-id', String(questions[qi].correctChoiceId || ''));
       qEl.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.surface || 'var(--silse-color-surface)') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
       var qPrompt = document.createElement('div');
       qPrompt.style.cssText = 'font-size:14px;font-weight:700;color:' + (p.text || '#fff') + ';margin-bottom:8px;';
@@ -2688,7 +2693,6 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         cBtn.className = 'silse-diagnostic-choice';
         cBtn.setAttribute('data-question-id', questions[qi].id);
         cBtn.setAttribute('data-choice-id', choices[ci].id);
-        cBtn.setAttribute('data-correct', choices[ci].id === questions[qi].correctChoiceId ? 'true' : 'false');
         cBtn.style.cssText = 'display:block;text-align:left;margin-bottom:6px;padding:8px 12px;min-height:40px;border-radius:8px;cursor:pointer;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:transparent;color:' + (p.text || '#fff') + ';font-size:13px;font-weight:600;width:100%;';
         cBtn.textContent = choices[ci].text;
         qEl.appendChild(cBtn);
@@ -2741,6 +2745,9 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var pEl = document.createElement('div');
       pEl.className = 'silse-remedial-question';
       pEl.setAttribute('data-question-id', practice[pi].id);
+      // Store correctChoiceId on parent question (not on each choice button) to prevent
+      // answer leak via DOM inspection (audit 6.2). Handler reads from parent.
+      pEl.setAttribute('data-correct-choice-id', String(practice[pi].correctChoiceId || ''));
       pEl.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.surface || 'var(--silse-color-surface)') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
       var pPrompt = document.createElement('div');
       pPrompt.style.cssText = 'font-size:14px;font-weight:700;color:' + (p.text || '#fff') + ';margin-bottom:8px;';
@@ -2752,7 +2759,6 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         cBtn.className = 'silse-remedial-choice';
         cBtn.setAttribute('data-question-id', practice[pi].id);
         cBtn.setAttribute('data-choice-id', choices[ci].id);
-        cBtn.setAttribute('data-correct', choices[ci].id === practice[pi].correctChoiceId ? 'true' : 'false');
         cBtn.style.cssText = 'display:block;text-align:left;margin-bottom:6px;padding:8px 12px;min-height:40px;border-radius:8px;cursor:pointer;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:transparent;color:' + (p.text || '#fff') + ';font-size:13px;font-weight:600;width:100%;';
         cBtn.textContent = choices[ci].text;
         pEl.appendChild(cBtn);
@@ -4009,6 +4015,19 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     });
 
     // GOLDEN-REFERENCE-GAME-P1: Classification game interaction
+    // Build itemId → correctCategory lookup from page data (NOT from DOM attribute)
+    // to prevent answer leak via DOM inspection (audit 6.2).
+    var classificationCorrectMap = {};
+    for (var pi = 0; pi < pages.length; pi++) {
+      if (pages[pi].scenePlan && pages[pi].scenePlan.slots[0]) {
+        var piContent = pages[pi].scenePlan.slots[0].content;
+        if (piContent.kind === 'classification-game' && piContent.items) {
+          for (var ii = 0; ii < piContent.items.length; ii++) {
+            classificationCorrectMap[piContent.items[ii].id] = piContent.items[ii].correctCategory;
+          }
+        }
+      }
+    }
     var gameSelectedItem = null;
     var gameScore = 0;
     canvas.addEventListener('click', function(e) {
@@ -4033,9 +4052,11 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var col = e.target.closest('[data-category]');
       if (col && gameSelectedItem) {
         var category = col.getAttribute('data-category');
-        var correctCat = gameSelectedItem.getAttribute('data-correct-cat');
-        var isCorrect = correctCat === category;
+        // Read correctCategory from JS lookup map (NOT from DOM attribute)
+        // to prevent answer leak via DOM inspection (audit 6.2).
         var itemId = gameSelectedItem.getAttribute('data-item-id');
+        var correctCat = classificationCorrectMap[itemId];
+        var isCorrect = correctCat === category;
         var itemLabel = gameSelectedItem.textContent;
         // Place item in column
         var placedContainer = col.querySelector('.silse-classification-placed-items');
@@ -4354,15 +4375,17 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         var score = 0;
         for (var qi = 0; qi < diagQuestions.length; qi++) {
           var qId2 = diagQuestions[qi].getAttribute('data-question-id');
+          var correctChoiceId = diagQuestions[qi].getAttribute('data-correct-choice-id') || '';
           var choices = diagQuestions[qi].querySelectorAll('.silse-diagnostic-choice');
           for (var ci = 0; ci < choices.length; ci++) {
             choices[ci].disabled = true;
-            var isCorrect = choices[ci].getAttribute('data-correct') === 'true';
-            var isSelected = diagAnswers[qId2] === choices[ci].getAttribute('data-choice-id');
+            var choiceId = choices[ci].getAttribute('data-choice-id');
+            var isCorrect = choiceId === correctChoiceId;
+            var isSelected = diagAnswers[qId2] === choiceId;
             if (isCorrect) { choices[ci].style.borderColor = '#34d399'; choices[ci].style.background = 'rgba(52,211,153,0.11)'; choices[ci].textContent += ' ✓'; }
             if (isSelected && !isCorrect) { choices[ci].style.borderColor = '#ff6b6b'; choices[ci].style.background = 'rgba(255,107,107,0.11)'; choices[ci].textContent += ' ✗'; }
           }
-          if (diagAnswers[qId2] && diagQuestions[qi].querySelector('[data-correct="true"]') && diagAnswers[qId2] === diagQuestions[qi].querySelector('[data-correct="true"]').getAttribute('data-choice-id')) score++;
+          if (diagAnswers[qId2] && diagAnswers[qId2] === correctChoiceId) score++;
         }
         // PATCH A: Show score (safe DOM, no innerHTML)
         var result = canvas.querySelector('.silse-diagnostic-result');
@@ -4428,7 +4451,11 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       if (remChoice) {
         var qId = remChoice.getAttribute('data-question-id');
         if (remChoice.disabled) return;
-        var isCorrect = remChoice.getAttribute('data-correct') === 'true';
+        // Read correctChoiceId from parent question element (not from choice button)
+        // to prevent answer leak via DOM inspection (audit 6.2).
+        var remQuestion = remChoice.closest('.silse-remedial-question');
+        var remCorrectId = remQuestion ? (remQuestion.getAttribute('data-correct-choice-id') || '') : '';
+        var isCorrect = remChoice.getAttribute('data-choice-id') === remCorrectId;
         remChoice.style.borderColor = isCorrect ? '#34d399' : '#ff6b6b';
         remChoice.style.background = isCorrect ? 'rgba(52,211,153,0.11)' : 'rgba(255,107,107,0.11)';
         var siblings = remChoice.parentNode.querySelectorAll('.silse-remedial-choice');
