@@ -34,7 +34,7 @@ export function ImageComponentView({
         height: '100%',
         ...resolvedStyle.inlineStyle,
         boxSizing: 'border-box',
-        outline: selected ? '2px solid var(--silse-color-primary, #2563eb)' : 'none',
+        outline: selected ? '2px solid var(--color-accent)' : 'none',
         outlineOffset: 2,
         cursor: 'pointer',
       }
@@ -46,7 +46,7 @@ export function ImageComponentView({
         height: component.height,
         ...resolvedStyle.inlineStyle,
         boxSizing: 'border-box',
-        outline: selected ? '2px solid var(--silse-color-primary, #2563eb)' : 'none',
+        outline: selected ? '2px solid var(--color-accent)' : 'none',
         outlineOffset: 2,
         cursor: 'pointer',
       };

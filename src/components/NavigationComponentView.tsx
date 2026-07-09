@@ -44,7 +44,7 @@ export function NavigationComponentView({
         justifyContent: 'center',
         cursor: onNavigate ? 'pointer' : 'default',
         userSelect: 'none',
-        boxShadow: selected ? '0 0 0 2px var(--silse-color-primary, #2563eb)' : undefined,
+        boxShadow: selected ? '0 0 0 2px var(--color-accent)' : undefined,
       }
     : {
         position: 'absolute',
@@ -58,7 +58,7 @@ export function NavigationComponentView({
         justifyContent: 'center',
         cursor: onNavigate ? 'pointer' : 'default',
         userSelect: 'none',
-        boxShadow: selected ? '0 0 0 2px var(--silse-color-primary, #2563eb)' : undefined,
+        boxShadow: selected ? '0 0 0 2px var(--color-accent)' : undefined,
       };
 
   const interactions = resolvedStyle.interactions;

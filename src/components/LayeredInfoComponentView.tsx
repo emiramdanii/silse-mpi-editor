@@ -270,7 +270,7 @@ function TabsView({
         style={{
           display: 'flex',
           gap: 4,
-          borderBottom: '2px solid #e3ddcd',
+          borderBottom: '2px solid var(--color-border)',
           flexWrap: 'wrap',
         }}
       >
@@ -287,7 +287,7 @@ function TabsView({
                 fontSize: 12,
                 fontWeight: isActive ? 600 : 500,
                 border: 'none',
-                borderBottom: isActive ? '2px solid #2563eb' : '2px solid transparent',
+                borderBottom: isActive ? '2px solid var(--color-accent)' : '2px solid transparent',
                 background: isActive ? 'var(--silse-color-primary, var(--color-accent-soft))' : 'transparent',
                 color: isActive ? 'var(--silse-color-primary, var(--color-accent))' : 'var(--silse-color-text, var(--color-text-soft))',
                 cursor: interactive ? 'pointer' : 'default',
@@ -479,7 +479,7 @@ function CardGridView({
           overflowWrap: 'anywhere',
           background: 'var(--silse-color-surface, var(--color-panel-soft))',
           borderRadius: 6,
-          border: '1px solid #e3ddcd',
+          border: '1px solid var(--color-border)',
         }}
       >
         {layers[safeActive]?.body}
