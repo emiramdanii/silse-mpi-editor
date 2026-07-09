@@ -75,6 +75,20 @@ import { createComponentId } from '../../ids';
 // ---------------------------------------------------------------------------
 // Role + scene-type mapping (legacy → foundation)
 // ---------------------------------------------------------------------------
+//
+// AUDIT 5.9.5 — Catatan 2 (magic mapping sync):
+// The ROLE_MAP, SCENE_TYPE_FROM_ROLE, and the scene-identifier branches in
+// mapSceneType() are HARDCODED one-to-one mappings. They must stay in sync
+// with:
+//   - src/core/ai-mpi-json/schema.ts → AiBlueprintSceneRole, AiBlueprintSceneType
+//   - src/core/mpi-container/universal-scene-taxonomy.ts → ALL_SCENE_TYPES
+//   - src/core/ai-mpi-json/legacy/ai-mpi-json-schema.ts → AI_MPI_SCENE_* constants
+//
+// If a new scene type is added to foundation schema, add a mapping here too.
+// If a legacy scene identifier is renamed, update mapSceneType() switch.
+// Currently 5 legacy scene identifiers + 6 legacy roles — manageable inline.
+// If this grows past ~15 entries, refactor to a configurable mapping table
+// loaded from a JSON/TS data file (not hardcoded switch statements).
 
 /**
  * Map legacy page.role → foundation scene.role.

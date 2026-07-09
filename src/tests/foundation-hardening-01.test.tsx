@@ -14,7 +14,7 @@ import {
 import { buildMpiPromptContract, buildMpiPromptText } from '../core/ai-prompt-contract';
 import { createSceneProofProject } from '../core/scene-proof-project';
 import { buildSceneRenderPlanForPage } from '../core/scene-renderer';
-import { getDesignContract } from '../core/mpi-design-contract';
+import { getDesignContract, getDesignContractWithProjectStyle } from '../core/mpi-design-contract';
 import { SceneRendererView } from '../components/SceneRendererView';
 import { exportProjectToHtml } from '../export/export-html';
 
@@ -168,8 +168,15 @@ describe('FOUNDATION-HARDENING-01 — design contract tokens (no hardcoded)', ()
     const project = createSceneProofProject();
     const materialPage = project.pages.find((p) => p.role === 'material')!;
     const plan = buildSceneRenderPlanForPage(project, materialPage)!;
-    const contract = getDesignContract(project.stylePackId);
-    // Verify plan.learning.studentActionPanel.border comes from contract
+    // EXPORT-CONTRAST-03 (commit 4fbe18a): getDesignContractWithProjectStyle overrides
+    // panel borders to '1px solid palette.border' for consistency across themes.
+    // The plan is built with getDesignContractWithProjectStyle (see sceneDetection.ts:133),
+    // so the test must compare against the SAME contract fn — not getDesignContract plain.
+    // Previously this test used getDesignContract(project.stylePackId) which returned the
+    // un-overridden '2px solid #1d3557' from DEFAULT_DESIGN_CONTRACT, causing a mismatch
+    // with the plan's overridden '1px solid #d1d5db'.
+    const contract = getDesignContractWithProjectStyle(project.stylePackId, project.style);
+    // Verify plan.learning.studentActionPanel.border comes from contract (with style override)
     expect(plan.learning?.studentActionPanel.border).toBe(contract.learning.studentActionPanel?.border);
     // Render and verify student action element exists
     const { container } = render(<SceneRendererView plan={plan} contract={contract} />);
