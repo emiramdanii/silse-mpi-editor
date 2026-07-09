@@ -396,22 +396,27 @@ body {
 
 #silse-toolbar {
   position: absolute;
-  top: 18px;
-  left: 32px;
-  right: 32px;
-  height: 38px;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 50;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  padding: 0 6px 0 14px;
-  color: var(--silse-stage-text);
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.28), 0 2px 6px rgba(0,0,0,0.16);
+  color: #f1f5f9;
   font-size: 13px;
   font-weight: 800;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
-#silse-toolbar > * { pointer-events: auto; }
 #silse-toolbar .silse-toolbar-side { display: inline-flex; align-items: center; gap: 8px; }
 
 #silse-toolbar #silse-page-info {
@@ -421,19 +426,18 @@ body {
   padding: 6px 14px;
   border-radius: 999px;
   background: rgba(255,255,255,0.10);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.14);
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.3px;
+  color: #f1f5f9;
 }
 
 #silse-toolbar button {
-  background: rgba(255,255,255,0.12);
-  color: var(--silse-stage-text);
-  border: 1px solid rgba(255,255,255,0.22);
-  padding: 7px 16px;
+  background: rgba(255,255,255,0.14);
+  color: #f1f5f9;
+  border: 1px solid rgba(255,255,255,0.20);
+  padding: 8px 18px;
   border-radius: 999px;
   cursor: pointer;
   font-size: 12px;
@@ -442,11 +446,12 @@ body {
   transition: transform 0.18s ease, background 0.18s ease;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
+  white-space: nowrap;
 }
 
 #silse-toolbar button:disabled { opacity: 0.4; cursor: not-allowed; }
 #silse-toolbar button:hover:not(:disabled) {
-  background: rgba(255,255,255,0.22);
+  background: rgba(255,255,255,0.26);
   transform: translateY(-1px);
 }
 
@@ -1776,8 +1781,15 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.primaryAction) {
       var pa = document.createElement('button');
       pa.className = 'silse-cover-primary-action';
+      pa.type = 'button';
       pa.style.cssText = 'padding:' + (btn.padding ? (btn.padding.top || 10) : 10) + 'px ' + (btn.padding ? (btn.padding.right || 20) : 20) + 'px;border-radius:' + (btn.radius || 8) + 'px;background:' + (btn.background || palette.primary) + ';color:' + (btn.color || '#fff') + ';border:0;font-weight:' + (btn.fontWeight || 600) + ';font-size:16px;cursor:pointer;margin-top:8px;';
       pa.textContent = content.primaryAction.label;
+      pa.setAttribute('aria-label', content.primaryAction.label + ', pergi ke halaman berikutnya');
+      // BUG-NAV-01 FIX: wire primaryAction ke navigate('next') — sebelumnya tombol
+      // di-create tapi tidak di-wire ke event handler, sehingga "Mulai Pembelajaran"
+      // tidak berfungsi saat di-klik.
+      var paAction = content.primaryAction.action || 'next';
+      pa.addEventListener('click', function() { navigate(paAction); });
       wrapper.appendChild(pa);
     }
     if (content.visualAnchor) {
@@ -1861,8 +1873,14 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.finalAction) {
       var fa = document.createElement('button');
       fa.className = 'silse-closing-final-action';
+      fa.type = 'button';
       fa.style.cssText = 'padding:' + (btn.padding ? (btn.padding.top || 10) : 10) + 'px ' + (btn.padding ? (btn.padding.right || 20) : 20) + 'px;border-radius:' + (btn.radius || 8) + 'px;background:' + (btn.background || palette.primary) + ';color:' + (btn.color || '#fff') + ';border:0;font-weight:' + (btn.fontWeight || 600) + ';font-size:16px;cursor:pointer;margin-top:8px;';
       fa.textContent = content.finalAction.label;
+      fa.setAttribute('aria-label', content.finalAction.label);
+      // BUG-NAV-01 FIX: wire finalAction. Default action 'prev' (kembali ke awal)
+      // karena closing adalah halaman terakhir. Jika action spesifik diset, gunakan itu.
+      var faAction = content.finalAction.action || 'prev';
+      fa.addEventListener('click', function() { navigate(faAction); });
       wrapper.appendChild(fa);
     }
     return wrapper;
