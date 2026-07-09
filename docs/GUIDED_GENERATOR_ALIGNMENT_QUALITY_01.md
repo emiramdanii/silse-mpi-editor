@@ -97,7 +97,8 @@ Menjamin semua output guided generator memenuhi kontrak visual, layout, dan alig
 
 Yang ditambahkan HANYA:
 
-1. **NEW helper** `src/core/guided-flow/generator-quality-report.ts` — pure core helper untuk mengukur kualitas output generator. Fungsi: `checkGeneratedTopicQuality(topic)`, `checkAllGeneratedTopicQuality()`, `checkGeneratedTopicQualityById(id)`. Mengekspor konstanta threshold: `MIN_ALIGNMENT_SCORE=80`, `MIN_PPKN_ALIGNMENT_SCORE=90`, `MIN_LAYOUT_SCORE=80`, `CRITICAL_ISSUE_CODES`.
+1. **NEW helper** `src/tests/fixtures/generator-quality-report.ts` — pure helper untuk mengukur kualitas output generator. Fungsi: `checkGeneratedTopicQuality(topic)`, `checkAllGeneratedTopicQuality()`, `checkGeneratedTopicQualityById(id)`. Mengekspor konstanta threshold: `MIN_ALIGNMENT_SCORE=80`, `MIN_PPKN_ALIGNMENT_SCORE=90`, `MIN_LAYOUT_SCORE=80`, `CRITICAL_ISSUE_CODES`.
+   > **Note (AUDIT 5.9.6):** File ini dipindahkan dari `src/core/guided-flow/` ke `src/tests/fixtures/` karena hanya digunakan oleh test files, bukan production code. Lihat commit `1f3e8a5`.
 2. **NEW test guard** `src/tests/guided-generator-alignment-quality-01.test.ts` — 21 test (15 mandatory + 6 helper).
 3. **NEW measurement script** `scripts/audit-guided-topics.ts` — script untuk re-audit semua topic kapan saja.
 
