@@ -269,3 +269,153 @@ export interface MergeStylesResult {
  *   - Hanya var(--token) tanpa fallback, karena :root sudah define semua
  *   - Verifikasi dengan grep: rg "var\(--[a-z-]+,\s*#" harus return 0
  */
+
+// ---------------------------------------------------------------------------
+// DEFAULT THEME — concrete values for the default (modern-clean) style pack
+// ---------------------------------------------------------------------------
+
+/**
+ * Default theme values — concrete hex/rgba for each token.
+ *
+ * Tujuan: Memberikan nilai konkret yang langsung bisa dipakai tim untuk
+ * mengisi `:root` di styles.css dan export-html.ts. Nilai diambil dari:
+ *   - Existing :root tokens (styles.css:7-50) untuk token yang sudah ada
+ *   - DEFAULT_DESIGN_CONTRACT (defaultDesignContract.ts) untuk palette
+ *   - Audit SILSE_FASE1_COLOR_AUDIT.md untuk token baru (P0-P3)
+ *
+ * Saat Fase 1 dieksekusi, nilai ini di-copy ke styles.css :root block.
+ * Style pack lain (soft-classroom, mission-dark) override subset yang relevan.
+ */
+export const DEFAULT_THEME_COLOR: ColorTokens = {
+  // Surface (existing)
+  bg: '#f8f6f1',
+  panel: '#ffffff',
+  panelSoft: '#fbfaf7',
+  border: '#e3ddcd',
+  borderStrong: '#c8be9f',
+
+  // Text (existing)
+  text: '#1f2533',
+  textSoft: '#4a5160',
+  muted: '#8a8775',
+  textOnDark: '#ffffff',          // NEW — text pada bg gelap (cover, closing, dark dialog)
+  textOnAccent: '#ffffff',        // NEW — text pada accent bg (button primary)
+
+  // Brand (existing)
+  accent: '#1e5b8f',
+  accentHover: '#184b76',
+  accentSoft: '#e8f0f8',
+
+  // States (existing + NEW strong/deep variants)
+  success: '#2f7d4f',
+  successSoft: '#e1f3e8',
+  successStrong: '#16a34a',       // NEW — Tailwind green-600 (feedback correct)
+  successDeep: '#166534',         // NEW — Tailwind green-800 (feedback correct text)
+  warning: '#b9740e',
+  warningSoft: '#fdf3e1',
+  warningStrong: '#f59e0b',       // NEW — Tailwind amber-500 (status chip)
+  warningDeep: '#92400e',         // NEW — Tailwind amber-800 (warning text)
+  danger: '#c0392b',
+  dangerSoft: '#fbe6e3',
+  dangerStrong: '#dc2626',        // NEW — Tailwind red-600 (feedback wrong)
+  dangerDeep: '#991b1b',          // NEW — Tailwind red-800 (feedback wrong text)
+
+  // Phase accents (existing)
+  phasePembukaan: '#1e5b8f',
+  phasePembukaanSoft: '#e8f0f8',
+  phaseInti: '#2f7d4f',
+  phaseIntiSoft: '#e1f3e8',
+  phasePenutup: '#8b5a8c',
+  phasePenutupSoft: '#f1e9f2',
+
+  // Overlay scrims (NEW)
+  overlayScrim: 'rgba(0, 0, 0, 0.5)',          // modal scrim
+  overlayScrimStrong: 'rgba(0, 0, 0, 0.85)',   // strong scrim
+  overlayScrimNavy: 'rgba(15, 23, 42, 0.6)',   // premium dialog scrim
+
+  // AI-style badge (NEW — Tailwind violet family)
+  aiStyle: '#7c3aed',             // violet-600
+  aiStyleStrong: '#6b21a8',       // violet-700
+  aiStyleBgGradient: 'linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%)',
+  aiStyleBorder: 'rgba(139, 92, 246, 0.2)',
+
+  // Component markers (NEW — PageThumbnail)
+  markerText: '#3b82f6',          // blue-500
+  markerImage: '#10b981',         // emerald-500
+  markerCard: '#f59e0b',          // amber-500
+  markerNavigation: '#8b5cf6',    // violet-500
+  markerQuestion: '#ec4899',      // pink-500
+  markerGame: '#ef4444',          // red-500
+  markerLayeredInfo: '#06b6d4',   // cyan-500
+  markerLearningBridge: '#6366f1', // indigo-500
+};
+
+export const DEFAULT_THEME_SHADOW: ShadowTokens = {
+  // Existing
+  sm: '0 1px 2px rgba(31, 37, 51, 0.04)',
+  md: '0 4px 16px rgba(31, 37, 51, 0.08)',
+  lg: '0 8px 32px rgba(31, 37, 51, 0.12)',
+
+  // Premium (NEW)
+  cardPremiumLight: '0 2px 8px rgba(0, 0, 0, 0.08)',
+  cardPremiumDark: '0 2px 8px rgba(0, 0, 0, 0.3)',
+  cardSubtle: '0 1px 3px rgba(0, 0, 0, 0.06)',
+  stagePremium: '0 26px 70px rgba(0, 0, 0, 0.42), 0 8px 22px rgba(0, 0, 0, 0.22)',
+  dialogPremium: '0 8px 32px rgba(0, 0, 0, 0.24)',
+  dialogStrong: '0 8px 32px rgba(0, 0, 0, 0.4)',
+  floatingSoft: '0 1px 3px rgba(0, 0, 0, 0.1)',
+  buttonPremium: '0 14px 28px rgba(0, 0, 0, 0.28)',
+  buttonNavy: '0 4px 12px rgba(29, 53, 87, 0.3)',
+  kicker: '0 2px 6px rgba(0, 0, 0, 0.16)',
+  kickerStrong: '0 4px 12px rgba(0, 0, 0, 0.2)',
+  ctaPremium: '0 14px 28px rgba(0, 0, 0, 0.28)',
+  awardMedal: '0 8px 24px rgba(255, 183, 3, 0.35)',
+  heroCard: '0 22px 54px rgba(29, 53, 87, 0.18), 0 4px 12px rgba(29, 53, 87, 0.06)',
+};
+
+// ---------------------------------------------------------------------------
+// mergeStyles — pseudocode (Fase 2 implementation)
+// ---------------------------------------------------------------------------
+
+/**
+ * mergeStyles pseudocode — cara kerja function yang akan diimplement di Fase 2.
+ *
+ * ```typescript
+ * function mergeStyles(
+ *   tokens: DesignTokens,
+ *   customStyle: SceneCustomStyleMap | undefined,
+ *   elementKey: string,
+ * ): Record<string, string> {
+ *   // 1. Mulai dengan empty result
+ *   const result: Record<string, string> = {};
+ *   //
+ *   // 2. Apply DesignTokens untuk elementKey (jika ada mapping)
+ *   //    Misal: elementKey 'shell' → { background: tokens.color.bg, ... }
+ *   //    Mapping elementKey → token properties didefinisikan di registry.
+ *   //
+ *   // 3. Apply SceneCustomStyles (AI override) — HIGHEST PRIORITY
+ *   if (customStyle && customStyle[elementKey]) {
+ *     const aiOverride = sanitizeElementStyle(customStyle[elementKey]);
+ *     Object.assign(result, aiOverride);  // override menang
+ *   }
+ *   //
+ *   // 4. Return merged result
+ *   return result;
+ * }
+ * ```
+ *
+ * Contoh pemakaian di renderer:
+ * ```tsx
+ * const shellStyle = mergeStyles(designTokens, page.sceneCustomStyle, 'shell');
+ * <div style={shellStyle}>...</div>
+ * ```
+ *
+ * Contoh pemakaian di export HTML:
+ * ```typescript
+ * const shellCss = styleMapToCssString(mergeStyles(designTokens, page.sceneCustomStyle, 'shell'));
+ * el.style.cssText = shellCss;
+ * ```
+ *
+ * Karena mergeStyles adalah pure function dengan input yang sama,
+ * React dan export HTML menghasilkan output yang identik → parity 100%.
+ */

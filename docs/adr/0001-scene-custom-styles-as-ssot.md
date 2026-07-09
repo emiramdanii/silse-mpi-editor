@@ -99,10 +99,32 @@ finalStyle = mergeStyles(designTokens, sceneCustomStyles)
 
 **Target completion:** Akhir Fase 1 P4 (setelah premium tokens + drop fallbacks)
 
+## Traceability: Fase → Artefak
+
+| Fase | Artefak Utama | Status |
+|---|---|---|
+| **Fase 1 — Color System** | ADR-0001 (this doc), `scene-custom-styles.ts` (interface + DEFAULT_THEME), `SILSE_FASE1_COLOR_AUDIT.md` (480 instances), `SILSE_REVIEW_QUICK_WINS.md` (naming convention) | Spec ready, eksekusi belum dimulai |
+| **Fase 2 — Renderer Refactor** | `mergeStyles()` implementation (pseudocode in `scene-custom-styles.ts`), renderer baca `page.sceneContent` bukan `GameComponent.sceneMetadata`, hapus `scene-helpers.ts` | Not started |
+| **Fase 3 — Export Sync** | Extract shared token module (`src/core/design/tokens.ts`), generate `:root` untuk editor + export dari satu source, parity React-vs-export | Not started |
+| **Fase 4 — Guardrails** | `scripts/audit-pointer-events.mjs` (done), visual regression test (React vs export screenshot compare), ESLint rule untuk hardcoded hex | Audit script done, visual regression not started |
+
+## 7 Sumber Style (Detail)
+
+| # | Sumber | Lokasi | Dipakai oleh | Masalah |
+|---|---|---|---|---|
+| 1 | `project.style.tokens` | dari style pack, disimpan di `SimpleProject.style` | `resolveComponentStyle`, `generateCssVariablesMap` | OK — tapi duplikasi dengan sumber 2 |
+| 2 | `MpiDesignContract` | `getDesignContractWithProjectStyle()` | Scene renderers (React) | React baca `contract.palette.*` langsung — tidak konsisten dengan sumber 6 |
+| 3 | `SlotResolvedStyle` | `renderScenePlan.ts` | `SceneRendererView` (scene path) | Hanya dipakai scene path, bukan component-view path — parity gap |
+| 4 | `ResolvedComponentStyle` | `resolveComponentStyle.ts` | Component views (non-scene path) | Hanya dipakai component-view path — parity gap dengan scene path |
+| 5 | `customStyle` (AI) | `AiBlueprintSlot.customStyle` → `page.sceneCustomStyle` | `SceneShell` via `CustomStyleProvider` | **Dulu di-drop oleh normalizer** (AUDIT 1.2, fixed). Sekarang preserved. |
+| 6 | CSS variables `--silse-color-*` | di-inject ke `:root` (styles.css + export-html.ts) | Export HTML, sebagian React | **Duplikasi**: `:root` di styles.css dan export-html.ts adalah 2 sumber terpisah yang bisa drift |
+| 7 | Hardcoded hex literals | inline di JSX/TS (480 instances) | Semua renderer | **TIDAK ikut tema** — ganti style pack tidak mengubah hardcoded hex |
+
 ## References
 
-- `download/SILSE_FASE1_COLOR_AUDIT.md` — 480 hardcoded instances inventoried
-- `download/SILSE_REVIEW_QUICK_WINS.md` — token naming convention
-- `src/core/design/scene-custom-styles.ts` — interface draft
+- `download/SILSE_FASE1_COLOR_AUDIT.md` — 480 hardcoded instances inventoried + before/after examples
+- `download/SILSE_REVIEW_QUICK_WINS.md` — token naming convention + pointer-events audit
+- `src/core/design/scene-custom-styles.ts` — interface draft + DEFAULT_THEME_COLOR + DEFAULT_THEME_SHADOW + mergeStyles pseudocode
 - `src/core/style/sanitize.ts` — existing CSS sanitizer (defense-in-depth)
 - AUDIT 1.2 fix (commit `5795a1f`) — normalizeSlot preserve customStyle
+- `scripts/audit-pointer-events.mjs` — automated pointer-events scanner (CI-ready)
