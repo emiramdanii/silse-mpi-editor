@@ -2242,18 +2242,24 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var children = [
       exportHeader(plan, '🎯 Tujuan Pembelajaran', plan.palette ? plan.palette.gold : null, 'Tujuan Pembelajaran'),
     ];
-    // Objective list
+    // Objective list — XSS-safe: build DOM with createElement + textContent
     var listEl = exportPanel(plan, null, null, 'silse-objective-item');
     var listDiv = listEl.querySelector('div:last-child') || listEl;
     if (content.objectiveList) {
-      var listHtml = '';
       for (var i = 0; i < content.objectiveList.length; i++) {
-        listHtml += '<div class="silse-objective-item" style="display:flex;gap:10;align-items:flex-start;margin-bottom:8px;">';
-        listHtml += '<span style="font-size:18px;color:' + (plan.palette ? plan.palette.gold : '#f9c12e') + ';font-weight:800;flex-shrink:0;">' + (i+1) + '</span>';
-        listHtml += '<span style="font-size:14px;line-height:1.6;color:' + (plan.palette ? plan.palette.text : '#fff') + ';">' + content.objectiveList[i] + '</span>';
-        listHtml += '</div>';
+        var item = document.createElement('div');
+        item.className = 'silse-objective-item';
+        item.style.cssText = 'display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;';
+        var num = document.createElement('span');
+        num.style.cssText = 'font-size:18px;color:' + (plan.palette ? plan.palette.gold : '#f9c12e') + ';font-weight:800;flex-shrink:0;';
+        num.textContent = String(i + 1);
+        var txt = document.createElement('span');
+        txt.style.cssText = 'font-size:14px;line-height:1.6;color:' + (plan.palette ? plan.palette.text : '#fff') + ';';
+        txt.textContent = String(content.objectiveList[i]);
+        item.appendChild(num);
+        item.appendChild(txt);
+        listDiv.appendChild(item);
       }
-      listDiv.innerHTML = listHtml;
     }
     children.push(listEl);
     if (content.successCriteria) children.push(exportPanel(plan, 'Kriteria Berhasil', content.successCriteria));
@@ -2315,11 +2321,19 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.breakdown) {
       var bdEl = exportPanel(plan, 'Rincian Skor', null, 'silse-result-breakdown');
       var bdDiv = bdEl.querySelector('div:last-child') || bdEl;
-      var bdHtml = '';
       for (var i = 0; i < content.breakdown.length; i++) {
-        bdHtml += '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span style="color:' + (plan.palette ? plan.palette.mutedText : '#888') + ';">' + content.breakdown[i].label + '</span><span style="font-weight:700;color:' + (plan.palette ? plan.palette.text : '#fff') + ';">' + content.breakdown[i].value + '</span></div>';
+        var bdItem = document.createElement('div');
+        bdItem.style.cssText = 'display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;';
+        var bdLabel = document.createElement('span');
+        bdLabel.style.cssText = 'color:' + (plan.palette ? plan.palette.mutedText : '#888') + ';';
+        bdLabel.textContent = String(content.breakdown[i].label);
+        var bdValue = document.createElement('span');
+        bdValue.style.cssText = 'font-weight:700;color:' + (plan.palette ? plan.palette.text : '#fff') + ';';
+        bdValue.textContent = String(content.breakdown[i].value);
+        bdItem.appendChild(bdLabel);
+        bdItem.appendChild(bdValue);
+        bdDiv.appendChild(bdItem);
       }
-      bdDiv.innerHTML = bdHtml;
       children.push(bdEl);
     }
     // LAYOUT-STYLE-01: render reviewCards via exportGrid (parity with in-app SceneGrid)
@@ -4102,7 +4116,16 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
           }
           if (hotspotData) {
             panel.style.display = 'block';
-            panel.innerHTML = '<div style="font-size:13px;font-weight:800;color:var(--silse-gold, #f9c12e);margin-bottom:6px;">' + hotspotData.label + '</div><div style="font-size:14px;line-height:1.6;color:var(--silse-text, #e8f2ff);">' + hotspotData.info + '</div>';
+            // XSS-safe: build DOM with createElement + textContent
+            while (panel.firstChild) panel.removeChild(panel.firstChild);
+            var hsLabel = document.createElement('div');
+            hsLabel.style.cssText = 'font-size:13px;font-weight:800;color:var(--silse-gold, #f9c12e);margin-bottom:6px;';
+            hsLabel.textContent = String(hotspotData.label);
+            var hsInfo = document.createElement('div');
+            hsInfo.style.cssText = 'font-size:14px;line-height:1.6;color:var(--silse-text, #e8f2ff);';
+            hsInfo.textContent = String(hotspotData.info);
+            panel.appendChild(hsLabel);
+            panel.appendChild(hsInfo);
           }
         }
       }
