@@ -200,7 +200,7 @@ function SlotView({ slot, contract, interactive, onSlotClick, onGameAction, onQu
     width: slot.placement.width,
     height: slot.placement.height,
     zIndex: slot.placement.zIndex ?? 1,
-    outline: selected ? '2px solid var(--silse-color-primary, #2563eb)' : 'none',
+    outline: selected ? '2px solid var(--silse-color-primary, var(--color-accent))' : 'none',
     outlineOffset: 2,
     cursor: interactive ? 'pointer' : 'default',
   };
@@ -275,10 +275,11 @@ function ContentRenderer({
         width: '100%', height: '100%',
         padding: surf?.padding ?? 16,
         borderRadius: surf?.radius ?? 12,
-        background: surf?.background ?? '#fff',
-        border: surf?.border ?? '1px solid #e5e7eb',
+        background: surf?.background ?? 'var(--silse-color-surface, var(--color-panel))',
+        border: surf?.border ?? '1px solid var(--silse-color-border, var(--color-border))',
         boxShadow: surf?.shadow,
         boxSizing: 'border-box',
+        color: 'var(--silse-color-text, var(--color-text))',
       }}>
         {c.title && <strong style={{ display: 'block', fontSize: 18, marginBottom: 6 }}>{c.title}</strong>}
         <div style={{ fontSize: 14, lineHeight: 1.5 }}>{c.body}</div>
@@ -294,7 +295,7 @@ function ContentRenderer({
         width: '100%', height: '100%',
         borderRadius: btn?.radius ?? 8,
         background: btn?.background ?? contract.palette.primary,
-        color: btn?.color ?? '#fff',
+        color: btn?.color ?? 'var(--silse-color-surface, var(--color-panel))',
         border: 0,
         fontWeight: btn?.fontWeight ?? 600,
         cursor: interactive ? 'pointer' : 'default',
@@ -380,9 +381,9 @@ function ContentRenderer({
     return (
       <div className={slot.contentClass} style={{
         padding: 12, borderRadius: 10,
-        background: fb?.background ?? '#f3f4f6',
-        color: fb?.color,
-        borderLeft: '4px solid ' + (fb?.borderColor ?? 'var(--silse-color-border, #d1d5db)'),
+        background: fb?.background ?? 'var(--silse-color-surface, var(--color-panel-soft))',
+        color: fb?.color ?? 'var(--silse-color-text, var(--color-text))',
+        borderLeft: '4px solid ' + (fb?.borderColor ?? 'var(--silse-color-border, var(--color-border))'),
       }}>
         {c.icon && <span style={{ marginRight: 6 }}>{c.icon}</span>}
         {c.text}
@@ -397,9 +398,10 @@ function ContentRenderer({
       <div className={slot.contentClass} style={{
         padding: 16,
         borderRadius: rw?.radius ?? 12,
-        background: rw?.background ?? '#fffbeb',
-        border: '2px solid ' + (rw?.borderColor ?? '#fbbf24'),
+        background: rw?.background ?? 'var(--silse-color-warning-soft, var(--color-warning-soft))',
+        border: '2px solid ' + (rw?.borderColor ?? 'var(--silse-color-warning, var(--color-warning))'),
         textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+        color: 'var(--silse-color-text, var(--color-text))',
       }}>
         {c.icon && <div style={{ fontSize: 48 }}>{c.icon}</div>}
         <strong style={{ fontSize: 18 }}>{c.label}</strong>
@@ -411,7 +413,7 @@ function ContentRenderer({
     return (
       <div className={slot.contentClass} style={{ display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center', height: '100%' }}>
         {c.buttons.map((btn, i) => (
-          <button key={i} style={{ padding: '8px 16px', borderRadius: 8, background: contract.palette.primary, color: '#fff', border: 0, fontWeight: 600, cursor: interactive ? 'pointer' : 'default' }}>
+          <button key={i} style={{ padding: '8px 16px', borderRadius: 8, background: contract.palette.primary, color: 'var(--silse-color-surface, var(--color-panel))', border: 0, fontWeight: 600, cursor: interactive ? 'pointer' : 'default' }}>
             {btn.label}
           </button>
         ))}
@@ -449,32 +451,33 @@ function GameMissionContent({
   onGameAction?: (slotId: string, actionIndex: number) => void;
 }) {
   // DESIGN-CONTRACT-RENDER-PARITY-01: briefing/target card style from resolvedStyle.surface
+  // 16:9 FIT: overflow hidden — game mission must fit 1280x720 without inner scroll.
   const briefingStyle = slot.resolvedStyle?.surface;
   return (
-    <div className="silse-game-scene" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: 10, padding: 16, boxSizing: 'border-box', overflow: 'auto' }}>
+    <div className="silse-game-scene" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: 10, padding: 16, boxSizing: 'border-box', overflow: 'hidden' }}>
       {/* Briefing */}
       <div className="silse-game-briefing" style={{
         padding: briefingStyle?.padding ?? 12,
         borderRadius: briefingStyle?.radius ?? 10,
-        background: briefingStyle?.background ?? '#fffbeb',
-        border: briefingStyle?.border ?? '1px solid #fde68a',
+        background: briefingStyle?.background ?? 'var(--silse-color-warning-soft, var(--color-warning-soft))',
+        border: briefingStyle?.border ?? '1px solid var(--silse-color-warning, var(--color-warning))',
       }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#92400e', textTransform: 'uppercase', marginBottom: 4 }}>📋 Briefing Misi</div>
-        <div style={{ fontSize: 15, fontWeight: 600 }}>{content.briefing}</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--silse-color-warning, var(--color-warning))', textTransform: 'uppercase', marginBottom: 4 }}>📋 Briefing Misi</div>
+        <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--silse-color-text, var(--color-text))' }}>{content.briefing}</div>
       </div>
 
       {/* Target */}
       <div className="silse-game-target" style={{
         padding: 12, borderRadius: 10,
-        background: contract.game.targetPanel?.background ?? '#eff6ff',
-        border: contract.game.targetPanel?.border ?? '1px solid #bfdbfe',
+        background: contract.game.targetPanel?.background ?? 'var(--silse-color-primary, var(--color-accent-soft))',
+        border: contract.game.targetPanel?.border ?? '1px solid var(--silse-color-primary, var(--color-accent))',
       }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#1e40af', textTransform: 'uppercase', marginBottom: 4 }}>🎯 Target Misi</div>
-        <div style={{ fontSize: 14 }}>{content.missionTarget}</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--silse-color-primary, var(--color-accent))', textTransform: 'uppercase', marginBottom: 4 }}>🎯 Target Misi</div>
+        <div style={{ fontSize: 14, color: 'var(--silse-color-text, var(--color-text))' }}>{content.missionTarget}</div>
       </div>
 
       {/* Action grid */}
-      <div className="silse-game-action-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
+      <div className="silse-game-action-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 8 }}>
         {content.actions.map((action, idx) => (
           <div
             key={action.id}
@@ -485,24 +488,25 @@ function GameMissionContent({
               if (interactive) onGameAction?.(slot.id, idx);
             }}
             style={{
-              padding: 14,
+              padding: 12,
               borderRadius: 12,
-              background: '#fff',
-              border: '2px solid var(--silse-color-border, #d1d5db)',
+              background: 'var(--silse-color-surface, var(--color-panel))',
+              border: '2px solid var(--silse-color-border, var(--color-border))',
               cursor: interactive ? 'pointer' : 'default',
               fontSize: 14,
               fontWeight: 600,
-              minHeight: 80,
+              color: 'var(--silse-color-text, var(--color-text))',
+              minHeight: 64,
               display: 'flex',
               flexDirection: 'column',
               gap: 6,
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ display: 'inline-grid', placeItems: 'center', minWidth: 28, height: 28, borderRadius: 8, background: contract.palette.primary, color: '#fff', fontSize: 13, fontWeight: 900 }}>
+              <span style={{ display: 'inline-grid', placeItems: 'center', minWidth: 28, height: 28, borderRadius: 8, background: contract.palette.primary, color: 'var(--silse-color-surface, var(--color-panel))', fontSize: 13, fontWeight: 900 }}>
                 {String.fromCharCode(65 + idx)}
               </span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--silse-color-muted-text, #6b7280)', textTransform: 'uppercase' }}>Aksi</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--silse-color-muted-text, var(--color-muted))', textTransform: 'uppercase' }}>Aksi</span>
             </div>
             <span>{action.label}</span>
           </div>
@@ -510,11 +514,11 @@ function GameMissionContent({
       </div>
 
       {/* Reward preview */}
-      <div className="silse-game-reward" style={{ padding: 12, borderRadius: 10, background: '#fffbeb', border: '2px solid #fbbf24', display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div className="silse-game-reward" style={{ padding: 12, borderRadius: 10, background: 'var(--silse-color-warning-soft, var(--color-warning-soft))', border: '2px solid var(--silse-color-warning, var(--color-warning))', display: 'flex', alignItems: 'center', gap: 12 }}>
         <span style={{ fontSize: 24 }}>{(content.reward as { icon?: string }).icon ?? '🏅'}</span>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#92400e', textTransform: 'uppercase' }}>Reward</div>
-          <strong style={{ fontSize: 14 }}>{content.reward.label}</strong>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--silse-color-warning, var(--color-warning))', textTransform: 'uppercase' }}>Reward</div>
+          <strong style={{ fontSize: 14, color: 'var(--silse-color-text, var(--color-text))' }}>{content.reward.label}</strong>
         </div>
       </div>
     </div>
@@ -556,7 +560,7 @@ function QuizQuestionContent({
   const quizPanelBorder = ansCard?.border ?? contract.palette.border;
 
   return (
-    <div className="silse-quiz-scene silse-premium-quiz-scene" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: 10, padding: 16, boxSizing: 'border-box', overflow: 'auto' }}>
+    <div className="silse-quiz-scene silse-premium-quiz-scene" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: 10, padding: 16, boxSizing: 'border-box', overflow: 'hidden' }}>
       {/* Challenge header */}
       <div className="silse-quiz-header silse-premium-quiz-header" style={{
         fontSize: 11, fontWeight: 700, color: contract.palette.mutedText,
@@ -573,12 +577,13 @@ function QuizQuestionContent({
         border: `1px solid ${quizPanelBorder}`,
         boxShadow: premiumShadow,
         fontSize: 17, fontWeight: 600,
+        color: contract.palette.text,
       }}>
         {content.prompt}
       </div>
 
       {/* Answer grid */}
-      <div className="silse-quiz-answer-grid silse-premium-quiz-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10 }}>
+      <div className="silse-quiz-answer-grid silse-premium-quiz-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
         {content.choices.map((choice, idx) => (
           <div
             key={choice.id}
@@ -603,12 +608,13 @@ function QuizQuestionContent({
             style={{
               padding: ansCard?.padding ?? 14,
               borderRadius: ansCard?.radius ?? contract.card.radius,
-              background: ansCard?.background ?? '#fff',
+              background: ansCard?.background ?? 'var(--silse-color-surface, var(--color-panel))',
               border: `2px solid ${quizPanelBorder}`,
               cursor: interactive ? 'pointer' : 'default',
               fontSize: 14,
               fontWeight: 600,
-              minHeight: 60,
+              color: contract.palette.text,
+              minHeight: 52,
               display: 'flex',
               alignItems: 'center',
               gap: 12,
@@ -621,7 +627,7 @@ function QuizQuestionContent({
               minWidth: 32, height: 32,
               borderRadius: badge?.radius ?? 8,
               background: badge?.background ?? contract.palette.primary,
-              color: badge?.color ?? '#fff',
+              color: badge?.color ?? 'var(--silse-color-surface, var(--color-panel))',
               fontSize: 14, fontWeight: 900, flexShrink: 0,
             }}>
               {String.fromCharCode(65 + idx)}
@@ -678,7 +684,7 @@ function LearningMaterialContent({
   const surfRadius = surf?.radius ?? contract.card.radius;
 
   return (
-    <div className="silse-learning-scene silse-premium-learning-scene" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: 12, padding: 16, boxSizing: 'border-box', overflow: 'auto' }}>
+    <div className="silse-learning-scene silse-premium-learning-scene" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: 12, padding: 16, boxSizing: 'border-box', overflow: 'hidden' }}>
       {/* Concept header */}
       <div className="silse-learning-header silse-premium-learning-header" style={{
         fontSize: contract.typography.titleSize,
@@ -735,12 +741,12 @@ function LearningMaterialContent({
         <div className="silse-learning-key-point silse-premium-learning-key-point" style={{
           padding: contract.learning.keyPointPanel?.padding ?? 12,
           borderRadius: contract.learning.keyPointPanel?.radius ?? 10,
-          background: contract.learning.keyPointPanel?.background ?? '#fffbeb',
-          border: contract.learning.keyPointPanel?.border ?? '1px solid #fde68a',
-          borderLeft: '4px solid ' + (contract.learning.keyPointPanel?.accentColor ?? '#f59e0b'),
+          background: contract.learning.keyPointPanel?.background ?? 'var(--silse-color-warning-soft, var(--color-warning-soft))',
+          border: contract.learning.keyPointPanel?.border ?? '1px solid var(--silse-color-warning, var(--color-warning))',
+          borderLeft: '4px solid ' + (contract.learning.keyPointPanel?.accentColor ?? 'var(--silse-color-warning, var(--color-warning))'),
           boxShadow: premiumShadow,
         }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: contract.learning.keyPointPanel?.iconColor ?? '#92400e', textTransform: 'uppercase', marginBottom: 6 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: contract.learning.keyPointPanel?.iconColor ?? 'var(--silse-color-warning, var(--color-warning))', textTransform: 'uppercase', marginBottom: 6 }}>
             {contract.learning.keyPointPanel?.icon ?? '🔑'} Key Points
           </div>
           <ul style={{ margin: 0, paddingLeft: 20, fontSize: 14, lineHeight: 1.6 }}>
@@ -804,7 +810,7 @@ const DARK_BACKGROUND_ROLES = new Set(['cover', 'closing']);
 
 function getContrastAwareTextColor(role: string | undefined, defaultColor: string): string {
   if (role && DARK_BACKGROUND_ROLES.has(role)) {
-    return '#ffffff';
+    return 'var(--silse-color-surface, var(--color-panel))';
   }
   return defaultColor;
 }
@@ -863,7 +869,7 @@ function CoverHeroContent({
         <button className="silse-cover-primary-action" style={{
           padding: `${btn?.padding?.top ?? 10}px ${btn?.padding?.right ?? 20}px`,
           borderRadius: btn?.radius ?? 8, background: btn?.background ?? contract.palette.primary,
-          color: btn?.color ?? '#fff', border: 0, fontWeight: btn?.fontWeight ?? 600,
+          color: btn?.color ?? 'var(--silse-color-surface, var(--color-panel))', border: 0, fontWeight: btn?.fontWeight ?? 600,
           fontSize: 16, cursor: 'pointer', marginTop: 8,
         }}>
           {content.primaryAction.label}
@@ -921,8 +927,8 @@ function ClosingAwardContent({
       {(content.rewardLabel || content.rewardIcon) && (
         <div className="silse-closing-reward" style={{
           padding: 20, borderRadius: rw?.radius ?? 12,
-          background: rw?.background ?? '#fffbeb',
-          border: `2px solid ${rw?.borderColor ?? '#fbbf24'}`,
+          background: rw?.background ?? 'var(--silse-color-warning-soft, var(--color-warning-soft))',
+          border: `2px solid ${rw?.borderColor ?? 'var(--silse-color-warning, var(--color-warning))'}`,
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
         }}>
           {content.rewardIcon && <div style={{ fontSize: 64 }}>{content.rewardIcon}</div>}
@@ -948,7 +954,7 @@ function ClosingAwardContent({
         <button className="silse-closing-final-action" style={{
           padding: `${btn?.padding?.top ?? 10}px ${btn?.padding?.right ?? 20}px`,
           borderRadius: btn?.radius ?? 8, background: btn?.background ?? contract.palette.primary,
-          color: btn?.color ?? '#fff', border: 0, fontWeight: btn?.fontWeight ?? 600,
+          color: btn?.color ?? 'var(--silse-color-surface, var(--color-panel))', border: 0, fontWeight: btn?.fontWeight ?? 600,
           fontSize: 16, cursor: 'pointer', marginTop: 8,
         }}>
           {content.finalAction.label}

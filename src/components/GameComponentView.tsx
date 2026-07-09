@@ -59,22 +59,25 @@ export function GameComponentView({
         position: 'relative', left: 0, top: 0, width: '100%', height: '100%',
         ...resolvedStyle.inlineStyle,
         boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8,
-        overflow: 'auto', padding: 12,
-        outline: selected ? '2px solid #2563eb' : 'none', outlineOffset: 2, cursor: 'pointer',
+        overflow: 'hidden', padding: 12,
+        color: 'var(--silse-color-text, var(--color-text))',
+        outline: selected ? '2px solid var(--silse-color-primary, var(--color-accent))' : 'none', outlineOffset: 2, cursor: 'pointer',
       }
     : {
         position: 'absolute', left: component.x, top: component.y,
         width: component.width, height: component.height,
         ...resolvedStyle.inlineStyle,
         boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 8,
-        overflow: 'auto', padding: 12,
-        outline: selected ? '2px solid #2563eb' : 'none', outlineOffset: 2, cursor: 'pointer',
+        overflow: 'hidden', padding: 12,
+        color: 'var(--silse-color-text, var(--color-text))',
+        outline: selected ? '2px solid var(--silse-color-primary, var(--color-accent))' : 'none', outlineOffset: 2, cursor: 'pointer',
       };
 
   const choiceStyle: CSSProperties = {
     padding: '10px 14px', minHeight: 44, height: 'auto',
-    border: '1px solid #d1d5db', borderRadius: 6, cursor: onAnswer ? 'pointer' : 'default',
-    fontSize: 14, lineHeight: 1.5, whiteSpace: 'normal', overflowWrap: 'anywhere',
+    border: '1px solid var(--silse-color-border, var(--color-border))', borderRadius: 6, cursor: onAnswer ? 'pointer' : 'default',
+    fontSize: 14, lineHeight: 1.5, color: 'var(--silse-color-text, var(--color-text))',
+    whiteSpace: 'normal', overflowWrap: 'anywhere',
     wordBreak: 'break-word', display: 'flex', alignItems: 'flex-start', gap: 8,
   };
 
@@ -117,10 +120,10 @@ export function GameComponentView({
     <div data-component-id={component.id} data-component-type="game" className={skinClass} style={containerStyle}
       onClick={(e) => { e.stopPropagation(); onSelect?.(component.id); }}>
       <strong style={{ fontSize: 16 }}>{component.title}</strong>
-      <div style={{ fontSize: 13, color: '#6b7280', whiteSpace: 'normal', overflowWrap: 'anywhere' }}>
+      <div style={{ fontSize: 13, color: 'var(--silse-color-muted-text, var(--color-muted))', whiteSpace: 'normal', overflowWrap: 'anywhere' }}>
         {component.instruction}
       </div>
-      <div style={{ fontSize: 12, color: '#6b7280' }}>
+      <div style={{ fontSize: 12, color: 'var(--silse-color-muted-text, var(--color-muted))' }}>
         Misi {gs.currentMissionIndex + 1} / {component.missions.length} · Skor: {gs.score}
       </div>
       <div style={{ fontSize: 15, fontWeight: 500, marginTop: 4, whiteSpace: 'normal', overflowWrap: 'anywhere' }}>
@@ -128,10 +131,10 @@ export function GameComponentView({
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {mission.choices.map((choice, idx) => {
-          let bg = '#ffffff';
-          if (gs.isAnswered && isCorrect(idx)) bg = '#d1fae5';
-          else if (gs.isAnswered && isSelected(idx) && !isCorrect(idx)) bg = '#fee2e2';
-          else if (isSelected(idx)) bg = '#dbeafe';
+          let bg = 'var(--silse-color-surface, var(--color-panel))';
+          if (gs.isAnswered && isCorrect(idx)) bg = 'var(--silse-color-success, var(--color-success-soft))';
+          else if (gs.isAnswered && isSelected(idx) && !isCorrect(idx)) bg = 'var(--silse-color-danger, var(--color-danger-soft))';
+          else if (isSelected(idx)) bg = 'var(--silse-color-primary, var(--color-accent-soft))';
           return (
             <div key={choice.id} data-choice-index={idx}
               onClick={(e) => { e.stopPropagation(); onAnswer?.(gs.currentMissionIndex, idx); }}
@@ -144,8 +147,12 @@ export function GameComponentView({
       </div>
       {gs.isAnswered && (
         <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 6, fontSize: 13,
-          backgroundColor: gs.selectedChoiceIndex === mission.correctChoiceIndex ? '#d1fae5' : '#fee2e2',
-          color: gs.selectedChoiceIndex === mission.correctChoiceIndex ? '#065f46' : '#991b1b',
+          backgroundColor: gs.selectedChoiceIndex === mission.correctChoiceIndex
+            ? 'var(--silse-color-success, var(--color-success-soft))'
+            : 'var(--silse-color-danger, var(--color-danger-soft))',
+          color: gs.selectedChoiceIndex === mission.correctChoiceIndex
+            ? 'var(--silse-color-success, var(--color-success))'
+            : 'var(--silse-color-danger, var(--color-danger))',
           whiteSpace: 'normal', overflowWrap: 'anywhere' }}>
           {gs.selectedChoiceIndex === mission.correctChoiceIndex ? mission.feedbackCorrect : mission.feedbackWrong}
         </div>
@@ -219,10 +226,10 @@ function GameMissionSceneView({
       >
         <div className="silse-game-reward" data-testid="silse-game-reward" style={rewardStyle}>
           <div style={{ fontSize: 48, marginBottom: 8 }}>🏆</div>
-          <strong style={{ fontSize: 20, display: 'block', marginBottom: 4 }}>
+          <strong style={{ fontSize: 20, display: 'block', marginBottom: 4, color: 'var(--silse-color-text, var(--color-text))' }}>
             {sceneMeta.reward?.label ?? 'Misi Selesai'}
           </strong>
-          <div style={{ fontSize: 14, color: '#4b5563' }}>
+          <div style={{ fontSize: 14, color: 'var(--silse-color-muted-text, var(--color-text-soft))' }}>
             Skor akhir: {gs.score}
           </div>
         </div>
@@ -247,20 +254,20 @@ function GameMissionSceneView({
     >
       {/* Briefing misi */}
       <div className="silse-game-briefing" data-testid="silse-game-briefing" style={briefingStyle}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#92400e', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--silse-color-warning, var(--color-warning))', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
           📋 Briefing Misi
         </div>
-        <div style={{ fontSize: 15, fontWeight: 600, color: '#1f2937', whiteSpace: 'normal', overflowWrap: 'anywhere' }}>
+        <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--silse-color-text, var(--color-text))', whiteSpace: 'normal', overflowWrap: 'anywhere' }}>
           {sceneMeta.briefing ?? component.instruction}
         </div>
       </div>
 
       {/* Target misi */}
       <div className="silse-game-target" data-testid="silse-game-target" style={targetStyle}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#1e40af', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--silse-color-primary, var(--color-accent))', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
           🎯 Target Misi
         </div>
-        <div style={{ fontSize: 14, color: '#1e3a8a', whiteSpace: 'normal', overflowWrap: 'anywhere' }}>
+        <div style={{ fontSize: 14, color: 'var(--silse-color-text, var(--color-text-soft))', whiteSpace: 'normal', overflowWrap: 'anywhere' }}>
           {sceneMeta.missionTarget ?? mission.prompt}
         </div>
       </div>
@@ -269,14 +276,14 @@ function GameMissionSceneView({
       <div
         className="silse-game-action-grid"
         data-testid="silse-game-action-grid"
-        style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10, marginTop: 4 }}
+        style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 8, marginTop: 4 }}
       >
         {mission.choices.map((choice, idx) => {
-          let bg = '#ffffff';
-          let borderColor = '#d1d5db';
-          if (gs.isAnswered && isCorrect(idx)) { bg = '#d1fae5'; borderColor = '#16a34a'; }
-          else if (gs.isAnswered && isSelected(idx) && !isCorrect(idx)) { bg = '#fee2e2'; borderColor = '#dc2626'; }
-          else if (isSelected(idx)) { bg = '#dbeafe'; borderColor = '#2563eb'; }
+          let bg = 'var(--silse-color-surface, var(--color-panel))';
+          let borderColor = 'var(--silse-color-border, var(--color-border))';
+          if (gs.isAnswered && isCorrect(idx)) { bg = 'var(--silse-color-success, var(--color-success-soft))'; borderColor = 'var(--silse-color-success, var(--color-success))'; }
+          else if (gs.isAnswered && isSelected(idx) && !isCorrect(idx)) { bg = 'var(--silse-color-danger, var(--color-danger-soft))'; borderColor = 'var(--silse-color-danger, var(--color-danger))'; }
+          else if (isSelected(idx)) { bg = 'var(--silse-color-primary, var(--color-accent-soft))'; borderColor = 'var(--silse-color-primary, var(--color-accent))'; }
 
           return (
             <div
@@ -286,8 +293,8 @@ function GameMissionSceneView({
               data-choice-index={idx}
               onClick={(e) => { e.stopPropagation(); onAnswer?.(gs.currentMissionIndex, idx); }}
               style={{
-                padding: '14px 16px',
-                minHeight: 80,
+                padding: '12px 14px',
+                minHeight: 64,
                 height: 'auto',
                 background: bg,
                 border: `2px solid ${borderColor}`,
@@ -295,6 +302,7 @@ function GameMissionSceneView({
                 cursor: onAnswer ? 'pointer' : 'default',
                 fontSize: 14,
                 fontWeight: 600,
+                color: 'var(--silse-color-text, var(--color-text))',
                 lineHeight: 1.4,
                 whiteSpace: 'normal',
                 overflowWrap: 'anywhere',
@@ -309,12 +317,12 @@ function GameMissionSceneView({
                 <span style={{
                   display: 'inline-grid', placeItems: 'center',
                   minWidth: 28, height: 28, borderRadius: 8,
-                  background: '#1d3557', color: '#fff',
+                  background: 'var(--silse-color-primary, var(--color-accent))', color: 'var(--silse-color-surface, var(--color-panel))',
                   fontSize: 13, fontWeight: 900, flexShrink: 0,
                 }}>
                   {String.fromCharCode(65 + idx)}
                 </span>
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--silse-color-muted-text, var(--color-muted))', textTransform: 'uppercase' }}>
                   Aksi
                 </span>
               </div>
@@ -335,9 +343,15 @@ function GameMissionSceneView({
             borderRadius: 10,
             fontSize: 13,
             fontWeight: 600,
-            backgroundColor: answeredCorrectly ? '#d1fae5' : '#fee2e2',
-            color: answeredCorrectly ? '#065f46' : '#991b1b',
-            borderLeft: `4px solid ${answeredCorrectly ? '#16a34a' : '#dc2626'}`,
+            backgroundColor: answeredCorrectly
+              ? 'var(--silse-color-success, var(--color-success-soft))'
+              : 'var(--silse-color-danger, var(--color-danger-soft))',
+            color: answeredCorrectly
+              ? 'var(--silse-color-success, var(--color-success))'
+              : 'var(--silse-color-danger, var(--color-danger))',
+            borderLeft: `4px solid ${answeredCorrectly
+              ? 'var(--silse-color-success, var(--color-success))'
+              : 'var(--silse-color-danger, var(--color-danger))'}`,
             whiteSpace: 'normal',
             overflowWrap: 'anywhere',
           }}
@@ -357,16 +371,16 @@ function GameMissionSceneView({
           style={{
             ...rewardStyle,
             marginTop: 8,
-            background: 'linear-gradient(145deg, #fff8e7, #fff)',
-            borderColor: '#fbbf24',
+            background: 'var(--silse-color-warning-soft, var(--color-warning-soft))',
+            borderColor: 'var(--silse-color-warning, var(--color-warning))',
           }}
         >
           <div style={{ fontSize: 24 }}>🏅</div>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#92400e', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--silse-color-warning, var(--color-warning))', textTransform: 'uppercase', letterSpacing: 0.5 }}>
               Reward Didapat
             </div>
-            <strong style={{ fontSize: 14, color: '#1f2937' }}>
+            <strong style={{ fontSize: 14, color: 'var(--silse-color-text, var(--color-text))' }}>
               {sceneMeta.reward.label}
             </strong>
           </div>
@@ -377,7 +391,7 @@ function GameMissionSceneView({
       {gs.isAnswered && gs.currentMissionIndex < component.missions.length - 1 && (
         <button
           onClick={(e) => { e.stopPropagation(); onNextMission?.(); }}
-          style={{ marginTop: 8, padding: '10px 18px', alignSelf: 'flex-end' }}
+          style={{ marginTop: 'auto', padding: '10px 18px', alignSelf: 'flex-end' }}
         >
           Misi Berikutnya →
         </button>
@@ -393,24 +407,24 @@ function GameMissionSceneView({
 const briefingStyle: CSSProperties = {
   padding: '12px 14px',
   borderRadius: 10,
-  background: '#fffbeb',
-  border: '1px solid #fde68a',
+  background: 'var(--silse-color-warning-soft, var(--color-warning-soft))',
+  border: '1px solid var(--silse-color-warning, var(--color-warning))',
   marginBottom: 8,
 };
 
 const targetStyle: CSSProperties = {
   padding: '12px 14px',
   borderRadius: 10,
-  background: '#eff6ff',
-  border: '1px solid #bfdbfe',
+  background: 'var(--silse-color-primary, var(--color-accent-soft))',
+  border: '1px solid var(--silse-color-primary, var(--color-accent))',
   marginBottom: 8,
 };
 
 const rewardStyle: CSSProperties = {
   padding: '16px',
   borderRadius: 12,
-  background: '#fffbeb',
-  border: '2px solid #fbbf24',
+  background: 'var(--silse-color-warning-soft, var(--color-warning-soft))',
+  border: '2px solid var(--silse-color-warning, var(--color-warning))',
   textAlign: 'center',
   display: 'flex',
   flexDirection: 'column',

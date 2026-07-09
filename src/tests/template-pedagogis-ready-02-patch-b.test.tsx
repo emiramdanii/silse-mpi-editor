@@ -358,34 +358,33 @@ describe('PATCH B — Scope C: structural regressions', () => {
 // ---------------------------------------------------------------------------
 
 describe('PATCH B — Scope D: render guard (SceneShell overflow)', () => {
-  it('21. React SceneShell uses overflowX: hidden (no plain overflow:auto)', () => {
+  it('21. React SceneShell uses overflow: hidden (no scrollbars on 16:9 canvas)', () => {
     const source = readFileSync(
       resolve(__dirname, '../components/scene-blocks/index.tsx'),
       'utf-8',
     );
-    // The shell function exists and uses the explicit pair, not bare overflow:auto
+    // The shell function exists and uses overflow: hidden so quiz/game/learning scenes
+    // fit within the 1280x720 canvas without inner scrollbars.
     expect(source).toContain('export function SceneShell');
-    expect(source).toContain("overflowX: 'hidden'");
-    expect(source).toContain("overflowY: 'auto'");
-    // After Patch B, the bare `overflow: 'auto'` is no longer used inside SceneShell
-    // (we cannot assert global absence because other components may legitimately use it,
-    //  but we CAN assert that the SceneShell section does not use it).
+    expect(source).toContain("overflow: 'hidden'");
+    // The old scrollable pair (overflowX/overflowY) should no longer be used inside SceneShell
     const shellStart = source.indexOf('export function SceneShell');
     const shellEnd = source.indexOf('// ----', shellStart + 1);
     const shellBlock = source.slice(shellStart, shellEnd === -1 ? undefined : shellEnd);
     expect(shellBlock).not.toContain("overflow: 'auto'");
+    expect(shellBlock).not.toContain("overflowY: 'auto'");
   });
 
-  it('22. Export SceneShell uses overflow-x:hidden (parity with React)', () => {
+  it('22. Export SceneShell uses overflow:hidden (parity with React)', () => {
     const source = readFileSync(
       resolve(__dirname, '../export/export-html.ts'),
       'utf-8',
     );
-    expect(source).toContain('overflow-x:hidden');
-    expect(source).toContain('overflow-y:auto');
-    // The old bare `overflow:auto;` should NOT appear inside the export shell builder
+    expect(source).toContain('overflow:hidden');
+    // The old scrollable pair (overflow-x:hidden;overflow-y:auto) should NOT appear
+    // inside the export shell builder
     expect(source).not.toContain(
-      'box-sizing:border-box;overflow:auto;background:radial-gradient',
+      'box-sizing:border-box;overflow-x:hidden;overflow-y:auto;background:radial-gradient',
     );
   });
 

@@ -70,9 +70,10 @@ export function LayeredInfoComponentView({
         display: 'flex',
         flexDirection: 'column',
         gap: 8,
-        overflow: 'auto',
+        overflow: 'hidden',
         padding: 12,
-        outline: selected ? '2px solid #2563eb' : 'none',
+        color: 'var(--silse-color-text, var(--color-text))',
+        outline: selected ? '2px solid var(--silse-color-primary, var(--color-accent))' : 'none',
         outlineOffset: 2,
         cursor: 'pointer',
       }
@@ -87,9 +88,10 @@ export function LayeredInfoComponentView({
         display: 'flex',
         flexDirection: 'column',
         gap: 8,
-        overflow: 'auto',
+        overflow: 'hidden',
         padding: 12,
-        outline: selected ? '2px solid #2563eb' : 'none',
+        color: 'var(--silse-color-text, var(--color-text))',
+        outline: selected ? '2px solid var(--silse-color-primary, var(--color-accent))' : 'none',
         outlineOffset: 2,
         cursor: 'pointer',
       };
@@ -155,7 +157,7 @@ function LayeredInfoContent({
 }) {
   if (layers.length === 0) {
     return (
-      <div style={{ color: '#6b7280', fontSize: 13, fontStyle: 'italic' }}>
+      <div style={{ color: 'var(--silse-color-muted-text, var(--color-muted))', fontSize: 13, fontStyle: 'italic' }}>
         Belum ada lapisan. Tambahkan lapisan di Panel Isi.
       </div>
     );
@@ -200,7 +202,7 @@ function AccordionView({
           <div
             key={layer.id}
             style={{
-              border: `1px solid ${isOpen ? '#2563eb' : '#d1d5db'}`,
+              border: `1px solid ${isOpen ? 'var(--silse-color-primary, var(--color-accent))' : 'var(--silse-color-border, var(--color-border))'}`,
               borderRadius: 6,
               overflow: 'hidden',
             }}
@@ -209,14 +211,14 @@ function AccordionView({
               onClick={() => onLayerClick(idx)}
               style={{
                 padding: '8px 12px',
-                background: isOpen ? '#eff6ff' : '#f9fafb',
+                background: isOpen ? 'var(--silse-color-primary, var(--color-accent-soft))' : 'var(--silse-color-surface, var(--color-panel-soft))',
                 cursor: interactive ? 'pointer' : 'default',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8,
                 fontSize: 13,
                 fontWeight: 600,
-                color: isOpen ? '#2563eb' : '#1f2937',
+                color: isOpen ? 'var(--silse-color-primary, var(--color-accent))' : 'var(--silse-color-text, var(--color-text))',
                 whiteSpace: 'normal',
                 overflowWrap: 'anywhere',
               }}
@@ -230,7 +232,7 @@ function AccordionView({
                   padding: '10px 12px',
                   fontSize: 13,
                   lineHeight: 1.5,
-                  color: '#1f2937',
+                  color: 'var(--silse-color-text, var(--color-text))',
                   whiteSpace: 'pre-wrap',
                   overflowWrap: 'anywhere',
                 }}
@@ -286,8 +288,8 @@ function TabsView({
                 fontWeight: isActive ? 600 : 500,
                 border: 'none',
                 borderBottom: isActive ? '2px solid #2563eb' : '2px solid transparent',
-                background: isActive ? '#eff6ff' : 'transparent',
-                color: isActive ? '#2563eb' : '#4a5160',
+                background: isActive ? 'var(--silse-color-primary, var(--color-accent-soft))' : 'transparent',
+                color: isActive ? 'var(--silse-color-primary, var(--color-accent))' : 'var(--silse-color-text, var(--color-text-soft))',
                 cursor: interactive ? 'pointer' : 'default',
                 marginBottom: '-2px',
                 display: 'inline-flex',
@@ -310,7 +312,7 @@ function TabsView({
             padding: 10,
             fontSize: 13,
             lineHeight: 1.5,
-            color: '#1f2937',
+            color: 'var(--silse-color-text, var(--color-text))',
             whiteSpace: 'pre-wrap',
             overflowWrap: 'anywhere',
             flex: 1,
@@ -354,9 +356,9 @@ function StepperView({
                   width: 28,
                   height: 28,
                   borderRadius: '50%',
-                  border: `2px solid ${isActive ? '#2563eb' : isPast ? '#2f7d4f' : '#d1d5db'}`,
-                  background: isActive ? '#2563eb' : isPast ? '#2f7d4f' : '#fff',
-                  color: isActive || isPast ? '#fff' : '#4a5160',
+                  border: `2px solid ${isActive ? 'var(--silse-color-primary, var(--color-accent))' : isPast ? 'var(--silse-color-success, var(--color-success))' : 'var(--silse-color-border, var(--color-border))'}`,
+                  background: isActive ? 'var(--silse-color-primary, var(--color-accent))' : isPast ? 'var(--silse-color-success, var(--color-success))' : 'var(--silse-color-surface, var(--color-panel))',
+                  color: isActive || isPast ? 'var(--silse-color-surface, var(--color-panel))' : 'var(--silse-color-text, var(--color-text-soft))',
                   fontSize: 12,
                   fontWeight: 700,
                   cursor: interactive ? 'pointer' : 'default',
@@ -374,7 +376,7 @@ function StepperView({
                   style={{
                     width: 24,
                     height: 2,
-                    background: isPast ? '#2f7d4f' : '#d1d5db',
+                    background: isPast ? 'var(--silse-color-success, var(--color-success))' : 'var(--silse-color-border, var(--color-border))',
                   }}
                 />
               )}
@@ -387,7 +389,7 @@ function StepperView({
           padding: '8px 4px',
           fontSize: 12,
           fontWeight: 600,
-          color: '#2563eb',
+          color: 'var(--silse-color-primary, var(--color-accent))',
           whiteSpace: 'normal',
           overflowWrap: 'anywhere',
         }}
@@ -399,12 +401,12 @@ function StepperView({
           padding: 10,
           fontSize: 13,
           lineHeight: 1.5,
-          color: '#1f2937',
+          color: 'var(--silse-color-text, var(--color-text))',
           whiteSpace: 'pre-wrap',
           overflowWrap: 'anywhere',
           flex: 1,
           overflow: 'auto',
-          background: '#f9fafb',
+          background: 'var(--silse-color-surface, var(--color-panel-soft))',
           borderRadius: 6,
         }}
       >
@@ -449,9 +451,9 @@ function CardGridView({
                 padding: '10px 8px',
                 fontSize: 12,
                 fontWeight: isActive ? 600 : 500,
-                border: `1px solid ${isActive ? '#2563eb' : '#d1d5db'}`,
-                background: isActive ? '#eff6ff' : '#fff',
-                color: isActive ? '#2563eb' : '#1f2937',
+                border: `1px solid ${isActive ? 'var(--silse-color-primary, var(--color-accent))' : 'var(--silse-color-border, var(--color-border))'}`,
+                background: isActive ? 'var(--silse-color-primary, var(--color-accent-soft))' : 'var(--silse-color-surface, var(--color-panel))',
+                color: isActive ? 'var(--silse-color-primary, var(--color-accent))' : 'var(--silse-color-text, var(--color-text))',
                 borderRadius: 6,
                 cursor: interactive ? 'pointer' : 'default',
                 textAlign: 'center',
@@ -472,10 +474,10 @@ function CardGridView({
           padding: 10,
           fontSize: 13,
           lineHeight: 1.5,
-          color: '#1f2937',
+          color: 'var(--silse-color-text, var(--color-text))',
           whiteSpace: 'pre-wrap',
           overflowWrap: 'anywhere',
-          background: '#f9fafb',
+          background: 'var(--silse-color-surface, var(--color-panel-soft))',
           borderRadius: 6,
           border: '1px solid #e3ddcd',
         }}
@@ -517,9 +519,9 @@ function TimelineView({
                     width: 20,
                     height: 20,
                     borderRadius: '50%',
-                    border: `2px solid ${isActive ? '#2563eb' : isPast ? '#2f7d4f' : '#d1d5db'}`,
-                    background: isActive ? '#2563eb' : isPast ? '#2f7d4f' : '#fff',
-                    color: '#fff',
+                    border: `2px solid ${isActive ? 'var(--silse-color-primary, var(--color-accent))' : isPast ? 'var(--silse-color-success, var(--color-success))' : 'var(--silse-color-border, var(--color-border))'}`,
+                    background: isActive ? 'var(--silse-color-primary, var(--color-accent))' : isPast ? 'var(--silse-color-success, var(--color-success))' : 'var(--silse-color-surface, var(--color-panel))',
+                    color: 'var(--silse-color-surface, var(--color-panel))',
                     fontSize: 10,
                     fontWeight: 700,
                     cursor: interactive ? 'pointer' : 'default',
@@ -532,7 +534,7 @@ function TimelineView({
                   {idx + 1}
                 </button>
                 {idx < layers.length - 1 && (
-                  <div style={{ width: 2, height: 24, background: isPast ? '#2f7d4f' : '#d1d5db' }} />
+                  <div style={{ width: 2, height: 24, background: isPast ? 'var(--silse-color-success, var(--color-success))' : 'var(--silse-color-border, var(--color-border))' }} />
                 )}
               </div>
               <div style={{ flex: 1, paddingBottom: 12 }}>
@@ -546,7 +548,7 @@ function TimelineView({
                     padding: 0,
                     fontSize: 12,
                     fontWeight: isActive ? 700 : 500,
-                    color: isActive ? '#2563eb' : '#1f2937',
+                    color: isActive ? 'var(--silse-color-primary, var(--color-accent))' : 'var(--silse-color-text, var(--color-text))',
                     cursor: interactive ? 'pointer' : 'default',
                     textAlign: 'left',
                     display: 'block',
@@ -560,7 +562,7 @@ function TimelineView({
                     style={{
                       fontSize: 12,
                       lineHeight: 1.5,
-                      color: '#1f2937',
+                      color: 'var(--silse-color-text, var(--color-text))',
                       whiteSpace: 'pre-wrap',
                       overflowWrap: 'anywhere',
                     }}

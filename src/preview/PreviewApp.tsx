@@ -72,7 +72,7 @@ export function PreviewApp() {
         ? currentPage.background.gradient
         : currentPage.background.type === 'image'
           ? `url(${currentPage.background.imageSrc}) center/cover no-repeat`
-          : '#ffffff';
+          : 'var(--color-panel)';
 
   const bgPattern = getBackgroundPatternForStylePack(project.stylePackId);
   const coverClass = currentPage.role === 'cover' ? getCoverClassForStylePack(project.stylePackId) : '';

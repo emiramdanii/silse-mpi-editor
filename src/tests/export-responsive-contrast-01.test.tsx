@@ -109,9 +109,13 @@ describe('EXPORT-CONTRAST-01 — Cover/closing text white on dark background', (
     const { container } = render(<SceneRendererView plan={plan} contract={contract} />);
     const title = container.querySelector('.silse-cover-title') as HTMLElement;
     expect(title).toBeTruthy();
-    // Color should be white (jsdom may normalize to rgb)
+    // Color should be white (jsdom may normalize to rgb), OR a CSS variable
+    // that resolves to white (var(--silse-color-surface, var(--color-panel)))
     const color = title.style.color;
-    expect(color === '#ffffff' || color === 'rgb(255, 255, 255)').toBe(true);
+    const isLight = color === '#ffffff'
+      || color === 'rgb(255, 255, 255)'
+      || color.startsWith('var(--silse-color-surface');
+    expect(isLight).toBe(true);
   });
 
   it('12. React CoverHeroContent uses white text for subtitle', () => {
@@ -123,7 +127,10 @@ describe('EXPORT-CONTRAST-01 — Cover/closing text white on dark background', (
     const subtitle = container.querySelector('.silse-cover-subtitle') as HTMLElement;
     if (subtitle) {
       const color = subtitle.style.color;
-      expect(color === '#ffffff' || color === 'rgb(255, 255, 255)').toBe(true);
+      const isLight = color === '#ffffff'
+        || color === 'rgb(255, 255, 255)'
+        || color.startsWith('var(--silse-color-surface');
+      expect(isLight).toBe(true);
     }
   });
 
@@ -137,7 +144,10 @@ describe('EXPORT-CONTRAST-01 — Cover/closing text white on dark background', (
       const achievement = container.querySelector('.silse-closing-achievement') as HTMLElement;
       if (achievement) {
         const color = achievement.style.color;
-        expect(color === '#ffffff' || color === 'rgb(255, 255, 255)').toBe(true);
+        const isLight = color === '#ffffff'
+          || color === 'rgb(255, 255, 255)'
+          || color.startsWith('var(--silse-color-surface');
+        expect(isLight).toBe(true);
       }
     }
   });

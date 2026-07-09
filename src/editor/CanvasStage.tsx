@@ -206,7 +206,7 @@ export function CanvasStage() {
         ? currentPage.background.gradient
         : currentPage?.background.type === 'image'
           ? `url(${currentPage.background.imageSrc}) center/cover no-repeat`
-          : '#ffffff';
+          : 'var(--color-panel)';
 
   const bgPattern = getBackgroundPatternForStylePack(project.stylePackId);
   const coverClass = currentPage?.role === 'cover' ? getCoverClassForStylePack(project.stylePackId) : '';
@@ -259,7 +259,7 @@ export function CanvasStage() {
         data-testid="zoom-controls"
         style={{
           display: 'flex', alignItems: 'center', gap: 4,
-          padding: '4px 8px', background: '#fff', borderRadius: 6,
+          padding: '4px 8px', background: 'var(--color-panel)', borderRadius: 6,
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)', position: 'absolute',
           top: 60, right: 16, zIndex: 100,
         }}
@@ -272,7 +272,7 @@ export function CanvasStage() {
         >−</button>
         <span
           data-testid="zoom-level"
-          style={{ fontSize: 11, fontWeight: 700, color: '#1e293b', minWidth: 36, textAlign: 'center' }}
+          style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text)', minWidth: 36, textAlign: 'center' }}
         >
           {Math.round(zoom * 100)}%
         </span>
@@ -286,7 +286,7 @@ export function CanvasStage() {
           onClick={zoomReset}
           data-testid="zoom-reset"
           title="Reset zoom (100%)"
-          style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 11, padding: '2px 6px', color: '#64748b' }}
+          style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 11, padding: '2px 6px', color: 'var(--color-muted)' }}
         >↺</button>
       </div>
       <div
@@ -498,8 +498,8 @@ export function CanvasStage() {
                     bottom: -6,
                     width: 12,
                     height: 12,
-                    background: '#2563eb',
-                    border: '2px solid #fff',
+                    background: 'var(--color-accent)',
+                    border: '2px solid var(--color-panel)',
                     borderRadius: '50%',
                     cursor: 'nwse-resize',
                     zIndex: 10,
@@ -515,8 +515,8 @@ export function CanvasStage() {
                     position: 'absolute',
                     bottom: -24,
                     left: 0,
-                    background: '#2563eb',
-                    color: '#fff',
+                    background: 'var(--color-accent)',
+                    color: 'var(--color-panel)',
                     fontSize: 10,
                     fontWeight: 700,
                     padding: '2px 6px',

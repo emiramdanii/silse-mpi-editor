@@ -145,7 +145,9 @@ describe('VISUAL-PREMIUM-01 — Scope 4: export HTML parity', () => {
 
   it('4f. export HTML contains choice-selected gradient background', () => {
     expect(html).toContain('.silse-choice-selected');
-    expect(html).toMatch(/linear-gradient\(135deg,rgba\(37,99,235,0\.06\)/);
+    // Gradient uses the editor theme accent color (rgba of #1e5b8f = 30,91,143),
+    // not the old Tailwind blue-600 (37,99,235).
+    expect(html).toMatch(/linear-gradient\(135deg,rgba\(30,91,143,0\.06\)/);
   });
 
   it('4g. export HTML contains badge gradient background', () => {

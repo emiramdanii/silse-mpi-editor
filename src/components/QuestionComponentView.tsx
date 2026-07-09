@@ -57,8 +57,9 @@ export function QuestionComponentView({
         display: 'flex',
         flexDirection: 'column',
         gap: 8,
-        overflow: 'auto',
-        outline: selected ? '2px solid var(--silse-color-primary, #2563eb)' : 'none',
+        overflow: 'hidden',
+        color: 'var(--silse-color-text, var(--color-text))',
+        outline: selected ? '2px solid var(--silse-color-primary, var(--color-accent))' : 'none',
         outlineOffset: 2,
         cursor: 'pointer',
       }
@@ -73,22 +74,24 @@ export function QuestionComponentView({
         display: 'flex',
         flexDirection: 'column',
         gap: 8,
-        overflow: 'auto',
-        outline: selected ? '2px solid var(--silse-color-primary, #2563eb)' : 'none',
+        overflow: 'hidden',
+        color: 'var(--silse-color-text, var(--color-text))',
+        outline: selected ? '2px solid var(--silse-color-primary, var(--color-accent))' : 'none',
         outlineOffset: 2,
         cursor: 'pointer',
       };
 
-  // UX Lock: choice style — no clipping
+  // UX Lock: choice style — no clipping. Text color must always contrast with card bg.
   const choiceStyle: CSSProperties = {
     padding: '10px 14px',
     minHeight: 44,
     height: 'auto',
-    border: '1px solid var(--silse-color-border, #d1d5db)',
+    border: '1px solid var(--silse-color-border, var(--color-border))',
     borderRadius: 6,
     cursor: onAnswer ? 'pointer' : 'default',
     fontSize: 14,
     lineHeight: 1.5,
+    color: 'var(--silse-color-text, var(--color-text))',
     whiteSpace: 'normal', // explicitly NOT nowrap
     overflowWrap: 'anywhere', // safe wrapping
     wordBreak: 'break-word',
@@ -121,11 +124,11 @@ export function QuestionComponentView({
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {component.choices.map((choice, idx) => {
-          let bg = '#ffffff';
+          let bg = 'var(--silse-color-surface, var(--color-panel))';
           let stateClass = 'silse-choice-default';
-          if (isAnswered && isCorrect(idx)) { bg = '#d1fae5'; stateClass = 'silse-choice-correct'; }
-          else if (isAnswered && isSelected(idx) && !isCorrect(idx)) { bg = '#fee2e2'; stateClass = 'silse-choice-wrong'; }
-          else if (isSelected(idx)) { bg = '#dbeafe'; stateClass = 'silse-choice-selected'; }
+          if (isAnswered && isCorrect(idx)) { bg = 'var(--silse-color-success, var(--color-success-soft))'; stateClass = 'silse-choice-correct'; }
+          else if (isAnswered && isSelected(idx) && !isCorrect(idx)) { bg = 'var(--silse-color-danger, var(--color-danger-soft))'; stateClass = 'silse-choice-wrong'; }
+          else if (isSelected(idx)) { bg = 'var(--silse-color-primary, var(--color-accent-soft))'; stateClass = 'silse-choice-selected'; }
 
           return (
             <div
@@ -160,8 +163,12 @@ export function QuestionComponentView({
           padding: '8px 12px',
           borderRadius: 6,
           fontSize: 13,
-          backgroundColor: isCorrectAnswer ? '#d1fae5' : '#fee2e2',
-          color: isCorrectAnswer ? '#065f46' : '#991b1b',
+          backgroundColor: isCorrectAnswer
+            ? 'var(--silse-color-success, var(--color-success-soft))'
+            : 'var(--silse-color-danger, var(--color-danger-soft))',
+          color: isCorrectAnswer
+            ? 'var(--silse-color-success, var(--color-success))'
+            : 'var(--silse-color-danger, var(--color-danger))',
           whiteSpace: 'normal',
           overflowWrap: 'anywhere',
           position: 'relative',

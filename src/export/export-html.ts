@@ -355,6 +355,24 @@ function generateCSS(cssVars: Record<string, string>, profile: PremiumExportProf
 
   const baseCss = `
 :root {
+  /* Editor theme tokens — always available as fallback when style pack doesn't override */
+  --color-bg: #f8f6f1;
+  --color-panel: #ffffff;
+  --color-panel-soft: #fbfaf7;
+  --color-border: #e3ddcd;
+  --color-border-strong: #c8be9f;
+  --color-text: #1f2533;
+  --color-text-soft: #4a5160;
+  --color-muted: #8a8775;
+  --color-accent: #1e5b8f;
+  --color-accent-hover: #184b76;
+  --color-accent-soft: #e8f0f8;
+  --color-success: #2f7d4f;
+  --color-success-soft: #e1f3e8;
+  --color-warning: #b9740e;
+  --color-warning-soft: #fdf3e1;
+  --color-danger: #c0392b;
+  --color-danger-soft: #fbe6e3;
 ${varsStr}
   --silse-navy: ${c.navy};
   --silse-blue: ${c.blue};
@@ -627,8 +645,8 @@ body {
 .skin-card-flat { border:1px solid var(--silse-color-border); border-radius:10px; background:var(--silse-color-surface); box-shadow:0 2px 8px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04); }
 .skin-card-soft { border:1px solid rgba(255,200,200,0.4); border-radius:18px; background:linear-gradient(135deg,var(--silse-color-surface) 0%,rgba(255,255,255,0.7) 100%); box-shadow:0 4px 16px rgba(0,0,0,0.08),0 1px 4px rgba(0,0,0,0.04); }
 .skin-card-bold { border:2px solid var(--silse-color-primary); border-radius:10px; background:var(--silse-color-surface); box-shadow:0 0 0 1px rgba(59,130,246,0.3),0 6px 20px rgba(0,0,0,0.5),0 2px 8px rgba(59,130,246,0.15); }
-.skin-button-clean { border:1px solid var(--silse-color-primary); border-radius:6px; background:var(--silse-color-primary); color:#fff; font-weight:600; box-shadow:0 1px 2px rgba(37,99,235,0.2); }
-.skin-button-rounded { border:none; border-radius:24px; background:linear-gradient(135deg,var(--silse-color-primary) 0%,var(--silse-color-secondary) 100%); color:#fff; font-weight:600; box-shadow:0 2px 6px rgba(245,158,11,0.3); }
+.skin-button-clean { border:1px solid var(--silse-color-primary, var(--color-accent)); border-radius:6px; background:var(--silse-color-primary, var(--color-accent)); color:var(--silse-color-surface, var(--color-panel)); font-weight:600; box-shadow:0 1px 2px rgba(30,91,143,0.2); }
+.skin-button-rounded { border:none; border-radius:24px; background:linear-gradient(135deg,var(--silse-color-primary, var(--color-accent)) 0%,var(--silse-color-secondary, var(--color-warning)) 100%); color:var(--silse-color-surface, var(--color-panel)); font-weight:600; box-shadow:0 2px 6px rgba(185,116,14,0.3); }
 .skin-button-mission { border:2px solid var(--silse-color-primary); border-radius:4px; background:var(--silse-color-surface); color:var(--silse-color-primary); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; box-shadow:0 0 12px rgba(59,130,246,0.4); }
 .skin-quiz-calm { border:1px solid var(--silse-color-border); border-radius:10px; background:var(--silse-color-surface); }
 .skin-quiz-playful { border:2px solid rgba(245,158,11,0.3); border-radius:16px; background:linear-gradient(135deg,rgba(254,243,199,0.5) 0%,rgba(255,255,255,0.8) 100%); }
@@ -672,8 +690,8 @@ body {
 .silse-cover-mission [data-variant="subtitle"] { letter-spacing:2px; opacity:0.65; text-transform:uppercase; font-size:0.8em; font-weight:600; }
 /* QUIZ-GAME-VISUAL-POLISH-01: quiz/game visual polish */
 .silse-choice-default { border-left:3px solid transparent; transition:border-color 0.15s,background-color 0.15s; }
-.silse-choice-default:hover { border-left-color:var(--silse-color-primary,#2563eb); }
-.silse-choice-selected { border-left:3px solid var(--silse-color-primary,#2563eb); box-shadow:inset 0 0 0 1px rgba(37,99,235,0.2); }
+.silse-choice-default:hover { border-left-color:var(--silse-color-primary,var(--color-accent)); }
+.silse-choice-selected { border-left:3px solid var(--silse-color-primary,var(--color-accent)); box-shadow:inset 0 0 0 1px rgba(30,91,143,0.2); }
 .silse-choice-correct { border-left:4px solid #16a34a; box-shadow:inset 0 0 0 1px rgba(22,163,74,0.2); }
 .silse-choice-wrong { border-left:4px solid #dc2626; box-shadow:inset 0 0 0 1px rgba(220,38,38,0.15); }
 .silse-feedback-correct { border-left:4px solid #16a34a; font-weight:500; }
@@ -694,8 +712,8 @@ body {
 .silse-cover-clean .silse-block-shell::before,.silse-cover-soft .silse-block-shell::before,.silse-cover-mission .silse-block-shell::before { content:''; position:absolute; top:24px; right:24px; width:48px; height:2px; background:linear-gradient(90deg,transparent,rgba(249,193,46,0.6),transparent); pointer-events:none; z-index:0; }
 .silse-block-panel { position:relative; box-shadow:0 1px 2px rgba(0,0,0,0.04),0 4px 12px rgba(0,0,0,0.06),0 12px 32px rgba(0,0,0,0.04) !important; border:1px solid rgba(255,255,255,0.06) !important; }
 .silse-block-panel::before { content:''; position:absolute; top:0; left:12px; right:12px; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent); pointer-events:none; }
-.silse-choice-default:hover { border-left-color:var(--silse-color-primary,#2563eb); box-shadow:0 2px 8px rgba(37,99,235,0.12); transform:translateY(-1px); }
-.silse-choice-selected { border-left:3px solid var(--silse-color-primary,#2563eb); box-shadow:inset 0 0 0 1px rgba(37,99,235,0.2),0 2px 12px rgba(37,99,235,0.15); background:linear-gradient(135deg,rgba(37,99,235,0.06) 0%,rgba(37,99,235,0.02) 100%); }
+.silse-choice-default:hover { border-left-color:var(--silse-color-primary,var(--color-accent)); box-shadow:0 2px 8px rgba(30,91,143,0.12); transform:translateY(-1px); }
+.silse-choice-selected { border-left:3px solid var(--silse-color-primary,var(--color-accent)); box-shadow:inset 0 0 0 1px rgba(30,91,143,0.2),0 2px 12px rgba(30,91,143,0.15); background:linear-gradient(135deg,rgba(30,91,143,0.06) 0%,rgba(30,91,143,0.02) 100%); }
 .silse-choice-correct { border-left:4px solid #16a34a; box-shadow:inset 0 0 0 1px rgba(22,163,74,0.25),0 2px 16px rgba(22,163,74,0.18); background:linear-gradient(135deg,rgba(22,163,74,0.08) 0%,rgba(22,163,74,0.02) 100%); }
 .silse-choice-wrong { border-left:4px solid #dc2626; box-shadow:inset 0 0 0 1px rgba(220,38,38,0.2),0 2px 12px rgba(220,38,38,0.12); }
 .silse-feedback-correct { border-left:4px solid #16a34a; background:linear-gradient(135deg,rgba(22,163,74,0.08) 0%,rgba(22,163,74,0.02) 100%); font-weight:500; }
@@ -1430,7 +1448,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
   function renderGameMissionSceneContent(slot, content) {
     var wrapper = document.createElement('div');
     wrapper.className = 'silse-game-scene';
-    wrapper.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;gap:10px;padding:16px;box-sizing:border-box;overflow:auto;';
+    wrapper.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;gap:10px;padding:16px;box-sizing:border-box;overflow:hidden;';
 
     var rs = slot.resolvedStyle || {};
     var surf = rs.surface || {};
@@ -1440,15 +1458,15 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     briefing.className = 'silse-game-briefing';
     var briefingCss = 'padding:' + (surf.padding != null ? surf.padding : 12) + 'px;';
     briefingCss += 'border-radius:' + (surf.radius != null ? surf.radius : 10) + 'px;';
-    briefingCss += 'background:' + (surf.background || '#fffbeb') + ';';
-    briefingCss += 'border:' + (surf.border || '1px solid #fde68a') + ';';
+    briefingCss += 'background:' + (surf.background || 'var(--silse-color-warning-soft, var(--color-warning-soft))') + ';';
+    briefingCss += 'border:' + (surf.border || '1px solid var(--silse-color-warning, var(--color-warning))') + ';';
     briefing.style.cssText = briefingCss;
     var briefingLabel = document.createElement('div');
-    briefingLabel.style.cssText = 'font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;margin-bottom:4px;';
+    briefingLabel.style.cssText = 'font-size:11px;font-weight:700;color:var(--silse-color-warning, var(--color-warning));text-transform:uppercase;margin-bottom:4px;';
     briefingLabel.textContent = '📋 Briefing Misi';
     briefing.appendChild(briefingLabel);
     var briefingText = document.createElement('div');
-    briefingText.style.cssText = 'font-size:15px;font-weight:600;';
+    briefingText.style.cssText = 'font-size:15px;font-weight:600;color:var(--silse-color-text, var(--color-text));';
     briefingText.textContent = content.briefing || '';
     briefing.appendChild(briefingText);
     wrapper.appendChild(briefing);
@@ -1456,13 +1474,13 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     // Target
     var target = document.createElement('div');
     target.className = 'silse-game-target';
-    target.style.cssText = 'padding:12px;border-radius:10px;background:#eff6ff;border:1px solid #bfdbfe;';
+    target.style.cssText = 'padding:12px;border-radius:10px;background:var(--silse-color-primary, var(--color-accent-soft));border:1px solid var(--silse-color-primary, var(--color-accent));';
     var targetLabel = document.createElement('div');
-    targetLabel.style.cssText = 'font-size:11px;font-weight:700;color:#1e40af;text-transform:uppercase;margin-bottom:4px;';
+    targetLabel.style.cssText = 'font-size:11px;font-weight:700;color:var(--silse-color-primary, var(--color-accent));text-transform:uppercase;margin-bottom:4px;';
     targetLabel.textContent = '🎯 Target Misi';
     target.appendChild(targetLabel);
     var targetText = document.createElement('div');
-    targetText.style.cssText = 'font-size:14px;';
+    targetText.style.cssText = 'font-size:14px;color:var(--silse-color-text, var(--color-text));';
     targetText.textContent = content.missionTarget || '';
     target.appendChild(targetText);
     wrapper.appendChild(target);
@@ -1470,21 +1488,21 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     // Action grid
     var actionGrid = document.createElement('div');
     actionGrid.className = 'silse-game-action-grid';
-    actionGrid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));gap:10px;';
+    actionGrid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:8px;';
     for (var ai = 0; ai < content.actions.length; ai++) {
       (function(actionIdx, action) {
         var card = document.createElement('div');
         card.className = 'silse-game-action-card';
         card.setAttribute('data-action-index', String(actionIdx));
-        card.style.cssText = 'padding:14px;border-radius:12px;background:#fff;border:2px solid #d1d5db;cursor:pointer;font-size:14px;font-weight:600;min-height:80px;display:flex;flex-direction:column;gap:6px;';
+        card.style.cssText = 'padding:12px;border-radius:12px;background:var(--silse-color-surface, var(--color-panel));border:2px solid var(--silse-color-border, var(--color-border));cursor:pointer;font-size:14px;font-weight:600;color:var(--silse-color-text, var(--color-text));min-height:64px;display:flex;flex-direction:column;gap:6px;';
         var cardHeader = document.createElement('div');
         cardHeader.style.cssText = 'display:flex;align-items:center;gap:8px;';
         var letterBadge = document.createElement('span');
-        letterBadge.style.cssText = 'display:inline-grid;place-items:center;min-width:28px;height:28px;border-radius:8px;background:#1d3557;color:#fff;font-size:13px;font-weight:900;';
+        letterBadge.style.cssText = 'display:inline-grid;place-items:center;min-width:28px;height:28px;border-radius:8px;background:var(--silse-color-primary, var(--color-accent));color:var(--silse-color-surface, var(--color-panel));font-size:13px;font-weight:900;';
         letterBadge.textContent = String.fromCharCode(65 + actionIdx);
         cardHeader.appendChild(letterBadge);
         var actionLabel = document.createElement('span');
-        actionLabel.style.cssText = 'font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;';
+        actionLabel.style.cssText = 'font-size:11px;font-weight:700;color:var(--silse-color-muted-text, var(--color-muted));text-transform:uppercase;';
         actionLabel.textContent = 'Aksi';
         cardHeader.appendChild(actionLabel);
         card.appendChild(cardHeader);
@@ -1499,18 +1517,18 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     // Reward preview
     var reward = document.createElement('div');
     reward.className = 'silse-game-reward';
-    reward.style.cssText = 'padding:12px;border-radius:10px;background:#fffbeb;border:2px solid #fbbf24;display:flex;align-items:center;gap:12px;';
+    reward.style.cssText = 'padding:12px;border-radius:10px;background:var(--silse-color-warning-soft, var(--color-warning-soft));border:2px solid var(--silse-color-warning, var(--color-warning));display:flex;align-items:center;gap:12px;';
     var rewardIcon = document.createElement('span');
     rewardIcon.style.fontSize = '24px';
     rewardIcon.textContent = content.reward.icon || '🏅';
     reward.appendChild(rewardIcon);
     var rewardText = document.createElement('div');
     var rewardTextLabel = document.createElement('div');
-    rewardTextLabel.style.cssText = 'font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;';
+    rewardTextLabel.style.cssText = 'font-size:11px;font-weight:700;color:var(--silse-color-warning, var(--color-warning));text-transform:uppercase;';
     rewardTextLabel.textContent = 'Reward';
     rewardText.appendChild(rewardTextLabel);
     var rewardTextValue = document.createElement('strong');
-    rewardTextValue.style.cssText = 'font-size:14px;';
+    rewardTextValue.style.cssText = 'font-size:14px;color:var(--silse-color-text, var(--color-text));';
     rewardTextValue.textContent = content.reward.label || '';
     rewardText.appendChild(rewardTextValue);
     reward.appendChild(rewardText);
@@ -1528,11 +1546,11 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var badge = rs.quizChoiceBadge || {};
     var panel = rs.quizQuestionPanel || {};
     var premiumShadow = (plan.card && plan.card.shadow) || '0 2px 8px rgba(0,0,0,0.08)';
-    var quizPanelBorder = ansCard.border || (plan.palette ? plan.palette.border : '#d1d5db');
+    var quizPanelBorder = ansCard.border || (plan.palette ? plan.palette.border : 'var(--silse-color-border, var(--color-border))');
 
     var wrapper = document.createElement('div');
     wrapper.className = 'silse-quiz-scene silse-premium-quiz-scene';
-    wrapper.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;gap:10px;padding:16px;box-sizing:border-box;overflow:auto;';
+    wrapper.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;gap:10px;padding:16px;box-sizing:border-box;overflow:hidden;';
 
     // Challenge header
     var header = document.createElement('div');
@@ -1544,10 +1562,10 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     // Question focus panel
     var prompt = document.createElement('div');
     prompt.className = 'silse-quiz-question-focus silse-premium-quiz-focus';
-    var promptCss = 'font-size:17px;font-weight:600;';
+    var promptCss = 'font-size:17px;font-weight:600;color:' + (plan.palette ? plan.palette.text : 'var(--silse-color-text, var(--color-text))') + ';';
     promptCss += 'padding:' + (panel.padding != null ? panel.padding : 16) + 'px;';
     promptCss += 'border-radius:' + (panel.radius != null ? panel.radius : (plan.card ? plan.card.radius : 12)) + 'px;';
-    promptCss += 'background:' + (panel.background || '#f8fafc') + ';';
+    promptCss += 'background:' + (panel.background || 'var(--silse-color-surface, var(--color-panel))') + ';';
     promptCss += 'border:1px solid ' + quizPanelBorder + ';';
     promptCss += 'box-shadow:' + premiumShadow + ';';
     prompt.style.cssText = promptCss;
@@ -1557,7 +1575,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     // Answer grid
     var answerGrid = document.createElement('div');
     answerGrid.className = 'silse-quiz-answer-grid silse-premium-quiz-grid';
-    answerGrid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:10px;';
+    answerGrid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));gap:10px;';
     for (var ci = 0; ci < content.choices.length; ci++) {
       (function(choiceIdx, choice) {
         var card = document.createElement('div');
@@ -1565,16 +1583,16 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         card.setAttribute('data-choice-id', choice.id);
         var cardCss = 'padding:' + (ansCard.padding != null ? ansCard.padding : 14) + 'px;';
         cardCss += 'border-radius:' + (ansCard.radius != null ? ansCard.radius : (plan.card ? plan.card.radius : 12)) + 'px;';
-        cardCss += 'background:' + (ansCard.background || '#fff') + ';';
+        cardCss += 'background:' + (ansCard.background || 'var(--silse-color-surface, var(--color-panel))') + ';';
         cardCss += 'border:2px solid ' + quizPanelBorder + ';';
-        cardCss += 'cursor:pointer;font-size:14px;font-weight:600;min-height:60px;display:flex;align-items:center;gap:12px;transition:all 0.18s ease;';
+        cardCss += 'cursor:pointer;font-size:14px;font-weight:600;min-height:52px;color:' + (plan.palette ? plan.palette.text : 'var(--silse-color-text, var(--color-text))') + ';display:flex;align-items:center;gap:12px;transition:all 0.18s ease;';
         cardCss += 'box-shadow:' + premiumShadow + ';';
         card.style.cssText = cardCss;
 
         // Choice letter badge
         var letterBadge = document.createElement('span');
         letterBadge.className = 'silse-quiz-choice-badge silse-premium-quiz-badge';
-        letterBadge.style.cssText = 'display:inline-grid;place-items:center;min-width:32px;height:32px;border-radius:' + (badge.radius != null ? badge.radius : 8) + 'px;background:' + (badge.background || 'var(--silse-color-primary)') + ';color:' + (badge.color || '#fff') + ';font-size:14px;font-weight:900;flex-shrink:0;';
+        letterBadge.style.cssText = 'display:inline-grid;place-items:center;min-width:32px;height:32px;border-radius:' + (badge.radius != null ? badge.radius : 8) + 'px;background:' + (badge.background || 'var(--silse-color-primary, var(--color-accent))') + ';color:' + (badge.color || 'var(--silse-color-surface, var(--color-panel))') + ';font-size:14px;font-weight:900;flex-shrink:0;';
         letterBadge.textContent = String.fromCharCode(65 + choiceIdx);
         card.appendChild(letterBadge);
 
@@ -1611,13 +1629,13 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var palette = plan.palette || {};
     var ty = plan.typography || {};
     var premiumShadow = (plan.card && plan.card.shadow) || '0 2px 8px rgba(0,0,0,0.08)';
-    var surfBorder = surf.border || (plan.card ? plan.card.border : '1px solid #e5e7eb');
+    var surfBorder = surf.border || (plan.card ? plan.card.border : '1px solid var(--silse-color-border, var(--color-border))');
     var surfRadius = surf.radius != null ? surf.radius : (plan.card ? plan.card.radius : 12);
     var surfPadding = surf.padding != null ? surf.padding : (plan.card ? plan.card.padding : 16);
 
     var wrapper = document.createElement('div');
     wrapper.className = 'silse-learning-scene silse-premium-learning-scene';
-    wrapper.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;gap:12px;padding:16px;box-sizing:border-box;overflow:auto;';
+    wrapper.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;gap:12px;padding:16px;box-sizing:border-box;overflow:hidden;';
 
     // Concept header
     var header = document.createElement('div');
@@ -1904,7 +1922,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     // PREMIUM-STYLE-AFTER-FOUNDATION-01: subtle radial gradient + more gap + padding
     // TEMPLATE-PEDAGOGIS-READY-02 PATCH B: explicit overflow — vertical auto,
     // horizontal hidden. Parity with the in-app SceneShell.
-    el.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;gap:16px;padding:28px;box-sizing:border-box;overflow-x:hidden;overflow-y:auto;background:radial-gradient(ellipse at top,' + (p.surface || 'var(--silse-color-surface)') + ' 0%,' + (p.background || 'var(--silse-color-background)') + ' 70%);color:' + p.text + ';font-family:' + (ty.bodyFont || 'sans-serif') + ';';
+    el.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;gap:16px;padding:28px;box-sizing:border-box;overflow:hidden;background:radial-gradient(ellipse at top,' + (p.surface || 'var(--silse-color-surface)') + ' 0%,' + (p.background || 'var(--silse-color-background)') + ' 70%);color:' + p.text + ';font-family:' + (ty.bodyFont || 'sans-serif') + ';';
     // DEEP-STYLE-INJECTION-01: apply customStyle.shell (pre-computed CSS string)
     if (_sceneCustomStyleCss && _sceneCustomStyleCss.shell) {
       el.style.cssText += _sceneCustomStyleCss.shell;
@@ -3169,7 +3187,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         letterBadge.textContent = String.fromCharCode(65 + actionIdx);
         cardHeader.appendChild(letterBadge);
         var actionLabel = document.createElement('span');
-        actionLabel.style.cssText = 'font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;';
+        actionLabel.style.cssText = 'font-size:11px;font-weight:700;color:var(--silse-color-muted-text, var(--color-muted));text-transform:uppercase;';
         actionLabel.textContent = 'Aksi';
         cardHeader.appendChild(actionLabel);
         card.appendChild(cardHeader);
