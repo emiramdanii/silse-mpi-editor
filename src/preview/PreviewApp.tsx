@@ -132,26 +132,6 @@ export function PreviewApp() {
         </div>
       </div>
       <div className="preview-canvas-wrap">
-        {/* CORE-MPI-UX-FOUNDATION-01: Navigation + Progress for scene-renderable projects */}
-        {useSceneRenderer && (
-          <>
-            <NavigationToolbarBlock
-              contract={getDesignContractWithProjectStyle(project.stylePackId, project.style)}
-              currentSceneIndex={currentIdx}
-              totalScenes={project.pages.length}
-              sceneTitle={currentPage.title}
-              onPrev={navigatePrev}
-              onNext={navigateNext}
-              canPrev={!isFirst}
-              canNext={!isLast}
-            />
-            <ProgressBarBlock
-              contract={getDesignContractWithProjectStyle(project.stylePackId, project.style)}
-              currentSceneIndex={currentIdx}
-              totalScenes={project.pages.length}
-            />
-          </>
-        )}
         <div
           className={`canvas-frame preview-canvas silse-premium-stage ${bgPattern.pageClass} ${bgPattern.patternClass} ${coverClass} ${animProfile.pageEnterClass}`.trim()}
           data-testid="preview-canvas-frame"
@@ -163,6 +143,10 @@ export function PreviewApp() {
             ...premiumCssVars,
           } as React.CSSProperties}
         >
+          {/* BUG-NAV-02 (Option C): Navigation toolbar moved INSIDE canvas-frame
+              to match export HTML positioning (floating pill at bottom-center).
+              Previously rendered as a top horizontal bar OUTSIDE the canvas,
+              causing WYSINWYG mismatch between preview and export. */}
           {/* PATCH-1: Premium auto-decoration layer (mirrors export + editor). */}
           {(isCover || isClosing) && (
             <div className="silse-premium-decoration" data-testid="silse-premium-decoration-preview" aria-hidden="true">
@@ -314,6 +298,32 @@ export function PreviewApp() {
             }
             return null;
           })}
+
+          {/* BUG-NAV-02 (Option C): Navigation toolbar + progress bar rendered
+              INSIDE canvas-frame as floating pill overlay, matching export HTML.
+              Positioned at bottom-center via .preview-canvas .silse-block-nav-toolbar
+              CSS rule in styles.css. pointer-events: auto on the toolbar ensures
+              clicks pass through to buttons despite .silse-premium-decoration
+              wrapper's pointer-events: none. */}
+          {useSceneRenderer && (
+            <>
+              <NavigationToolbarBlock
+                contract={getDesignContractWithProjectStyle(project.stylePackId, project.style)}
+                currentSceneIndex={currentIdx}
+                totalScenes={project.pages.length}
+                sceneTitle={currentPage.title}
+                onPrev={navigatePrev}
+                onNext={navigateNext}
+                canPrev={!isFirst}
+                canNext={!isLast}
+              />
+              <ProgressBarBlock
+                contract={getDesignContractWithProjectStyle(project.stylePackId, project.style)}
+                currentSceneIndex={currentIdx}
+                totalScenes={project.pages.length}
+              />
+            </>
+          )}
         </div>
       </div>
     </div>
