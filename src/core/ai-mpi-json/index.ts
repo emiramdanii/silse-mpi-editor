@@ -3,14 +3,20 @@
  *
  * Layer: core/ai-mpi-json
  *
- * Dua set API:
- *   1. Proof-of-concept (MPI-JSON-SCENE-PROOF-01): AiMpiJson, normalizeAiMpiJson,
- *      aiMpiJsonToProject — simple flat schema untuk game-mission proof.
- *   2. Foundation (AI-MPI-JSON-BLUEPRINT-01): AiMpiBlueprint, validateAiMpiJson,
- *      normalizeBlueprint — rich schema dengan scenes/slots/placements/styleIntent/designSystem.
+ * Single canonical pipeline (FOUNDATION, AI-MPI-JSON-BLUEPRINT-01):
+ *   raw JSON → validateAiMpiJson → normalizeAiMpiJson → aiBlueprintToSimpleProject
+ *              (or → aiJsonToMpiContainer for the container path)
+ *
+ * Scene helpers (isGameMissionScene, AI_MPI_SCENE_GAME_MISSION) are
+ * production utilities used by GameComponentView.
+ *
+ * LEGACY pipeline (MPI-JSON-SCENE-PROOF-01) is in ./legacy/ and is NOT
+ * re-exported here. Only the test file mpi-json-scene-proof-01.test.tsx
+ * imports from ./legacy/ directly. Once that test is ported to the new
+ * schema, ./legacy/ will be deleted.
  */
 
-// === Foundation API (AI-MPI-JSON-BLUEPRINT-01) ===
+// === Foundation schema types ===
 export type {
   AiMpiBlueprint,
   AiBlueprintMetadata,
@@ -32,22 +38,77 @@ export type {
   AiBlueprintAsset,
   AiBlueprintRuntime,
   AiBlueprintExportConfig,
+  CustomStyleMap,
 } from './schema';
 
+// === Foundation validator ===
 export {
   validateAiMpiJson,
   isValidAiMpiJson,
   type BlueprintValidationError,
 } from './validateAiMpiJson';
 
+// === Foundation normalizer ===
+// AUDIT 5.9.4: normalizeAiMpiJson now resolves unambiguously to the
+// foundation normalizer. Previously the barrel exported both
+// normalizeAiMpiJson (kebab-case PoC) AND normalizeBlueprint (alias for
+// the camelCase foundation one), which was a footgun — developers
+// importing { normalizeAiMpiJson } from the barrel got the LEGACY
+// normalizer by default.
+//
+// normalizeBlueprint is kept as a @deprecated alias for backward compat
+// with 7 test files that still use it. New code should use normalizeAiMpiJson.
+// The alias will be removed once all tests are updated.
 export {
-  normalizeAiMpiJson as normalizeBlueprint,
+  normalizeAiMpiJson,
   AiMpiBlueprintError,
 } from './normalizeAiMpiJson';
 
+/** @deprecated Use normalizeAiMpiJson instead. Alias kept for backward compat. */
+export { normalizeAiMpiJson as normalizeBlueprint } from './normalizeAiMpiJson';
+
+// === Foundation container bridge ===
 export { aiJsonToMpiContainer } from './aiJsonToMpiContainer';
 
-// === Proof-of-concept API (MPI-JSON-SCENE-PROOF-01, backward compat) ===
+// === BASELINE-SYNC: AiMpiBlueprint → SimpleProject bridge ===
+export { aiBlueprintToSimpleProject } from './aiBlueprintToSimpleProject';
+
+// === Scene helpers (production utilities, NOT legacy) ===
+export {
+  isGameMissionScene,
+  AI_MPI_SCENE_GAME_MISSION,
+} from './scene-helpers';
+
+// === Round-trip verification (audit 1.4) ===
+export { verifyRoundTrip, type RoundTripIssue } from './round-trip-verify';
+
+// === Silent failure handler (import warnings) ===
+export {
+  collectImportWarnings,
+  formatImportWarnings,
+  isKnownSceneType,
+  isKnownContentKind,
+  type ImportWarning,
+} from './silent-failure-handler';
+
+// === Human-readable errors ===
+export {
+  translateErrors,
+  formatHumanReadableErrors,
+} from './human-readable-errors';
+
+// ============================================================================
+// @deprecated LEGACY re-exports (MPI-JSON-SCENE-PROOF-01)
+// ============================================================================
+// These are kept ONLY for the legacy test file mpi-json-scene-proof-01.test.tsx.
+// Production code must NOT import from here — use the foundation pipeline above.
+// Once the legacy test is ported to the new schema, this entire block + the
+// ./legacy/ subfolder will be deleted.
+//
+// The legacy test imports directly from ./legacy/* files (not from this barrel),
+// so these re-exports are technically unused here. They exist only to keep the
+// barrel's public surface documented for audit purposes.
+// ============================================================================
 export type {
   AiMpiJson,
   AiMpiMetadata,
@@ -60,26 +121,10 @@ export type {
   AiMpiGameReward as AiMpiGameRewardPoc,
   AiMpiQuizBlock,
   AiMpiScene,
-} from './ai-mpi-json-schema';
+} from './legacy/ai-mpi-json-schema';
 
+/** @deprecated Legacy PoC normalizer — use normalizeAiMpiJson (foundation). */
 export {
-  AI_MPI_SCENE_GAME_MISSION,
-  AI_MPI_SCENE_COVER_HERO,
-  AI_MPI_SCENE_MATERIAL_BRIEF,
-  AI_MPI_SCENE_QUIZ_CHECK,
-  AI_MPI_SCENE_CLOSING_THANKS,
-} from './ai-mpi-json-schema';
-
-export {
-  normalizeAiMpiJson,
+  normalizeAiMpiJson as normalizeAiMpiJsonLegacy,
   AiMpiJsonError,
-} from './normalize-ai-mpi-json';
-
-export {
-  aiMpiJsonToProject,
-  getPageScene,
-  isGameMissionScene,
-} from './ai-mpi-json-to-project';
-
-// BASELINE-SYNC: AiMpiBlueprint → SimpleProject bridge.
-export { aiBlueprintToSimpleProject } from './aiBlueprintToSimpleProject';
+} from './legacy/normalize-ai-mpi-json';

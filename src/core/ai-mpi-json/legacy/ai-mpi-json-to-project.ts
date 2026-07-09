@@ -1,24 +1,18 @@
 /**
  * AI MPI JSON → SimpleProject Converter (MPI-JSON-SCENE-PROOF-01).
  *
- * Layer: core/ai-mpi-json (pure function, no React/DOM)
- * Allowed imports: ../types, ../ids, ../style-presets, ../style-packs/style-pack-registry, ./ai-mpi-json-schema
+ * @deprecated LEGACY pipeline — kept only for mpi-json-scene-proof-01.test.tsx.
+ * Production code uses the foundation pipeline:
+ *   normalizeAiMpiJson (camelCase) → aiBlueprintToSimpleProject
+ * This file will be deleted once the test is ported to the new schema.
+ *
+ * Layer: core/ai-mpi-json/legacy (pure function, no React/DOM)
+ * Allowed imports: ../../types, ../../ids, ../../style-presets,
+ *                  ../../style-packs/style-pack-registry, ./ai-mpi-json-schema
  *
  * Kontrak (MPI-JSON-SCENE-PROOF-01):
  *   Pure function yang mengkonversi AiMpiJson (input AI) menjadi SimpleProject
- *   (format internal app). Preserve scene intent di metadata tambahan:
- *     - page.scene → disimpan di page metadata (tidak ada field baru di SimplePage,
- *       jadi scene di-encode di title atau lewat component sceneMetadata)
- *     - game block briefing/missionTarget/reward → disimpan di GameComponent.sceneMetadata
- *     - game actions → dipetakan ke missions + choices (1:1 mapping)
- *     - quiz correctChoiceId → dipetakan ke correctChoiceIndex (cari index)
- *
- *   Prinsip:
- *     - Pure function, no DOM, no React, no store.
- *     - Tidak mengubah schema SimpleProject (field wajib tetap, field optional baru).
- *     - Tidak mengubah data konten (text, jawaban, feedback) — hanya mapping.
- *     - Preserve scene intent agar renderer bisa tampilkan sebagai scene.
- *     - Unknown styleId → fallback modern-clean.
+ *   (format internal app). Preserve scene intent di metadata tambahan.
  */
 
 import type {
@@ -35,11 +29,11 @@ import type {
   LayoutId,
   Curriculum,
   CurriculumObjective,
-} from '../types';
-import { PROJECT_VERSION } from '../types';
-import { createProjectId, createPageId, createComponentId } from '../ids';
-import { resolveStylePackV1 } from '../style-packs/style-pack-registry';
-import { stylePackToProjectStyle } from '../style-presets';
+} from '../../types';
+import { PROJECT_VERSION } from '../../types';
+import { createProjectId, createPageId, createComponentId } from '../../ids';
+import { resolveStylePackV1 } from '../../style-packs/style-pack-registry';
+import { stylePackToProjectStyle } from '../../style-presets';
 import type {
   AiMpiJson,
   AiMpiPage,

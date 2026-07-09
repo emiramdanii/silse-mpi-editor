@@ -1,7 +1,13 @@
 /**
  * Normalize AI MPI JSON (MPI-JSON-SCENE-PROOF-01).
  *
- * Layer: core/ai-mpi-json (pure function, no React/DOM)
+ * @deprecated LEGACY normalizer — proof-of-concept from MPI-JSON-SCENE-PROOF-01.
+ * Production code uses the foundation normalizer in ../normalizeAiMpiJson.ts
+ * (camelCase). This file is kept only for the legacy test
+ * mpi-json-scene-proof-01.test.tsx and will be deleted once that test is
+ * ported to the new schema.
+ *
+ * Layer: core/ai-mpi-json/legacy (pure function, no React/DOM)
  * Allowed imports: ./ai-mpi-json-schema
  *
  * Kontrak:
