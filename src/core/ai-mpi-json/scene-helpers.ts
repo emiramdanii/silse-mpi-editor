@@ -1,5 +1,19 @@
 /**
+ * @module scene-helpers
+ *
  * Scene helpers — production utilities for scene metadata checks.
+ *
+ * **Placement decision (review follow-up):** This file lives at
+ * `src/core/ai-mpi-json/scene-helpers.ts` (NOT `src/core/shared/` or
+ * `src/core/scene-helpers.ts`) because:
+ *   - The `AI_MPI_SCENE_GAME_MISSION` constant and `isGameMissionScene()`
+ *     helper are semantically tied to the AI JSON pipeline — they check
+ *     `component.sceneMetadata.scene` which is set by the AI import
+ *     converter (legacy `ai-mpi-json-to-project.ts`).
+ *   - Moving to `shared/` would decouple them from their logical origin
+ *     and make it unclear where to add new scene-type checks.
+ *   - The `ai-mpi-json/` namespace already owns scene-type definitions
+ *     (schema.ts AiBlueprintSceneType, universal-scene-taxonomy.ts).
  *
  * Layer: core/ai-mpi-json (pure function, no React/DOM)
  * Allowed imports: ../types

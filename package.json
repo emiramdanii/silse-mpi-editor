@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "audit:pointer-events": "node scripts/audit-pointer-events.mjs",
+    "audit": "npm run audit:pointer-events"
   },
   "dependencies": {
     "react": "^18.3.1",
