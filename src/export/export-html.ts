@@ -70,7 +70,8 @@ type ExportRenderPage = {
   /** DEEP-STYLE-INJECTION-01: Pre-computed CSS strings per element key.
    *  Browser JS appends these directly to el.style.cssText — no runtime
    *  conversion needed. Pre-computed at build time via styleMapToCssString.
-   *  LAYOUT-STYLE-01: added 'grid' key for SceneGrid layout overrides. */
+   *  LAYOUT-STYLE-01: added 'grid' key for SceneGrid layout overrides.
+   *  COMPONENT-STYLE-01: added 'tabs' + 'accordion' keys for interactive components. */
   customStyleCss?: {
     shell?: string;
     header?: string;
@@ -78,6 +79,8 @@ type ExportRenderPage = {
     chip?: string;
     button?: string;
     grid?: string;
+    tabs?: string;
+    accordion?: string;
   };
 };
 
@@ -175,6 +178,8 @@ function buildExportRenderModel(project: SimpleProject): ExportRenderModel {
       if (sanitized.chip) result.chip = styleMapToCssString(sanitized.chip);
       if (sanitized.button) result.button = styleMapToCssString(sanitized.button);
       if (sanitized.grid) result.grid = styleMapToCssString(sanitized.grid);
+      if (sanitized.tabs) result.tabs = styleMapToCssString(sanitized.tabs);
+      if (sanitized.accordion) result.accordion = styleMapToCssString(sanitized.accordion);
       return Object.keys(result).length > 0 ? result : undefined;
     })(),
   }));
@@ -2173,6 +2178,10 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var el = document.createElement('div');
     el.className = 'silse-block-tabs';
     el.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;';
+    // COMPONENT-STYLE-01: apply customStyle.tabs (pre-computed CSS string)
+    if (_sceneCustomStyleCss && _sceneCustomStyleCss.tabs) {
+      el.style.cssText += _sceneCustomStyleCss.tabs;
+    }
     for (var i = 0; i < tabs.length; i++) {
       var tab = document.createElement('button');
       tab.setAttribute('data-tab-id', tabs[i].id);
@@ -3613,6 +3622,10 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       if (variant === 'accordion') {
         var accContainer = document.createElement('div');
         accContainer.style.cssText = 'display:flex;flex-direction:column;gap:6px;';
+        // COMPONENT-STYLE-01: apply customStyle.accordion (pre-computed CSS string)
+        if (_sceneCustomStyleCss && _sceneCustomStyleCss.accordion) {
+          accContainer.style.cssText += _sceneCustomStyleCss.accordion;
+        }
         layers.forEach(function(layer, idx) {
           var isOpen = openIdx === idx;
           var accItem = document.createElement('div');

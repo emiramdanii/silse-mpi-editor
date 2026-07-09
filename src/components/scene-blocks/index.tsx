@@ -246,7 +246,8 @@ export function SceneGrid({ children, className = '', columns, gap = 10, customS
 // ---------------------------------------------------------------------------
 
 // INTERACTION-P1: SceneTabs with internal state — tabs bisa berpindah panel
-export function SceneTabs({ contract, tabs, activeTab: externalTab, onTabClick, className = '' }: BlockProps & {
+// COMPONENT-STYLE-01: consume customStyle.tabs from context (active + inactive tab styling)
+export function SceneTabs({ contract, tabs, activeTab: externalTab, onTabClick, className = '', customStyle }: BlockProps & {
   tabs: { id: string; label: string }[];
   activeTab: string;
   onTabClick?: (id: string) => void;
@@ -258,8 +259,14 @@ export function SceneTabs({ contract, tabs, activeTab: externalTab, onTabClick, 
     onTabClick?.(id);
   }, [onTabClick]);
 
+  // COMPONENT-STYLE-01: customStyle.tabs from prop or context (prop wins)
+  const ctxStyle = useCustomStyleFromContext();
+  const merged = customStyle ?? ctxStyle;
+  const safeStyle = sanitizeCustomStyle(merged);
+  const tabsOverlay = safeStyle?.tabs as CSSProperties | undefined;
+
   return (
-    <div className={`silse-block-tabs ${className}`.trim()} style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }} data-testid="silse-block-tabs">
+    <div className={`silse-block-tabs ${className}`.trim()} style={{ display: 'flex', gap: 6, flexWrap: 'wrap', ...tabsOverlay }} data-testid="silse-block-tabs">
       {tabs.map((tab) => {
         const isActive = tab.id === activeTab;
         return (
@@ -281,7 +288,7 @@ export function SceneTabs({ contract, tabs, activeTab: externalTab, onTabClick, 
 // 7. SceneAccordion — INTERACTION-P1: internal state, buka/tutup
 // ---------------------------------------------------------------------------
 
-export function SceneAccordion({ contract, items, openIndex: externalIdx, onToggle, className = '' }: BlockProps & {
+export function SceneAccordion({ contract, items, openIndex: externalIdx, onToggle, className = '', customStyle }: BlockProps & {
   items: { title: string; body: string }[];
   openIndex: number | null;
   onToggle?: (idx: number) => void;
@@ -293,8 +300,14 @@ export function SceneAccordion({ contract, items, openIndex: externalIdx, onTogg
     onToggle?.(idx);
   }, [onToggle]);
 
+  // COMPONENT-STYLE-01: customStyle.accordion from prop or context (prop wins)
+  const ctxStyle = useCustomStyleFromContext();
+  const merged = customStyle ?? ctxStyle;
+  const safeStyle = sanitizeCustomStyle(merged);
+  const accordionOverlay = safeStyle?.accordion as CSSProperties | undefined;
+
   return (
-    <div className={`silse-block-accordion ${className}`.trim()} style={{ display: 'flex', flexDirection: 'column', gap: 6 }} data-testid="silse-block-accordion">
+    <div className={`silse-block-accordion ${className}`.trim()} style={{ display: 'flex', flexDirection: 'column', gap: 6, ...accordionOverlay }} data-testid="silse-block-accordion">
       {items.map((item, idx) => {
         const isOpen = idx === openIndex;
         return (

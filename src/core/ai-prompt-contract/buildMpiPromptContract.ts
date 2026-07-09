@@ -195,6 +195,8 @@ export function buildMpiPromptText(): string {
   lines.push('  - "chip": badge/label kecil (background, border, color)');
   lines.push('  - "button": tombol aksi (background, borderRadius, boxShadow)');
   lines.push('  - "grid": layout grid container (gridTemplateColumns, gap, display) — LAYOUT-STYLE-01');
+  lines.push('  - "tabs": container tab navigasi (gap, background, borderRadius, padding) — COMPONENT-STYLE-01');
+  lines.push('  - "accordion": container accordion (gap, background, borderRadius, padding) — COMPONENT-STYLE-01');
   lines.push('Contoh:');
   lines.push('  "customStyle": {');
   lines.push('    "shell": { "background": "linear-gradient(135deg, #667eea, #764ba2)" },');
@@ -202,9 +204,16 @@ export function buildMpiPromptText(): string {
   lines.push('    "panel": { "borderRadius": "24px", "boxShadow": "0 20px 60px rgba(0,0,0,0.3)", "backdropFilter": "blur(10px)" },');
   lines.push('    "chip": { "background": "rgba(255,255,255,0.1)", "border": "1px solid rgba(255,255,255,0.2)" },');
   lines.push('    "button": { "background": "linear-gradient(135deg, #667eea, #764ba2)", "borderRadius": "999px" },');
-  lines.push('    "grid": { "gridTemplateColumns": "repeat(3, 1fr)", "gap": "20px" }');
+  lines.push('    "grid": { "gridTemplateColumns": "repeat(3, 1fr)", "gap": "20px" },');
+  lines.push('    "tabs": { "gap": "8px", "background": "rgba(255,255,255,0.05)", "borderRadius": "12px", "padding": "8px" }');
   lines.push('  }');
   lines.push('Batasan: fontFamily TIDAK boleh font dekoratif (Comic Sans, cursive) atau eksternal (Google Fonts).');
+  lines.push('');
+  lines.push('COMPONENT STYLE (COMPONENT-STYLE-01) — Batasan untuk "tabs" dan "accordion" key:');
+  lines.push('Element key "tabs" dan "accordion" memungkinkan AI mengatur container styling untuk komponen interaktif.');
+  lines.push('Properti yang diizinkan: gap, background, borderRadius, padding, border, boxShadow, margin.');
+  lines.push('Catatan: AI hanya bisa override container styling. Warna tab aktif/accordion header tetap dari contract palette.');
+  lines.push('Contoh: "tabs": { "gap": "8px", "background": "rgba(255,255,255,0.05)", "borderRadius": "12px" }');
   lines.push('');
   lines.push('LAYOUT STYLE (LAYOUT-STYLE-01) — Batasan khusus untuk "grid" key:');
   lines.push('Element key "grid" memungkinkan AI mengatur layout grid container (kartu review, galeri).');
