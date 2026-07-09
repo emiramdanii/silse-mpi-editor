@@ -1743,6 +1743,62 @@ textarea {
   flex-shrink: 0;
 }
 
+/* BUG-NAV-02 (Option C): Navigation toolbar inside preview canvas as floating pill.
+ * Mirrors the export HTML's #silse-toolbar positioning (bottom-center, glass pill).
+ * Without this rule, the toolbar renders as a top horizontal bar OUTSIDE the canvas,
+ * causing WYSINWYG mismatch between preview and export.
+ * The .silse-block-nav-toolbar component uses inline styles for layout (flex, gap,
+ * padding) — this rule overrides position + visual treatment to match export. */
+.preview-canvas .silse-block-nav-toolbar {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  pointer-events: auto;
+  /* Glass pill aesthetic — matches export #silse-toolbar */
+  background: rgba(15, 23, 42, 0.72) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 999px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28), 0 2px 6px rgba(0, 0, 0, 0.16);
+  color: #f1f5f9;
+  padding: 8px 14px !important;
+}
+
+/* Progress bar inside preview canvas — position above the floating toolbar pill.
+ * The ProgressBarBlock component renders as a thin horizontal bar; we anchor it
+ * at bottom: 70px (just above the 60px-tall toolbar pill at bottom: 20px). */
+.preview-canvas .silse-block-progress-bar {
+  position: absolute;
+  bottom: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  pointer-events: none;
+  width: 60%;
+  opacity: 0.85;
+}
+
+/* Override button colors inside the floating pill so they're visible on dark bg */
+.preview-canvas .silse-block-nav-toolbar button {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.preview-canvas .silse-block-nav-toolbar button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+}
+.preview-canvas .silse-block-nav-toolbar button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+/* Scene title + index text inside the floating pill */
+.preview-canvas .silse-block-nav-toolbar span {
+  color: #f1f5f9;
+}
+
 .preview-empty {
   color: #fff;
   text-align: center;
@@ -4140,8 +4196,14 @@ textarea {
   text-transform: uppercase;
   border: 0;
   cursor: pointer;
+  /* BUG-NAV-01: re-enable pointer events so the CTA is clickable in preview.
+   * The .silse-premium-decoration wrapper sets pointer-events: none, which
+   * is inherited by this button. Without this override, the onClick handler
+   * in PreviewApp.tsx never fires — the button looks clickable but is dead.
+   * Export HTML already sets pointer-events: auto on its own CTA rule. */
+  pointer-events: auto;
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.28);
-  z-index: 0;
+  z-index: 1;
   white-space: nowrap;
 }
 
