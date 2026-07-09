@@ -375,7 +375,7 @@ describe('Fase 0 / Audit 1.3 — forbidden-field guard in new pipeline', () => {
   });
 
   it('ALLOWS customStyle (structured CSS object, not raw string)', () => {
-    const bp = makeValidBlueprintBase();
+    const bp = makeValidBlueprintBase() as unknown as AiMpiBlueprint;
     bp.scenes[0].slots[0].customStyle = { shell: { background: 'red' } };
     const errors = validateAiMpiJson(bp);
     // customStyle is NOT in FORBIDDEN_KEYS, so no forbidden-field error
