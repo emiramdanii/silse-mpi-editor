@@ -10,6 +10,8 @@
  *   PATCH A: Mendukung 26 scene types (5 rendered + 21 contract-only).
  *   Validator menolak sceneType yang tidak dikenal.
  *   Validator memvalidasi required slots per scene type.
+ *   AUDIT 1.3: Recursive forbidden-field guard rejects raw html/css/script/
+ *   className/cdn/iframe/import keys anywhere in the blueprint.
  */
 
 import { isKnownSceneType } from '../mpi-container/universal-scene-taxonomy';
@@ -26,6 +28,76 @@ function isString(v: unknown): v is string {
   return typeof v === 'string';
 }
 
+// AUDIT 1.3: Forbidden field guard (inlined to avoid cross-layer import
+// from src/ai-import/forbidden-field-guard.ts; layer rules restrict this
+// module to ./schema + ../mpi-container/).
+//
+// These keys are rejected anywhere in the blueprint because they enable
+// raw HTML/CSS/JS injection:
+//   - html, script, css, style: raw code strings
+//   - className: React className escape hatch
+//   - dangerouslySetInnerHTML: React raw HTML injection
+//   - cdn, externalUrl, import: external resource loading
+//   - iframe: third-party embedding
+//
+// Note: 'customStyle' (CustomStyleMap) is ALLOWED because it is a structured
+// CSS object (Record<string, Record<string, string>>), not a raw string.
+// The FASE3 sanitizer in src/core/style/sanitize.ts strips dangerous CSS
+// values (expression(), javascript: URLs, etc.) before DOM application.
+const FORBIDDEN_KEYS = [
+  'html',
+  'css',
+  'script',
+  'scripts',
+  'style', // raw CSS string — style hanya boleh via StylePack tokens atau customStyle (structured object)
+  'className',
+  'dangerouslySetInnerHTML',
+  'cdn',
+  'externalUrl',
+  'import', // ES import string
+  'iframe',
+] as const;
+
+/**
+ * Recursively scan for forbidden fields.
+ * Returns list of errors with dotted path to each forbidden field.
+ *
+ * Mirror of checkForbiddenFields in src/ai-import/forbidden-field-guard.ts.
+ * Kept in sync manually because layer rules forbid cross-layer import.
+ * If the forbidden list changes there, update here too.
+ */
+function checkForbiddenFields(obj: unknown, path: string = ''): BlueprintValidationError[] {
+  const errors: BlueprintValidationError[] = [];
+  if (obj === null || obj === undefined) return errors;
+  if (typeof obj !== 'object') return errors;
+
+  if (Array.isArray(obj)) {
+    for (let i = 0; i < obj.length; i++) {
+      const childPath = path ? `${path}[${i}]` : `[${i}]`;
+      errors.push(...checkForbiddenFields(obj[i], childPath));
+    }
+    return errors;
+  }
+
+  const record = obj as Record<string, unknown>;
+  for (const key of Object.keys(record)) {
+    const currentPath = path ? `${path}.${key}` : key;
+
+    if ((FORBIDDEN_KEYS as readonly string[]).includes(key)) {
+      errors.push({
+        path: currentPath,
+        message: 'forbidden field — raw HTML/CSS/JS/className/CDN is not allowed in AI blueprint',
+      });
+    }
+
+    const value = record[key];
+    if (typeof value === 'object' && value !== null) {
+      errors.push(...checkForbiddenFields(value, currentPath));
+    }
+  }
+  return errors;
+}
+
 export function validateAiMpiJson(input: unknown): BlueprintValidationError[] {
   const errors: BlueprintValidationError[] = [];
 
@@ -33,6 +105,12 @@ export function validateAiMpiJson(input: unknown): BlueprintValidationError[] {
     errors.push({ path: 'root', message: 'must be object' });
     return errors;
   }
+
+  // AUDIT 1.3: Forbidden-field guard runs FIRST, before structural checks.
+  // A blueprint with a 'script' or 'html' field anywhere is rejected
+  // regardless of whether the rest of the structure is valid.
+  const forbiddenErrors = checkForbiddenFields(input);
+  errors.push(...forbiddenErrors);
 
   if (typeof input.version !== 'number') errors.push({ path: 'version', message: 'must be number' });
   if (!isObject(input.metadata)) errors.push({ path: 'metadata', message: 'must be object' });
