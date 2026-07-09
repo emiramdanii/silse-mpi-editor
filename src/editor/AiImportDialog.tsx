@@ -21,6 +21,7 @@ import { aiBlueprintToSimpleProject } from '../core/ai-mpi-json/aiBlueprintToSim
 import { checkBlueprintContentQuality } from '../core/content-quality-guard';
 import { collectImportWarnings, formatImportWarnings } from '../core/ai-mpi-json/silent-failure-handler';
 import { translateErrors, formatHumanReadableErrors } from '../core/ai-mpi-json/human-readable-errors';
+import { verifyRoundTrip } from '../core/ai-mpi-json/round-trip-verify';
 import type { BlueprintValidationError } from '../core/ai-mpi-json/validateAiMpiJson';
 
 type Tab = 'prompt' | 'import';
@@ -57,6 +58,10 @@ export function AiImportDialog({ onClose }: { onClose: () => void }) {
   const [errors, setErrors] = useState<BlueprintValidationError[] | null>(null);
   const [qualityWarnings, setQualityWarnings] = useState<string[]>([]);
   const [importWarnings, setImportWarnings] = useState<string[]>([]);
+  // AUDIT 1.4: round-trip warnings from verifyRoundTrip(). Non-blocking —
+  // surface to user so they know scene count / sceneType / title may have
+  // drifted during blueprint → SimpleProject conversion.
+  const [roundTripWarnings, setRoundTripWarnings] = useState<string[]>([]);
   const [applied, setApplied] = useState(false);
 
   const promptText = useMemo(() => buildMpiPromptText(), []);
@@ -86,6 +91,7 @@ export function AiImportDialog({ onClose }: { onClose: () => void }) {
     setApplied(false);
     setQualityWarnings([]);
     setImportWarnings([]);
+    setRoundTripWarnings([]);
     if (!jsonInput.trim()) {
       setErrors([{ message: 'JSON tidak boleh kosong. Paste hasil JSON dari AI.' } as BlueprintValidationError]);
       return;
@@ -121,6 +127,12 @@ export function AiImportDialog({ onClose }: { onClose: () => void }) {
       } else {
         setQualityWarnings([]);
       }
+      // AUDIT 1.4: Round-trip verification. verifyRoundTrip() checks that
+      // scene count, sceneType, title, and metadata are preserved through
+      // blueprint → SimpleProject conversion. Non-blocking — surface as
+      // warnings so the user knows data may have drifted.
+      const roundTripIssues = verifyRoundTrip(normalized, project);
+      setRoundTripWarnings(roundTripIssues.map((i) => `${i.field}: ${i.message}`));
       // Simpan untuk apply
       void project;
     } catch (e) {
@@ -139,6 +151,13 @@ export function AiImportDialog({ onClose }: { onClose: () => void }) {
       }
       const normalized = normalizeAiMpiJson(parsed);
       const project = aiBlueprintToSimpleProject(normalized);
+      // AUDIT 1.4: re-run round-trip on apply (input may have changed since
+      // validate). If issues exist, surface them as warnings but still allow
+      // apply (non-blocking per audit recommendation).
+      const roundTripIssues = verifyRoundTrip(normalized, project);
+      if (roundTripIssues.length > 0) {
+        setRoundTripWarnings(roundTripIssues.map((i) => `${i.field}: ${i.message}`));
+      }
       setProject(project);
       setApplied(true);
       setTimeout(() => {
@@ -314,6 +333,18 @@ export function AiImportDialog({ onClose }: { onClose: () => void }) {
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#92400e', marginBottom: 6 }}>⚠️ Catatan kualitas (tetap bisa diapply):</div>
                   <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12, color: '#78350f', lineHeight: 1.6 }}>
                     {qualityWarnings.map((w, i) => (
+                      <li key={i}>{w}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* AUDIT 1.4: round-trip warnings — data drift during conversion */}
+              {errors === null && jsonInput.trim() && roundTripWarnings.length > 0 && (
+                <div data-testid="ai-import-roundtrip-warnings" style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 8, padding: 12, marginTop: 12 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#92400e', marginBottom: 6 }}>🔄 Catatan round-trip (data berubah saat konversi, tetap bisa diapply):</div>
+                  <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12, color: '#78350f', lineHeight: 1.6 }}>
+                    {roundTripWarnings.map((w, i) => (
                       <li key={i}>{w}</li>
                     ))}
                   </ul>
