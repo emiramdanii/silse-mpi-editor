@@ -10,7 +10,7 @@
  *   placements, sceneType, slots).
  */
 
-import type { AiMpiBlueprint, AiBlueprintScene, AiBlueprintSlot, AiBlueprintSlotContent } from './schema';
+import type { AiMpiBlueprint, AiBlueprintScene, AiBlueprintSlot, AiBlueprintSlotContent, CustomStyleMap } from './schema';
 import { validateAiMpiJson } from './validateAiMpiJson';
 
 export class AiMpiBlueprintError extends Error {
@@ -25,6 +25,37 @@ function isObject(v: unknown): v is Record<string, unknown> {
 }
 function isString(v: unknown): v is string {
   return typeof v === 'string';
+}
+
+/**
+ * Normalize customStyle from AI input.
+ *
+ * AUDIT 1.2 (silent data loss): Previously normalizeSlot did NOT carry
+ * customStyle over to the output, so AI-supplied custom styling was
+ * silently dropped during normalization. Tests bypassed the normalizer
+ * (templateToBlueprint + direct mutation), so this bug was invisible.
+ *
+ * This function preserves customStyle when present, with light validation:
+ *   - top-level must be an object
+ *   - each value must be an object (Record<string, string>)
+ *
+ * Dangerous CSS values (script, expression, javascript: URLs) are
+ * stripped downstream by the FASE3 sanitizer in src/core/style/sanitize.ts
+ * before being applied to the DOM. The forbidden-field guard in
+ * validateAiMpiJson (audit 1.3) rejects raw 'html'/'script'/'css' keys.
+ */
+function normalizeCustomStyle(cs: unknown): CustomStyleMap | undefined {
+  if (!isObject(cs)) return undefined;
+  const result: CustomStyleMap = {};
+  for (const key of Object.keys(cs)) {
+    const value = cs[key];
+    if (isObject(value)) {
+      // Cast: each value is Record<string, string>. We accept any object here;
+      // downstream sanitizer will validate/escape string values.
+      result[key] = value as Record<string, string>;
+    }
+  }
+  return Object.keys(result).length > 0 ? result : undefined;
 }
 
 function normalizeSlot(slot: unknown): AiBlueprintSlot {
@@ -43,6 +74,8 @@ function normalizeSlot(slot: unknown): AiBlueprintSlot {
     } : { x: 0, y: 0, width: 100, height: 50 },
     designTokenKey: isString(slot.designTokenKey) ? slot.designTokenKey : undefined,
     content: slot.content as AiBlueprintSlotContent,
+    // AUDIT 1.2: preserve customStyle from AI input (was silently dropped before)
+    customStyle: normalizeCustomStyle(slot.customStyle),
   };
 }
 
