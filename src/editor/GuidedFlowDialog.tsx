@@ -32,6 +32,10 @@ export function GuidedFlowDialog({ onClose }: { onClose: () => void }) {
   const [selectedTopic, setSelectedTopic] = useState<MpiTopic | null>(null);
   const [generated, setGenerated] = useState<GeneratedMpiResult | null>(null);
   const [generating, setGenerating] = useState(false);
+  // AUDIT 8.6: error state so generator/apply failures don't hang the spinner
+  // forever. Previously, if generateMpiFromTopic() or setProject() threw,
+  // setGenerating(false) was never called and the dialog appeared frozen.
+  const [error, setError] = useState<string | null>(null);
 
   const mapelList = getUniqueMapelList();
 
@@ -47,11 +51,20 @@ export function GuidedFlowDialog({ onClose }: { onClose: () => void }) {
   const handleGenerate = () => {
     if (!selectedTopic) return;
     setGenerating(true);
+    setError(null);
     // Simulate async (could be real async later)
     setTimeout(() => {
-      const result = generateMpiFromTopic(selectedTopic);
-      setGenerated(result);
-      setGenerating(false);
+      // AUDIT 8.6: wrap generator in try/catch so a throw doesn't hang
+      // the 'generating' spinner forever.
+      try {
+        const result = generateMpiFromTopic(selectedTopic);
+        setGenerated(result);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        setError(`Gagal membuat draft MPI: ${message}`);
+      } finally {
+        setGenerating(false);
+      }
     }, 100);
   };
 
@@ -75,8 +88,16 @@ export function GuidedFlowDialog({ onClose }: { onClose: () => void }) {
       );
       if (!proceed) return;
     }
-    setProject(generated.project);
-    onClose();
+    // AUDIT 8.6: wrap setProject in try/catch — store mutation could throw
+    // (e.g. validation error in a future stricter setProject). Without
+    // try/catch, the dialog would stay open in an indeterminate state.
+    try {
+      setProject(generated.project);
+      onClose();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setError(`Gagal menerapkan draft MPI ke editor: ${message}`);
+    }
   };
 
   const handleBack = () => {
@@ -108,6 +129,41 @@ export function GuidedFlowDialog({ onClose }: { onClose: () => void }) {
             ✕
           </button>
         </div>
+
+        {/* AUDIT 8.6: error banner so generator/apply failures are visible */}
+        {error && (
+          <div
+            className="guided-flow-error"
+            role="alert"
+            data-testid="guided-flow-error"
+            style={{
+              margin: '12px 0',
+              padding: '10px 14px',
+              borderRadius: 6,
+              background: 'var(--color-danger-soft, #fbe6e3)',
+              border: '1px solid var(--color-danger, #c0392b)',
+              color: 'var(--color-danger, #c0392b)',
+              fontSize: 13,
+              fontWeight: 600,
+            }}
+          >
+            ⚠ {error}
+            <button
+              onClick={() => setError(null)}
+              aria-label="Tutup pesan error"
+              style={{
+                marginLeft: 12,
+                background: 'transparent',
+                border: 0,
+                color: 'inherit',
+                cursor: 'pointer',
+                fontWeight: 800,
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         {!generated ? (
           <>
