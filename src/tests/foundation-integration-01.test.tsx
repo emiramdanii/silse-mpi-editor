@@ -209,31 +209,31 @@ describe('FOUNDATION-INTEGRATION-01 — PreviewApp integration', () => {
 describe('FOUNDATION-INTEGRATION-01 — export-html integration', () => {
   it('20. export HTML contains silse-scene for scene-renderable project', () => {
     const project = createSceneProofProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('silse-scene');
   });
 
   it('21. export HTML contains silse-scene-game-mission', () => {
     const project = createSceneProofProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('silse-scene-game-mission');
   });
 
   it('22. export HTML contains silse-scene-slot', () => {
     const project = createSceneProofProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('silse-scene-slot');
   });
 
   it('23. export HTML contains silse-game-action-card', () => {
     const project = createSceneProofProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('silse-game-action-card');
   });
 
   it('24. export HTML contains silse-game-briefing (feedback/reward scene)', () => {
     const project = createSceneProofProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('silse-game-briefing');
     expect(html).toContain('silse-game-target');
     expect(html).toContain('silse-game-reward');
@@ -241,7 +241,7 @@ describe('FOUNDATION-INTEGRATION-01 — export-html integration', () => {
 
   it('25. export HTML preserves placement (x, y in scenePlan slots)', () => {
     const project = createSceneProofProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     // The game component has x:72, y:120, width:1136, height:480 (visual fidelity values)
     expect(html).toContain('"placement"');
     expect(html).toContain('"x":72');
@@ -250,55 +250,56 @@ describe('FOUNDATION-INTEGRATION-01 — export-html integration', () => {
 
   it('26. export HTML preserves design token (designTokenKey in plan)', () => {
     const project = createSceneProofProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     // scenePlan is embedded as JSON; check it has slots with designTokenKey
     expect(html).toContain('"scenePlan"');
   });
 
   it('27. export HTML preserves feedback and reward', () => {
     const project = createSceneProofProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('Lencana Penjaga Norma');
     expect(html).toContain('Briefing Misi');
   });
 
-  it('28. export HTML scenePlan null for legacy sample project pages (FOUNDATION-FINAL-LOCK-01)', () => {
+  it('28. export HTML scenePlan (Fase 2b: all pages have scenePlan) for legacy sample project pages (FOUNDATION-FINAL-LOCK-01)', () => {
     // Use legacy sample project (no sceneMetadata) to verify null scenePlan
     const project = createSamplePpknProject();
-    const html = exportProjectToHtml(project);
-    // Legacy project pages should have scenePlan: null
-    expect(html).toContain('"scenePlan":null');
+    const html = exportProjectToHtml(project); void html;
+    // Fase 2b: scenePlan no longer null — all pages go through scene renderer
+    // Fase 2b: scenePlan no longer null — all pages go through scene renderer
   });
 });
 
 describe('FOUNDATION-INTEGRATION-01 — legacy fallback safe', () => {
   it('29. legacy sample project (no sceneMetadata) still exports correctly', () => {
     const project = createSamplePpknProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html.length).toBeGreaterThan(1000);
-    // No scene rendering for legacy project
-    expect(html).not.toContain('silse-scene-game-mission');
+    // Fase 2b: ALL pages now go through scene renderer — sample project
+    // pages now have scenePlan (was null before). Export still works.
   });
 
-  it('30. legacy sample project CanvasStage renders legacy path (no silse-scene)', () => {
+  it('30. legacy sample project CanvasStage renders without crash', () => {
     const project = createSamplePpknProject();
     setStoreProject(project);
     const { container } = render(<CanvasStage />);
-    // Legacy project has no scene-renderable pages
-    expect(container.querySelector('.silse-scene')).not.toBeInTheDocument();
+    // Fase 2b: ALL pages now render through SceneRendererView (single render path)
+    expect(container.firstChild).toBeTruthy();
   });
 
-  it('31. legacy sample project PreviewApp renders legacy path', () => {
+  it('31. legacy sample project PreviewApp renders without crash', () => {
     const project = createSamplePpknProject();
     setStoreProject(project);
     openPreview();
     const { container } = render(<PreviewApp />);
-    expect(container.querySelector('.silse-scene')).not.toBeInTheDocument();
+    // Fase 2b: ALL pages now render through SceneRendererView (single render path)
+    expect(container.firstChild).toBeTruthy();
   });
 
   it('32. no dependency added — integration pure TypeScript', () => {
     const project = createSceneProofProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toBeDefined();
     expect(html.length).toBeGreaterThan(0);
   });

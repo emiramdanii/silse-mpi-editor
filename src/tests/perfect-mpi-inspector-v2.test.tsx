@@ -251,8 +251,8 @@ describe('PERFECT-MPI-INSPECTOR-V2 — Scope D: Regression', () => {
 
   it('16. legacy project safe (no sceneType)', () => {
     const project = createSamplePpknProject();
-    const html = exportProjectToHtml(project);
-    expect(html).toContain('"scenePlan":null');
+    const html = exportProjectToHtml(project); void html;
+    // Fase 2b: scenePlan no longer null — all pages go through scene renderer
     expect(() => exportProjectToHtml(project)).not.toThrow();
   });
 

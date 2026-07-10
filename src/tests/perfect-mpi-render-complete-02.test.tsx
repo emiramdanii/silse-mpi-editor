@@ -102,7 +102,7 @@ describe('PERFECT-MPI-RENDER-COMPLETE-02 — Scope A: Timeline Story', () => {
 
   it('4. timeline-story export actual scene', () => {
     const project = build5SceneProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('silse-scene-timeline-story');
     expect(html).toContain('"sceneType":"timeline-story"');
     expect(html).toContain('silse-timeline-track');
@@ -164,7 +164,7 @@ describe('PERFECT-MPI-RENDER-COMPLETE-02 — Scope B: Branching Scenario', () =>
 
   it('9. branching-scenario export actual scene', () => {
     const project = build5SceneProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('silse-scene-branching-scenario');
     expect(html).toContain('"sceneType":"branching-scenario"');
     expect(html).toContain('silse-branching-choice');
@@ -206,7 +206,7 @@ describe('PERFECT-MPI-RENDER-COMPLETE-02 — Scope C: Glossary Cards', () => {
 
   it('12. glossary-cards export actual scene', () => {
     const project = build5SceneProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('silse-scene-glossary-cards');
     expect(html).toContain('"sceneType":"glossary-cards"');
     expect(html).toContain('silse-glossary-card');
@@ -240,7 +240,7 @@ describe('PERFECT-MPI-RENDER-COMPLETE-02 — Scope D: Teacher Guide', () => {
     // TEMPLATE-CLEANUP-01: teacher-guide is teacher-preparation content,
     // excluded from the standalone student-facing export.
     const project = build5SceneProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     // The teacher-guide scene's content must NOT appear as rendered text.
     // (The JS renderer function still exists in <script>, but the page is
     //  filtered out before rendering, so the content is never emitted.)
@@ -274,7 +274,7 @@ describe('PERFECT-MPI-RENDER-COMPLETE-02 — Scope E: Accessibility Help', () =>
 
   it('16. accessibility-help export actual scene', () => {
     const project = build5SceneProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('silse-scene-accessibility-help');
     expect(html).toContain('"sceneType":"accessibility-help"');
   });
@@ -306,8 +306,8 @@ describe('PERFECT-MPI-RENDER-COMPLETE-02 — Scope F: SceneContent Inspector', (
 describe('PERFECT-MPI-RENDER-COMPLETE-02 — Scope G: Regression', () => {
   it('18. legacy project safe', () => {
     const project = createSamplePpknProject();
-    const html = exportProjectToHtml(project);
-    expect(html).toContain('"scenePlan":null');
+    const html = exportProjectToHtml(project); void html;
+    // Fase 2b: scenePlan no longer null — all pages go through scene renderer
     expect(() => exportProjectToHtml(project)).not.toThrow();
   });
 

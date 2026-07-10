@@ -511,7 +511,7 @@ describe('VISUAL-QUALITY-GUARD-01 — Scope I: Regression (legacy fallback not a
   it('25. legacy fallback tetap aman (createSamplePpknProject export tanpa crash)', () => {
     const project = createSamplePpknProject();
     const html = exportProjectToHtml(project);
-    expect(html).toContain('"scenePlan":null');
+    // Fase 2b: scenePlan no longer null — all pages go through scene renderer
     expect(html.length).toBeGreaterThan(1000);
     expect(() => exportProjectToHtml(project)).not.toThrow();
   });

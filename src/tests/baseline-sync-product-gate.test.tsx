@@ -115,7 +115,7 @@ describe('BASELINE-SYNC — Full 12 Scene App Gate', () => {
 
   it('6. export HTML contains all 12 scene classes via bridge', () => {
     const project = useEditorStore.getState().project;
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     EMITTED_SCENE_CLASS.forEach((cls) => {
       expect(html).toContain(cls);
     });
@@ -173,28 +173,28 @@ describe('BASELINE-SYNC — Classification Game', () => {
 describe('BASELINE-SYNC — Export Interaction Emit', () => {
   it('10. export tabs emit data-tab-id', () => {
     const { project } = buildFullProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain("setAttribute('data-tab-id'");
     expect(html).toContain('[data-tab-id]');
   });
 
   it('11. export timer emit data-action="timer-toggle"', () => {
     const { project } = buildFullProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain("'data-action', 'timer-toggle'");
     expect(html).toContain('[data-action="timer-toggle"]');
   });
 
   it('12. export save response emit data-action="save-response"', () => {
     const { project } = buildFullProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain("'data-action', 'save-response'");
     expect(html).toContain('[data-action="save-response"]');
   });
 
   it('13. export reveal emit silse-reveal-body + silse-reveal-hint', () => {
     const { project } = buildFullProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('silse-reveal-body');
     expect(html).toContain('silse-reveal-hint');
     expect(html).toContain('.silse-block-reveal');
@@ -202,7 +202,7 @@ describe('BASELINE-SYNC — Export Interaction Emit', () => {
 
   it('14. export classification emit data-item-id + data-category', () => {
     const { project } = buildFullProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain("setAttribute('data-item-id'");
     expect(html).toContain("setAttribute('data-category'");
     expect(html).toContain('[data-item-id]');
@@ -211,7 +211,7 @@ describe('BASELINE-SYNC — Export Interaction Emit', () => {
 
   it('15. export wireInteractions handler present', () => {
     const { project } = buildFullProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('wireInteractions()');
   });
 });
@@ -223,14 +223,14 @@ describe('BASELINE-SYNC — Export Interaction Emit', () => {
 describe('BASELINE-SYNC — Regression', () => {
   it('16. legacy fallback tetap aman', () => {
     const project = createSamplePpknProject();
-    const html = exportProjectToHtml(project);
-    expect(html).toContain('"scenePlan":null');
+    const html = exportProjectToHtml(project); void html;
+    // Fase 2b: scenePlan no longer null — all pages go through scene renderer
     expect(() => exportProjectToHtml(project)).not.toThrow();
   });
 
   it('17. 5 rendered scene tetap PASS (createSceneProofProject)', () => {
     const project = createSceneProofProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('silse-scene-cover-hero');
     expect(html).toContain('silse-scene-learning-scene');
     expect(html).toContain('silse-scene-game-mission');
@@ -240,7 +240,7 @@ describe('BASELINE-SYNC — Regression', () => {
 
   it('18. tidak ada iframe / html import / stylesheet link', () => {
     const project = createSceneProofProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).not.toMatch(/<iframe/);
     expect(html).not.toMatch(/<link\s+rel=["']stylesheet["']/);
     expect(html).not.toMatch(/<script\s+src=/);

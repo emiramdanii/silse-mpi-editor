@@ -68,7 +68,7 @@ describe('HIGH-PRIORITY-RENDERERS-01 — Scope A: Hotspot Map', () => {
   it('3. hotspot-map export contains hotspot classes + handler', () => {
     // Create a project with hotspot-map scene via a simple project
     const project = createSamplePpknProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     // Export HTML has hotspot renderer code
     expect(html).toContain('renderHotspotMapExport');
     expect(html).toContain('silse-hotspot-map');
@@ -128,7 +128,7 @@ describe('HIGH-PRIORITY-RENDERERS-01 — Scope B: Matching Game', () => {
 
   it('7. matching-game export contains data-left-id/data-right-id', () => {
     const project = createSamplePpknProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('renderMatchingGameExport');
     expect(html).toContain("setAttribute('data-left-id'");
     expect(html).toContain("setAttribute('data-right-id'");
@@ -173,7 +173,7 @@ describe('HIGH-PRIORITY-RENDERERS-01 — Scope C: Sequencing Game', () => {
 
   it('10. sequencing-game export contains sequence classes + handler', () => {
     const project = createSamplePpknProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('renderSequencingGameExport');
     expect(html).toContain('silse-sequence-item');
     expect(html).toContain('silse-sequence-up');
@@ -217,7 +217,7 @@ describe('HIGH-PRIORITY-RENDERERS-01 — Scope D: Media Focus', () => {
 
   it('13. media-focus export contains media + response input', () => {
     const project = createSamplePpknProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('renderMediaFocusExport');
     expect(html).toContain('silse-media-focus-display');
     expect(html).toContain('silse-media-focus-question');
@@ -302,8 +302,8 @@ describe('HIGH-PRIORITY-RENDERERS-01 — Scope F: Regression', () => {
 
   it('20. legacy project still safe', () => {
     const project = createSamplePpknProject();
-    const html = exportProjectToHtml(project);
-    expect(html).toContain('"scenePlan":null');
+    const html = exportProjectToHtml(project); void html;
+    // Fase 2b: scenePlan no longer null — all pages go through scene renderer
     expect(() => exportProjectToHtml(project)).not.toThrow();
   });
 });
