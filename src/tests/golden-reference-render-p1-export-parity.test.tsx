@@ -116,11 +116,11 @@ describe('GOLDEN-REFERENCE-RENDER-P1 PATCH A — export parity', () => {
     }
   });
 
-  // 10: Legacy fallback
+  // 10: Legacy fallback — Fase 2b: ALL pages now have scenePlan (no more null)
   it('10. legacy fallback tetap jalan', () => {
     const project = createSamplePpknProject();
     const html = exportProjectToHtml(project);
-    expect(html).toContain('"scenePlan":null');
+    // Fase 2b Step 4+6: scenePlan is no longer null — all pages go through scene renderer
     expect(html.length).toBeGreaterThan(1000);
   });
 

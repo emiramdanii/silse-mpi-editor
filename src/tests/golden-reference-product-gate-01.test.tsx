@@ -400,8 +400,7 @@ describe('GOLDEN-REFERENCE-PRODUCT-GATE-01 — Scope E: Regression', () => {
 
   it('25. legacy fallback aman', () => {
     const project = createSamplePpknProject();
-    const html = exportProjectToHtml(project);
-    expect(html).toContain('"scenePlan":null');
+    // Fase 2b: scenePlan is no longer null — all pages go through scene renderer
     expect(() => exportProjectToHtml(project)).not.toThrow();
   });
 
@@ -439,16 +438,13 @@ describe('GOLDEN-REFERENCE-PRODUCT-GATE-01 — Scope E: Regression', () => {
     cpDom.unmount();
   });
 
-  it('29. tidak semua page dipaksa scene renderer', () => {
+  it('29. semua page punya scenePlan (Fase 2b: single render path)', () => {
     const project = createSamplePpknProject();
     const html = exportProjectToHtml(project);
-    // Legacy project: some pages scene-renderable (by role), some not.
-    // Verify that scenePlan field exists for all pages (either null or object).
+    // Fase 2b: ALL pages now have scenePlan (no more null fallback).
+    // Verify that scenePlan field exists for all pages.
     const totalMatches = html.match(/"scenePlan"/g) ?? [];
     expect(totalMatches.length).toBe(project.pages.length);
-    // At least some pages should have scenePlan:null (legacy fallback)
-    const nullMatches = html.match(/"scenePlan":null/g) ?? [];
-    expect(nullMatches.length).toBeGreaterThan(0);
   });
 
   it('30. tidak ada HTML import / iframe / reskin di export', () => {
