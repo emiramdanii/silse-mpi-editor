@@ -170,17 +170,18 @@ Audit ini menemukan **480 instance hardcoded warna** di 14 file production code.
 ### P3 — PageThumbnail markers — ✅ SELESAI
 10. ✅ 8 component-type marker colors → `--color-marker-*` family + 2 fallback hex (`#ffffff` → `var(--color-panel)`, `#6b7280` → `var(--color-muted)`)
 
-### P4 — Export HTML (largest surface) — ⏳ TUNDA
-11. ⏳ `export-html.ts` `:root` block — extract to shared TS module
-12. ⏳ `export-html.ts` ~191 hex fallbacks → replace with `var(--silse-*)` / `var(--color-*)`
-13. ⏳ `styles.css` ~92 hex (outside :root) — skin classes + premium decoration
+### P4 — Export HTML (largest surface) — ✅ SELESAI (commit d8278fc, 9aa8314, 40c4f17)
+11. ✅ `export-html.ts` `:root` block — synced with 33 new editor theme tokens
+12. ✅ `export-html.ts` ~209 hex → `var()` tokens + 51 fallbacks dropped (0 violations outside :root)
+13. ✅ `styles.css` ~92 hex (outside `:root`) → `var()` tokens (0 violations outside :root)
 
 ### P5 — Animation/celebration — ➖ DEFER to Fase 2
 14. ➖ `styles.css:3714-3934`, `export-html.ts:727-769` — motion + celebrate colors
 
-### Milestone: "Hapus Fallback Warna" — ⏳ TUNDA (target: setelah P4)
-- ⏳ Setelah P4 selesai, semua `var(--token, #hex)` fallback dihapus
-- ⏳ Verifikasi: `rg "var\(--[a-z-]+,\s*#"` return 0 di src/
+### Milestone: "Hapus Fallback Warna" — ✅ SELESAI
+- ✅ Semua `var(--token, #hex)` fallback dihapus dari src/
+- ✅ Verifikasi: `rg "var\(--[a-z-]+,\s*#"` return 0 di src/ (styles.css + export-html.ts)
+- ✅ 0 hex violations outside :root definitions in styles.css + export-html.ts
 
 ---
 
@@ -192,9 +193,9 @@ Audit ini menemukan **480 instance hardcoded warna** di 14 file production code.
 | P1 | 1 | 1 ✅ | 0 | 8 (component view fallbacks) |
 | P2 | 3 | 3 ✅ | 0 | ~63 (Topbar 2 + TemplatePickerDialog 30 + AiImportDialog 31) + 2 new tokens |
 | P3 | 1 | 1 ✅ | 0 | 10 (8 markers + 2 fallback) |
-| P4 | 3 | 0 | 3 | ~283 hex remaining |
+| P4 | 3 | 3 ✅ | 0 | ~334 (export-html 209+51+33 + styles.css 92) |
 | P5 | 1 | 0 | 0 (deferred) | ~5 hex (deferred) |
-| **Total** | **15** | **11 ✅** | **4** | **~121 migrated, ~286 remaining** |
+| **Total** | **15** | **14 ✅** | **1 (deferred)** | **~455 migrated, ~5 deferred** |
 
 #### Contoh Before/After P0
 
