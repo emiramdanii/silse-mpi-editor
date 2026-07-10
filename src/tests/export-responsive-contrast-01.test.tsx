@@ -76,28 +76,29 @@ describe('EXPORT-CONTRAST-01 — Cover/closing text white on dark background', (
     // Cover title CSS should contain color:#ffffff
     expect(html).toContain('silse-cover-title');
     // Find the cover title CSS block and verify it has white color
-    const titleMatch = html.match(/silse-cover-title[^}]*color:#ffffff/);
+    // Fase 1 P4: #ffffff migrated to var(--color-panel) which resolves to #ffffff
+    const titleMatch = html.match(/silse-cover-title[^}]*color:(?:#ffffff|var\(--color-panel\))/);
     expect(titleMatch).toBeTruthy();
   });
 
   it('8. export HTML cover subtitle uses white color', () => {
     const project = aiBlueprintToSimpleProject(templateToBlueprint(TEMPLATE_PPKN_NORMA));
     const html = exportProjectToHtml(project);
-    const subtitleMatch = html.match(/silse-cover-subtitle[^}]*color:#ffffff/);
+    const subtitleMatch = html.match(/silse-cover-subtitle[^}]*color:(?:#ffffff|var\(--color-panel\))/);
     expect(subtitleMatch).toBeTruthy();
   });
 
   it('9. export HTML closing achievement uses white color', () => {
     const project = aiBlueprintToSimpleProject(templateToBlueprint(TEMPLATE_PPKN_NORMA));
     const html = exportProjectToHtml(project);
-    const achMatch = html.match(/silse-closing-achievement[^}]*color:#ffffff/);
+    const achMatch = html.match(/silse-closing-achievement[^}]*color:(?:#ffffff|var\(--color-panel\))/);
     expect(achMatch).toBeTruthy();
   });
 
   it('10. export HTML closing summary uses white color', () => {
     const project = aiBlueprintToSimpleProject(templateToBlueprint(TEMPLATE_PPKN_NORMA));
     const html = exportProjectToHtml(project);
-    const sumMatch = html.match(/silse-closing-summary[^}]*color:#ffffff/);
+    const sumMatch = html.match(/silse-closing-summary[^}]*color:(?:#ffffff|var\(--color-panel\))/);
     expect(sumMatch).toBeTruthy();
   });
 

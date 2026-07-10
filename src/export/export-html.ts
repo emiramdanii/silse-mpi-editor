@@ -341,9 +341,9 @@ function generateCSS(cssVars: Record<string, string>, profile: PremiumExportProf
   const cardR = profile.cardRadius;
   const btnR = profile.buttonRadius;
   const isDark = profile.darkStage;
-  const stageOuter = isDark ? c.navy : '#f1f5f9';
-  const stageTextOnDark = isDark ? '#ffffff' : c.navy;
-  const heroColor = isDark ? '#ffffff' : c.blue;
+  const stageOuter = isDark ? c.navy : 'var(--color-panel-soft)';
+  const stageTextOnDark = isDark ? 'var(--color-panel)' : c.navy;
+  const heroColor = isDark ? 'var(--color-panel)' : c.blue;
   const heroAccent = c.red;
   const bodyColor = isDark ? 'rgba(255,255,255,0.92)' : c.text;
   const mutedColor = isDark ? 'rgba(255,255,255,0.7)' : c.muted;
@@ -467,7 +467,7 @@ body {
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255,255,255,0.14);
   box-shadow: 0 8px 24px rgba(0,0,0,0.28), 0 2px 6px rgba(0,0,0,0.16);
-  color: #f1f5f9;
+  color: var(--color-panel-soft);
   font-size: 13px;
   font-weight: 800;
   pointer-events: auto;
@@ -486,12 +486,12 @@ body {
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.3px;
-  color: #f1f5f9;
+  color: var(--color-panel-soft);
 }
 
 #silse-toolbar button {
   background: rgba(255,255,255,0.14);
-  color: #f1f5f9;
+  color: var(--color-panel-soft);
   border: 1px solid rgba(255,255,255,0.20);
   padding: 8px 18px;
   border-radius: 999px;
@@ -593,7 +593,7 @@ body {
   height: 38px;
   border-radius: 12px;
   background: ${c.blue};
-  color: #fff;
+  color: var(--color-panel);
   font-size: 16px;
   font-weight: 900;
   flex-shrink: 0;
@@ -658,7 +658,7 @@ body {
   height: 38px;
   border-radius: 12px;
   background: ${c.blue};
-  color: #fff;
+  color: var(--color-panel);
   font-size: 16px;
   font-weight: 900;
   flex-shrink: 0;
@@ -725,10 +725,10 @@ body {
 .silse-choice-default { border-left:3px solid transparent; transition:border-color 0.15s,background-color 0.15s; }
 .silse-choice-default:hover { border-left-color:var(--silse-color-primary,var(--color-accent)); }
 .silse-choice-selected { border-left:3px solid var(--silse-color-primary,var(--color-accent)); box-shadow:inset 0 0 0 1px rgba(30,91,143,0.2); }
-.silse-choice-correct { border-left:4px solid #16a34a; box-shadow:inset 0 0 0 1px rgba(22,163,74,0.2); }
-.silse-choice-wrong { border-left:4px solid #dc2626; box-shadow:inset 0 0 0 1px rgba(220,38,38,0.15); }
-.silse-feedback-correct { border-left:4px solid #16a34a; font-weight:500; }
-.silse-feedback-wrong { border-left:4px solid #dc2626; font-weight:500; }
+.silse-choice-correct { border-left:4px solid var(--color-success-strong); box-shadow:inset 0 0 0 1px rgba(22,163,74,0.2); }
+.silse-choice-wrong { border-left:4px solid var(--color-danger-strong); box-shadow:inset 0 0 0 1px rgba(220,38,38,0.15); }
+.silse-feedback-correct { border-left:4px solid var(--color-success-strong); font-weight:500; }
+.silse-feedback-wrong { border-left:4px solid var(--color-danger-strong); font-weight:500; }
 .silse-score { font-weight:600; padding:4px 12px; border-radius:12px; background:rgba(255,255,255,0.15); }
 .silse-quiz-mission .silse-question-choice, .silse-game-mission .silse-game-choice { border-radius:4px; letter-spacing:0.3px; }
 .silse-quiz-mission .silse-choice-correct, .silse-game-mission .silse-choice-correct { box-shadow:0 0 8px rgba(34,197,94,0.3); }
@@ -747,10 +747,10 @@ body {
 .silse-block-panel::before { content:''; position:absolute; top:0; left:12px; right:12px; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent); pointer-events:none; }
 .silse-choice-default:hover { border-left-color:var(--silse-color-primary,var(--color-accent)); box-shadow:0 2px 8px rgba(30,91,143,0.12); transform:translateY(-1px); }
 .silse-choice-selected { border-left:3px solid var(--silse-color-primary,var(--color-accent)); box-shadow:inset 0 0 0 1px rgba(30,91,143,0.2),0 2px 12px rgba(30,91,143,0.15); background:linear-gradient(135deg,rgba(30,91,143,0.06) 0%,rgba(30,91,143,0.02) 100%); }
-.silse-choice-correct { border-left:4px solid #16a34a; box-shadow:inset 0 0 0 1px rgba(22,163,74,0.25),0 2px 16px rgba(22,163,74,0.18); background:linear-gradient(135deg,rgba(22,163,74,0.08) 0%,rgba(22,163,74,0.02) 100%); }
-.silse-choice-wrong { border-left:4px solid #dc2626; box-shadow:inset 0 0 0 1px rgba(220,38,38,0.2),0 2px 12px rgba(220,38,38,0.12); }
-.silse-feedback-correct { border-left:4px solid #16a34a; background:linear-gradient(135deg,rgba(22,163,74,0.08) 0%,rgba(22,163,74,0.02) 100%); font-weight:500; }
-.silse-feedback-wrong { border-left:4px solid #dc2626; background:linear-gradient(135deg,rgba(220,38,38,0.08) 0%,rgba(220,38,38,0.02) 100%); font-weight:500; }
+.silse-choice-correct { border-left:4px solid var(--color-success-strong); box-shadow:inset 0 0 0 1px rgba(22,163,74,0.25),0 2px 16px rgba(22,163,74,0.18); background:linear-gradient(135deg,rgba(22,163,74,0.08) 0%,rgba(22,163,74,0.02) 100%); }
+.silse-choice-wrong { border-left:4px solid var(--color-danger-strong); box-shadow:inset 0 0 0 1px rgba(220,38,38,0.2),0 2px 12px rgba(220,38,38,0.12); }
+.silse-feedback-correct { border-left:4px solid var(--color-success-strong); background:linear-gradient(135deg,rgba(22,163,74,0.08) 0%,rgba(22,163,74,0.02) 100%); font-weight:500; }
+.silse-feedback-wrong { border-left:4px solid var(--color-danger-strong); background:linear-gradient(135deg,rgba(220,38,38,0.08) 0%,rgba(220,38,38,0.02) 100%); font-weight:500; }
 .silse-block-chip { background:linear-gradient(135deg,rgba(249,193,46,0.18) 0%,rgba(249,193,46,0.08) 100%) !important; box-shadow:0 1px 3px rgba(249,193,46,0.15),inset 0 1px 0 rgba(255,255,255,0.1); }
 /* MICRO-ANIMATION-SYSTEM-V1: micro animation + prefers-reduced-motion */
 @keyframes silse-fade-in-soft { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
@@ -875,7 +875,7 @@ body {
   font-size: 22px;
   font-weight: 900;
   letter-spacing: -0.01em;
-  color: ${isDark ? '#fff' : c.blue};
+  color: ${isDark ? 'var(--color-panel)' : c.blue};
   margin-bottom: 6px;
 }
 
@@ -889,7 +889,7 @@ body {
   ${t.heroUppercase ? 'text-transform: uppercase;' : ''}
   box-shadow: 0 12px 24px rgba(0,0,0,0.18) !important;
   background: linear-gradient(145deg, ${c.red}, ${c.blue}) !important;
-  color: #fff !important;
+  color: var(--color-panel) !important;
   border: 0 !important;
   transition: transform 0.18s ease, box-shadow 0.18s ease !important;
 }
@@ -924,7 +924,7 @@ body {
   font-size: 22px;
   font-weight: 900;
   letter-spacing: -0.01em;
-  color: ${isDark ? '#fff' : c.blue};
+  color: ${isDark ? 'var(--color-panel)' : c.blue};
 }
 
 #silse-canvas .skin-bridge-subtle,
@@ -984,7 +984,7 @@ body {
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: linear-gradient(145deg, #fff8e7, #fff);
+  background: linear-gradient(145deg, var(--color-warning-soft), var(--color-panel));
   border: 8px solid var(--silse-gold);
   box-shadow: 0 20px 40px rgba(0,0,0,0.20), inset 0 0 0 6px rgba(255,183,3,0.35), inset 0 0 38px rgba(255,209,102,0.28);
   font-size: 80px;
@@ -1007,7 +1007,7 @@ body {
   padding: 10px 22px;
   border-radius: 999px;
   background: linear-gradient(135deg, ${c.red}, ${c.blue});
-  color: #fff;
+  color: var(--color-panel);
   font-family: var(--silse-body-font);
   font-size: 14px;
   font-weight: 900;
@@ -1070,7 +1070,7 @@ body {
   padding: 14px 32px;
   border-radius: 999px;
   background: linear-gradient(145deg, ${c.red}, ${c.blue});
-  color: #fff;
+  color: var(--color-panel);
   font-family: var(--silse-body-font);
   font-size: 16px;
   font-weight: 900;
@@ -1299,7 +1299,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     sceneEl.className = plan.sceneClass;
     sceneEl.setAttribute('data-scene-id', plan.sceneId);
     sceneEl.setAttribute('data-scene-type', plan.sceneType);
-    var sceneBg = (plan.background && plan.background.gradient) ? plan.background.gradient : (plan.background ? plan.background.color : '#ffffff');
+    var sceneBg = (plan.background && plan.background.gradient) ? plan.background.gradient : (plan.background ? plan.background.color : 'var(--color-panel)');
     sceneEl.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;z-index:2;background:' + sceneBg + ';';
     // DEEP-STYLE-INJECTION-01: apply customStyle.shell to generic scene element
     if (_sceneCustomStyleCss && _sceneCustomStyleCss.shell) {
@@ -1354,8 +1354,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var cCss = 'width:100%;height:100%;box-sizing:border-box;';
       cCss += 'padding:' + (surf.padding != null ? surf.padding : 16) + 'px;';
       cCss += 'border-radius:' + (surf.radius != null ? surf.radius : 12) + 'px;';
-      cCss += 'background:' + (surf.background || '#fff') + ';';
-      cCss += 'border:' + (surf.border || '1px solid #e5e7eb') + ';';
+      cCss += 'background:' + (surf.background || 'var(--color-panel)') + ';';
+      cCss += 'border:' + (surf.border || '1px solid var(--color-border)') + ';';
       if (surf.shadow) cCss += 'box-shadow:' + surf.shadow + ';';
       cEl.style.cssText = cCss;
       if (content.title) {
@@ -1379,7 +1379,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var bCss = 'width:100%;height:100%;border:0;cursor:pointer;';
       bCss += 'border-radius:' + (btn.radius != null ? btn.radius : 8) + 'px;';
       bCss += 'background:' + (btn.background || 'var(--silse-color-primary)') + ';';
-      bCss += 'color:' + (btn.color || '#fff') + ';';
+      bCss += 'color:' + (btn.color || 'var(--color-panel)') + ';';
       bCss += 'font-weight:' + (btn.fontWeight || 600) + ';';
       if (btn.padding) {
         bCss += 'padding:' + (btn.padding.top || 0) + 'px ' + (btn.padding.right || 0) + 'px ' + (btn.padding.bottom || 0) + 'px ' + (btn.padding.left || 0) + 'px;';
@@ -1413,7 +1413,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.kind === 'image') {
       var imgWrap = document.createElement('div');
       imgWrap.className = 'silse-block-media ' + (slot.contentClass || '');
-      imgWrap.style.cssText = 'width:100%;height:100%;border-radius:12px;overflow:hidden;border:1px solid ' + (plan.palette ? plan.palette.border : '#e5e7eb') + ';background:' + (plan.palette ? plan.palette.surface : '#f8fafc') + ';';
+      imgWrap.style.cssText = 'width:100%;height:100%;border-radius:12px;overflow:hidden;border:1px solid ' + (plan.palette ? plan.palette.border : 'var(--color-border)') + ';background:' + (plan.palette ? plan.palette.surface : 'var(--color-panel-soft)') + ';';
       if (content.src) {
         var imgEl = document.createElement('img');
         imgEl.src = content.src;
@@ -1422,7 +1422,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         imgWrap.appendChild(imgEl);
       } else {
         var fallback = document.createElement('div');
-        fallback.style.cssText = 'width:100%;height:100%;min-height:120px;display:grid;place-items:center;color:' + (plan.palette ? plan.palette.mutedText : '#6b7280') + ';font-size:13px;font-style:italic;';
+        fallback.style.cssText = 'width:100%;height:100%;min-height:120px;display:grid;place-items:center;color:' + (plan.palette ? plan.palette.mutedText : 'var(--color-muted)') + ';font-size:13px;font-style:italic;';
         fallback.textContent = '📷 Media tidak tersedia';
         imgWrap.appendChild(fallback);
       }
@@ -1439,8 +1439,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var rw = rs.reward || {};
       var rCss = 'padding:16px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;';
       rCss += 'border-radius:' + (rw.radius != null ? rw.radius : 12) + 'px;';
-      rCss += 'background:' + (rw.background || '#fffbeb') + ';';
-      rCss += 'border:2px solid ' + (rw.borderColor || '#fbbf24') + ';';
+      rCss += 'background:' + (rw.background || 'var(--color-warning-soft)') + ';';
+      rCss += 'border:2px solid ' + (rw.borderColor || 'var(--silse-gold)') + ';';
       rEl.style.cssText = rCss;
       if (content.icon) {
         var rIcon = document.createElement('div');
@@ -1461,9 +1461,9 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       fEl.className = slot.contentClass;
       var fb = rs.feedback || {};
       var fCss = 'padding:12px;border-radius:10px;';
-      fCss += 'background:' + (fb.background || '#f3f4f6') + ';';
+      fCss += 'background:' + (fb.background || 'var(--color-panel-soft)') + ';';
       if (fb.color) fCss += 'color:' + fb.color + ';';
-      fCss += 'border-left:4px solid ' + (fb.borderColor || '#d1d5db') + ';';
+      fCss += 'border-left:4px solid ' + (fb.borderColor || 'var(--color-border)') + ';';
       fEl.style.cssText = fCss;
       fEl.textContent = content.text || '';
       return fEl;
@@ -1808,7 +1808,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     title.className = 'silse-cover-title';
     // EXPORT-CONTRAST-01: cover scenes use dark gradient backgrounds.
     // Force white text for title/subtitle to ensure readability.
-    var titleCss = 'text-align:center;color:#ffffff;';
+    var titleCss = 'text-align:center;color:var(--color-panel);';
     if (ty.fontFamily) titleCss += 'font-family:' + ty.fontFamily + ';';
     if (ty.fontSize) titleCss += 'font-size:' + ty.fontSize + 'px;';
     if (ty.fontWeight) titleCss += 'font-weight:' + ty.fontWeight + ';';
@@ -1821,7 +1821,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var subtitle = document.createElement('div');
       subtitle.className = 'silse-cover-subtitle';
       // EXPORT-CONTRAST-01: white subtitle for dark cover background
-      subtitle.style.cssText = 'font-size:20px;color:#ffffff;text-align:center;';
+      subtitle.style.cssText = 'font-size:20px;color:var(--color-panel);text-align:center;';
       subtitle.textContent = content.heroSubtitle;
       wrapper.appendChild(subtitle);
     }
@@ -1838,7 +1838,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var pa = document.createElement('button');
       pa.className = 'silse-cover-primary-action';
       pa.type = 'button';
-      pa.style.cssText = 'padding:' + (btn.padding ? (btn.padding.top || 10) : 10) + 'px ' + (btn.padding ? (btn.padding.right || 20) : 20) + 'px;border-radius:' + (btn.radius || 8) + 'px;background:' + (btn.background || palette.primary) + ';color:' + (btn.color || '#fff') + ';border:0;font-weight:' + (btn.fontWeight || 600) + ';font-size:16px;cursor:pointer;margin-top:8px;';
+      pa.style.cssText = 'padding:' + (btn.padding ? (btn.padding.top || 10) : 10) + 'px ' + (btn.padding ? (btn.padding.right || 20) : 20) + 'px;border-radius:' + (btn.radius || 8) + 'px;background:' + (btn.background || palette.primary) + ';color:' + (btn.color || 'var(--color-panel)') + ';border:0;font-weight:' + (btn.fontWeight || 600) + ';font-size:16px;cursor:pointer;margin-top:8px;';
       pa.textContent = content.primaryAction.label;
       pa.setAttribute('aria-label', content.primaryAction.label + ', pergi ke halaman berikutnya');
       // BUG-NAV-01 FIX: wire primaryAction ke navigate('next') — sebelumnya tombol
@@ -1874,7 +1874,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var ach = document.createElement('div');
       ach.className = 'silse-closing-achievement';
       // EXPORT-CONTRAST-01: closing scenes use dark gradient backgrounds. Force white text.
-      ach.style.cssText = 'font-family:' + ty.heroFont + ';font-size:' + ty.titleSize + 'px;font-weight:' + ty.titleWeight + ';color:#ffffff;text-align:center;';
+      ach.style.cssText = 'font-family:' + ty.heroFont + ';font-size:' + ty.titleSize + 'px;font-weight:' + ty.titleWeight + ';color:var(--color-panel);text-align:center;';
       ach.textContent = content.achievement;
       wrapper.appendChild(ach);
     }
@@ -1882,14 +1882,14 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var sum = document.createElement('div');
       sum.className = 'silse-closing-summary';
       // EXPORT-CONTRAST-01: white summary for dark closing background
-      sum.style.cssText = 'font-size:18px;color:#ffffff;text-align:center;max-width:800px;';
+      sum.style.cssText = 'font-size:18px;color:var(--color-panel);text-align:center;max-width:800px;';
       sum.textContent = content.summary;
       wrapper.appendChild(sum);
     }
     if (content.rewardLabel || content.rewardIcon) {
       var reward = document.createElement('div');
       reward.className = 'silse-closing-reward';
-      reward.style.cssText = 'padding:20px;border-radius:' + (rw.radius || 12) + 'px;background:' + (rw.background || '#fffbeb') + ';border:2px solid ' + (rw.borderColor || '#fbbf24') + ';display:flex;flex-direction:column;align-items:center;gap:8px;';
+      reward.style.cssText = 'padding:20px;border-radius:' + (rw.radius || 12) + 'px;background:' + (rw.background || 'var(--color-warning-soft)') + ';border:2px solid ' + (rw.borderColor || 'var(--silse-gold)') + ';display:flex;flex-direction:column;align-items:center;gap:8px;';
       if (content.rewardIcon) {
         var ri = document.createElement('div');
         ri.style.fontSize = '64px';
@@ -1907,7 +1907,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.reflectionPrompt) {
       var refl = document.createElement('div');
       refl.className = 'silse-closing-reflection';
-      refl.style.cssText = 'padding:' + (surf.padding || 16) + 'px;border-radius:' + (surf.radius || 12) + 'px;background:' + (surf.background || palette.surface) + ';border:' + (surf.border || '1px solid #e5e7eb') + ';max-width:600px;text-align:center;';
+      refl.style.cssText = 'padding:' + (surf.padding || 16) + 'px;border-radius:' + (surf.radius || 12) + 'px;background:' + (surf.background || palette.surface) + ';border:' + (surf.border || '1px solid var(--color-border)') + ';max-width:600px;text-align:center;';
       var reflLabel = document.createElement('div');
       reflLabel.style.cssText = 'font-size:11px;font-weight:700;color:' + palette.mutedText + ';text-transform:uppercase;margin-bottom:6px;';
       reflLabel.textContent = 'Refleksi';
@@ -1922,7 +1922,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var nl = document.createElement('div');
       nl.className = 'silse-closing-next-learning';
       // EXPORT-CONTRAST-01: white nextLearning for dark closing background
-      nl.style.cssText = 'font-size:13px;color:#ffffff;';
+      nl.style.cssText = 'font-size:13px;color:var(--color-panel);';
       nl.textContent = content.nextLearning;
       wrapper.appendChild(nl);
     }
@@ -1930,7 +1930,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var fa = document.createElement('button');
       fa.className = 'silse-closing-final-action';
       fa.type = 'button';
-      fa.style.cssText = 'padding:' + (btn.padding ? (btn.padding.top || 10) : 10) + 'px ' + (btn.padding ? (btn.padding.right || 20) : 20) + 'px;border-radius:' + (btn.radius || 8) + 'px;background:' + (btn.background || palette.primary) + ';color:' + (btn.color || '#fff') + ';border:0;font-weight:' + (btn.fontWeight || 600) + ';font-size:16px;cursor:pointer;margin-top:8px;';
+      fa.style.cssText = 'padding:' + (btn.padding ? (btn.padding.top || 10) : 10) + 'px ' + (btn.padding ? (btn.padding.right || 20) : 20) + 'px;border-radius:' + (btn.radius || 8) + 'px;background:' + (btn.background || palette.primary) + ';color:' + (btn.color || 'var(--color-panel)') + ';border:0;font-weight:' + (btn.fontWeight || 600) + ';font-size:16px;cursor:pointer;margin-top:8px;';
       fa.textContent = content.finalAction.label;
       fa.setAttribute('aria-label', content.finalAction.label);
       // BUG-NAV-01 FIX: wire finalAction. Default action 'prev' (kembali ke awal)
@@ -1970,7 +1970,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     // MOTION-PRESET-01: entrance slide-up on header (reduced-motion safe via CSS)
     el.className = 'silse-block-header silse-motion-entrance-slide-up';
     // PREMIUM-STYLE-AFTER-FOUNDATION-01: accent border bottom + letter spacing
-    el.style.cssText = 'border-bottom:2px solid ' + (chipColor || p.gold || 'var(--silse-color-gold, #f9c12e)') + '33;padding-bottom:10px;margin-bottom:4px;';
+    el.style.cssText = 'border-bottom:2px solid ' + (chipColor || p.gold || 'var(--silse-color-gold, var(--silse-gold))') + '33;padding-bottom:10px;margin-bottom:4px;';
     // DEEP-STYLE-INJECTION-01: apply customStyle.header (pre-computed CSS string)
     if (_sceneCustomStyleCss && _sceneCustomStyleCss.header) {
       el.style.cssText += _sceneCustomStyleCss.header;
@@ -1978,7 +1978,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (chipLabel) {
       var chip = document.createElement('div');
       chip.className = 'silse-block-chip';
-      chip.style.cssText = 'display:inline-flex;align-items:center;gap:5px;padding:4px 14px;border-radius:999px;background:' + (chipColor ? chipColor + '22' : (p.gold ? p.gold + '22' : 'rgba(255,255,255,0.1)')) + ';color:' + (chipColor || p.gold || '#fff') + ';font-size:11px;font-weight:800;margin-bottom:10px;letter-spacing:0.05em;text-transform:uppercase;';
+      chip.style.cssText = 'display:inline-flex;align-items:center;gap:5px;padding:4px 14px;border-radius:999px;background:' + (chipColor ? chipColor + '22' : (p.gold ? p.gold + '22' : 'rgba(255,255,255,0.1)')) + ';color:' + (chipColor || p.gold || 'var(--color-panel)') + ';font-size:11px;font-weight:800;margin-bottom:10px;letter-spacing:0.05em;text-transform:uppercase;';
       // DEEP-STYLE-INJECTION-01: apply customStyle.chip to chip element
       if (_sceneCustomStyleCss && _sceneCustomStyleCss.chip) {
         chip.style.cssText += _sceneCustomStyleCss.chip;
@@ -2012,7 +2012,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     }
     if (title) {
       var t = document.createElement('div');
-      t.style.cssText = 'font-weight:800;font-size:13px;margin-bottom:8px;color:' + (p.mutedText || '#6e90b5') + ';text-transform:uppercase;letter-spacing:0.04em;';
+      t.style.cssText = 'font-weight:800;font-size:13px;margin-bottom:8px;color:' + (p.mutedText || 'var(--silse-muted-premium)') + ';text-transform:uppercase;letter-spacing:0.04em;';
       t.textContent = title;
       el.appendChild(t);
     }
@@ -2027,7 +2027,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
 
   function exportDiscussionBanner(plan, label, title, body, accentColor) {
     var p = plan.palette || {};
-    var ac = accentColor || p.success || '#34d399';
+    var ac = accentColor || p.success || 'var(--color-success-strong)';
     var el = document.createElement('div');
     el.className = 'silse-block-discussion';
     el.style.cssText = 'border-radius:13px;padding:13px 15px;display:flex;gap:12px;align-items:flex-start;background:' + ac + '11;border:1px solid ' + ac + '40;';
@@ -2054,26 +2054,26 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     el.className = 'silse-block-timer';
     el.setAttribute('data-running', 'false');
     el.setAttribute('data-remaining', '300');
-    el.style.cssText = 'display:flex;align-items:center;gap:10px;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '14;border:1px solid ' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '33;border-radius:10px;padding:8px 14px;';
+    el.style.cssText = 'display:flex;align-items:center;gap:10px;background:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + '14;border:1px solid ' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + '33;border-radius:10px;padding:8px 14px;';
     var time = document.createElement('span');
     time.className = 'silse-timer-display';
-    time.style.cssText = 'font-size:20px;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';min-width:42px;font-weight:800;';
+    time.style.cssText = 'font-size:20px;color:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + ';min-width:42px;font-weight:800;';
     time.textContent = '5:00';
     el.appendChild(time);
     var bar = document.createElement('div');
     bar.style.cssText = 'flex:1;height:5px;background:rgba(255,255,255,0.08);border-radius:99px;overflow:hidden;';
     var fill = document.createElement('div');
-    fill.style.cssText = 'height:100%;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';border-radius:99px;width:50%;';
+    fill.style.cssText = 'height:100%;background:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + ';border-radius:99px;width:50%;';
     bar.appendChild(fill);
     el.appendChild(bar);
     var toggleBtn = document.createElement('button');
     toggleBtn.setAttribute('data-action', 'timer-toggle');
-    toggleBtn.style.cssText = 'padding:8px 14px;min-height:44px;border-radius:999px;border:none;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';color:' + (p.primary || 'var(--silse-color-background)') + ';font-weight:800;cursor:pointer;';
+    toggleBtn.style.cssText = 'padding:8px 14px;min-height:44px;border-radius:999px;border:none;background:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + ';color:' + (p.primary || 'var(--silse-color-background)') + ';font-weight:800;cursor:pointer;';
     toggleBtn.textContent = '▶';
     el.appendChild(toggleBtn);
     var resetBtn = document.createElement('button');
     resetBtn.setAttribute('data-action', 'timer-reset');
-    resetBtn.style.cssText = 'padding:8px 14px;min-height:44px;border-radius:999px;border:none;background:rgba(255,255,255,0.08);color:' + (p.mutedText || '#6e90b5') + ';font-weight:800;cursor:pointer;';
+    resetBtn.style.cssText = 'padding:8px 14px;min-height:44px;border-radius:999px;border:none;background:rgba(255,255,255,0.08);color:' + (p.mutedText || 'var(--silse-muted-premium)') + ';font-weight:800;cursor:pointer;';
     resetBtn.textContent = '↺';
     el.appendChild(resetBtn);
     return el;
@@ -2089,19 +2089,19 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     label.textContent = 'Jawaban Kamu';
     el.appendChild(label);
     var ta = document.createElement('textarea');
-    ta.style.cssText = 'width:100%;min-height:60px;border-radius:10px;padding:12px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.15);font-size:14px;color:' + (p.text || '#fff') + ';font-family:inherit;resize:vertical;box-sizing:border-box;';
+    ta.style.cssText = 'width:100%;min-height:60px;border-radius:10px;padding:12px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.15);font-size:14px;color:' + (p.text || 'var(--color-panel)') + ';font-family:inherit;resize:vertical;box-sizing:border-box;';
     ta.setAttribute('placeholder', placeholder || 'Tulis jawabanmu di sini...');
     el.appendChild(ta);
     var saveRow = document.createElement('div');
     saveRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-top:8px;';
     var saveBtn = document.createElement('button');
     saveBtn.setAttribute('data-action', 'save-response');
-    saveBtn.style.cssText = 'padding:10px 18px;min-height:44px;border-radius:999px;border:none;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';color:' + (p.primary || 'var(--silse-color-background)') + ';font-weight:800;cursor:pointer;';
+    saveBtn.style.cssText = 'padding:10px 18px;min-height:44px;border-radius:999px;border:none;background:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + ';color:' + (p.primary || 'var(--silse-color-background)') + ';font-weight:800;cursor:pointer;';
     saveBtn.textContent = 'Simpan Jawaban';
     saveRow.appendChild(saveBtn);
     var badge = document.createElement('span');
     badge.className = 'silse-saved-badge';
-    badge.style.cssText = 'display:none;padding:4px 12px;border-radius:999px;background:' + (p.success || '#34d399') + '22;color:' + (p.success || '#34d399') + ';font-size:12px;font-weight:800;';
+    badge.style.cssText = 'display:none;padding:4px 12px;border-radius:999px;background:' + (p.success || 'var(--color-success-strong)') + '22;color:' + (p.success || 'var(--color-success-strong)') + ';font-size:12px;font-weight:800;';
     badge.textContent = '✓ Tersimpan';
     saveRow.appendChild(badge);
     el.appendChild(saveRow);
@@ -2113,20 +2113,20 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var el = document.createElement('div');
     // MOTION-PRESET-01: feedback pop on reveal (reduced-motion safe via CSS)
     el.className = 'silse-block-reveal' + (revealed ? ' silse-motion-feedback-pop' : '');
-    el.style.cssText = 'border-radius:16px;padding:20px;background:' + (p.success || '#34d399') + '11;border:1px solid ' + (p.success || '#34d399') + '40;cursor:pointer;';
+    el.style.cssText = 'border-radius:16px;padding:20px;background:' + (p.success || 'var(--color-success-strong)') + '11;border:1px solid ' + (p.success || 'var(--color-success-strong)') + '40;cursor:pointer;';
     var l = document.createElement('div');
-    l.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.success || '#34d399') + ';margin-bottom:8px;';
+    l.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.success || 'var(--color-success-strong)') + ';margin-bottom:8px;';
     l.textContent = '💡 ' + label;
     el.appendChild(l);
     var hint = document.createElement('div');
     hint.className = 'silse-reveal-hint';
-    hint.style.cssText = 'font-size:14px;line-height:1.6;color:' + (p.mutedText || '#6e90b5') + ';font-style:italic;';
+    hint.style.cssText = 'font-size:14px;line-height:1.6;color:' + (p.mutedText || 'var(--silse-muted-premium)') + ';font-style:italic;';
     hint.textContent = 'Klik untuk melihat pembahasan...';
     if (revealed) hint.style.display = 'none';
     el.appendChild(hint);
     var body = document.createElement('div');
     body.className = 'silse-reveal-body';
-    body.style.cssText = 'font-size:14px;line-height:1.6;color:' + (p.text || '#fff') + ';';
+    body.style.cssText = 'font-size:14px;line-height:1.6;color:' + (p.text || 'var(--color-panel)') + ';';
     body.textContent = text;
     if (!revealed) body.style.display = 'none';
     el.appendChild(body);
@@ -2142,11 +2142,11 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     el.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:10px;';
     var circle = document.createElement('div');
     circle.className = 'silse-result-circle';
-    circle.style.cssText = 'width:120px;height:120px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ' ' + (pct * 3.6) + 'deg, rgba(255,255,255,0.08) 0deg);position:relative;';
+    circle.style.cssText = 'width:120px;height:120px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + ' ' + (pct * 3.6) + 'deg, rgba(255,255,255,0.08) 0deg);position:relative;';
     var inner = document.createElement('div');
     inner.style.cssText = 'width:96px;height:96px;border-radius:50%;display:grid;place-items:center;background:' + (p.surface || 'var(--silse-color-surface)') + ';';
     var num = document.createElement('span');
-    num.style.cssText = 'font-size:32px;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';font-weight:800;';
+    num.style.cssText = 'font-size:32px;color:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + ';font-weight:800;';
     num.textContent = String(score);
     inner.appendChild(num);
     circle.appendChild(inner);
@@ -2154,7 +2154,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (level) {
       var badge = document.createElement('div');
       badge.className = 'silse-result-level-badge';
-      badge.style.cssText = 'padding:6px 16px;border-radius:999px;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';color:' + (p.primary || 'var(--silse-color-background)') + ';font-size:14px;font-weight:800;';
+      badge.style.cssText = 'padding:6px 16px;border-radius:999px;background:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + ';color:' + (p.primary || 'var(--silse-color-background)') + ';font-size:14px;font-weight:800;';
       badge.textContent = level;
       el.appendChild(badge);
     }
@@ -2189,16 +2189,16 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var p = plan.palette || {};
     var el = document.createElement('div');
     el.className = 'silse-block-reflection';
-    el.style.cssText = 'border-radius:16px;padding:20px;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '0A;border:1px solid ' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '33;';
+    el.style.cssText = 'border-radius:16px;padding:20px;background:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + '0A;border:1px solid ' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + '33;';
     var label = document.createElement('div');
-    label.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';margin-bottom:10px;';
+    label.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + ';margin-bottom:10px;';
     label.textContent = '📝 Refleksi Diri';
     el.appendChild(label);
     for (var i = 0; i < prompts.length; i++) {
       var row = document.createElement('div');
       row.style.cssText = 'display:flex;gap:8;font-size:14px;line-height:1.6;color:' + p.text + ';';
       var num = document.createElement('span');
-      num.style.cssText = 'font-weight:800;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';flex-shrink:0;';
+      num.style.cssText = 'font-weight:800;color:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + ';flex-shrink:0;';
       num.textContent = (i + 1) + '.';
       var text = document.createElement('span');
       text.textContent = prompts[i];
@@ -2213,8 +2213,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var el = document.createElement('button');
     // MOTION-PRESET-01: hover lift (reduced-motion safe via CSS)
     el.className = 'silse-block-action silse-motion-hover-lift';
-    var bg = p.gold || 'var(--silse-color-gold, #f9c12e)'; var color = p.primary || 'var(--silse-color-background)';
-    if (variant === 'secondary') { bg = p.secondary || '#3ecfcf'; }
+    var bg = p.gold || 'var(--silse-color-gold, var(--silse-gold))'; var color = p.primary || 'var(--silse-color-background)';
+    if (variant === 'secondary') { bg = p.secondary || 'var(--color-success-strong)'; }
     el.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:999px;background:' + bg + ';color:' + color + ';border:none;font-weight:800;font-size:14px;cursor:pointer;';
     // DEEP-STYLE-INJECTION-01: apply customStyle.button (pre-computed CSS string)
     if (_sceneCustomStyleCss && _sceneCustomStyleCss.button) {
@@ -2237,7 +2237,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var tab = document.createElement('button');
       tab.setAttribute('data-tab-id', tabs[i].id);
       var isActive = tabs[i].id === activeTab;
-      tab.style.cssText = 'padding:8px 16px;min-height:40px;border-radius:999px;font-size:13px;font-weight:800;cursor:pointer;border:none;background:' + (isActive ? (p.gold || 'var(--silse-color-gold, #f9c12e)') : 'rgba(255,255,255,0.04)') + ';color:' + (isActive ? (p.primary || 'var(--silse-color-background)') : p.mutedText) + ';';
+      tab.style.cssText = 'padding:8px 16px;min-height:40px;border-radius:999px;font-size:13px;font-weight:800;cursor:pointer;border:none;background:' + (isActive ? (p.gold || 'var(--silse-color-gold, var(--silse-gold))') : 'rgba(255,255,255,0.04)') + ';color:' + (isActive ? (p.primary || 'var(--silse-color-background)') : p.mutedText) + ';';
       tab.textContent = tabs[i].label;
       el.appendChild(tab);
     }
@@ -2282,8 +2282,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var listHtml = '';
       for (var i = 0; i < content.objectiveList.length; i++) {
         listHtml += '<div class="silse-objective-item" style="display:flex;gap:10;align-items:flex-start;margin-bottom:8px;">';
-        listHtml += '<span style="font-size:18px;color:' + (plan.palette ? plan.palette.gold : '#f9c12e') + ';font-weight:800;flex-shrink:0;">' + (i+1) + '</span>';
-        listHtml += '<span style="font-size:14px;line-height:1.6;color:' + (plan.palette ? plan.palette.text : '#fff') + ';">' + content.objectiveList[i] + '</span>';
+        listHtml += '<span style="font-size:18px;color:' + (plan.palette ? plan.palette.gold : 'var(--silse-gold)') + ';font-weight:800;flex-shrink:0;">' + (i+1) + '</span>';
+        listHtml += '<span style="font-size:14px;line-height:1.6;color:' + (plan.palette ? plan.palette.text : 'var(--color-panel)') + ';">' + content.objectiveList[i] + '</span>';
         listHtml += '</div>';
       }
       listDiv.innerHTML = listHtml;
@@ -2350,7 +2350,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var bdDiv = bdEl.querySelector('div:last-child') || bdEl;
       var bdHtml = '';
       for (var i = 0; i < content.breakdown.length; i++) {
-        bdHtml += '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span style="color:' + (plan.palette ? plan.palette.mutedText : '#888') + ';">' + content.breakdown[i].label + '</span><span style="font-weight:700;color:' + (plan.palette ? plan.palette.text : '#fff') + ';">' + content.breakdown[i].value + '</span></div>';
+        bdHtml += '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span style="color:' + (plan.palette ? plan.palette.mutedText : '#888') + ';">' + content.breakdown[i].label + '</span><span style="font-weight:700;color:' + (plan.palette ? plan.palette.text : 'var(--color-panel)') + ';">' + content.breakdown[i].value + '</span></div>';
       }
       bdDiv.innerHTML = bdHtml;
       children.push(bdEl);
@@ -2411,7 +2411,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.instruction) {
       var instr = document.createElement('div');
       instr.className = 'silse-classification-instruction silse-premium-game-instruction';
-      instr.style.cssText = 'background:' + (p.success || '#34d399') + '11;border:1px solid ' + (p.success || '#34d399') + '40;border-radius:13px;padding:13px 15px;font-size:14px;line-height:1.6;color:' + p.text + ';box-shadow:' + premiumShadow + ';';
+      instr.style.cssText = 'background:' + (p.success || 'var(--color-success-strong)') + '11;border:1px solid ' + (p.success || 'var(--color-success-strong)') + '40;border-radius:13px;padding:13px 15px;font-size:14px;line-height:1.6;color:' + p.text + ';box-shadow:' + premiumShadow + ';';
       instr.textContent = content.instruction;
       children.push(instr);
     }
@@ -2419,7 +2419,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var scoreEl = document.createElement('div');
     scoreEl.className = 'silse-classification-score silse-premium-game-score';
     scoreEl.setAttribute('data-testid', 'game-score');
-    scoreEl.style.cssText = 'display:inline-flex;align-items:center;gap:10px;font-size:16px;font-weight:800;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';padding:8px 14px;border-radius:999px;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '11;border:1px solid ' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '33;box-shadow:' + premiumShadow + ';';
+    scoreEl.style.cssText = 'display:inline-flex;align-items:center;gap:10px;font-size:16px;font-weight:800;color:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + ';padding:8px 14px;border-radius:999px;background:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + '11;border:1px solid ' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + '33;box-shadow:' + premiumShadow + ';';
     scoreEl.innerHTML = '<span style="font-size:18px;">🏆</span> Skor: <span class="silse-game-score-val">0</span>';
     children.push(scoreEl);
     // Feedback area
@@ -2462,9 +2462,9 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
           var col = document.createElement('div');
           col.className = 'silse-classification-column silse-premium-game-column';
           col.setAttribute('data-category', cat);
-          col.style.cssText = 'background:' + (p.surface || 'var(--silse-color-surface)') + ';border:2px dashed ' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + 'aa;border-radius:16px;padding:20px;min-height:120px;box-shadow:' + premiumShadow + ';transition:all 0.18s ease;';
+          col.style.cssText = 'background:' + (p.surface || 'var(--silse-color-surface)') + ';border:2px dashed ' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + 'aa;border-radius:16px;padding:20px;min-height:120px;box-shadow:' + premiumShadow + ';transition:all 0.18s ease;';
           var colTitle = document.createElement('div');
-          colTitle.style.cssText = 'font-size:13px;font-weight:800;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';margin-bottom:10px;text-align:center;';
+          colTitle.style.cssText = 'font-size:13px;font-weight:800;color:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + ';margin-bottom:10px;text-align:center;';
           colTitle.textContent = cat;
           col.appendChild(colTitle);
           var colItems = document.createElement('div');
@@ -2488,7 +2488,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var children = [exportHeader(plan, '🗺️ Peta Interaktif', p.secondary, content.guidingQuestion || 'Peta Hotspot')];
     if (content.caption) {
       var cap = document.createElement('div');
-      cap.style.cssText = 'font-size:14px;line-height:1.6;color:' + (p.mutedText || '#6e90b5') + ';';
+      cap.style.cssText = 'font-size:14px;line-height:1.6;color:' + (p.mutedText || 'var(--silse-muted-premium)') + ';';
       cap.textContent = content.caption;
       children.push(cap);
     }
@@ -2497,7 +2497,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     mapEl.style.cssText = 'position:relative;width:100%;min-height:320px;border-radius:12px;overflow:hidden;background:' + (content.backgroundVisual ? 'url(' + content.backgroundVisual + ') center/cover' : (p.surface || 'var(--silse-color-surface)')) + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
     if (!content.backgroundVisual) {
       var fb = document.createElement('div');
-      fb.style.cssText = 'position:absolute;inset:0;display:grid;place-items:center;color:' + (p.mutedText || '#6e90b5') + ';font-style:italic;';
+      fb.style.cssText = 'position:absolute;inset:0;display:grid;place-items:center;color:' + (p.mutedText || 'var(--silse-muted-premium)') + ';font-style:italic;';
       fb.textContent = '🗺️ Peta tidak tersedia — klik titik untuk informasi';
       mapEl.appendChild(fb);
     }
@@ -2508,7 +2508,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       btn.setAttribute('data-hotspot-id', hotspots[i].id);
       btn.style.cssText = 'position:absolute;left:' + hotspots[i].x + '%;top:' + hotspots[i].y + '%;width:28px;height:28px;border-radius:50%;border:3px solid ' + (p.primary || 'var(--silse-color-background)') + ';background:' + (p.primary || 'var(--silse-color-background)') + ';cursor:pointer;transform:translate(-50%,-50%);box-shadow:0 2px 8px rgba(0,0,0,0.3);';
       var lbl = document.createElement('span');
-      lbl.style.cssText = 'position:absolute;top:-24px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:800;color:' + (p.text || '#fff') + ';white-space:nowrap;';
+      lbl.style.cssText = 'position:absolute;top:-24px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:800;color:' + (p.text || 'var(--color-panel)') + ';white-space:nowrap;';
       lbl.textContent = hotspots[i].label;
       btn.appendChild(lbl);
       mapEl.appendChild(btn);
@@ -2516,7 +2516,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     children.push(mapEl);
     var panel = document.createElement('div');
     panel.className = 'silse-hotspot-panel';
-    panel.style.cssText = 'display:none;padding:16px;border-radius:12px;background:' + (p.surface || 'var(--silse-color-surface)') + ';border:1px solid ' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '66;';
+    panel.style.cssText = 'display:none;padding:16px;border-radius:12px;background:' + (p.surface || 'var(--silse-color-surface)') + ';border:1px solid ' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + '66;';
     panel.textContent = 'Klik titik untuk melihat informasi';
     children.push(panel);
     return exportShell(plan, 'silse-scene-hotspot-map', children);
@@ -2529,13 +2529,13 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.instruction) {
       var instr = document.createElement('div');
       instr.className = 'silse-premium-matching-instruction';
-      instr.style.cssText = 'font-size:14px;line-height:1.6;padding:8px 12px;background:' + (p.success || '#34d399') + '11;border-radius:16px;color:' + (p.text || '#fff') + ';box-shadow:' + premiumShadow + ';';
+      instr.style.cssText = 'font-size:14px;line-height:1.6;padding:8px 12px;background:' + (p.success || 'var(--color-success-strong)') + '11;border-radius:16px;color:' + (p.text || 'var(--color-panel)') + ';box-shadow:' + premiumShadow + ';';
       instr.textContent = content.instruction;
       children.push(instr);
     }
     var scoreEl = document.createElement('div');
     scoreEl.className = 'silse-matching-score silse-premium-matching-score';
-    scoreEl.style.cssText = 'display:inline-flex;align-items:center;gap:8px;font-size:16px;font-weight:800;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';padding:8px 14px;border-radius:999px;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '11;border:1px solid ' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '33;box-shadow:' + premiumShadow + ';';
+    scoreEl.style.cssText = 'display:inline-flex;align-items:center;gap:8px;font-size:16px;font-weight:800;color:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + ';padding:8px 14px;border-radius:999px;background:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + '11;border:1px solid ' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + '33;box-shadow:' + premiumShadow + ';';
     scoreEl.innerHTML = '<span style="font-size:18px;">🏆</span> Skor: <span class="silse-matching-score-val">0</span>';
     children.push(scoreEl);
     var fbEl = document.createElement('div');
@@ -2547,7 +2547,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var leftCol = document.createElement('div');
     leftCol.className = 'silse-matching-left silse-premium-matching-left';
     var leftLabel = document.createElement('div');
-    leftLabel.style.cssText = 'font-size:12px;font-weight:800;text-transform:uppercase;color:' + (p.mutedText || '#6e90b5') + ';margin-bottom:8px;';
+    leftLabel.style.cssText = 'font-size:12px;font-weight:800;text-transform:uppercase;color:' + (p.mutedText || 'var(--silse-muted-premium)') + ';margin-bottom:8px;';
     leftLabel.textContent = 'Kolom Kiri';
     leftCol.appendChild(leftLabel);
     var leftItems = content.leftItems || [];
@@ -2555,7 +2555,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var lbtn = document.createElement('button');
       lbtn.className = 'silse-matching-pair silse-premium-matching-pair';
       lbtn.setAttribute('data-left-id', leftItems[li].id);
-      lbtn.style.cssText = 'display:block;width:100%;text-align:left;margin-bottom:6px;padding:10px 14px;min-height:44px;border-radius:16px;cursor:pointer;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:' + (p.surface || 'var(--silse-color-surface)') + ';color:' + (p.text || '#fff') + ';font-size:14px;font-weight:600;transition:all 0.18s ease;';
+      lbtn.style.cssText = 'display:block;width:100%;text-align:left;margin-bottom:6px;padding:10px 14px;min-height:44px;border-radius:16px;cursor:pointer;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:' + (p.surface || 'var(--silse-color-surface)') + ';color:' + (p.text || 'var(--color-panel)') + ';font-size:14px;font-weight:600;transition:all 0.18s ease;';
       lbtn.textContent = leftItems[li].label;
       leftCol.appendChild(lbtn);
     }
@@ -2563,7 +2563,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var rightCol = document.createElement('div');
     rightCol.className = 'silse-matching-right silse-premium-matching-right';
     var rightLabel = document.createElement('div');
-    rightLabel.style.cssText = 'font-size:12px;font-weight:800;text-transform:uppercase;color:' + (p.mutedText || '#6e90b5') + ';margin-bottom:8px;';
+    rightLabel.style.cssText = 'font-size:12px;font-weight:800;text-transform:uppercase;color:' + (p.mutedText || 'var(--silse-muted-premium)') + ';margin-bottom:8px;';
     rightLabel.textContent = 'Kolom Kanan';
     rightCol.appendChild(rightLabel);
     var rightItems = content.rightItems || [];
@@ -2571,7 +2571,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var rbtn = document.createElement('button');
       rbtn.className = 'silse-matching-pair silse-premium-matching-pair';
       rbtn.setAttribute('data-right-id', rightItems[ri].id);
-      rbtn.style.cssText = 'display:block;width:100%;text-align:left;margin-bottom:6px;padding:10px 14px;min-height:44px;border-radius:16px;cursor:pointer;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:' + (p.surface || 'var(--silse-color-surface)') + ';color:' + (p.text || '#fff') + ';font-size:14px;font-weight:600;transition:all 0.18s ease;';
+      rbtn.style.cssText = 'display:block;width:100%;text-align:left;margin-bottom:6px;padding:10px 14px;min-height:44px;border-radius:16px;cursor:pointer;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:' + (p.surface || 'var(--silse-color-surface)') + ';color:' + (p.text || 'var(--color-panel)') + ';font-size:14px;font-weight:600;transition:all 0.18s ease;';
       rbtn.textContent = rightItems[ri].label;
       rightCol.appendChild(rbtn);
     }
@@ -2590,13 +2590,13 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.instruction) {
       var instr = document.createElement('div');
       instr.className = 'silse-premium-sequence-instruction';
-      instr.style.cssText = 'font-size:14px;line-height:1.6;padding:8px 12px;background:' + (p.accent || '#e63946') + '11;border-radius:16px;color:' + (p.text || '#fff') + ';box-shadow:' + premiumShadow + ';';
+      instr.style.cssText = 'font-size:14px;line-height:1.6;padding:8px 12px;background:' + (p.accent || 'var(--silse-red)') + '11;border-radius:16px;color:' + (p.text || 'var(--color-panel)') + ';box-shadow:' + premiumShadow + ';';
       instr.textContent = content.instruction;
       children.push(instr);
     }
     var scoreEl = document.createElement('div');
     scoreEl.className = 'silse-premium-sequence-score';
-    scoreEl.style.cssText = 'display:inline-flex;align-items:center;gap:8px;font-size:16px;font-weight:800;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';padding:8px 14px;border-radius:999px;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '11;border:1px solid ' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '33;box-shadow:' + premiumShadow + ';';
+    scoreEl.style.cssText = 'display:inline-flex;align-items:center;gap:8px;font-size:16px;font-weight:800;color:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + ';padding:8px 14px;border-radius:999px;background:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + '11;border:1px solid ' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + '33;box-shadow:' + premiumShadow + ';';
     scoreEl.innerHTML = '<span style="font-size:18px;">🏆</span> Skor: <span class="silse-sequence-score-val">0</span>';
     children.push(scoreEl);
     var fbEl = document.createElement('div');
@@ -2611,22 +2611,22 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:16px;background:' + (p.surface || 'var(--silse-color-surface)') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';box-shadow:' + premiumShadow + ';transition:all 0.18s ease;';
       var num = document.createElement('span');
       num.className = 'silse-sequence-num';
-      num.style.cssText = 'font-size:18px;font-weight:800;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';min-width:28px;';
+      num.style.cssText = 'font-size:18px;font-weight:800;color:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + ';min-width:28px;';
       num.textContent = (si + 1) + '.';
       var lbl = document.createElement('span');
-      lbl.style.cssText = 'flex:1;font-size:14px;font-weight:600;color:' + (p.text || '#fff') + ';';
+      lbl.style.cssText = 'flex:1;font-size:14px;font-weight:600;color:' + (p.text || 'var(--color-panel)') + ';';
       lbl.textContent = items[si].label;
       var upBtn = document.createElement('button');
       upBtn.className = 'silse-sequence-up silse-premium-sequence-up';
       upBtn.setAttribute('data-action', 'seq-up');
       upBtn.setAttribute('data-seq-id', items[si].id);
-      upBtn.style.cssText = 'padding:6px 12px;min-height:36px;border-radius:8px;border:none;background:' + (p.primary || 'var(--silse-color-background)') + ';color:#fff;font-weight:700;cursor:pointer;transition:all 0.18s ease;';
+      upBtn.style.cssText = 'padding:6px 12px;min-height:36px;border-radius:8px;border:none;background:' + (p.primary || 'var(--silse-color-background)') + ';color:var(--color-panel);font-weight:700;cursor:pointer;transition:all 0.18s ease;';
       upBtn.textContent = '↑';
       var downBtn = document.createElement('button');
       downBtn.className = 'silse-sequence-down silse-premium-sequence-down';
       downBtn.setAttribute('data-action', 'seq-down');
       downBtn.setAttribute('data-seq-id', items[si].id);
-      downBtn.style.cssText = 'padding:6px 12px;min-height:36px;border-radius:8px;border:none;background:' + (p.primary || 'var(--silse-color-background)') + ';color:#fff;font-weight:700;cursor:pointer;transition:all 0.18s ease;';
+      downBtn.style.cssText = 'padding:6px 12px;min-height:36px;border-radius:8px;border:none;background:' + (p.primary || 'var(--silse-color-background)') + ';color:var(--color-panel);font-weight:700;cursor:pointer;transition:all 0.18s ease;';
       downBtn.textContent = '↓';
       row.appendChild(num); row.appendChild(lbl); row.appendChild(upBtn); row.appendChild(downBtn);
       children.push(row);
@@ -2634,7 +2634,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var checkBtn = document.createElement('button');
     checkBtn.className = 'silse-sequence-check silse-premium-sequence-check';
     checkBtn.setAttribute('data-action', 'seq-check');
-    checkBtn.style.cssText = 'padding:10px 18px;min-height:44px;border-radius:999px;border:none;background:' + (p.success || '#34d399') + ';color:#fff;font-weight:800;cursor:pointer;transition:all 0.18s ease;box-shadow:' + premiumShadow + ';';
+    checkBtn.style.cssText = 'padding:10px 18px;min-height:44px;border-radius:999px;border:none;background:' + (p.success || 'var(--color-success-strong)') + ';color:var(--color-panel);font-weight:800;cursor:pointer;transition:all 0.18s ease;box-shadow:' + premiumShadow + ';';
     checkBtn.textContent = '✓ Cek Jawaban';
     children.push(checkBtn);
     children.push(exportActionButton(plan, '↺ Reset', 'secondary'));
@@ -2657,26 +2657,26 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       mediaWrap.appendChild(img);
     } else {
       var fb = document.createElement('div');
-      fb.style.cssText = 'width:100%;min-height:200px;display:grid;place-items:center;color:' + (p.mutedText || '#6e90b5') + ';font-size:13px;font-style:italic;';
+      fb.style.cssText = 'width:100%;min-height:200px;display:grid;place-items:center;color:' + (p.mutedText || 'var(--silse-muted-premium)') + ';font-size:13px;font-style:italic;';
       fb.textContent = '📷 Media tidak tersedia';
       mediaWrap.appendChild(fb);
     }
     children.push(mediaWrap);
     if (content.caption) {
       var cap = document.createElement('div');
-      cap.style.cssText = 'font-size:13px;color:' + (p.mutedText || '#6e90b5') + ';font-style:italic;';
+      cap.style.cssText = 'font-size:13px;color:' + (p.mutedText || 'var(--silse-muted-premium)') + ';font-style:italic;';
       cap.textContent = content.caption;
       children.push(cap);
     }
     if (content.guidingQuestion) {
       var q = document.createElement('div');
       q.className = 'silse-media-focus-question';
-      q.style.cssText = 'padding:16px;border-radius:12px;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '0A;border:1px solid ' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '33;';
+      q.style.cssText = 'padding:16px;border-radius:12px;background:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + '0A;border:1px solid ' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + '33;';
       var qLabel = document.createElement('div');
-      qLabel.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';margin-bottom:6px;';
+      qLabel.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + ';margin-bottom:6px;';
       qLabel.textContent = '❓ Pertanyaan Pemandu';
       var qText = document.createElement('div');
-      qText.style.cssText = 'font-size:15px;line-height:1.6;color:' + (p.text || '#fff') + ';font-weight:600;';
+      qText.style.cssText = 'font-size:15px;line-height:1.6;color:' + (p.text || 'var(--color-panel)') + ';font-weight:600;';
       qText.textContent = content.guidingQuestion;
       q.appendChild(qLabel); q.appendChild(qText);
       children.push(q);
@@ -2698,7 +2698,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       qEl.setAttribute('data-question-id', questions[qi].id);
       qEl.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.surface || 'var(--silse-color-surface)') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
       var qPrompt = document.createElement('div');
-      qPrompt.style.cssText = 'font-size:14px;font-weight:700;color:' + (p.text || '#fff') + ';margin-bottom:8px;';
+      qPrompt.style.cssText = 'font-size:14px;font-weight:700;color:' + (p.text || 'var(--color-panel)') + ';margin-bottom:8px;';
       qPrompt.textContent = (qi + 1) + '. ' + questions[qi].prompt;
       qEl.appendChild(qPrompt);
       var choices = questions[qi].choices || [];
@@ -2708,7 +2708,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         cBtn.setAttribute('data-question-id', questions[qi].id);
         cBtn.setAttribute('data-choice-id', choices[ci].id);
         cBtn.setAttribute('data-correct', choices[ci].id === questions[qi].correctChoiceId ? 'true' : 'false');
-        cBtn.style.cssText = 'display:block;text-align:left;margin-bottom:6px;padding:8px 12px;min-height:40px;border-radius:8px;cursor:pointer;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:transparent;color:' + (p.text || '#fff') + ';font-size:13px;font-weight:600;width:100%;';
+        cBtn.style.cssText = 'display:block;text-align:left;margin-bottom:6px;padding:8px 12px;min-height:40px;border-radius:8px;cursor:pointer;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:transparent;color:' + (p.text || 'var(--color-panel)') + ';font-size:13px;font-weight:600;width:100%;';
         cBtn.textContent = choices[ci].text;
         qEl.appendChild(cBtn);
       }
@@ -2720,17 +2720,17 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     children.push(submitBtn);
     var resultEl = document.createElement('div');
     resultEl.className = 'silse-diagnostic-result';
-    resultEl.style.cssText = 'display:none;padding:16px;border-radius:12px;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '0A;border:1px solid ' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '33;text-align:center;';
+    resultEl.style.cssText = 'display:none;padding:16px;border-radius:12px;background:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + '0A;border:1px solid ' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + '33;text-align:center;';
     children.push(resultEl);
     // PATCH A: readiness level element (hidden until submit)
     var readinessEl = document.createElement('div');
     readinessEl.className = 'silse-diagnostic-readiness';
-    readinessEl.style.cssText = 'display:none;padding:12px;border-radius:10px;background:' + (p.secondary || 'var(--silse-color-secondary)') + '11;border:1px solid ' + (p.secondary || 'var(--silse-color-secondary)') + '33;font-size:14px;font-weight:700;color:' + (p.text || '#fff') + ';text-align:center;';
+    readinessEl.style.cssText = 'display:none;padding:12px;border-radius:10px;background:' + (p.secondary || 'var(--silse-color-secondary)') + '11;border:1px solid ' + (p.secondary || 'var(--silse-color-secondary)') + '33;font-size:14px;font-weight:700;color:' + (p.text || 'var(--color-panel)') + ';text-align:center;';
     children.push(readinessEl);
     // PATCH A: recommendation element (hidden until submit)
     var recEl = document.createElement('div');
     recEl.className = 'silse-diagnostic-recommendation';
-    recEl.style.cssText = 'display:none;padding:12px;border-radius:10px;background:' + (p.success || '#34d399') + '11;border:1px solid ' + (p.success || '#34d399') + '33;font-size:14px;color:' + (p.text || '#fff') + ';';
+    recEl.style.cssText = 'display:none;padding:12px;border-radius:10px;background:' + (p.success || 'var(--color-success-strong)') + '11;border:1px solid ' + (p.success || 'var(--color-success-strong)') + '33;font-size:14px;color:' + (p.text || 'var(--color-panel)') + ';';
     children.push(recEl);
     // PATCH A: store readinessLevels + recommendation as JSON data attrs on the scene shell for wireInteractions.
     var sceneShell = exportShell(plan, 'silse-scene-diagnostic-check', children);
@@ -2744,10 +2744,10 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var children = [exportHeader(plan, '🔧 Penguatan Konsep', p.warning, 'Penguatan Konsep')];
     if (content.misconception) {
       var mc = document.createElement('div');
-      mc.style.cssText = 'padding:12px;border-radius:10px;background:' + (p.danger || '#ff6b6b') + '11;border:1px solid ' + (p.danger || '#ff6b6b') + '33;font-size:14px;color:' + (p.text || '#fff') + ';';
+      mc.style.cssText = 'padding:12px;border-radius:10px;background:' + (p.danger || 'var(--color-danger-strong)') + '11;border:1px solid ' + (p.danger || 'var(--color-danger-strong)') + '33;font-size:14px;color:' + (p.text || 'var(--color-panel)') + ';';
       // PATCH A: safe DOM — use textContent + appendChild instead of innerHTML
       var mcLabel = document.createElement('strong');
-      mcLabel.style.color = (p.danger || '#ff6b6b');
+      mcLabel.style.color = (p.danger || 'var(--color-danger-strong)');
       mcLabel.textContent = '⚠️ Miskonsepsi: ';
       mc.appendChild(mcLabel);
       var mcText = document.createTextNode(content.misconception);
@@ -2762,7 +2762,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       pEl.setAttribute('data-question-id', practice[pi].id);
       pEl.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.surface || 'var(--silse-color-surface)') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
       var pPrompt = document.createElement('div');
-      pPrompt.style.cssText = 'font-size:14px;font-weight:700;color:' + (p.text || '#fff') + ';margin-bottom:8px;';
+      pPrompt.style.cssText = 'font-size:14px;font-weight:700;color:' + (p.text || 'var(--color-panel)') + ';margin-bottom:8px;';
       pPrompt.textContent = (pi + 1) + '. ' + practice[pi].prompt;
       pEl.appendChild(pPrompt);
       var choices = practice[pi].choices || [];
@@ -2772,7 +2772,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         cBtn.setAttribute('data-question-id', practice[pi].id);
         cBtn.setAttribute('data-choice-id', choices[ci].id);
         cBtn.setAttribute('data-correct', choices[ci].id === practice[pi].correctChoiceId ? 'true' : 'false');
-        cBtn.style.cssText = 'display:block;text-align:left;margin-bottom:6px;padding:8px 12px;min-height:40px;border-radius:8px;cursor:pointer;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:transparent;color:' + (p.text || '#fff') + ';font-size:13px;font-weight:600;width:100%;';
+        cBtn.style.cssText = 'display:block;text-align:left;margin-bottom:6px;padding:8px 12px;min-height:40px;border-radius:8px;cursor:pointer;border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:transparent;color:' + (p.text || 'var(--color-panel)') + ';font-size:13px;font-weight:600;width:100%;';
         cBtn.textContent = choices[ci].text;
         pEl.appendChild(cBtn);
       }
@@ -2781,7 +2781,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         hintBtn.className = 'silse-remedial-hint';
         hintBtn.setAttribute('data-question-id', practice[pi].id);
         hintBtn.setAttribute('data-hint', practice[pi].hint);
-        hintBtn.style.cssText = 'margin-top:6px;padding:4px 10px;font-size:12px;border:none;background:transparent;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';cursor:pointer;font-weight:700;';
+        hintBtn.style.cssText = 'margin-top:6px;padding:4px 10px;font-size:12px;border:none;background:transparent;color:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + ';cursor:pointer;font-weight:700;';
         hintBtn.textContent = '💡 Tampilkan Hint';
         pEl.appendChild(hintBtn);
       }
@@ -2808,7 +2808,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       tLabel.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.secondary || 'var(--silse-color-secondary)') + ';margin-bottom:6px;';
       tLabel.textContent = 'Tugas Lanjutan';
       var tText = document.createElement('div');
-      tText.style.cssText = 'font-size:15px;line-height:1.6;color:' + (p.text || '#fff') + ';font-weight:600;';
+      tText.style.cssText = 'font-size:15px;line-height:1.6;color:' + (p.text || 'var(--color-panel)') + ';font-weight:600;';
       tText.textContent = content.advancedTask;
       task.appendChild(tLabel); task.appendChild(tText);
       children.push(task);
@@ -2819,17 +2819,17 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       rubric.className = 'silse-enrichment-rubric';
       rubric.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.surface || 'var(--silse-color-surface)') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
       var rLabel = document.createElement('div');
-      rLabel.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.mutedText || '#6e90b5') + ';margin-bottom:8px;';
+      rLabel.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.mutedText || 'var(--silse-muted-premium)') + ';margin-bottom:8px;';
       rLabel.textContent = 'Rubrik Penilaian';
       rubric.appendChild(rLabel);
       for (var ri = 0; ri < content.rubricPreview.length; ri++) {
         var row = document.createElement('div');
         row.style.cssText = 'display:flex;gap:8px;padding:6px 0;border-bottom:' + (ri < content.rubricPreview.length - 1 ? '1px solid ' + (p.border || 'rgba(255,255,255,0.06)') : 'none') + ';';
         var cName = document.createElement('span');
-        cName.style.cssText = 'font-size:13px;font-weight:700;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';min-width:100px;';
+        cName.style.cssText = 'font-size:13px;font-weight:700;color:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + ';min-width:100px;';
         cName.textContent = content.rubricPreview[ri].criterion;
         var cDesc = document.createElement('span');
-        cDesc.style.cssText = 'font-size:13px;color:' + (p.mutedText || '#6e90b5') + ';';
+        cDesc.style.cssText = 'font-size:13px;color:' + (p.mutedText || 'var(--silse-muted-premium)') + ';';
         cDesc.textContent = content.rubricPreview[ri].descriptor;
         row.appendChild(cName); row.appendChild(cDesc);
         rubric.appendChild(row);
@@ -2842,7 +2842,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     children.push(completeBtn);
     var completionMsg = document.createElement('div');
     completionMsg.className = 'silse-enrichment-completion';
-    completionMsg.style.cssText = 'display:none;padding:16px;border-radius:12px;text-align:center;background:' + (p.success || '#34d399') + '11;border:1px solid ' + (p.success || '#34d399') + '33;font-size:16px;font-weight:800;color:' + (p.success || '#34d399') + ';';
+    completionMsg.style.cssText = 'display:none;padding:16px;border-radius:12px;text-align:center;background:' + (p.success || 'var(--color-success-strong)') + '11;border:1px solid ' + (p.success || 'var(--color-success-strong)') + '33;font-size:16px;font-weight:800;color:' + (p.success || 'var(--color-success-strong)') + ';';
     completionMsg.textContent = content.completionMessage || 'Selamat! Challenge enrichment selesai.';
     children.push(completionMsg);
     var enrShell = exportShell(plan, 'silse-scene-enrichment-challenge', children);
@@ -2854,14 +2854,14 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var children = [exportHeader(plan, '📝 LKPD', p.success, 'Worksheet Activity')];
     if (content.instruction) {
       var instr = document.createElement('div');
-      instr.style.cssText = 'font-size:14px;line-height:1.6;padding:8px 12px;background:' + (p.success || '#34d399') + '11;border-radius:10px;color:' + (p.text || '#fff') + ';';
+      instr.style.cssText = 'font-size:14px;line-height:1.6;padding:8px 12px;background:' + (p.success || 'var(--color-success-strong)') + '11;border-radius:10px;color:' + (p.text || 'var(--color-panel)') + ';';
       instr.textContent = content.instruction;
       children.push(instr);
     }
     var steps = content.taskSteps || [];
     var checklist = document.createElement('div');
     checklist.className = 'silse-worksheet-checklist';
-    checklist.style.cssText = 'font-size:13px;font-weight:700;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';';
+    checklist.style.cssText = 'font-size:13px;font-weight:700;color:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + ';';
     checklist.textContent = '✓ Selesai: 0 / ' + steps.length;
     children.push(checklist);
     for (var si = 0; si < steps.length; si++) {
@@ -2875,10 +2875,10 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       checkBtn.className = 'silse-worksheet-check';
       checkBtn.setAttribute('data-step-id', steps[si].id);
       checkBtn.setAttribute('data-action', 'worksheet-check');
-      checkBtn.style.cssText = 'width:24px;height:24px;min-height:24px;border-radius:6px;border:2px solid ' + (p.success || '#34d399') + ';background:transparent;color:#fff;cursor:pointer;font-size:14px;font-weight:800;flex-shrink:0;display:grid;place-items:center;';
+      checkBtn.style.cssText = 'width:24px;height:24px;min-height:24px;border-radius:6px;border:2px solid ' + (p.success || 'var(--color-success-strong)') + ';background:transparent;color:var(--color-panel);cursor:pointer;font-size:14px;font-weight:800;flex-shrink:0;display:grid;place-items:center;';
       checkBtn.textContent = '';
       var sPrompt = document.createElement('span');
-      sPrompt.style.cssText = 'font-size:14px;font-weight:700;color:' + (p.text || '#fff') + ';';
+      sPrompt.style.cssText = 'font-size:14px;font-weight:700;color:' + (p.text || 'var(--color-panel)') + ';';
       sPrompt.textContent = (si + 1) + '. ' + steps[si].prompt;
       sRow.appendChild(checkBtn); sRow.appendChild(sPrompt);
       sEl.appendChild(sRow);
@@ -2886,7 +2886,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       ta.className = 'silse-worksheet-response';
       ta.setAttribute('data-step-id', steps[si].id);
       ta.setAttribute('placeholder', steps[si].responsePlaceholder || 'Tulis jawabanmu...');
-      ta.style.cssText = 'width:100%;min-height:50px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.15);font-size:13px;color:' + (p.text || '#fff') + ';font-family:inherit;resize:vertical;box-sizing:border-box;';
+      ta.style.cssText = 'width:100%;min-height:50px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.15);font-size:13px;color:' + (p.text || 'var(--color-panel)') + ';font-family:inherit;resize:vertical;box-sizing:border-box;';
       sEl.appendChild(ta);
       children.push(sEl);
     }
@@ -2899,7 +2899,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.scoreGuide) {
       var sg = document.createElement('div');
       sg.className = 'silse-rubric-score-guide';
-      sg.style.cssText = 'padding:12px;border-radius:10px;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '0A;border:1px solid ' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '33;font-size:14px;color:' + (p.text || '#fff') + ';';
+      sg.style.cssText = 'padding:12px;border-radius:10px;background:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + '0A;border:1px solid ' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + '33;font-size:14px;color:' + (p.text || 'var(--color-panel)') + ';';
       sg.textContent = '📋 ' + content.scoreGuide;
       children.push(sg);
     }
@@ -2910,14 +2910,14 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       for (var li = 0; li < levels.length; li++) {
         var lvl = document.createElement('div');
         lvl.className = 'silse-rubric-level';
-        lvl.style.cssText = 'padding:8px 14px;border-radius:999px;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '11;border:1px solid ' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '33;text-align:center;';
+        lvl.style.cssText = 'padding:8px 14px;border-radius:999px;background:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + '11;border:1px solid ' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + '33;text-align:center;';
         // PATCH A: safe DOM — use appendChild instead of innerHTML
         var lvlName = document.createElement('div');
-        lvlName.style.cssText = 'font-size:14px;font-weight:800;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';';
+        lvlName.style.cssText = 'font-size:14px;font-weight:800;color:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + ';';
         lvlName.textContent = levels[li].name;
         lvl.appendChild(lvlName);
         var lvlScore = document.createElement('div');
-        lvlScore.style.cssText = 'font-size:11px;color:' + (p.mutedText || '#6e90b5') + ';';
+        lvlScore.style.cssText = 'font-size:11px;color:' + (p.mutedText || 'var(--silse-muted-premium)') + ';';
         lvlScore.textContent = 'Skor: ' + levels[li].score;
         lvl.appendChild(lvlScore);
         lvlRow.appendChild(lvl);
@@ -2930,11 +2930,11 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       cEl.className = 'silse-rubric-criterion';
       cEl.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.surface || 'var(--silse-color-surface)') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';';
       var cName = document.createElement('div');
-      cName.style.cssText = 'font-size:14px;font-weight:800;color:' + (p.text || '#fff') + ';margin-bottom:6px;';
+      cName.style.cssText = 'font-size:14px;font-weight:800;color:' + (p.text || 'var(--color-panel)') + ';margin-bottom:6px;';
       cName.textContent = criteria[ci].name;
       cEl.appendChild(cName);
       var cDesc = document.createElement('div');
-      cDesc.style.cssText = 'font-size:13px;line-height:1.6;color:' + (p.mutedText || '#6e90b5') + ';';
+      cDesc.style.cssText = 'font-size:13px;line-height:1.6;color:' + (p.mutedText || 'var(--silse-muted-premium)') + ';';
       cDesc.textContent = criteria[ci].description;
       cEl.appendChild(cDesc);
       children.push(cEl);
@@ -2954,12 +2954,12 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       stepBtn.className = 'silse-timeline-step';
       stepBtn.setAttribute('data-event-id', events[i].id);
       stepBtn.setAttribute('data-event-idx', String(i));
-      stepBtn.style.cssText = 'width:32px;height:32px;min-height:32px;border-radius:50%;border:2px solid ' + (p.mutedText || '#6e90b5') + ';background:transparent;color:' + (p.text || '#fff') + ';font-weight:800;cursor:pointer;font-size:13px;flex-shrink:0;';
+      stepBtn.style.cssText = 'width:32px;height:32px;min-height:32px;border-radius:50%;border:2px solid ' + (p.mutedText || 'var(--silse-muted-premium)') + ';background:transparent;color:' + (p.text || 'var(--color-panel)') + ';font-weight:800;cursor:pointer;font-size:13px;flex-shrink:0;';
       stepBtn.textContent = String(i + 1);
       trackEl.appendChild(stepBtn);
       if (i < events.length - 1) {
         var line = document.createElement('div');
-        line.style.cssText = 'width:20px;height:2px;background:' + (p.mutedText || '#6e90b5') + ';flex-shrink:0;';
+        line.style.cssText = 'width:20px;height:2px;background:' + (p.mutedText || 'var(--silse-muted-premium)') + ';flex-shrink:0;';
         trackEl.appendChild(line);
       }
     }
@@ -2973,11 +2973,11 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     navRow.style.cssText = 'display:flex;gap:8px;';
     var prevBtn = document.createElement('button');
     prevBtn.setAttribute('data-action', 'timeline-prev');
-    prevBtn.style.cssText = 'padding:8px 16px;min-height:44px;border-radius:999px;border:none;background:' + (p.primary || 'var(--silse-color-background)') + ';color:#fff;font-weight:700;cursor:pointer;';
+    prevBtn.style.cssText = 'padding:8px 16px;min-height:44px;border-radius:999px;border:none;background:' + (p.primary || 'var(--silse-color-background)') + ';color:var(--color-panel);font-weight:700;cursor:pointer;';
     prevBtn.textContent = '← Prev';
     var nextBtn = document.createElement('button');
     nextBtn.setAttribute('data-action', 'timeline-next');
-    nextBtn.style.cssText = 'padding:8px 16px;min-height:44px;border-radius:999px;border:none;background:' + (p.primary || 'var(--silse-color-background)') + ';color:#fff;font-weight:700;cursor:pointer;';
+    nextBtn.style.cssText = 'padding:8px 16px;min-height:44px;border-radius:999px;border:none;background:' + (p.primary || 'var(--silse-color-background)') + ';color:var(--color-panel);font-weight:700;cursor:pointer;';
     nextBtn.textContent = 'Next →';
     navRow.appendChild(prevBtn);
     navRow.appendChild(nextBtn);
@@ -2995,7 +2995,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.scenarioPrompt) {
       var promptEl = document.createElement('div');
       promptEl.className = 'silse-branching-prompt';
-      promptEl.style.cssText = 'padding:16px;border-radius:12px;background:' + (p.accent || '#e63946') + '11;border:1px solid ' + (p.accent || '#e63946') + '33;font-size:15px;line-height:1.6;color:' + (p.text || '#fff') + ';font-weight:600;';
+      promptEl.style.cssText = 'padding:16px;border-radius:12px;background:' + (p.accent || 'var(--silse-red)') + '11;border:1px solid ' + (p.accent || 'var(--silse-red)') + '33;font-size:15px;line-height:1.6;color:' + (p.text || 'var(--color-panel)') + ';font-weight:600;';
       promptEl.textContent = content.scenarioPrompt;
       children.push(promptEl);
     }
@@ -3009,7 +3009,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       cBtn.setAttribute('data-choice-id', choices[ci].id);
       cBtn.setAttribute('data-consequence', choices[ci].consequence);
       cBtn.setAttribute('data-is-correct', choices[ci].isCorrect ? 'true' : 'false');
-      cBtn.style.cssText = 'text-align:left;padding:12px 16px;min-height:44px;border-radius:10px;cursor:pointer;border:2px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:' + (p.surface || 'var(--silse-color-surface)') + ';color:' + (p.text || '#fff') + ';font-size:14px;font-weight:600;';
+      cBtn.style.cssText = 'text-align:left;padding:12px 16px;min-height:44px;border-radius:10px;cursor:pointer;border:2px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';background:' + (p.surface || 'var(--silse-color-surface)') + ';color:' + (p.text || 'var(--color-panel)') + ';font-size:14px;font-weight:600;';
       cBtn.textContent = choices[ci].label;
       choicesContainer.appendChild(cBtn);
     }
@@ -3039,23 +3039,23 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       if (terms[ti].example) card.setAttribute('data-example', terms[ti].example);
       card.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.surface || 'var(--silse-color-surface)') + ';border:1px solid ' + (p.border || 'rgba(255,255,255,0.09)') + ';cursor:pointer;';
       var termEl = document.createElement('div');
-      termEl.style.cssText = 'font-size:15px;font-weight:800;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';margin-bottom:6px;';
+      termEl.style.cssText = 'font-size:15px;font-weight:800;color:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + ';margin-bottom:6px;';
       termEl.textContent = terms[ti].term;
       card.appendChild(termEl);
       var hintEl = document.createElement('div');
       hintEl.className = 'silse-glossary-hint';
-      hintEl.style.cssText = 'font-size:13px;color:' + (p.mutedText || '#6e90b5') + ';font-style:italic;';
+      hintEl.style.cssText = 'font-size:13px;color:' + (p.mutedText || 'var(--silse-muted-premium)') + ';font-style:italic;';
       hintEl.textContent = 'Klik untuk melihat definisi...';
       card.appendChild(hintEl);
       var defEl = document.createElement('div');
       defEl.className = 'silse-glossary-definition';
-      defEl.style.cssText = 'display:none;font-size:13px;line-height:1.6;color:' + (p.text || '#fff') + ';';
+      defEl.style.cssText = 'display:none;font-size:13px;line-height:1.6;color:' + (p.text || 'var(--color-panel)') + ';';
       defEl.textContent = terms[ti].definition;
       card.appendChild(defEl);
       if (terms[ti].example) {
         var exEl = document.createElement('div');
         exEl.className = 'silse-glossary-example';
-        exEl.style.cssText = 'display:none;font-size:12px;color:' + (p.mutedText || '#6e90b5') + ';font-style:italic;margin-top:6px;';
+        exEl.style.cssText = 'display:none;font-size:12px;color:' + (p.mutedText || 'var(--silse-muted-premium)') + ';font-style:italic;margin-top:6px;';
         exEl.textContent = 'Contoh: ' + terms[ti].example;
         card.appendChild(exEl);
       }
@@ -3071,7 +3071,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.timeAllocation) {
       var timing = document.createElement('div');
       timing.className = 'silse-teacher-timing';
-      timing.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;background:' + (p.accent || '#e63946') + '11;border:1px solid ' + (p.accent || '#e63946') + '33;font-size:13px;font-weight:700;color:' + (p.accent || '#e63946') + ';';
+      timing.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;background:' + (p.accent || 'var(--silse-red)') + '11;border:1px solid ' + (p.accent || 'var(--silse-red)') + '33;font-size:13px;font-weight:700;color:' + (p.accent || 'var(--silse-red)') + ';';
       timing.textContent = '⏱️ ' + content.timeAllocation;
       children.push(timing);
     }
@@ -3079,17 +3079,17 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.facilitationTips && content.facilitationTips.length) {
       var tipsEl = document.createElement('div');
       tipsEl.className = 'silse-teacher-tips';
-      tipsEl.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '0A;border:1px solid ' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + '33;';
+      tipsEl.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + '0A;border:1px solid ' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + '33;';
       var tipsLabel = document.createElement('div');
-      tipsLabel.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';margin-bottom:8px;';
+      tipsLabel.style.cssText = 'font-size:11px;font-weight:800;text-transform:uppercase;color:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + ';margin-bottom:8px;';
       tipsLabel.textContent = '💡 Tips Fasilitasi';
       tipsEl.appendChild(tipsLabel);
       for (var fi = 0; fi < content.facilitationTips.length; fi++) {
         var tipRow = document.createElement('div');
         tipRow.className = 'silse-teacher-tip';
-        tipRow.style.cssText = 'display:flex;gap:8px;padding:4px 0;font-size:13px;line-height:1.5;color:' + (p.text || '#fff') + ';';
+        tipRow.style.cssText = 'display:flex;gap:8px;padding:4px 0;font-size:13px;line-height:1.5;color:' + (p.text || 'var(--color-panel)') + ';';
         var tipNum = document.createElement('span');
-        tipNum.style.cssText = 'color:' + (p.gold || 'var(--silse-color-gold, #f9c12e)') + ';font-weight:800;';
+        tipNum.style.cssText = 'color:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + ';font-weight:800;';
         tipNum.textContent = (fi + 1) + '.';
         var tipText = document.createElement('span');
         tipText.textContent = content.facilitationTips[fi];
@@ -3143,7 +3143,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (gs.completed) {
       var rewardDone = document.createElement('div');
       rewardDone.className = 'silse-game-reward';
-      rewardDone.style.cssText = 'padding:16px;border-radius:12px;background:#fffbeb;border:2px solid #fbbf24;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;';
+      rewardDone.style.cssText = 'padding:16px;border-radius:12px;background:var(--color-warning-soft);border:2px solid var(--silse-gold);text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;';
       var rewardIcon = document.createElement('div');
       rewardIcon.style.fontSize = '48px';
       rewardIcon.textContent = '🏆';
@@ -3153,13 +3153,13 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       rewardLabel.textContent = (sceneMeta.reward && sceneMeta.reward.label) ? sceneMeta.reward.label : 'Misi Selesai';
       rewardDone.appendChild(rewardLabel);
       var rewardScore = document.createElement('div');
-      rewardScore.style.cssText = 'font-size:14px;color:#4b5563;';
+      rewardScore.style.cssText = 'font-size:14px;color:var(--color-text-soft);';
       rewardScore.textContent = 'Skor akhir: ' + gs.score;
       rewardDone.appendChild(rewardScore);
       el.appendChild(rewardDone);
 
       var retryBtn = document.createElement('button');
-      retryBtn.style.cssText = 'margin-top:12px;padding:10px 18px;border-radius:999px;border:0;background:#1d3557;color:#fff;font-weight:800;cursor:pointer;align-self:center;';
+      retryBtn.style.cssText = 'margin-top:12px;padding:10px 18px;border-radius:999px;border:0;background:var(--silse-blue);color:var(--color-panel);font-weight:800;cursor:pointer;align-self:center;';
       retryBtn.textContent = 'Ulangi Misi';
       retryBtn.addEventListener('click', function() {
         gameStates[comp.id] = { currentMissionIndex: 0, selectedChoiceIndex: null, isAnswered: false, score: 0, completed: false };
@@ -3172,13 +3172,13 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     // Briefing
     var briefing = document.createElement('div');
     briefing.className = 'silse-game-briefing';
-    briefing.style.cssText = 'padding:12px 14px;border-radius:10px;background:#fffbeb;border:1px solid #fde68a;margin-bottom:8px;';
+    briefing.style.cssText = 'padding:12px 14px;border-radius:10px;background:var(--color-warning-soft);border:1px solid var(--color-warning-strong);margin-bottom:8px;';
     var briefingLabel = document.createElement('div');
-    briefingLabel.style.cssText = 'font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;';
+    briefingLabel.style.cssText = 'font-size:11px;font-weight:700;color:var(--color-warning-deep);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;';
     briefingLabel.textContent = '📋 Briefing Misi';
     briefing.appendChild(briefingLabel);
     var briefingText = document.createElement('div');
-    briefingText.style.cssText = 'font-size:15px;font-weight:600;color:#1f2937;white-space:normal;overflow-wrap:anywhere;';
+    briefingText.style.cssText = 'font-size:15px;font-weight:600;color:var(--color-text);white-space:normal;overflow-wrap:anywhere;';
     briefingText.textContent = sceneMeta.briefing || comp.gameInstruction || '';
     briefing.appendChild(briefingText);
     el.appendChild(briefing);
@@ -3186,13 +3186,13 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     // Target
     var target = document.createElement('div');
     target.className = 'silse-game-target';
-    target.style.cssText = 'padding:12px 14px;border-radius:10px;background:#eff6ff;border:1px solid #bfdbfe;margin-bottom:8px;';
+    target.style.cssText = 'padding:12px 14px;border-radius:10px;background:var(--color-accent-soft);border:1px solid var(--color-accent);margin-bottom:8px;';
     var targetLabel = document.createElement('div');
-    targetLabel.style.cssText = 'font-size:11px;font-weight:700;color:#1e40af;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;';
+    targetLabel.style.cssText = 'font-size:11px;font-weight:700;color:var(--color-accent);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;';
     targetLabel.textContent = '🎯 Target Misi';
     target.appendChild(targetLabel);
     var targetText = document.createElement('div');
-    targetText.style.cssText = 'font-size:14px;color:#1e3a8a;white-space:normal;overflow-wrap:anywhere;';
+    targetText.style.cssText = 'font-size:14px;color:var(--color-accent-hover);white-space:normal;overflow-wrap:anywhere;';
     targetText.textContent = sceneMeta.missionTarget || mission.prompt || '';
     target.appendChild(targetText);
     el.appendChild(target);
@@ -3207,16 +3207,16 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         var card = document.createElement('div');
         card.className = 'silse-game-action-card';
         card.dataset.choiceIndex = String(actionIdx);
-        var bg = '#ffffff';
-        var borderColor = '#d1d5db';
-        if (actionState.isAnswered && actionIdx === actionMission.correctChoiceIndex) { bg = '#d1fae5'; borderColor = '#16a34a'; }
-        else if (actionState.isAnswered && actionIdx === actionState.selectedChoiceIndex && actionIdx !== actionMission.correctChoiceIndex) { bg = '#fee2e2'; borderColor = '#dc2626'; }
+        var bg = 'var(--color-panel)';
+        var borderColor = 'var(--color-border)';
+        if (actionState.isAnswered && actionIdx === actionMission.correctChoiceIndex) { bg = 'var(--color-success-soft)'; borderColor = 'var(--color-success-strong)'; }
+        else if (actionState.isAnswered && actionIdx === actionState.selectedChoiceIndex && actionIdx !== actionMission.correctChoiceIndex) { bg = 'var(--color-danger-soft)'; borderColor = 'var(--color-danger-strong)'; }
         card.style.cssText = 'padding:14px 16px;min-height:80px;height:auto;background:' + bg + ';border:2px solid ' + borderColor + ';border-radius:12px;cursor:pointer;font-size:14px;font-weight:600;line-height:1.4;white-space:normal;overflow-wrap:anywhere;word-break:break-word;display:flex;flex-direction:column;gap:6px;transition:transform 0.15s ease, box-shadow 0.15s ease;';
 
         var cardHeader = document.createElement('div');
         cardHeader.style.cssText = 'display:flex;align-items:center;gap:8px;';
         var letterBadge = document.createElement('span');
-        letterBadge.style.cssText = 'display:inline-grid;place-items:center;min-width:28px;height:28px;border-radius:8px;background:#1d3557;color:#fff;font-size:13px;font-weight:900;flex-shrink:0;';
+        letterBadge.style.cssText = 'display:inline-grid;place-items:center;min-width:28px;height:28px;border-radius:8px;background:var(--silse-blue);color:var(--color-panel);font-size:13px;font-weight:900;flex-shrink:0;';
         letterBadge.textContent = String.fromCharCode(65 + actionIdx);
         cardHeader.appendChild(letterBadge);
         var actionLabel = document.createElement('span');
@@ -3251,7 +3251,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var answeredCorrectly = gs.selectedChoiceIndex === mission.correctChoiceIndex;
       var feedback = document.createElement('div');
       feedback.className = 'silse-game-feedback';
-      feedback.style.cssText = 'margin-top:8px;padding:12px 14px;border-radius:10px;font-size:13px;font-weight:600;background-color:' + (answeredCorrectly ? '#d1fae5' : '#fee2e2') + ';color:' + (answeredCorrectly ? '#065f46' : '#991b1b') + ';border-left:4px solid ' + (answeredCorrectly ? '#16a34a' : '#dc2626') + ';white-space:normal;overflow-wrap:anywhere;';
+      feedback.style.cssText = 'margin-top:8px;padding:12px 14px;border-radius:10px;font-size:13px;font-weight:600;background-color:' + (answeredCorrectly ? 'var(--color-success-soft)' : 'var(--color-danger-soft)') + ';color:' + (answeredCorrectly ? 'var(--color-success-deep)' : 'var(--color-danger-deep)') + ';border-left:4px solid ' + (answeredCorrectly ? 'var(--color-success-strong)' : 'var(--color-danger-strong)') + ';white-space:normal;overflow-wrap:anywhere;';
       var feedbackLabel = document.createElement('div');
       feedbackLabel.style.cssText = 'font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;';
       feedbackLabel.textContent = answeredCorrectly ? '✓ Hasil Aksi' : '✗ Hasil Aksi';
@@ -3263,18 +3263,18 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       if (answeredCorrectly && sceneMeta.reward) {
         var rewardPreview = document.createElement('div');
         rewardPreview.className = 'silse-game-reward';
-        rewardPreview.style.cssText = 'margin-top:8px;padding:16px;border-radius:12px;background:linear-gradient(145deg, #fff8e7, #fff);border:2px solid #fbbf24;display:flex;align-items:center;gap:12px;';
+        rewardPreview.style.cssText = 'margin-top:8px;padding:16px;border-radius:12px;background:linear-gradient(145deg, var(--color-warning-soft), var(--color-panel));border:2px solid var(--silse-gold);display:flex;align-items:center;gap:12px;';
         var rewardIcon2 = document.createElement('div');
         rewardIcon2.style.fontSize = '24px';
         rewardIcon2.textContent = '🏅';
         rewardPreview.appendChild(rewardIcon2);
         var rewardText = document.createElement('div');
         var rewardTextLabel = document.createElement('div');
-        rewardTextLabel.style.cssText = 'font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.5px;';
+        rewardTextLabel.style.cssText = 'font-size:11px;font-weight:700;color:var(--color-warning-deep);text-transform:uppercase;letter-spacing:0.5px;';
         rewardTextLabel.textContent = 'Reward Didapat';
         rewardText.appendChild(rewardTextLabel);
         var rewardTextValue = document.createElement('strong');
-        rewardTextValue.style.cssText = 'font-size:14px;color:#1f2937;';
+        rewardTextValue.style.cssText = 'font-size:14px;color:var(--color-text);';
         rewardTextValue.textContent = sceneMeta.reward.label;
         rewardText.appendChild(rewardTextValue);
         rewardPreview.appendChild(rewardText);
@@ -3440,8 +3440,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
           var bg = '';
           var choiceStateClass = 'silse-choice-default';
           if (existingAnswer && existingAnswer.isAnswered) {
-            if (choiceIdx === correctIdx) { bg = '#d1fae5'; choiceStateClass = 'silse-choice-correct'; }
-            else if (choiceIdx === existingAnswer.selectedChoiceIndex) { bg = '#fee2e2'; choiceStateClass = 'silse-choice-wrong'; }
+            if (choiceIdx === correctIdx) { bg = 'var(--color-success-soft)'; choiceStateClass = 'silse-choice-correct'; }
+            else if (choiceIdx === existingAnswer.selectedChoiceIndex) { bg = 'var(--color-danger-soft)'; choiceStateClass = 'silse-choice-wrong'; }
           }
           choiceEl.className = 'silse-question-choice ' + choiceStateClass;
           choiceEl.dataset.choiceIndex = String(choiceIdx);
@@ -3491,8 +3491,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         }
         feedback.className = 'silse-question-feedback ' + (isCorrectAnswer ? 'silse-feedback-correct' : 'silse-feedback-wrong') + celebClasses;
         feedback.style.position = 'relative';
-        feedback.style.backgroundColor = isCorrectAnswer ? '#d1fae5' : '#fee2e2';
-        feedback.style.color = isCorrectAnswer ? '#065f46' : '#991b1b';
+        feedback.style.backgroundColor = isCorrectAnswer ? 'var(--color-success-soft)' : 'var(--color-danger-soft)';
+        feedback.style.color = isCorrectAnswer ? 'var(--color-success-deep)' : 'var(--color-danger-deep)';
         feedback.textContent = isCorrectAnswer ? comp.feedbackCorrect : comp.feedbackWrong;
         if (isCorrectAnswer) {
           var particle = document.createElement('span');
@@ -3530,7 +3530,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         doneScore.textContent = 'Skor: ' + gameState.score;
         el.appendChild(doneScore);
         var retryBtn = document.createElement('button');
-        retryBtn.style.cssText = 'margin-top:12px;padding:10px 18px;border-radius:999px;border:0;background:#1d3557;color:#fff;font-weight:800;cursor:pointer;';
+        retryBtn.style.cssText = 'margin-top:12px;padding:10px 18px;border-radius:999px;border:0;background:var(--silse-blue);color:var(--color-panel);font-weight:800;cursor:pointer;';
         retryBtn.textContent = 'Ulangi Game';
         retryBtn.addEventListener('click', function() {
           gameStates[comp.id] = { currentMissionIndex: 0, selectedChoiceIndex: null, isAnswered: false, score: 0, completed: false };
@@ -3572,8 +3572,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
           gChoiceEl.className = 'silse-game-choice';
           var gBg = '';
           if (gState.isAnswered) {
-            if (gChoiceIdx === gMission.correctChoiceIndex) gBg = '#d1fae5';
-            else if (gChoiceIdx === gState.selectedChoiceIndex) gBg = '#fee2e2';
+            if (gChoiceIdx === gMission.correctChoiceIndex) gBg = 'var(--color-success-soft)';
+            else if (gChoiceIdx === gState.selectedChoiceIndex) gBg = 'var(--color-danger-soft)';
           }
           if (gBg) gChoiceEl.style.backgroundColor = gBg;
 
@@ -3610,8 +3610,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         var gFeedback = document.createElement('div');
         gFeedback.className = 'silse-game-feedback';
         var gIsCorrect = gameState.selectedChoiceIndex === mission.correctChoiceIndex;
-        gFeedback.style.backgroundColor = gIsCorrect ? '#d1fae5' : '#fee2e2';
-        gFeedback.style.color = gIsCorrect ? '#065f46' : '#991b1b';
+        gFeedback.style.backgroundColor = gIsCorrect ? 'var(--color-success-soft)' : 'var(--color-danger-soft)';
+        gFeedback.style.color = gIsCorrect ? 'var(--color-success-deep)' : 'var(--color-danger-deep)';
         gFeedback.textContent = gIsCorrect ? mission.feedbackCorrect : mission.feedbackWrong;
         el.appendChild(gFeedback);
 
@@ -3656,7 +3656,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var layers = comp.layers || [];
       if (layers.length === 0) {
         var liEmpty = document.createElement('div');
-        liEmpty.style.cssText = 'color:#6b7280;font-size:13px;font-style:italic;';
+        liEmpty.style.cssText = 'color:var(--color-muted);font-size:13px;font-style:italic;';
         liEmpty.textContent = 'Belum ada lapisan.';
         el.appendChild(liEmpty);
         return el;
@@ -3680,9 +3680,9 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         layers.forEach(function(layer, idx) {
           var isOpen = openIdx === idx;
           var accItem = document.createElement('div');
-          accItem.style.cssText = 'border:1px solid ' + (isOpen ? '#2563eb' : '#d1d5db') + ';border-radius:6px;overflow:hidden;';
+          accItem.style.cssText = 'border:1px solid ' + (isOpen ? 'var(--color-accent)' : 'var(--color-border)') + ';border-radius:6px;overflow:hidden;';
           var accHead = document.createElement('div');
-          accHead.style.cssText = 'padding:8px 12px;background:' + (isOpen ? '#eff6ff' : '#f9fafb') + ';cursor:pointer;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:' + (isOpen ? '#2563eb' : '#1f2937') + ';white-space:normal;overflow-wrap:anywhere;';
+          accHead.style.cssText = 'padding:8px 12px;background:' + (isOpen ? 'var(--color-accent-soft)' : 'var(--color-panel-soft)') + ';cursor:pointer;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:' + (isOpen ? 'var(--color-accent)' : 'var(--color-text)') + ';white-space:normal;overflow-wrap:anywhere;';
           accHead.textContent = (isOpen ? '▾ ' : '▸ ') + layer.title;
           (function(itemIdx) {
             accHead.addEventListener('click', function() {
@@ -3693,7 +3693,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
           accItem.appendChild(accHead);
           if (isOpen) {
             var accBody = document.createElement('div');
-            accBody.style.cssText = 'padding:10px 12px;font-size:13px;line-height:1.5;color:#1f2937;white-space:pre-wrap;overflow-wrap:anywhere;';
+            accBody.style.cssText = 'padding:10px 12px;font-size:13px;line-height:1.5;color:var(--color-text);white-space:pre-wrap;overflow-wrap:anywhere;';
             accBody.textContent = layer.body;
             accItem.appendChild(accBody);
           }
@@ -3704,11 +3704,11 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         // Tabs / iconTabs
         var safeActive = (openIdx === null || openIdx < 0 || openIdx >= layers.length) ? 0 : openIdx;
         var tabsBar = document.createElement('div');
-        tabsBar.style.cssText = 'display:flex;gap:4px;border-bottom:2px solid #e3ddcd;flex-wrap:wrap;';
+        tabsBar.style.cssText = 'display:flex;gap:4px;border-bottom:2px solid var(--color-border);flex-wrap:wrap;';
         layers.forEach(function(layer, idx) {
           var isActive = safeActive === idx;
           var tab = document.createElement('button');
-          tab.style.cssText = 'padding:6px 12px;font-size:12px;font-weight:' + (isActive ? '600' : '500') + ';border:none;border-bottom:2px solid ' + (isActive ? '#2563eb' : 'transparent') + ';background:' + (isActive ? '#eff6ff' : 'transparent') + ';color:' + (isActive ? '#2563eb' : '#4a5160') + ';cursor:pointer;margin-bottom:-2px;display:inline-flex;align-items:center;gap:4px;border-radius:4px 4px 0 0;';
+          tab.style.cssText = 'padding:6px 12px;font-size:12px;font-weight:' + (isActive ? '600' : '500') + ';border:none;border-bottom:2px solid ' + (isActive ? 'var(--color-accent)' : 'transparent') + ';background:' + (isActive ? 'var(--color-accent-soft)' : 'transparent') + ';color:' + (isActive ? 'var(--color-accent)' : 'var(--color-text-soft)') + ';cursor:pointer;margin-bottom:-2px;display:inline-flex;align-items:center;gap:4px;border-radius:4px 4px 0 0;';
           if (variant === 'iconTabs' && layer.icon) {
             var iconSpan = document.createElement('span');
             iconSpan.style.fontSize = '14px';
@@ -3730,7 +3730,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         var activeLayer = layers[safeActive];
         if (activeLayer) {
           var tabBody = document.createElement('div');
-          tabBody.style.cssText = 'padding:10px;font-size:13px;line-height:1.5;color:#1f2937;white-space:pre-wrap;overflow-wrap:anywhere;flex:1;overflow:auto;';
+          tabBody.style.cssText = 'padding:10px;font-size:13px;line-height:1.5;color:var(--color-text);white-space:pre-wrap;overflow-wrap:anywhere;flex:1;overflow:auto;';
           tabBody.textContent = activeLayer.body;
           el.appendChild(tabBody);
         }
@@ -3743,7 +3743,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
           var isActive = sSafeActive === idx;
           var isPast = idx < sSafeActive;
           var step = document.createElement('button');
-          step.style.cssText = 'width:28px;height:28px;border-radius:50%;border:2px solid ' + (isActive ? '#2563eb' : isPast ? '#2f7d4f' : '#d1d5db') + ';background:' + (isActive ? '#2563eb' : isPast ? '#2f7d4f' : '#fff') + ';color:#fff;font-size:12px;font-weight:700;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;';
+          step.style.cssText = 'width:28px;height:28px;border-radius:50%;border:2px solid ' + (isActive ? 'var(--color-accent)' : isPast ? 'var(--color-success)' : 'var(--color-border)') + ';background:' + (isActive ? 'var(--color-accent)' : isPast ? 'var(--color-success)' : 'var(--color-panel)') + ';color:var(--color-panel);font-size:12px;font-weight:700;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;';
           step.textContent = String(idx + 1);
           step.title = layer.title;
           (function(itemIdx) {
@@ -3755,18 +3755,18 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
           stepBar.appendChild(step);
           if (idx < layers.length - 1) {
             var line = document.createElement('div');
-            line.style.cssText = 'width:24px;height:2px;background:' + (isPast ? '#2f7d4f' : '#d1d5db') + ';';
+            line.style.cssText = 'width:24px;height:2px;background:' + (isPast ? 'var(--color-success)' : 'var(--color-border)') + ';';
             stepBar.appendChild(line);
           }
         });
         el.appendChild(stepBar);
         var stepTitle = document.createElement('div');
-        stepTitle.style.cssText = 'padding:8px 4px;font-size:12px;font-weight:600;color:#2563eb;white-space:normal;overflow-wrap:anywhere;';
+        stepTitle.style.cssText = 'padding:8px 4px;font-size:12px;font-weight:600;color:var(--color-accent);white-space:normal;overflow-wrap:anywhere;';
         stepTitle.textContent = layers[sSafeActive] ? layers[sSafeActive].title : '';
         el.appendChild(stepTitle);
         if (layers[sSafeActive]) {
           var stepBody = document.createElement('div');
-          stepBody.style.cssText = 'padding:10px;font-size:13px;line-height:1.5;color:#1f2937;white-space:pre-wrap;overflow-wrap:anywhere;flex:1;overflow:auto;background:#f9fafb;border-radius:6px;';
+          stepBody.style.cssText = 'padding:10px;font-size:13px;line-height:1.5;color:var(--color-text);white-space:pre-wrap;overflow-wrap:anywhere;flex:1;overflow:auto;background:var(--color-panel-soft);border-radius:6px;';
           stepBody.textContent = layers[sSafeActive].body;
           el.appendChild(stepBody);
         }
@@ -3778,7 +3778,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         layers.forEach(function(layer, idx) {
           var isActive = cSafeActive === idx;
           var card = document.createElement('button');
-          card.style.cssText = 'padding:10px 8px;font-size:12px;font-weight:' + (isActive ? '600' : '500') + ';border:1px solid ' + (isActive ? '#2563eb' : '#d1d5db') + ';background:' + (isActive ? '#eff6ff' : '#fff') + ';color:' + (isActive ? '#2563eb' : '#1f2937') + ';border-radius:6px;cursor:pointer;text-align:center;display:flex;flex-direction:column;gap:2px;min-height:60px;';
+          card.style.cssText = 'padding:10px 8px;font-size:12px;font-weight:' + (isActive ? '600' : '500') + ';border:1px solid ' + (isActive ? 'var(--color-accent)' : 'var(--color-border)') + ';background:' + (isActive ? 'var(--color-accent-soft)' : 'var(--color-panel)') + ';color:' + (isActive ? 'var(--color-accent)' : 'var(--color-text)') + ';border-radius:6px;cursor:pointer;text-align:center;display:flex;flex-direction:column;gap:2px;min-height:60px;';
           if (layer.icon) {
             var cIcon = document.createElement('span');
             cIcon.style.fontSize = '16px';
@@ -3800,7 +3800,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         el.appendChild(grid);
         if (layers[cSafeActive]) {
           var cBody = document.createElement('div');
-          cBody.style.cssText = 'padding:10px;font-size:13px;line-height:1.5;color:#1f2937;white-space:pre-wrap;overflow-wrap:anywhere;background:#f9fafb;border-radius:6px;border:1px solid #e3ddcd;';
+          cBody.style.cssText = 'padding:10px;font-size:13px;line-height:1.5;color:var(--color-text);white-space:pre-wrap;overflow-wrap:anywhere;background:var(--color-panel-soft);border-radius:6px;border:1px solid var(--color-border);';
           cBody.textContent = layers[cSafeActive].body;
           el.appendChild(cBody);
         }
@@ -3817,7 +3817,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
           var tlCol = document.createElement('div');
           tlCol.style.cssText = 'display:flex;flex-direction:column;align-items:center;flex-shrink:0;';
           var tlDot = document.createElement('button');
-          tlDot.style.cssText = 'width:20px;height:20px;border-radius:50%;border:2px solid ' + (isActive ? '#2563eb' : isPast ? '#2f7d4f' : '#d1d5db') + ';background:' + (isActive ? '#2563eb' : isPast ? '#2f7d4f' : '#fff') + ';color:#fff;font-size:10px;font-weight:700;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;';
+          tlDot.style.cssText = 'width:20px;height:20px;border-radius:50%;border:2px solid ' + (isActive ? 'var(--color-accent)' : isPast ? 'var(--color-success)' : 'var(--color-border)') + ';background:' + (isActive ? 'var(--color-accent)' : isPast ? 'var(--color-success)' : 'var(--color-panel)') + ';color:var(--color-panel);font-size:10px;font-weight:700;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;';
           tlDot.textContent = String(idx + 1);
           (function(itemIdx) {
             tlDot.addEventListener('click', function() {
@@ -3828,14 +3828,14 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
           tlCol.appendChild(tlDot);
           if (idx < layers.length - 1) {
             var tlLine = document.createElement('div');
-            tlLine.style.cssText = 'width:2px;height:24px;background:' + (isPast ? '#2f7d4f' : '#d1d5db') + ';';
+            tlLine.style.cssText = 'width:2px;height:24px;background:' + (isPast ? 'var(--color-success)' : 'var(--color-border)') + ';';
             tlCol.appendChild(tlLine);
           }
           tlRow.appendChild(tlCol);
           var tlContent = document.createElement('div');
           tlContent.style.cssText = 'flex:1;padding-bottom:12px;';
           var tlTitleBtn = document.createElement('button');
-          tlTitleBtn.style.cssText = 'border:none;background:transparent;padding:0;font-size:12px;font-weight:' + (isActive ? '700' : '500') + ';color:' + (isActive ? '#2563eb' : '#1f2937') + ';cursor:pointer;text-align:left;display:block;margin-bottom:2px;';
+          tlTitleBtn.style.cssText = 'border:none;background:transparent;padding:0;font-size:12px;font-weight:' + (isActive ? '700' : '500') + ';color:' + (isActive ? 'var(--color-accent)' : 'var(--color-text)') + ';cursor:pointer;text-align:left;display:block;margin-bottom:2px;';
           tlTitleBtn.textContent = layer.title;
           (function(itemIdx) {
             tlTitleBtn.addEventListener('click', function() {
@@ -3846,7 +3846,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
           tlContent.appendChild(tlTitleBtn);
           if (isActive) {
             var tlBody = document.createElement('div');
-            tlBody.style.cssText = 'font-size:12px;line-height:1.5;color:#1f2937;white-space:pre-wrap;overflow-wrap:anywhere;';
+            tlBody.style.cssText = 'font-size:12px;line-height:1.5;color:var(--color-text);white-space:pre-wrap;overflow-wrap:anywhere;';
             tlBody.textContent = layer.body;
             tlContent.appendChild(tlBody);
           }
@@ -3945,8 +3945,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         var allTabs = tabsContainer.querySelectorAll('[data-tab-id]');
         for (var i = 0; i < allTabs.length; i++) {
           var isActive = allTabs[i].getAttribute('data-tab-id') === tabId;
-          allTabs[i].style.background = isActive ? 'var(--silse-gold, #f9c12e)' : 'rgba(255,255,255,0.04)';
-          allTabs[i].style.color = isActive ? 'var(--silse-navy, #0e1c2f)' : 'var(--silse-muted-premium, #6e90b5)';
+          allTabs[i].style.background = isActive ? 'var(--silse-gold, var(--silse-gold))' : 'rgba(255,255,255,0.04)';
+          allTabs[i].style.color = isActive ? 'var(--silse-navy)' : 'var(--silse-muted-premium, var(--silse-muted-premium))';
         }
         // Show/hide panels
         for (var j = 0; j < panels.length; j++) {
@@ -4043,7 +4043,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         }
         // Select new
         item.setAttribute('data-selected', 'true');
-        item.style.borderColor = 'var(--silse-gold, #f9c12e)';
+        item.style.borderColor = 'var(--silse-gold, var(--silse-gold))';
         item.style.background = 'rgba(249,193,46,0.15)';
         gameSelectedItem = item;
         return;
@@ -4062,7 +4062,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
           var placed = document.createElement('div');
           placed.className = 'silse-classification-placed-item';
           placed.setAttribute('data-placed-id', itemId);
-          placed.style.cssText = 'padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600;background:' + (isCorrect ? 'rgba(52,211,153,0.15)' : 'rgba(255,107,107,0.15)') + ';color:' + (isCorrect ? '#34d399' : '#ff6b6b') + ';';
+          placed.style.cssText = 'padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600;background:' + (isCorrect ? 'rgba(52,211,153,0.15)' : 'rgba(255,107,107,0.15)') + ';color:' + (isCorrect ? 'var(--color-success-strong)' : 'var(--color-danger-strong)') + ';';
           placed.textContent = itemLabel;
           placedContainer.appendChild(placed);
         }
@@ -4079,8 +4079,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         if (fb) {
           fb.style.display = 'block';
           fb.style.background = isCorrect ? 'rgba(52,211,153,0.11)' : 'rgba(255,107,107,0.11)';
-          fb.style.border = '1px solid ' + (isCorrect ? '#34d399' : '#ff6b6b') + '40';
-          fb.style.color = isCorrect ? '#34d399' : '#ff6b6b';
+          fb.style.border = '1px solid ' + (isCorrect ? 'var(--color-success-strong)' : 'var(--color-danger-strong)') + '40';
+          fb.style.color = isCorrect ? 'var(--color-success-strong)' : 'var(--color-danger-strong)';
           fb.textContent = isCorrect ? 'Benar! ' + itemLabel + ' → ' + category : 'Belum tepat. ' + itemLabel + ' bukan ' + category + '.';
         }
         gameSelectedItem = null;
@@ -4088,7 +4088,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         var remaining = canvas.querySelectorAll('[data-item-id]:not([data-placed])');
         if (remaining.length === 0) {
           var scoreEl2 = canvas.querySelector('.silse-classification-score');
-          if (scoreEl2) scoreEl2.innerHTML += ' <span style="color:#34d399">✓ Selesai!</span>';
+          if (scoreEl2) scoreEl2.innerHTML += ' <span style="color:var(--color-success-strong)">✓ Selesai!</span>';
         }
         return;
       }
@@ -4135,7 +4135,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
           }
           if (hotspotData) {
             panel.style.display = 'block';
-            panel.innerHTML = '<div style="font-size:13px;font-weight:800;color:var(--silse-gold, #f9c12e);margin-bottom:6px;">' + hotspotData.label + '</div><div style="font-size:14px;line-height:1.6;color:var(--silse-text, #e8f2ff);">' + hotspotData.info + '</div>';
+            panel.innerHTML = '<div style="font-size:13px;font-weight:800;color:var(--silse-gold, var(--silse-gold));margin-bottom:6px;">' + hotspotData.label + '</div><div style="font-size:14px;line-height:1.6;color:var(--silse-text, var(--color-accent-soft));">' + hotspotData.info + '</div>';
           }
         }
       }
@@ -4151,7 +4151,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         var prevSelected = canvas.querySelector('[data-left-id][data-selected="true"]');
         if (prevSelected) { prevSelected.removeAttribute('data-selected'); prevSelected.style.borderColor = ''; prevSelected.style.background = ''; }
         leftBtn.setAttribute('data-selected', 'true');
-        leftBtn.style.borderColor = 'var(--silse-gold, #f9c12e)';
+        leftBtn.style.borderColor = 'var(--silse-gold, var(--silse-gold))';
         leftBtn.style.background = 'rgba(249,193,46,0.15)';
         matchingSelectedLeft = leftId;
         return;
@@ -4177,18 +4177,18 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         if (fb) {
           fb.style.display = 'block';
           fb.style.background = isCorrect ? 'rgba(52,211,153,0.11)' : 'rgba(255,107,107,0.11)';
-          fb.style.color = isCorrect ? '#34d399' : '#ff6b6b';
+          fb.style.color = isCorrect ? 'var(--color-success-strong)' : 'var(--color-danger-strong)';
           fb.textContent = isCorrect ? 'Benar! Pasangan tepat.' : 'Belum tepat. Coba lagi.';
         }
         if (isCorrect) {
           matchingScore += scorePer;
           var sv = canvas.querySelector('.silse-matching-score-val');
           if (sv) sv.textContent = String(matchingScore);
-          rightBtn.style.borderColor = '#34d399';
+          rightBtn.style.borderColor = 'var(--color-success-strong)';
           rightBtn.style.background = 'rgba(52,211,153,0.11)';
           rightBtn.disabled = true;
           var leftSelected = canvas.querySelector('[data-left-id][data-selected="true"]');
-          if (leftSelected) { leftSelected.style.borderColor = '#34d399'; leftSelected.style.background = 'rgba(52,211,153,0.11)'; leftSelected.removeAttribute('data-selected'); }
+          if (leftSelected) { leftSelected.style.borderColor = 'var(--color-success-strong)'; leftSelected.style.background = 'rgba(52,211,153,0.11)'; leftSelected.removeAttribute('data-selected'); }
         }
         matchingSelectedLeft = null;
         return;
@@ -4259,7 +4259,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         if (sfb2) {
           sfb2.style.display = 'block';
           sfb2.style.background = isCorrect ? 'rgba(52,211,153,0.11)' : 'rgba(255,107,107,0.11)';
-          sfb2.style.color = isCorrect ? '#34d399' : '#ff6b6b';
+          sfb2.style.color = isCorrect ? 'var(--color-success-strong)' : 'var(--color-danger-strong)';
           sfb2.textContent = isCorrect ? 'Benar! Urutan tepat.' : 'Belum tepat. Coba urutkan lagi.';
         }
         if (isCorrect) {
@@ -4352,7 +4352,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
           siblings[si].style.borderColor = '';
           siblings[si].style.background = 'transparent';
         }
-        diagChoice.style.borderColor = 'var(--silse-gold, #f9c12e)';
+        diagChoice.style.borderColor = 'var(--silse-gold, var(--silse-gold))';
         diagChoice.style.background = 'rgba(249,193,46,0.11)';
         return;
       }
@@ -4369,8 +4369,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
             choices[ci].disabled = true;
             var isCorrect = choices[ci].getAttribute('data-correct') === 'true';
             var isSelected = diagAnswers[qId2] === choices[ci].getAttribute('data-choice-id');
-            if (isCorrect) { choices[ci].style.borderColor = '#34d399'; choices[ci].style.background = 'rgba(52,211,153,0.11)'; choices[ci].textContent += ' ✓'; }
-            if (isSelected && !isCorrect) { choices[ci].style.borderColor = '#ff6b6b'; choices[ci].style.background = 'rgba(255,107,107,0.11)'; choices[ci].textContent += ' ✗'; }
+            if (isCorrect) { choices[ci].style.borderColor = 'var(--color-success-strong)'; choices[ci].style.background = 'rgba(52,211,153,0.11)'; choices[ci].textContent += ' ✓'; }
+            if (isSelected && !isCorrect) { choices[ci].style.borderColor = 'var(--color-danger-strong)'; choices[ci].style.background = 'rgba(255,107,107,0.11)'; choices[ci].textContent += ' ✗'; }
           }
           if (diagAnswers[qId2] && diagQuestions[qi].querySelector('[data-correct="true"]') && diagAnswers[qId2] === diagQuestions[qi].querySelector('[data-correct="true"]').getAttribute('data-choice-id')) score++;
         }
@@ -4380,7 +4380,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
           result.style.display = 'block';
           result.textContent = '';
           var scoreNum = document.createElement('div');
-          scoreNum.style.cssText = 'font-size:28px;font-weight:800;color:var(--silse-gold, #f9c12e);';
+          scoreNum.style.cssText = 'font-size:28px;font-weight:800;color:var(--silse-gold, var(--silse-gold));';
           scoreNum.textContent = score + ' / ' + diagQuestions.length;
           result.appendChild(scoreNum);
         }
@@ -4439,7 +4439,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         var qId = remChoice.getAttribute('data-question-id');
         if (remChoice.disabled) return;
         var isCorrect = remChoice.getAttribute('data-correct') === 'true';
-        remChoice.style.borderColor = isCorrect ? '#34d399' : '#ff6b6b';
+        remChoice.style.borderColor = isCorrect ? 'var(--color-success-strong)' : 'var(--color-danger-strong)';
         remChoice.style.background = isCorrect ? 'rgba(52,211,153,0.11)' : 'rgba(255,107,107,0.11)';
         var siblings = remChoice.parentNode.querySelectorAll('.silse-remedial-choice');
         for (var si = 0; si < siblings.length; si++) { siblings[si].disabled = true; }
@@ -4447,7 +4447,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         if (fb) {
           fb.style.display = 'block';
           fb.style.background = isCorrect ? 'rgba(52,211,153,0.11)' : 'rgba(255,107,107,0.11)';
-          fb.style.color = isCorrect ? '#34d399' : '#ff6b6b';
+          fb.style.color = isCorrect ? 'var(--color-success-strong)' : 'var(--color-danger-strong)';
           fb.textContent = isCorrect ? 'Benar!' : 'Belum tepat. Coba lagi.';
         }
         return;
@@ -4458,7 +4458,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         if (hint) {
           hintBtn.style.display = 'none';
           var hintEl = document.createElement('div');
-          hintEl.style.cssText = 'margin-top:6px;padding:8px;border-radius:8px;background:rgba(249,193,46,0.07);font-size:13px;color:var(--silse-muted-text, #6e90b5);';
+          hintEl.style.cssText = 'margin-top:6px;padding:8px;border-radius:8px;background:rgba(249,193,46,0.07);font-size:13px;color:var(--silse-muted-text, var(--silse-muted-premium));';
           hintEl.textContent = hint;
           hintBtn.parentNode.appendChild(hintEl);
         }
@@ -4472,9 +4472,9 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       if (wsCheck) {
         var isChecked = wsCheck.textContent === '✓';
         wsCheck.textContent = isChecked ? '' : '✓';
-        wsCheck.style.background = isChecked ? 'transparent' : 'var(--silse-success, #34d399)';
+        wsCheck.style.background = isChecked ? 'transparent' : 'var(--silse-success, var(--color-success-strong))';
         var stepEl = wsCheck.closest('.silse-worksheet-question');
-        if (stepEl) stepEl.style.border = isChecked ? '1px solid var(--silse-border, rgba(255,255,255,0.09))' : '2px solid var(--silse-success, #34d399)';
+        if (stepEl) stepEl.style.border = isChecked ? '1px solid var(--silse-border, rgba(255,255,255,0.09))' : '2px solid var(--silse-success, var(--color-success-strong))';
         // Update checklist count
         var allChecks = canvas.querySelectorAll('.silse-worksheet-check');
         var done = 0;
@@ -4512,19 +4512,19 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         var allSteps = canvas.querySelectorAll('.silse-timeline-step');
         for (var si = 0; si < allSteps.length; si++) {
           var stepI = parseInt(allSteps[si].getAttribute('data-event-idx') || '0', 10);
-          allSteps[si].style.borderColor = stepI === idx ? 'var(--silse-gold, #f9c12e)' : 'var(--silse-muted-text, #6e90b5)';
-          allSteps[si].style.background = stepI === idx ? 'var(--silse-gold, #f9c12e)' : (stepI < idx ? 'var(--silse-success, #34d399)' : 'transparent');
-          allSteps[si].style.color = stepI === idx ? 'var(--silse-navy, #0e1c2f)' : 'var(--silse-text, #e8f2ff)';
+          allSteps[si].style.borderColor = stepI === idx ? 'var(--silse-gold, var(--silse-gold))' : 'var(--silse-muted-text, var(--silse-muted-premium))';
+          allSteps[si].style.background = stepI === idx ? 'var(--silse-gold, var(--silse-gold))' : (stepI < idx ? 'var(--silse-success, var(--color-success-strong))' : 'transparent');
+          allSteps[si].style.color = stepI === idx ? 'var(--silse-navy)' : 'var(--silse-text, var(--color-accent-soft))';
         }
         // Update detail
         var detail = canvas.querySelector('.silse-timeline-event');
         if (detail && events[idx]) {
           detail.textContent = '';
           var dLabel = document.createElement('div');
-          dLabel.style.cssText = 'font-size:16px;font-weight:800;color:var(--silse-gold, #f9c12e);margin-bottom:8px;';
+          dLabel.style.cssText = 'font-size:16px;font-weight:800;color:var(--silse-gold, var(--silse-gold));margin-bottom:8px;';
           dLabel.textContent = events[idx].label;
           var dDesc = document.createElement('div');
-          dDesc.style.cssText = 'font-size:14px;line-height:1.6;color:var(--silse-text, #e8f2ff);';
+          dDesc.style.cssText = 'font-size:14px;line-height:1.6;color:var(--silse-text, var(--color-accent-soft));';
           dDesc.textContent = events[idx].description;
           detail.appendChild(dLabel);
           detail.appendChild(dDesc);
@@ -4565,13 +4565,13 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         if (consEl) {
           consEl.style.display = 'block';
           consEl.style.background = isCorrect ? 'rgba(52,211,153,0.11)' : 'rgba(249,193,46,0.11)';
-          consEl.style.border = '1px solid ' + (isCorrect ? '#34d399' : '#f9c12e') + '40';
+          consEl.style.border = '1px solid ' + (isCorrect ? 'var(--color-success-strong)' : 'var(--silse-gold)') + '40';
           consEl.textContent = '';
           var consLabel = document.createElement('div');
-          consLabel.style.cssText = 'font-size:13px;font-weight:800;text-transform:uppercase;color:' + (isCorrect ? '#34d399' : '#f9c12e') + ';margin-bottom:8px;';
+          consLabel.style.cssText = 'font-size:13px;font-weight:800;text-transform:uppercase;color:' + (isCorrect ? 'var(--color-success-strong)' : 'var(--silse-gold)') + ';margin-bottom:8px;';
           consLabel.textContent = isCorrect ? '✓ Pilihan Tepat' : '⚠ Pertimbangkan Kembali';
           var consText = document.createElement('div');
-          consText.style.cssText = 'font-size:14px;line-height:1.6;color:var(--silse-text, #e8f2ff);';
+          consText.style.cssText = 'font-size:14px;line-height:1.6;color:var(--silse-text, var(--color-accent-soft));';
           consText.textContent = consequence;
           consEl.appendChild(consLabel);
           consEl.appendChild(consText);
@@ -4605,7 +4605,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         if (hint) hint.style.display = isShown ? 'block' : 'none';
         if (def) def.style.display = isShown ? 'none' : 'block';
         if (ex) ex.style.display = isShown ? 'none' : 'block';
-        glCard.style.borderColor = isShown ? 'var(--silse-border, rgba(255,255,255,0.09))' : 'var(--silse-gold, #f9c12e)';
+        glCard.style.borderColor = isShown ? 'var(--silse-border, rgba(255,255,255,0.09))' : 'var(--silse-gold, var(--silse-gold))';
         return;
       }
     });
