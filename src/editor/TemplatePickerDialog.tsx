@@ -93,7 +93,7 @@ export function TemplatePickerDialog({ onClose }: { onClose: () => void }) {
       aria-label="Pilih Template Pedagogis"
       style={{
         position: 'fixed', inset: 0, zIndex: 1000,
-        background: 'rgba(14,28,47,0.7)', backdropFilter: 'blur(4px)',
+        background: 'var(--color-overlay-scrim-navy)', backdropFilter: 'blur(4px)',
         display: 'grid', placeItems: 'center',
       }}
       onClick={onClose}
@@ -102,7 +102,7 @@ export function TemplatePickerDialog({ onClose }: { onClose: () => void }) {
         className="template-picker-dialog"
         data-testid="template-picker-dialog"
         style={{
-          background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
+          background: 'linear-gradient(145deg, var(--color-panel) 0%, var(--color-panel-soft) 100%)',
           borderRadius: 20, padding: 32, maxWidth: 760, width: '92%',
           maxHeight: '82vh', overflow: 'auto',
           boxShadow: '0 12px 48px rgba(0,0,0,0.25), 0 4px 16px rgba(0,0,0,0.1)',
@@ -114,10 +114,10 @@ export function TemplatePickerDialog({ onClose }: { onClose: () => void }) {
         <div style={{ marginBottom: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <h2 style={{ margin: '0 0 4px 0', fontSize: 22, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>
+              <h2 style={{ margin: '0 0 4px 0', fontSize: 22, fontWeight: 800, color: 'var(--color-text-strong)', letterSpacing: '-0.02em' }}>
                 📋 Template Pedagogis
               </h2>
-              <p style={{ margin: 0, fontSize: 14, color: '#64748b' }}>
+              <p style={{ margin: 0, fontSize: 14, color: 'var(--color-muted)' }}>
                 Pilih template siap pakai — lengkap dengan panduan guru, rubrik, dan jalur diferensiasi.
               </p>
             </div>
@@ -126,12 +126,12 @@ export function TemplatePickerDialog({ onClose }: { onClose: () => void }) {
               onClick={onClose}
               aria-label="Tutup"
               style={{
-                border: 'none', background: '#f1f5f9', fontSize: 18, cursor: 'pointer',
-                color: '#64748b', borderRadius: 8, width: 32, height: 32, display: 'grid', placeItems: 'center',
+                border: 'none', background: 'var(--color-panel-soft)', fontSize: 18, cursor: 'pointer',
+                color: 'var(--color-muted)', borderRadius: 8, width: 32, height: 32, display: 'grid', placeItems: 'center',
                 transition: 'all 0.15s',
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = '#e2e8f0'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = '#f1f5f9'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-border-neutral)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--color-panel-soft)'; }}
             >✕</button>
           </div>
         </div>
@@ -145,9 +145,9 @@ export function TemplatePickerDialog({ onClose }: { onClose: () => void }) {
               onClick={() => setSelectedMapel(m)}
               style={{
                 padding: '7px 16px', borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                border: selectedMapel === m ? '2px solid #1d3557' : '2px solid #e2e8f0',
-                background: selectedMapel === m ? '#1d3557' : '#fff',
-                color: selectedMapel === m ? '#fff' : '#475569',
+                border: selectedMapel === m ? '2px solid var(--color-accent)' : '2px solid var(--color-border-neutral)',
+                background: selectedMapel === m ? 'var(--color-accent)' : 'var(--color-panel)',
+                color: selectedMapel === m ? 'var(--color-panel)' : 'var(--color-text-soft)',
                 transition: 'all 0.15s',
               }}
             >{m === 'all' ? '📊 Semua Mapel' : m}</button>
@@ -164,47 +164,47 @@ export function TemplatePickerDialog({ onClose }: { onClose: () => void }) {
                 key={template.id}
                 data-testid={`template-card-${template.id}`}
                 style={{
-                  border: '1px solid #e2e8f0', borderRadius: 14, padding: 18,
-                  background: '#fff',
+                  border: '1px solid var(--color-border-neutral)', borderRadius: 14, padding: 18,
+                  background: 'var(--color-panel)',
                   boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
                   transition: 'box-shadow 0.18s, border-color 0.18s',
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
+                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)'; e.currentTarget.style.borderColor = 'var(--color-border-strong)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)'; e.currentTarget.style.borderColor = 'var(--color-border-neutral)'; }}
               >
                 {/* Title row */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em' }}>{template.name}</div>
-                    <div style={{ fontSize: 13, color: '#64748b', marginTop: 3 }}>
+                    <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--color-text-strong)', letterSpacing: '-0.01em' }}>{template.name}</div>
+                    <div style={{ fontSize: 13, color: 'var(--color-muted)', marginTop: 3 }}>
                       {template.mapel} · Kelas {template.grade} · Fase {template.phase}
                     </div>
                   </div>
                   {/* Mapel badge */}
                   <span style={{
                     fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 999,
-                    background: '#1d3557', color: '#fff', letterSpacing: '0.04em', textTransform: 'uppercase',
+                    background: 'var(--color-accent)', color: 'var(--color-panel)', letterSpacing: '0.04em', textTransform: 'uppercase',
                     whiteSpace: 'nowrap', flexShrink: 0,
                   }}>{template.mapel}</span>
                 </div>
 
                 {/* Description */}
-                <div style={{ fontSize: 14, color: '#334155', lineHeight: 1.5, marginBottom: 12 }}>{template.description}</div>
+                <div style={{ fontSize: 14, color: 'var(--color-text-soft)', lineHeight: 1.5, marginBottom: 12 }}>{template.description}</div>
 
                 {/* Badges row */}
                 <div data-testid={`template-status-${template.id}`} style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
-                  <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 6, background: status.valid ? '#dcfce7' : '#fef2f2', color: status.valid ? '#166534' : '#991b1b', fontWeight: 700 }}>
+                  <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 6, background: status.valid ? 'var(--color-success-soft)' : 'var(--color-danger-soft)', color: status.valid ? 'var(--color-success-deep)' : 'var(--color-danger-deep)', fontWeight: 700 }}>
                     {status.valid ? '✓ Valid' : '✗ Invalid'}
                   </span>
-                  <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 6, background: status.qualityPass ? '#dcfce7' : '#fef2f2', color: status.qualityPass ? '#166534' : '#991b1b', fontWeight: 700 }}>
+                  <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 6, background: status.qualityPass ? 'var(--color-success-soft)' : 'var(--color-danger-soft)', color: status.qualityPass ? 'var(--color-success-deep)' : 'var(--color-danger-deep)', fontWeight: 700 }}>
                     {status.qualityPass ? '✓ Quality' : '✗ Issues'}
                   </span>
-                  <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 6, background: '#dbeafe', color: '#1e40af', fontWeight: 700 }}>
+                  <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 6, background: 'var(--color-accent-soft)', color: 'var(--color-accent)', fontWeight: 700 }}>
                     {status.sceneCount} Scene
                   </span>
-                  {status.hasCover && <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 6, background: '#dbeafe', color: '#1e40af', fontWeight: 700 }}>Cover</span>}
-                  {status.hasClosing && <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 6, background: '#dbeafe', color: '#1e40af', fontWeight: 700 }}>Closing</span>}
-                  {gameType && <span data-testid={`template-game-type-${template.id}`} style={{ fontSize: 11, padding: '3px 9px', borderRadius: 6, background: '#fef3c7', color: '#92400e', fontWeight: 700 }}>{gameType}</span>}
+                  {status.hasCover && <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 6, background: 'var(--color-accent-soft)', color: 'var(--color-accent)', fontWeight: 700 }}>Cover</span>}
+                  {status.hasClosing && <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 6, background: 'var(--color-accent-soft)', color: 'var(--color-accent)', fontWeight: 700 }}>Closing</span>}
+                  {gameType && <span data-testid={`template-game-type-${template.id}`} style={{ fontSize: 11, padding: '3px 9px', borderRadius: 6, background: 'var(--color-warning-soft)', color: 'var(--color-warning-deep)', fontWeight: 700 }}>{gameType}</span>}
                 </div>
 
                 {/* CTA */}
@@ -214,8 +214,8 @@ export function TemplatePickerDialog({ onClose }: { onClose: () => void }) {
                   disabled={applied}
                   style={{
                     padding: '10px 20px', borderRadius: 10, border: 'none',
-                    background: applied ? '#94a3b8' : 'linear-gradient(135deg, #1d3557 0%, #264c7d 100%)',
-                    color: '#fff', fontWeight: 700, fontSize: 14, cursor: applied ? 'default' : 'pointer',
+                    background: applied ? 'var(--color-muted)' : 'linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-hover) 100%)',
+                    color: 'var(--color-panel)', fontWeight: 700, fontSize: 14, cursor: applied ? 'default' : 'pointer',
                     boxShadow: applied ? 'none' : '0 2px 8px rgba(29,53,87,0.3)',
                     transition: 'all 0.18s',
                   }}
@@ -228,7 +228,7 @@ export function TemplatePickerDialog({ onClose }: { onClose: () => void }) {
         </div>
 
         {templates.length === 0 && (
-          <div style={{ textAlign: 'center', padding: 32, color: '#94a3b8', fontSize: 14 }}>
+          <div style={{ textAlign: 'center', padding: 32, color: 'var(--color-muted)', fontSize: 14 }}>
             Belum ada template untuk mapel ini.
           </div>
         )}
@@ -239,20 +239,20 @@ export function TemplatePickerDialog({ onClose }: { onClose: () => void }) {
         <div
           data-testid="overwrite-confirm"
           style={{
-            position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(0,0,0,0.5)',
+            position: 'fixed', inset: 0, zIndex: 1100, background: 'var(--color-overlay-scrim)',
             display: 'grid', placeItems: 'center',
           }}
           onClick={() => setConfirmOverwrite(null)}
         >
           <div
             style={{
-              background: '#fff', borderRadius: 16, padding: 28, maxWidth: 420, width: '88%',
+              background: 'var(--color-panel)', borderRadius: 16, padding: 28, maxWidth: 420, width: '88%',
               boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>⚠️ Ganti Project?</div>
-            <div style={{ fontSize: 14, color: '#475569', lineHeight: 1.5, marginBottom: 20 }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-text-strong)', marginBottom: 8 }}>⚠️ Ganti Project?</div>
+            <div style={{ fontSize: 14, color: 'var(--color-text-soft)', lineHeight: 1.5, marginBottom: 20 }}>
               Project saat ini akan diganti oleh template "{confirmOverwrite.name}". Perubahan yang belum disimpan akan hilang.
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
@@ -260,8 +260,8 @@ export function TemplatePickerDialog({ onClose }: { onClose: () => void }) {
                 data-testid="overwrite-cancel"
                 onClick={() => setConfirmOverwrite(null)}
                 style={{
-                  padding: '8px 18px', borderRadius: 8, border: '2px solid #e2e8f0',
-                  background: '#fff', color: '#475569', fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                  padding: '8px 18px', borderRadius: 8, border: '2px solid var(--color-border-neutral)',
+                  background: 'var(--color-panel)', color: 'var(--color-text-soft)', fontWeight: 700, fontSize: 14, cursor: 'pointer',
                 }}
               >Batal</button>
               <button
@@ -269,7 +269,7 @@ export function TemplatePickerDialog({ onClose }: { onClose: () => void }) {
                 onClick={() => doApply(confirmOverwrite)}
                 style={{
                   padding: '8px 18px', borderRadius: 8, border: 'none',
-                  background: '#dc2626', color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                  background: 'var(--color-danger-strong)', color: 'var(--color-panel)', fontWeight: 700, fontSize: 14, cursor: 'pointer',
                 }}
               >Ya, Ganti</button>
             </div>

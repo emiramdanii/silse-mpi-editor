@@ -161,10 +161,11 @@ Audit ini menemukan **480 instance hardcoded warna** di 14 file production code.
 ### P1 — High user-visible — ✅ SELESAI (commit 5ae5092)
 6. ✅ Drop `#2563eb` fallback dari 4 component views (Card/Image/Text/Navigation, 8 instances) → `var(--color-accent)`
 
-### P2 — Dialog files — ⏳ TUNDA (next batch)
-7. ⏳ `Topbar.tsx:368,373` — Suspense fallback `#64748b` (2 hex, missed in P0)
-8. ⏳ `TemplatePickerDialog.tsx` (~30 hex) — neutral + navy + status tokens
-9. ⏳ `AiImportDialog.tsx` (~35 hex) — banyak `#1e5b8f` = exact `--color-accent`
+### P2 — Dialog files — ✅ SELESAI (commit 38872cf, ab71fee, b362fc1, 666b0da)
+7. ✅ `Topbar.tsx:368,373` — Suspense fallback `#64748b` → `var(--color-muted)` (2 hex)
+8. ✅ `TemplatePickerDialog.tsx` (~30 hex) → tokens (neutral + navy + status)
+9. ✅ `AiImportDialog.tsx` (~31 hex) → tokens (banyak `#1e5b8f` = exact `--color-accent`)
+   * Token baru ditambahkan: `--color-text-strong` (#0f172a), `--color-border-neutral` (#e2e8f0)
 
 ### P3 — PageThumbnail markers — ⏳ TUNDA
 10. ⏳ 8 component-type marker colors → `--color-marker-*` family (tokens sudah defined di :root, tinggal swap)
@@ -189,11 +190,11 @@ Audit ini menemukan **480 instance hardcoded warna** di 14 file production code.
 |---|---|---|---|---|
 | P0 | 6 | 6 ✅ | 0 | ~40 (15 wrong vars + 11 AI-style + 8 LayeredInfo + 6 guided-flow) |
 | P1 | 1 | 1 ✅ | 0 | 8 (component view fallbacks) |
-| P2 | 3 | 0 | 3 | ~67 hex remaining |
+| P2 | 3 | 3 ✅ | 0 | ~63 (Topbar 2 + TemplatePickerDialog 30 + AiImportDialog 31) + 2 new tokens |
 | P3 | 1 | 0 | 1 | 8 hex remaining |
 | P4 | 3 | 0 | 3 | ~283 hex remaining |
 | P5 | 1 | 0 | 0 (deferred) | ~5 hex (deferred) |
-| **Total** | **15** | **7 ✅** | **8** | **~48 migrated, ~391 remaining** |
+| **Total** | **15** | **10 ✅** | **5** | **~111 migrated, ~296 remaining** |
 
 #### Contoh Before/After P0
 

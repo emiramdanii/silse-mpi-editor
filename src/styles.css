@@ -11,9 +11,11 @@
   --color-panel-soft: #fbfaf7;
   --color-border: #e3ddcd;
   --color-border-strong: #c8be9f;
+  --color-border-neutral: #e2e8f0;         /* NEW Fase 1 P2: Tailwind slate-200, untuk dialog borders */
 
   /* Text */
   --color-text: #1f2533;
+  --color-text-strong: #0f172a;            /* NEW Fase 1 P2: Tailwind slate-900, untuk dialog title */
   --color-text-soft: #4a5160;
   --color-muted: #8a8775;
   --color-text-on-dark: #ffffff;            /* NEW Fase 1: text pada bg gelap (cover, closing, dark dialog) */

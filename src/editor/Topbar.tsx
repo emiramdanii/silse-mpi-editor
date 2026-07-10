@@ -365,12 +365,12 @@ export function Topbar() {
         <GuidedFlowDialog onClose={() => setShowGuidedFlow(false)} />
       )}
       {showTemplatePicker && (
-        <Suspense fallback={<div style={{ padding: 20, textAlign: 'center', color: '#64748b' }}>Memuat template…</div>}>
+        <Suspense fallback={<div style={{ padding: 20, textAlign: 'center', color: 'var(--color-muted)' }}>Memuat template…</div>}>
           <TemplatePickerDialog onClose={() => setShowTemplatePicker(false)} />
         </Suspense>
       )}
       {showAiImport && (
-        <Suspense fallback={<div style={{ padding: 20, textAlign: 'center', color: '#64748b' }}>Memuat import AI…</div>}>
+        <Suspense fallback={<div style={{ padding: 20, textAlign: 'center', color: 'var(--color-muted)' }}>Memuat import AI…</div>}>
           <AiImportDialog onClose={() => setShowAiImport(false)} />
         </Suspense>
       )}
