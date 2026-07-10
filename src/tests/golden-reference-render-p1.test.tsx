@@ -150,16 +150,13 @@ describe('GOLDEN-REFERENCE-RENDER-P1 — 7 scene composers', () => {
     expect(html).toContain('silse-scene-closing-award');
   });
 
-  // 15: Legacy fallback
+  // 15: Legacy fallback — Fase 2b Step 4: ALL pages now get scenePlan (no more null)
   it('15. legacy fallback tetap PASS', () => {
     const project = createSamplePpknProject();
     const html = exportProjectToHtml(project);
-    // Legacy project should not have the 7 new golden-reference scene RENDERED in DOM.
-    // The export JS may contain the class names in routing code (inside <script>),
-    // but the scenePlan should be null for legacy pages (no scene rendering).
-    // Check that scenePlan is null for legacy pages.
-    expect(html).toContain('"scenePlan":null');
-    // Check that legacy project still exports without error
+    // Fase 2b Step 4: scenePlan is no longer null for legacy/sample pages.
+    // All pages now go through SceneRendererView (single render path).
+    // The sample project still exports without error.
     expect(html.length).toBeGreaterThan(1000);
   });
 
