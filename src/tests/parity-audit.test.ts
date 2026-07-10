@@ -118,7 +118,11 @@ describe('PARITY-AUDIT: Fase 3 — Export parity (project.style → export HTML)
     const bp = templateToBlueprint(TEMPLATE_PPKN_NORMA);
     const project = aiBlueprintToSimpleProject(bp);
     const html = exportProjectToHtml(project);
-    // Base colors should NOT contain #8b5cf6
-    expect(html).not.toContain('#8b5cf6');
+    // Base colors should NOT contain #8b5cf6 as a STYLE VALUE (outside :root token definitions).
+    // Fase 1 P4: :root now defines --color-marker-navigation: #8b5cf6 as a token, which is correct.
+    // The test should only check that #8b5cf6 is not used as inline style outside :root.
+    // Strip the :root block before checking.
+    const htmlWithoutRoot = html.replace(/:root\s*\{[^}]*\}/g, '');
+    expect(htmlWithoutRoot).not.toContain('#8b5cf6');
   });
 });
