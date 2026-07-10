@@ -215,7 +215,10 @@ function mapComponentToSlot(component: PageComponent): MpiSceneSlot {
     width: component.width,
     height: component.height,
   };
-  return createMpiSlot(slotRole, placement, content);
+  // Fase 2 Step 1: pass component.id as slot.id so that slot.id === component.id.
+  // This enables the editor's selection model to work through SceneRendererView:
+  //   onSlotClick(slotId) → selectComponent(slotId) → Inspector finds component by id.
+  return createMpiSlot(slotRole, placement, content, undefined, component.id);
 }
 
 // ---------------------------------------------------------------------------

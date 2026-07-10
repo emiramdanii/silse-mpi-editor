@@ -305,7 +305,8 @@ describe('SCENE-RENDERER-PROOF-01 — React view produces scene classes', () => 
       />
     );
     const firstSlot = dom.querySelector('.silse-scene-slot') as HTMLElement;
-    expect(firstSlot.style.outline).toContain('2563eb'); // selected outline
+    // Fase 1 P1: outline changed from #2563eb fallback to var(--color-accent)
+    expect(firstSlot.style.outline).toContain('var(--color-accent)'); // selected outline
     firstSlot.click();
     expect(selectedId).toBe(plan.slots[0].id);
   });

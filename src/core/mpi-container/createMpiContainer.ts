@@ -65,9 +65,21 @@ export function createMpiSlot(
   placement: MpiSceneSlot['placement'],
   content: MpiSceneSlot['content'],
   designTokenKey?: string,
+  /**
+   * Fase 2 Step 1: Optional explicit slot ID.
+   *
+   * When converting SimpleProject → MpiContainer, pass component.id here
+   * so that slot.id === component.id. This enables the editor's selection
+   * model to work through SceneRendererView:
+   *   onSlotClick(slotId) → selectComponent(slotId) → Inspector finds component
+   *
+   * If omitted, a random ID is generated (legacy behavior, for non-component
+   * sources like AI blueprint bridge pages where slots come from sceneContent).
+   */
+  id?: string,
 ): MpiSceneSlot {
   return {
-    id: `slot_${createComponentId().slice(5)}`,
+    id: id ?? `slot_${createComponentId().slice(5)}`,
     role,
     placement,
     content,
