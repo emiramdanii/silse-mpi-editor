@@ -381,6 +381,23 @@ export function CanvasStage() {
                 selectedSlotId={selectedComponentId ?? undefined}
                 customStyle={currentPage?.sceneCustomStyle}
                 // PATCH A: Editor mode does NOT wire score/completion — prevents accidental score changes during editing.
+                // Fase 2a Step 2: Editor interaction (drag/resize) for cover-hero scene type.
+                // slot.id === component.id (Step 1 fix) makes selectComponent work through slots.
+                editorMode={true}
+                onSlotDrag={(slotId, x, y) => {
+                  // Find the component to preserve width/height during drag
+                  const comp = currentPage?.components.find((c) => c.id === slotId);
+                  if (comp) {
+                    updateComponentGeometry(slotId, { x, y, width: comp.width, height: comp.height });
+                  }
+                }}
+                onSlotResize={(slotId, width, height) => {
+                  // Find the component to preserve x/y during resize
+                  const comp = currentPage?.components.find((c) => c.id === slotId);
+                  if (comp) {
+                    updateComponentGeometry(slotId, { x: comp.x, y: comp.y, width, height });
+                  }
+                }}
               />
             </div>
           )}
