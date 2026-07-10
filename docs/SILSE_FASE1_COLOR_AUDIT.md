@@ -167,8 +167,8 @@ Audit ini menemukan **480 instance hardcoded warna** di 14 file production code.
 9. ✅ `AiImportDialog.tsx` (~31 hex) → tokens (banyak `#1e5b8f` = exact `--color-accent`)
    * Token baru ditambahkan: `--color-text-strong` (#0f172a), `--color-border-neutral` (#e2e8f0)
 
-### P3 — PageThumbnail markers — ⏳ TUNDA
-10. ⏳ 8 component-type marker colors → `--color-marker-*` family (tokens sudah defined di :root, tinggal swap)
+### P3 — PageThumbnail markers — ✅ SELESAI
+10. ✅ 8 component-type marker colors → `--color-marker-*` family + 2 fallback hex (`#ffffff` → `var(--color-panel)`, `#6b7280` → `var(--color-muted)`)
 
 ### P4 — Export HTML (largest surface) — ⏳ TUNDA
 11. ⏳ `export-html.ts` `:root` block — extract to shared TS module
@@ -191,10 +191,10 @@ Audit ini menemukan **480 instance hardcoded warna** di 14 file production code.
 | P0 | 6 | 6 ✅ | 0 | ~40 (15 wrong vars + 11 AI-style + 8 LayeredInfo + 6 guided-flow) |
 | P1 | 1 | 1 ✅ | 0 | 8 (component view fallbacks) |
 | P2 | 3 | 3 ✅ | 0 | ~63 (Topbar 2 + TemplatePickerDialog 30 + AiImportDialog 31) + 2 new tokens |
-| P3 | 1 | 0 | 1 | 8 hex remaining |
+| P3 | 1 | 1 ✅ | 0 | 10 (8 markers + 2 fallback) |
 | P4 | 3 | 0 | 3 | ~283 hex remaining |
 | P5 | 1 | 0 | 0 (deferred) | ~5 hex (deferred) |
-| **Total** | **15** | **10 ✅** | **5** | **~111 migrated, ~296 remaining** |
+| **Total** | **15** | **11 ✅** | **4** | **~121 migrated, ~286 remaining** |
 
 #### Contoh Before/After P0
 

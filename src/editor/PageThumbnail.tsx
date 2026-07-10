@@ -23,14 +23,14 @@ const THUMB_H = 124; // 16:9 ratio
 const SCALE = THUMB_W / 1280; // canvas is 1280×720
 
 const COMPONENT_COLORS: Record<string, string> = {
-  text: '#3b82f6',
-  image: '#10b981',
-  card: '#f59e0b',
-  navigation: '#8b5cf6',
-  question: '#ec4899',
-  game: '#ef4444',
-  'layered-info': '#06b6d4',
-  'learning-bridge': '#6366f1',
+  text: 'var(--color-marker-text)',
+  image: 'var(--color-marker-image)',
+  card: 'var(--color-marker-card)',
+  navigation: 'var(--color-marker-navigation)',
+  question: 'var(--color-marker-question)',
+  game: 'var(--color-marker-game)',
+  'layered-info': 'var(--color-marker-layered-info)',
+  'learning-bridge': 'var(--color-marker-learning-bridge)',
 };
 
 const COMPONENT_LABELS: Record<string, string> = {
@@ -57,7 +57,7 @@ export function PageThumbnail({
 }) {
   const info = getRoleInfo(page.role);
   const status = computePageStatus(page, project);
-  const bgColor = page.background.type === 'color' ? page.background.color : '#ffffff';
+  const bgColor = page.background.type === 'color' ? page.background.color : 'var(--color-panel)';
 
   return (
     <button
@@ -113,7 +113,7 @@ export function PageThumbnail({
 }
 
 function ComponentBlock({ comp }: { comp: PageComponent }) {
-  const color = COMPONENT_COLORS[comp.type] ?? '#6b7280';
+  const color = COMPONENT_COLORS[comp.type] ?? 'var(--color-muted)';
   const label = COMPONENT_LABELS[comp.type] ?? '?';
   const x = comp.x * SCALE;
   const y = comp.y * SCALE;
