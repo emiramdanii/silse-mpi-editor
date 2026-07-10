@@ -243,8 +243,8 @@ describe('PATCH A — Scope C: SceneRendererView Interaction', () => {
 describe('PATCH A — Scope D: Regression', () => {
   it('9. legacy project still safe', () => {
     const project = createSamplePpknProject();
-    const html = exportProjectToHtml(project);
-    expect(html).toContain('"scenePlan":null');
+    const html = exportProjectToHtml(project); void html;
+    // Fase 2b: scenePlan no longer null — all pages go through scene renderer
     expect(() => exportProjectToHtml(project)).not.toThrow();
   });
 

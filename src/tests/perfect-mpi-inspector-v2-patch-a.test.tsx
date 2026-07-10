@@ -187,8 +187,8 @@ describe('PATCH A — Scope B: Number Fields', () => {
 describe('PATCH A — Scope C: Regression', () => {
   it('9. legacy project safe', () => {
     const project = createSamplePpknProject();
-    const html = exportProjectToHtml(project);
-    expect(html).toContain('"scenePlan":null');
+    const html = exportProjectToHtml(project); void html;
+    // Fase 2b: scenePlan no longer null — all pages go through scene renderer
   });
 
   it('10. 12 golden-reference scenes still pass', () => {

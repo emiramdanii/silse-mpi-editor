@@ -90,21 +90,21 @@ describe('PREMIUM-STYLE-AFTER-FOUNDATION-01 — Export Parity', () => {
   it('6. export HTML contains radial-gradient in shell', () => {
     const bp = normalizeBlueprint(loadGoldenRef());
     const project = aiBlueprintToSimpleProject(bp);
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('radial-gradient');
   });
 
   it('7. export HTML contains box-shadow in panel', () => {
     const bp = normalizeBlueprint(loadGoldenRef());
     const project = aiBlueprintToSimpleProject(bp);
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('box-shadow:0 2px 8px');
   });
 
   it('8. export HTML contains border-bottom accent in header', () => {
     const bp = normalizeBlueprint(loadGoldenRef());
     const project = aiBlueprintToSimpleProject(bp);
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('border-bottom:2px solid');
   });
 });
@@ -122,8 +122,8 @@ describe('PREMIUM-STYLE-AFTER-FOUNDATION-01 — Interaction Still Works', () => 
 
   it('10. legacy project still safe after premium polish', () => {
     const project = createSamplePpknProject();
-    const html = exportProjectToHtml(project);
-    expect(html).toContain('"scenePlan":null');
+    const html = exportProjectToHtml(project); void html;
+    // Fase 2b: scenePlan no longer null — all pages go through scene renderer
     expect(() => exportProjectToHtml(project)).not.toThrow();
   });
 
@@ -139,7 +139,7 @@ describe('PREMIUM-STYLE-AFTER-FOUNDATION-01 — Interaction Still Works', () => 
 
   it('12. export wireInteractions still present after premium polish', () => {
     const project = createSamplePpknProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('wireInteractions()');
     expect(html).toContain('[data-tab-id]');
     expect(html).toContain('[data-action="save-response"]');

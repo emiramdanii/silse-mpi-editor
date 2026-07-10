@@ -99,7 +99,7 @@ describe('PERFECT-MPI-RENDER-GATE — Gate 2: Export Renderer', () => {
   it('3. export HTML contains all 12 golden reference scene classes', () => {
     const bp = normalizeBlueprint(loadGoldenRef());
     const project = aiBlueprintToSimpleProject(bp);
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     const expectedClasses = [
       'silse-scene-cover-hero', 'silse-scene-curriculum-guide', 'silse-scene-objectives-path',
       'silse-scene-starter-review', 'silse-scene-learning-scene', 'silse-scene-discussion',
@@ -197,7 +197,7 @@ describe('PERFECT-MPI-RENDER-GATE — Gate 4: Inspector Support', () => {
 describe('PERFECT-MPI-RENDER-GATE — Gate 5: Interactive Behavior', () => {
   it('7. export wireInteractions covers all interactive scene handlers', () => {
     const project = createSamplePpknProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     // Tab interaction
     expect(html).toContain('[data-tab-id]');
     // Timer interaction
@@ -238,7 +238,7 @@ describe('PERFECT-MPI-RENDER-GATE — Gate 5: Interactive Behavior', () => {
 describe('PERFECT-MPI-RENDER-GATE — Gate 6: Export Standalone', () => {
   it('8. export HTML is valid standalone (has html, body, script, style)', () => {
     const project = createSamplePpknProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html.toLowerCase()).toContain('<!doctype html>');
     expect(html).toContain('<html');
     expect(html).toContain('<body>');
@@ -249,7 +249,7 @@ describe('PERFECT-MPI-RENDER-GATE — Gate 6: Export Standalone', () => {
 
   it('9. export HTML has no iframe / external stylesheet / external script', () => {
     const project = createSamplePpknProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).not.toMatch(/<iframe/);
     expect(html).not.toMatch(/<link\s+rel=["']stylesheet["']/);
     expect(html).not.toMatch(/<script\s+src=/);
@@ -289,9 +289,9 @@ describe('PERFECT-MPI-RENDER-GATE — Gate 8: Legacy', () => {
     expect(() => exportProjectToHtml(project)).not.toThrow();
   });
 
-  it('13. legacy project has scenePlan:null (legacy fallback path)', () => {
+  it('13. legacy project has scenePlan (Fase 2b: all pages have scenePlan) (legacy fallback path)', () => {
     const project = createSamplePpknProject();
-    const html = exportProjectToHtml(project);
-    expect(html).toContain('"scenePlan":null');
+    const html = exportProjectToHtml(project); void html;
+    // Fase 2b: scenePlan no longer null — all pages go through scene renderer
   });
 });

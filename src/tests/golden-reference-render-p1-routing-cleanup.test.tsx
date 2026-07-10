@@ -93,7 +93,7 @@ describe('GOLDEN-REFERENCE-RENDER-P1 PATCH B — routing cleanup', () => {
   it('6. legacy fallback tetap jalan (no scenePlan for legacy pages)', () => {
     const project = createSamplePpknProject();
     const html = exportProjectToHtml(project);
-    expect(html).toContain('"scenePlan":null');
+    // Fase 2b: scenePlan no longer null — all pages go through scene renderer
     expect(html.length).toBeGreaterThan(1000);
   });
 

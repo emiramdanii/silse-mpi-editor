@@ -85,7 +85,7 @@ describe('PERFECT-MPI-RENDER-COMPLETE-01 — Scope A: Diagnostic Check', () => {
 
   it('3. diagnostic-check export actual scene', () => {
     const project = build5SceneProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('silse-scene-diagnostic-check');
     expect(html).toContain('"sceneType":"diagnostic-check"');
     expect(html).toContain('silse-diagnostic-question');
@@ -134,7 +134,7 @@ describe('PERFECT-MPI-RENDER-COMPLETE-01 — Scope B: Remedial Practice', () => 
 
   it('6. remedial-practice export actual scene', () => {
     const project = build5SceneProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('silse-scene-remedial-practice');
     expect(html).toContain('"sceneType":"remedial-practice"');
     expect(html).toContain('silse-remedial-question');
@@ -173,7 +173,7 @@ describe('PERFECT-MPI-RENDER-COMPLETE-01 — Scope C: Enrichment Challenge', () 
 
   it('9. enrichment export actual scene', () => {
     const project = build5SceneProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('silse-scene-enrichment-challenge');
     expect(html).toContain('"sceneType":"enrichment-challenge"');
     expect(html).toContain('silse-enrichment-task');
@@ -218,7 +218,7 @@ describe('PERFECT-MPI-RENDER-COMPLETE-01 — Scope D: Worksheet Activity', () =>
 
   it('12. worksheet export actual scene', () => {
     const project = build5SceneProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('silse-scene-worksheet-activity');
     expect(html).toContain('"sceneType":"worksheet-activity"');
     expect(html).toContain('silse-worksheet-question');
@@ -260,7 +260,7 @@ describe('PERFECT-MPI-RENDER-COMPLETE-01 — Scope E: Rubric Panel', () => {
 
   it('15. rubric export actual scene', () => {
     const project = build5SceneProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('silse-scene-rubric-panel');
     expect(html).toContain('"sceneType":"rubric-panel"');
     expect(html).toContain('silse-rubric-criterion');
@@ -294,8 +294,8 @@ describe('PERFECT-MPI-RENDER-COMPLETE-01 — Scope F: SceneContent Inspector', (
 describe('PERFECT-MPI-RENDER-COMPLETE-01 — Scope G: Regression', () => {
   it('17. legacy project safe', () => {
     const project = createSamplePpknProject();
-    const html = exportProjectToHtml(project);
-    expect(html).toContain('"scenePlan":null');
+    const html = exportProjectToHtml(project); void html;
+    // Fase 2b: scenePlan no longer null — all pages go through scene renderer
     expect(() => exportProjectToHtml(project)).not.toThrow();
   });
 

@@ -100,13 +100,13 @@ describe('PREMIUM-STYLE-P2 — Scope B: Export Parity', () => {
   it('8. export contains premium classes for golden reference scenes', () => {
     const bp = normalizeBlueprint(loadGoldenRef());
     const project = aiBlueprintToSimpleProject(bp);
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('silse-premium');
   });
 
   it('9. export contains box-shadow for panels', () => {
     const project = createSamplePpknProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('box-shadow');
   });
 });
@@ -177,7 +177,7 @@ describe('PREMIUM-STYLE-P2 PATCH A — Sequencing Lock', () => {
 
   it('13. export sequencing has seqLocked logic', () => {
     const project = createSamplePpknProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('seqLocked');
   });
 });
@@ -255,7 +255,7 @@ describe('PREMIUM-STYLE-P2 PATCH A — Overflow Guard', () => {
     // Check the rendered export output for width values > 1280
     const bp = normalizeBlueprint(loadGoldenRef());
     const project = aiBlueprintToSimpleProject(bp);
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     const widths = html.match(/width:\s*(\d+)/g) || [];
     widths.forEach((w) => {
       const num = parseInt(w.match(/\d+/)![0], 10);
@@ -265,7 +265,7 @@ describe('PREMIUM-STYLE-P2 PATCH A — Overflow Guard', () => {
 
   it('19. export has no external CSS/JS', () => {
     const project = createSamplePpknProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).not.toMatch(/<link\s+rel=["']stylesheet["']/);
     expect(html).not.toMatch(/<script\s+src=/);
     expect(html).not.toMatch(/<iframe/);
@@ -288,13 +288,13 @@ describe('PREMIUM-STYLE-P2 PATCH A — Regression', () => {
 
   it('21. legacy project still safe', () => {
     const project = createSamplePpknProject();
-    const html = exportProjectToHtml(project);
-    expect(html).toContain('"scenePlan":null');
+    const html = exportProjectToHtml(project); void html;
+    // Fase 2b: scenePlan no longer null — all pages go through scene renderer
   });
 
   it('22. export wireInteractions still present', () => {
     const project = createSamplePpknProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('wireInteractions()');
   });
 });

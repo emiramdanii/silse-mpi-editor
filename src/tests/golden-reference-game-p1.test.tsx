@@ -159,7 +159,7 @@ describe('GOLDEN-REFERENCE-GAME-P1 — classification game', () => {
   it('12. legacy fallback tetap aman', () => {
     const project = createSamplePpknProject();
     const html = exportProjectToHtml(project);
-    expect(html).toContain('"scenePlan":null');
+    // Fase 2b: scenePlan no longer null — all pages go through scene renderer
     expect(html.length).toBeGreaterThan(1000);
   });
 });

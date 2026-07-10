@@ -76,7 +76,7 @@ function buildAssessmentProject(): SimpleProject {
 describe('PERFECT-MPI-RENDER-COMPLETE-01 PATCH A — Fix 1: Diagnostic export parity', () => {
   it('1. diagnostic export contains readiness level element + data attrs', () => {
     const project = buildAssessmentProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     // Readiness element exists
     expect(html).toContain('silse-diagnostic-readiness');
     // Recommendation element exists
@@ -89,13 +89,13 @@ describe('PERFECT-MPI-RENDER-COMPLETE-01 PATCH A — Fix 1: Diagnostic export pa
 
   it('2. diagnostic export submit button has data-action="diagnostic-submit"', () => {
     const project = buildAssessmentProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain("data-action', 'diagnostic-submit'");
   });
 
   it('3. diagnostic wireInteractions handler contains readiness + recommendation logic', () => {
     const project = buildAssessmentProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     // Handler must look up readinessLevels from data attr
     expect(html).toContain("getAttribute('data-readiness-levels')");
     // Handler must match score >= minScore
@@ -109,7 +109,7 @@ describe('PERFECT-MPI-RENDER-COMPLETE-01 PATCH A — Fix 1: Diagnostic export pa
 
   it('4. diagnostic reset clears readiness + recommendation (not just result)', () => {
     const project = buildAssessmentProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     // Reset handler must hide readiness
     expect(html).toContain("dr2.style.display = 'none'");
     // Reset handler must hide recommendation
@@ -120,20 +120,20 @@ describe('PERFECT-MPI-RENDER-COMPLETE-01 PATCH A — Fix 1: Diagnostic export pa
 describe('PERFECT-MPI-RENDER-COMPLETE-01 PATCH A — Fix 2: Enrichment completion toggle', () => {
   it('5. enrichment export has data-action="enrichment-complete"', () => {
     const project = buildAssessmentProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain("data-action', 'enrichment-complete'");
   });
 
   it('6. enrichment export has completion message element (hidden initially)', () => {
     const project = buildAssessmentProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     expect(html).toContain('silse-enrichment-completion');
     expect(html).toContain("display:none");
   });
 
   it('7. enrichment wireInteractions handler shows completion + hides button', () => {
     const project = buildAssessmentProject();
-    const html = exportProjectToHtml(project);
+    const html = exportProjectToHtml(project); void html;
     // Handler must query enrichment-complete
     expect(html).toContain('[data-action="enrichment-complete"]');
     // Handler must show completion element
@@ -186,8 +186,8 @@ describe('PERFECT-MPI-RENDER-COMPLETE-01 PATCH A — Fix 3: No unsafe innerHTML'
 describe('PERFECT-MPI-RENDER-COMPLETE-01 PATCH A — Regression', () => {
   it('11. legacy project still safe', () => {
     const project = createSamplePpknProject();
-    const html = exportProjectToHtml(project);
-    expect(html).toContain('"scenePlan":null');
+    const html = exportProjectToHtml(project); void html;
+    // Fase 2b: scenePlan no longer null — all pages go through scene renderer
     expect(() => exportProjectToHtml(project)).not.toThrow();
   });
 
