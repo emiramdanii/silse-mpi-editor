@@ -160,25 +160,25 @@ export function AiImportDialog({ onClose }: { onClose: () => void }) {
     >
       <div
         style={{
-          background: '#fff', borderRadius: 16, maxWidth: 800, width: '100%',
+          background: 'var(--color-panel)', borderRadius: 16, maxWidth: 800, width: '100%',
           maxHeight: '90vh', display: 'flex', flexDirection: 'column',
           boxShadow: '0 24px 64px rgba(0,0,0,0.24)',
         }}
       >
         {/* Header */}
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--color-border-neutral)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <h2 style={{ margin: '0 0 4px 0', fontSize: 20, fontWeight: 800, color: '#0f172a' }}>
+            <h2 style={{ margin: '0 0 4px 0', fontSize: 20, fontWeight: 800, color: 'var(--color-text-strong)' }}>
               🤖 Import Desain dari AI
             </h2>
-            <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--color-muted)' }}>
               AI buat blueprint JSON → masuk ke editor → edit → export HTML
             </p>
           </div>
           <button
             data-testid="ai-import-close"
             onClick={onClose}
-            style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#64748b', padding: '0 4px' }}
+            style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--color-muted)', padding: '0 4px' }}
             aria-label="Tutup"
           >
             ✕
@@ -186,13 +186,13 @@ export function AiImportDialog({ onClose }: { onClose: () => void }) {
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: 4, padding: '12px 24px 0', borderBottom: '1px solid #e2e8f0' }}>
+        <div style={{ display: 'flex', gap: 4, padding: '12px 24px 0', borderBottom: '1px solid var(--color-border-neutral)' }}>
           <button
             data-testid="ai-import-tab-prompt"
             onClick={() => setTab('prompt')}
             style={{
-              padding: '8px 16px', border: 'none', background: tab === 'prompt' ? '#1e5b8f' : 'transparent',
-              color: tab === 'prompt' ? '#fff' : '#64748b', borderRadius: '8px 8px 0 0',
+              padding: '8px 16px', border: 'none', background: tab === 'prompt' ? 'var(--color-accent)' : 'transparent',
+              color: tab === 'prompt' ? 'var(--color-panel)' : 'var(--color-muted)', borderRadius: '8px 8px 0 0',
               cursor: 'pointer', fontSize: 13, fontWeight: 700,
             }}
           >
@@ -202,8 +202,8 @@ export function AiImportDialog({ onClose }: { onClose: () => void }) {
             data-testid="ai-import-tab-import"
             onClick={() => setTab('import')}
             style={{
-              padding: '8px 16px', border: 'none', background: tab === 'import' ? '#1e5b8f' : 'transparent',
-              color: tab === 'import' ? '#fff' : '#64748b', borderRadius: '8px 8px 0 0',
+              padding: '8px 16px', border: 'none', background: tab === 'import' ? 'var(--color-accent)' : 'transparent',
+              color: tab === 'import' ? 'var(--color-panel)' : 'var(--color-muted)', borderRadius: '8px 8px 0 0',
               cursor: 'pointer', fontSize: 13, fontWeight: 700,
             }}
           >
@@ -215,7 +215,7 @@ export function AiImportDialog({ onClose }: { onClose: () => void }) {
         <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
           {tab === 'prompt' && (
             <div data-testid="ai-import-prompt-panel">
-              <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 8, padding: 12, marginBottom: 12, fontSize: 13, color: '#0c4a6e' }}>
+              <div style={{ background: 'var(--color-accent-soft)', border: '1px solid var(--color-accent)', borderRadius: 8, padding: 12, marginBottom: 12, fontSize: 13, color: 'var(--color-accent-hover)' }}>
                 <strong>Cara pakai:</strong>
                 <ol style={{ margin: '6px 0 0 16px', padding: 0, lineHeight: 1.6 }}>
                   <li>Copy prompt di bawah ini</li>
@@ -232,9 +232,9 @@ export function AiImportDialog({ onClose }: { onClose: () => void }) {
                 value={promptText}
                 style={{
                   width: '100%', minHeight: 280, padding: 12,
-                  border: '1px solid #cbd5e1', borderRadius: 8,
+                  border: '1px solid var(--color-border-strong)', borderRadius: 8,
                   fontFamily: 'ui-monospace, monospace', fontSize: 12, lineHeight: 1.5,
-                  resize: 'vertical', boxSizing: 'border-box', background: '#f8fafc',
+                  resize: 'vertical', boxSizing: 'border-box', background: 'var(--color-panel-soft)',
                 }}
               />
               <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
@@ -242,8 +242,8 @@ export function AiImportDialog({ onClose }: { onClose: () => void }) {
                   data-testid="ai-import-copy-prompt"
                   onClick={handleCopyPrompt}
                   style={{
-                    padding: '8px 20px', background: copied ? '#16a34a' : '#1e5b8f',
-                    color: '#fff', border: 'none', borderRadius: 8,
+                    padding: '8px 20px', background: copied ? 'var(--color-success-strong)' : 'var(--color-accent)',
+                    color: 'var(--color-panel)', border: 'none', borderRadius: 8,
                     cursor: 'pointer', fontSize: 13, fontWeight: 700,
                   }}
                 >
@@ -253,8 +253,8 @@ export function AiImportDialog({ onClose }: { onClose: () => void }) {
                   data-testid="ai-import-goto-import"
                   onClick={() => setTab('import')}
                   style={{
-                    padding: '8px 20px', background: '#fff', color: '#1e5b8f',
-                    border: '1px solid #1e5b8f', borderRadius: 8,
+                    padding: '8px 20px', background: 'var(--color-panel)', color: 'var(--color-accent)',
+                    border: '1px solid var(--color-accent)', borderRadius: 8,
                     cursor: 'pointer', fontSize: 13, fontWeight: 700,
                   }}
                 >
@@ -267,11 +267,11 @@ export function AiImportDialog({ onClose }: { onClose: () => void }) {
           {tab === 'import' && (
             <div data-testid="ai-import-json-panel">
               {hasExistingContent && (
-                <div style={{ background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 8, padding: 10, marginBottom: 12, fontSize: 12, color: '#92400e' }}>
+                <div style={{ background: 'var(--color-warning-soft)', border: '1px solid var(--color-warning-strong)', borderRadius: 8, padding: 10, marginBottom: 12, fontSize: 12, color: 'var(--color-warning-deep)' }}>
                   ⚠️ Project saat ini sudah berisi konten. Import akan menggantinya.
                 </div>
               )}
-              <label style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', display: 'block', marginBottom: 6 }}>
+              <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-strong)', display: 'block', marginBottom: 6 }}>
                 Paste JSON dari AI:
               </label>
               <textarea
@@ -281,16 +281,16 @@ export function AiImportDialog({ onClose }: { onClose: () => void }) {
                 placeholder='{\n  "version": 1,\n  "metadata": { "title": "..." },\n  "scenes": [...]\n}'
                 style={{
                   width: '100%', minHeight: 240, padding: 12,
-                  border: '1px solid #cbd5e1', borderRadius: 8,
+                  border: '1px solid var(--color-border-strong)', borderRadius: 8,
                   fontFamily: 'ui-monospace, monospace', fontSize: 12, lineHeight: 1.5,
                   resize: 'vertical', boxSizing: 'border-box',
                 }}
               />
 
               {errors && errors.length > 0 && (
-                <div data-testid="ai-import-errors" style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: 12, marginTop: 12 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#991b1b', marginBottom: 6 }}>❌ Ada masalah dengan JSON dari AI:</div>
-                  <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12, color: '#7f1d1d', lineHeight: 1.6 }}>
+                <div data-testid="ai-import-errors" style={{ background: 'var(--color-danger-soft)', border: '1px solid var(--color-danger-strong)', borderRadius: 8, padding: 12, marginTop: 12 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-danger-deep)', marginBottom: 6 }}>❌ Ada masalah dengan JSON dari AI:</div>
+                  <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12, color: 'var(--color-danger-deep)', lineHeight: 1.6 }}>
                     {formatHumanReadableErrors(translateErrors(errors)).map((msg, i) => (
                       <li key={i}>{msg}</li>
                     ))}
@@ -299,9 +299,9 @@ export function AiImportDialog({ onClose }: { onClose: () => void }) {
               )}
 
               {errors === null && jsonInput.trim() && importWarnings.length > 0 && (
-                <div data-testid="ai-import-silent-warnings" style={{ background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 8, padding: 12, marginTop: 12 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#92400e', marginBottom: 6 }}>⚠️ Elemen tidak dikenali (tetap bisa diapply):</div>
-                  <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12, color: '#78350f', lineHeight: 1.6 }}>
+                <div data-testid="ai-import-silent-warnings" style={{ background: 'var(--color-warning-soft)', border: '1px solid var(--color-warning-strong)', borderRadius: 8, padding: 12, marginTop: 12 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-warning-deep)', marginBottom: 6 }}>⚠️ Elemen tidak dikenali (tetap bisa diapply):</div>
+                  <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12, color: 'var(--color-warning-deep)', lineHeight: 1.6 }}>
                     {importWarnings.map((w, i) => (
                       <li key={i}>{w}</li>
                     ))}
@@ -310,9 +310,9 @@ export function AiImportDialog({ onClose }: { onClose: () => void }) {
               )}
 
               {errors === null && jsonInput.trim() && qualityWarnings.length > 0 && (
-                <div data-testid="ai-import-warnings" style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: 12, marginTop: 12 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#92400e', marginBottom: 6 }}>⚠️ Catatan kualitas (tetap bisa diapply):</div>
-                  <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12, color: '#78350f', lineHeight: 1.6 }}>
+                <div data-testid="ai-import-warnings" style={{ background: 'var(--color-warning-soft)', border: '1px solid var(--color-warning-strong)', borderRadius: 8, padding: 12, marginTop: 12 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-warning-deep)', marginBottom: 6 }}>⚠️ Catatan kualitas (tetap bisa diapply):</div>
+                  <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12, color: 'var(--color-warning-deep)', lineHeight: 1.6 }}>
                     {qualityWarnings.map((w, i) => (
                       <li key={i}>{w}</li>
                     ))}
@@ -321,7 +321,7 @@ export function AiImportDialog({ onClose }: { onClose: () => void }) {
               )}
 
               {applied && (
-                <div data-testid="ai-import-success" style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: 12, marginTop: 12, fontSize: 13, color: '#166534', fontWeight: 700 }}>
+                <div data-testid="ai-import-success" style={{ background: 'var(--color-success-soft)', border: '1px solid var(--color-success-strong)', borderRadius: 8, padding: 12, marginTop: 12, fontSize: 13, color: 'var(--color-success-deep)', fontWeight: 700 }}>
                   ✓ Desain AI berhasil dimuat! Menutup dialog...
                 </div>
               )}
@@ -331,8 +331,8 @@ export function AiImportDialog({ onClose }: { onClose: () => void }) {
                   data-testid="ai-import-validate"
                   onClick={handleValidate}
                   style={{
-                    padding: '8px 20px', background: '#fff', color: '#1e5b8f',
-                    border: '1px solid #1e5b8f', borderRadius: 8,
+                    padding: '8px 20px', background: 'var(--color-panel)', color: 'var(--color-accent)',
+                    border: '1px solid var(--color-accent)', borderRadius: 8,
                     cursor: 'pointer', fontSize: 13, fontWeight: 700,
                   }}
                 >
@@ -343,8 +343,8 @@ export function AiImportDialog({ onClose }: { onClose: () => void }) {
                   onClick={handleApply}
                   disabled={!jsonInput.trim() || applied}
                   style={{
-                    padding: '8px 20px', background: jsonInput.trim() && !applied ? '#16a34a' : '#cbd5e1',
-                    color: '#fff', border: 'none', borderRadius: 8,
+                    padding: '8px 20px', background: jsonInput.trim() && !applied ? 'var(--color-success-strong)' : 'var(--color-border-strong)',
+                    color: 'var(--color-panel)', border: 'none', borderRadius: 8,
                     cursor: jsonInput.trim() && !applied ? 'pointer' : 'not-allowed',
                     fontSize: 13, fontWeight: 700,
                   }}
