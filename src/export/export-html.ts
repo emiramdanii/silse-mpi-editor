@@ -1231,18 +1231,12 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       canvas.appendChild(ctaBtn);
     }
 
-    // FOUNDATION-INTEGRATION-01: jika page punya scenePlan, render via scene renderer.
-    // Jalur lama tetap fallback untuk page tanpa scenePlan.
+    // Fase 2b Step 6: Always render via scene plan (single render path).
+    // No more legacy component-view fallback. buildSceneRenderPlanForPage
+    // now always returns a plan for every page (Step 4 removed the gate).
     if (page.scenePlan) {
       var sceneEl = renderSceneFromPlan(page.scenePlan, page);
       if (sceneEl) canvas.appendChild(sceneEl);
-    } else {
-      // Render components — style from resolvedStyle, NO switch (legacy path)
-      for (var i = 0; i < page.components.length; i++) {
-        var comp = page.components[i];
-        var el = renderComponent(comp);
-        if (el) canvas.appendChild(el);
-      }
     }
 
     prevBtn.disabled = (currentPageIdx === 0);
