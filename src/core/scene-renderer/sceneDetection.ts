@@ -112,7 +112,9 @@ export function hasAnySceneRenderablePage(project: SimpleProject): boolean {
 
 /**
  * Build a SceneRenderPlan for a specific page, if it's scene-renderable.
- * Returns null if page is not scene-renderable (caller falls back to legacy).
+ * Fase 2b Step 4: Always returns a plan (no more null fallback).
+ * simpleProjectToMpiContainer converts ALL pages to scenes, so every page
+ * gets a render plan. The isPageSceneRenderable gate is removed.
  *
  * Pure function — no DOM, no React, no store.
  */
@@ -120,7 +122,11 @@ export function buildSceneRenderPlanForPage(
   project: SimpleProject,
   page: SimplePage,
 ): SceneRenderPlan | null {
-  if (!isPageSceneRenderable(page)) return null;
+  // Fase 2b Step 4: Removed isPageSceneRenderable gate.
+  // ALL pages now get a scene render plan. simpleProjectToMpiContainer
+  // converts every page to a scene (with default sceneType from role if
+  // no explicit sceneType/sceneMetadata is set). This enables single
+  // render path through SceneRendererView.
 
   // Convert whole project to container, then find the scene matching this page.
   const container = simpleProjectToMpiContainer(project);

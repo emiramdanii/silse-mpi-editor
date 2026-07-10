@@ -261,8 +261,10 @@ describe('CORE-MPI-UX-FOUNDATION-01 — Scope E: Regression', () => {
     // CanvasStage should render without crash
     const { container } = render(<CanvasStage />);
     expect(container.firstChild).toBeTruthy();
-    // No navigation toolbar for legacy project (pages not scene-renderable)
-    expect(container.querySelector('[data-testid="silse-block-nav-toolbar"]')).not.toBeInTheDocument();
+    // Fase 2b Step 4: ALL pages now go through SceneRendererView (single render path).
+    // Navigation toolbar IS shown for sample project (previously it wasn't because
+    // pages weren't scene-renderable — now they always are).
+    expect(container.querySelector('[data-testid="silse-block-nav-toolbar"]')).toBeInTheDocument();
   });
 
   it('19. semua existing golden-reference tests tetap pass (count check)', () => {

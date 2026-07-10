@@ -16,27 +16,16 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useEditorStore } from '../store/editor-store';
-import { isCardComponent, isGameComponent, isImageComponent, isLayeredInfoComponent, isLearningBridgeComponent, isNavigationComponent, isQuestionComponent, isTextComponent } from '../components/component-utils';
-import { TextComponentView } from '../components/TextComponentView';
-import { ImageComponentView } from '../components/ImageComponentView';
-import { CardComponentView } from '../components/CardComponentView';
-import { NavigationComponentView } from '../components/NavigationComponentView';
-import { QuestionComponentView } from '../components/QuestionComponentView';
-import { GameComponentView } from '../components/GameComponentView';
-import { LayeredInfoComponentView } from '../components/LayeredInfoComponentView';
-import { LearningBridgeComponentView } from '../components/LearningBridgeComponentView';
 import { NavigationToolbarBlock } from '../components/scene-blocks';
 import { getCapability } from '../core/capability';
-import { getSkinClassForComponent } from '../core/style-packs/component-skin';
 import { getBackgroundPatternForStylePack } from '../core/style-packs/background-pattern';
 import { getCoverClassForStylePack } from '../core/style-packs/cover-decoration';
 import { getMicroAnimationForStylePack } from '../core/style-packs/micro-animation';
 import { getPremiumExportProfileWithProjectStyle, getPremiumCssVariables, getHeroKickerText } from '../core/style-packs/premium-export-profile';
-import { getResolvedComponentStyle } from '../core/style/resolveComponentStyle';
 import { buildSceneRenderPlanForPage } from '../core/scene-renderer';
 import { SceneRendererView } from '../components/SceneRendererView';
 import { getDesignContractWithProjectStyle } from '../core/mpi-design-contract';
-import { snapToGrid, clampRectToCanvas, CANVAS_WIDTH, CANVAS_HEIGHT, type Rect } from '../core/geometry';
+import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../core/geometry';
 import { Toolbar } from './Toolbar';
 import { getRoleInfo } from './mpi-standard-roles';
 
@@ -44,8 +33,6 @@ export function CanvasStage() {
   const project = useEditorStore((s) => s.project);
   const currentPage = project.pages.find((p) => p.id === project.currentPageId) ?? null;
   const selectedComponentId = useEditorStore((s) => s.selectedComponentId);
-  // UX-02: selected component for drag feedback
-  const selectedComponent = currentPage?.components.find((c) => c.id === selectedComponentId) ?? null;
 
   // UX-06: Zoom & Pan state
   const [zoom, setZoom] = useState(1);
@@ -80,13 +67,6 @@ export function CanvasStage() {
   // CORE-MPI-UX-FOUNDATION-01: navigation
   const navigateNext = useEditorStore((s) => s.navigateNext);
   const navigatePrev = useEditorStore((s) => s.navigatePrev);
-
-  const [dragState, setDragState] = useState<{
-    mode: 'drag' | 'resize' | null;
-    startX: number;
-    startY: number;
-    origRect: Rect | null;
-  }>({ mode: null, startX: 0, startY: 0, origRect: null });
 
   const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -133,72 +113,6 @@ export function CanvasStage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [removeComponent]);
 
-  // Pointer move handler (global during drag)
-  useEffect(() => {
-    if (!dragState.mode || !dragState.origRect || !selectedComponentId) return;
-
-    const handlePointerMove = (e: PointerEvent) => {
-      const dx = e.clientX - dragState.startX;
-      const dy = e.clientY - dragState.startY;
-
-      if (dragState.mode === 'drag') {
-        const newRect = clampRectToCanvas({
-          x: snapToGrid(dragState.origRect!.x + dx),
-          y: snapToGrid(dragState.origRect!.y + dy),
-          width: dragState.origRect!.width,
-          height: dragState.origRect!.height,
-        });
-        updateComponentGeometry(selectedComponentId, newRect);
-      } else if (dragState.mode === 'resize') {
-        const newRect = clampRectToCanvas({
-          x: dragState.origRect!.x,
-          y: dragState.origRect!.y,
-          width: snapToGrid(Math.max(80, dragState.origRect!.width + dx)),
-          height: snapToGrid(Math.max(40, dragState.origRect!.height + dy)),
-        });
-        updateComponentGeometry(selectedComponentId, newRect);
-      }
-    };
-
-    const handlePointerUp = () => {
-      setDragState({ mode: null, startX: 0, startY: 0, origRect: null });
-    };
-
-    window.addEventListener('pointermove', handlePointerMove);
-    window.addEventListener('pointerup', handlePointerUp);
-    return () => {
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup', handlePointerUp);
-    };
-  }, [dragState, selectedComponentId, updateComponentGeometry]);
-
-  const handleDragStart = (e: React.PointerEvent, componentId: string) => {
-    e.stopPropagation();
-    const comp = currentPage?.components.find((c) => c.id === componentId);
-    if (!comp) return;
-
-    selectComponent(componentId);
-    setDragState({
-      mode: 'drag',
-      startX: e.clientX,
-      startY: e.clientY,
-      origRect: { x: comp.x, y: comp.y, width: comp.width, height: comp.height },
-    });
-  };
-
-  const handleResizeStart = (e: React.PointerEvent, componentId: string) => {
-    e.stopPropagation();
-    const comp = currentPage?.components.find((c) => c.id === componentId);
-    if (!comp) return;
-
-    setDragState({
-      mode: 'resize',
-      startX: e.clientX,
-      startY: e.clientY,
-      origRect: { x: comp.x, y: comp.y, width: comp.width, height: comp.height },
-    });
-  };
-
   const bg =
     currentPage?.background.type === 'color'
       ? currentPage.background.color
@@ -233,16 +147,15 @@ export function CanvasStage() {
     return 'Halaman terpandu — elemen diatur otomatis oleh template.';
   })();
 
-  // FOUNDATION-INTEGRATION-01: jika page scene-renderable, pakai SceneRendererView.
-  // Jalur lama tetap fallback untuk page tanpa scene.
+  // Fase 2b Step 4: Always build scene render plan (no more useSceneRenderer flag).
+  // ALL pages now go through SceneRendererView — single render path.
   const sceneRenderPlan = currentPage ? buildSceneRenderPlanForPage(project, currentPage) : null;
-  const useSceneRenderer = !!sceneRenderPlan;
 
   return (
     <main className="canvas-stage" data-testid="canvas-stage">
       <Toolbar />
-      {/* CORE-MPI-UX-FOUNDATION-01: Navigation toolbar for scene-renderable projects */}
-      {useSceneRenderer && currentPage && (
+      {/* CORE-MPI-UX-FOUNDATION-01: Navigation toolbar — always shown when page exists */}
+      {currentPage && (
         <NavigationToolbarBlock
           contract={getDesignContractWithProjectStyle(project.stylePackId, project.style)}
           currentSceneIndex={project.pages.findIndex((p) => p.id === currentPage.id)}
@@ -353,7 +266,7 @@ export function CanvasStage() {
             </div>
           )}
 
-          {currentPage && currentPage.components.length === 0 && !useSceneRenderer && (
+          {currentPage && currentPage.components.length === 0 && !currentPage.sceneContent && (
             <div className="canvas-empty" data-testid="canvas-empty">
               <div className="canvas-empty__icon" aria-hidden>
                 {roleInfo?.icon ?? '📄'}
@@ -369,9 +282,9 @@ export function CanvasStage() {
             </div>
           )}
 
-          {/* FOUNDATION-INTEGRATION-01: Scene renderer path (jika page scene-renderable).
-              Jalur lama tetap fallback untuk page tanpa scene. */}
-          {useSceneRenderer && sceneRenderPlan && (
+          {/* Fase 2b Step 4: Scene renderer — single render path for ALL pages.
+              No more legacy component-view fallback. */}
+          {sceneRenderPlan && (
             <div data-testid="scene-renderer-mount" style={{ position: 'absolute', inset: 0, zIndex: 2 }}>
               <SceneRendererView
                 plan={sceneRenderPlan}
@@ -402,194 +315,7 @@ export function CanvasStage() {
             </div>
           )}
 
-        {!useSceneRenderer && currentPage?.components.map((component) => {
-          const resolvedStyle = getResolvedComponentStyle(project, currentPage, component);
-          const isSelected = component.id === selectedComponentId;
-
-          const wrapStyle: React.CSSProperties = {
-            position: 'absolute',
-            left: component.x,
-            top: component.y,
-            width: component.width,
-            height: component.height,
-            cursor: dragState.mode === 'drag' ? 'grabbing' : 'grab',
-          };
-
-          return (
-            <div
-              key={component.id}
-              style={wrapStyle}
-              onPointerDown={(e) => handleDragStart(e, component.id)}
-            >
-              {isTextComponent(component) && (
-                <TextComponentView
-                  component={component}
-                  resolvedStyle={resolvedStyle}
-                  selected={isSelected}
-                  onSelect={selectComponent}
-                  positionMode="fill"
-                  skinClass={getSkinClassForComponent('text', project.stylePackId)}
-                />
-              )}
-              {isImageComponent(component) && (
-                <ImageComponentView
-                  component={component}
-                  resolvedStyle={resolvedStyle}
-                  selected={isSelected}
-                  onSelect={selectComponent}
-                  positionMode="fill"
-                />
-              )}
-              {isCardComponent(component) && (
-                <CardComponentView
-                  component={component}
-                  resolvedStyle={resolvedStyle}
-                  selected={isSelected}
-                  onSelect={selectComponent}
-                  positionMode="fill"
-                  skinClass={getSkinClassForComponent('card', project.stylePackId)}
-                />
-              )}
-              {isNavigationComponent(component) && (
-                <NavigationComponentView
-                  component={component}
-                  resolvedStyle={resolvedStyle}
-                  selected={isSelected}
-                  onSelect={selectComponent}
-                  positionMode="fill"
-                  skinClass={getSkinClassForComponent('navigation', project.stylePackId)}
-                />
-              )}
-              {isQuestionComponent(component) && (
-                <QuestionComponentView
-                  component={component}
-                  resolvedStyle={resolvedStyle}
-                  selected={isSelected}
-                  onSelect={selectComponent}
-                  positionMode="fill"
-                  skinClass={getSkinClassForComponent('question', project.stylePackId)}
-                  stylePackId={project.stylePackId}
-                />
-              )}
-              {isGameComponent(component) && (
-                <GameComponentView
-                  component={component}
-                  resolvedStyle={resolvedStyle}
-                  selected={isSelected}
-                  onSelect={selectComponent}
-                  positionMode="fill"
-                  skinClass={getSkinClassForComponent('game', project.stylePackId)}
-                />
-              )}
-              {isLayeredInfoComponent(component) && (
-                <LayeredInfoComponentView
-                  component={component}
-                  resolvedStyle={resolvedStyle}
-                  selected={isSelected}
-                  onSelect={selectComponent}
-                  positionMode="fill"
-                  interactive={false}
-                  skinClass={getSkinClassForComponent('layered-info', project.stylePackId)}
-                />
-              )}
-              {isLearningBridgeComponent(component) && (
-                <LearningBridgeComponentView
-                  component={component}
-                  resolvedStyle={resolvedStyle}
-                  selected={isSelected}
-                  onSelect={selectComponent}
-                  positionMode="fill"
-                  interactive={false}
-                  skinClass={getSkinClassForComponent('learning-bridge', project.stylePackId)}
-                />
-              )}
-
-              {/* Resize handle (southeast) — editor only */}
-              {isSelected && (
-                <div
-                  data-testid="resize-handle-se"
-                  onPointerDown={(e) => handleResizeStart(e, component.id)}
-                  style={{
-                    position: 'absolute',
-                    right: -6,
-                    bottom: -6,
-                    width: 12,
-                    height: 12,
-                    background: 'var(--color-accent)',
-                    border: '2px solid var(--color-panel)',
-                    borderRadius: '50%',
-                    cursor: 'nwse-resize',
-                    zIndex: 10,
-                  }}
-                />
-              )}
-
-              {/* UX-02: Drag/Resize feedback — dimension label */}
-              {isSelected && dragState.mode && (
-                <div
-                  data-testid="drag-dimension-label"
-                  style={{
-                    position: 'absolute',
-                    bottom: -24,
-                    left: 0,
-                    background: 'var(--color-accent)',
-                    color: 'var(--color-panel)',
-                    fontSize: 10,
-                    fontWeight: 700,
-                    padding: '2px 6px',
-                    borderRadius: 3,
-                    whiteSpace: 'nowrap',
-                    pointerEvents: 'none',
-                    zIndex: 10,
-                  }}
-                >
-                  {Math.round(component.width)} × {Math.round(component.height)} · ({Math.round(component.x)}, {Math.round(component.y)})
-                </div>
-              )}
-            </div>
-          );
-        })}
         </div>
-
-        {/* UX-02: Drag/Resize feedback — alignment guide lines overlay */}
-        {dragState.mode && selectedComponent && (
-          <div
-            data-testid="drag-guides-overlay"
-            style={{
-              position: 'absolute',
-              inset: 0,
-              pointerEvents: 'none',
-              zIndex: 5,
-            }}
-          >
-            {/* Center vertical guide */}
-            <div
-              data-testid="drag-guide-center-v"
-              style={{
-                position: 'absolute',
-                left: '50%',
-                top: 0,
-                bottom: 0,
-                width: 1,
-                background: 'rgba(37, 99, 235, 0.3)',
-                borderLeft: '1px dashed rgba(37, 99, 235, 0.5)',
-              }}
-            />
-            {/* Center horizontal guide */}
-            <div
-              data-testid="drag-guide-center-h"
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: 0,
-                right: 0,
-                height: 1,
-                background: 'rgba(37, 99, 235, 0.3)',
-                borderTop: '1px dashed rgba(37, 99, 235, 0.5)',
-              }}
-            />
-          </div>
-        )}
       </div>
     </main>
   );
