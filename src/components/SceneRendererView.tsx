@@ -107,14 +107,12 @@ export type SceneRendererViewProps = {
   /** CUSTOM-STYLE-01: Custom CSS from AI for visual enhancement */
   customStyle?: Record<string, Record<string, string>>;
   /**
-   * Fase 2a Step 2: Editor interaction mode.
+   * Fase 2a Step 2-3: Editor interaction mode.
    *
    * When true, slots become draggable + resizable via pointer events.
    * onSlotDrag is called during drag, onSlotResize during resize.
-   * Only active for scene types listed in EDITOR_INTERACTIVE_SCENE_TYPES.
-   *
-   * Feature flag: currently limited to ['cover-hero'] as proof-of-concept.
-   * Will be expanded to all scene types in Step 3.
+   * Active for ALL scene types (Step 3 rollout).
+   * Exclude specific types via EDITOR_EXCLUDED_SCENE_TYPES if needed.
    */
   editorMode?: boolean;
   /** Called when a slot is dragged (editor). Receives slot ID + new x/y. */
@@ -128,11 +126,17 @@ export type SceneRendererViewProps = {
 };
 
 /**
- * Fase 2a Step 2: Scene types that support editor interaction (drag/resize).
- * Currently limited to 'cover-hero' as proof-of-concept.
- * Step 3 will expand this to all scene types.
+ * Fase 2a Step 3: Editor interaction now enabled for ALL scene types.
+ *
+ * Step 2 (proof-of-concept) limited this to ['cover-hero'].
+ * Step 3 removes the whitelist — all 27 scene types now support
+ * drag/resize/select through SceneRendererView.
+ *
+ * If a specific scene type needs to be excluded in the future (e.g.,
+ * interactive game scenes where drag would interfere with gameplay),
+ * add it to EDITOR_EXCLUDED_SCENE_TYPES below.
  */
-const EDITOR_INTERACTIVE_SCENE_TYPES = new Set(['cover-hero']);
+const EDITOR_EXCLUDED_SCENE_TYPES = new Set<string>([]);
 
 export function SceneRendererView({
   plan,
@@ -152,8 +156,8 @@ export function SceneRendererView({
   onSlotInteractionStart,
   onSlotInteractionEnd,
 }: SceneRendererViewProps) {
-  // Fase 2a Step 2: Check if this scene type supports editor interaction
-  const isEditorInteractive = editorMode && EDITOR_INTERACTIVE_SCENE_TYPES.has(plan.sceneType);
+  // Fase 2a Step 3: Editor interaction enabled for ALL scene types (except excluded)
+  const isEditorInteractive = editorMode && !EDITOR_EXCLUDED_SCENE_TYPES.has(plan.sceneType);
   // CUSTOM-STYLE-01 + FASE 3: Sanitize customStyle — filter dangerous props + fonts
   // DEEP-STYLE-INJECTION-01: Pass raw customStyle via CustomStyleProvider context.
   // Blocks (SceneShell/Header/Panel/Chip/Button) consume context + sanitize internally.
