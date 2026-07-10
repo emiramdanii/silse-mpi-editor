@@ -106,7 +106,33 @@ export type SceneRendererViewProps = {
   onSceneReset?: (sceneId: string) => void;
   /** CUSTOM-STYLE-01: Custom CSS from AI for visual enhancement */
   customStyle?: Record<string, Record<string, string>>;
+  /**
+   * Fase 2a Step 2: Editor interaction mode.
+   *
+   * When true, slots become draggable + resizable via pointer events.
+   * onSlotDrag is called during drag, onSlotResize during resize.
+   * Only active for scene types listed in EDITOR_INTERACTIVE_SCENE_TYPES.
+   *
+   * Feature flag: currently limited to ['cover-hero'] as proof-of-concept.
+   * Will be expanded to all scene types in Step 3.
+   */
+  editorMode?: boolean;
+  /** Called when a slot is dragged (editor). Receives slot ID + new x/y. */
+  onSlotDrag?: (slotId: string, x: number, y: number) => void;
+  /** Called when a slot is resized (editor). Receives slot ID + new w/h. */
+  onSlotResize?: (slotId: string, width: number, height: number) => void;
+  /** Called when drag/resize starts (editor). Receives slot ID. */
+  onSlotInteractionStart?: (slotId: string) => void;
+  /** Called when drag/resize ends (editor). */
+  onSlotInteractionEnd?: () => void;
 };
+
+/**
+ * Fase 2a Step 2: Scene types that support editor interaction (drag/resize).
+ * Currently limited to 'cover-hero' as proof-of-concept.
+ * Step 3 will expand this to all scene types.
+ */
+const EDITOR_INTERACTIVE_SCENE_TYPES = new Set(['cover-hero']);
 
 export function SceneRendererView({
   plan,
@@ -120,7 +146,14 @@ export function SceneRendererView({
   onSceneComplete,
   onSceneReset,
   customStyle,
+  editorMode = false,
+  onSlotDrag,
+  onSlotResize,
+  onSlotInteractionStart,
+  onSlotInteractionEnd,
 }: SceneRendererViewProps) {
+  // Fase 2a Step 2: Check if this scene type supports editor interaction
+  const isEditorInteractive = editorMode && EDITOR_INTERACTIVE_SCENE_TYPES.has(plan.sceneType);
   // CUSTOM-STYLE-01 + FASE 3: Sanitize customStyle — filter dangerous props + fonts
   // DEEP-STYLE-INJECTION-01: Pass raw customStyle via CustomStyleProvider context.
   // Blocks (SceneShell/Header/Panel/Chip/Button) consume context + sanitize internally.
@@ -172,6 +205,11 @@ export function SceneRendererView({
           onGameAction={onGameAction}
           onQuizAnswer={onQuizAnswer}
           selected={selectedSlotId === slot.id}
+          editorInteractive={isEditorInteractive}
+          onSlotDrag={onSlotDrag}
+          onSlotResize={onSlotResize}
+          onSlotInteractionStart={onSlotInteractionStart}
+          onSlotInteractionEnd={onSlotInteractionEnd}
         />
       ))}
     </div>
@@ -190,9 +228,18 @@ type SlotViewProps = {
   onGameAction?: (slotId: string, actionIndex: number) => void;
   onQuizAnswer?: (slotId: string, choiceId: string) => void;
   selected: boolean;
+  // Fase 2a Step 2: Editor interaction props
+  editorInteractive?: boolean;
+  onSlotDrag?: (slotId: string, x: number, y: number) => void;
+  onSlotResize?: (slotId: string, width: number, height: number) => void;
+  onSlotInteractionStart?: (slotId: string) => void;
+  onSlotInteractionEnd?: () => void;
 };
 
-function SlotView({ slot, contract, interactive, onSlotClick, onGameAction, onQuizAnswer, selected }: SlotViewProps) {
+function SlotView({
+  slot, contract, interactive, onSlotClick, onGameAction, onQuizAnswer, selected,
+  editorInteractive = false, onSlotDrag, onSlotResize, onSlotInteractionStart, onSlotInteractionEnd,
+}: SlotViewProps) {
   const slotStyle: CSSProperties = {
     position: 'absolute',
     left: slot.placement.x,
@@ -202,7 +249,56 @@ function SlotView({ slot, contract, interactive, onSlotClick, onGameAction, onQu
     zIndex: slot.placement.zIndex ?? 1,
     outline: selected ? '2px solid var(--silse-color-primary, var(--color-accent))' : 'none',
     outlineOffset: 2,
-    cursor: interactive ? 'pointer' : 'default',
+    cursor: editorInteractive ? (selected ? 'grab' : 'pointer') : (interactive ? 'pointer' : 'default'),
+  };
+
+  // Fase 2a Step 2: Editor drag handler
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (!editorInteractive) return;
+    e.stopPropagation();
+    onSlotClick?.(slot.id);
+    onSlotInteractionStart?.(slot.id);
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const origX = slot.placement.x;
+    const origY = slot.placement.y;
+    const origW = slot.placement.width;
+    const origH = slot.placement.height;
+    let isResizing = false;
+
+    // Check if pointer is near bottom-right corner (resize zone: 12px)
+    const rect = e.currentTarget.getBoundingClientRect();
+    const offsetX = e.clientX - rect.right;
+    const offsetY = e.clientY - rect.bottom;
+    if (Math.abs(offsetX) < 14 && Math.abs(offsetY) < 14) {
+      isResizing = true;
+    }
+
+    const handleMove = (ev: PointerEvent) => {
+      ev.preventDefault();
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+
+      if (isResizing) {
+        const newW = Math.max(80, origW + dx);
+        const newH = Math.max(40, origH + dy);
+        onSlotResize?.(slot.id, newW, newH);
+      } else {
+        const newX = Math.max(0, origX + dx);
+        const newY = Math.max(0, origY + dy);
+        onSlotDrag?.(slot.id, newX, newY);
+      }
+    };
+
+    const handleUp = () => {
+      window.removeEventListener('pointermove', handleMove);
+      window.removeEventListener('pointerup', handleUp);
+      onSlotInteractionEnd?.();
+    };
+
+    window.addEventListener('pointermove', handleMove);
+    window.addEventListener('pointerup', handleUp);
   };
 
   return (
@@ -211,9 +307,10 @@ function SlotView({ slot, contract, interactive, onSlotClick, onGameAction, onQu
       data-slot-id={slot.id}
       data-slot-role={slot.role}
       style={slotStyle}
+      onPointerDown={editorInteractive ? handlePointerDown : undefined}
       onClick={(e) => {
         e.stopPropagation();
-        onSlotClick?.(slot.id);
+        if (!editorInteractive) onSlotClick?.(slot.id);
       }}
     >
       <ContentRenderer
@@ -223,6 +320,24 @@ function SlotView({ slot, contract, interactive, onSlotClick, onGameAction, onQu
         onGameAction={onGameAction}
         onQuizAnswer={onQuizAnswer}
       />
+      {/* Fase 2a Step 2: Resize handle (SE corner) — editor only */}
+      {editorInteractive && selected && (
+        <div
+          data-testid="scene-slot-resize-handle"
+          style={{
+            position: 'absolute',
+            right: -6,
+            bottom: -6,
+            width: 12,
+            height: 12,
+            background: 'var(--color-accent)',
+            border: '2px solid var(--color-panel)',
+            borderRadius: '50%',
+            cursor: 'nwse-resize',
+            zIndex: 10,
+          }}
+        />
+      )}
     </div>
   );
 }
