@@ -10,17 +10,6 @@
 
 import { useEditorStore } from '../store/editor-store';
 import { usePreviewStore } from './preview-store';
-import { isCardComponent, isGameComponent, isImageComponent, isLayeredInfoComponent, isLearningBridgeComponent, isNavigationComponent, isQuestionComponent, isTextComponent } from '../components/component-utils';
-import { TextComponentView } from '../components/TextComponentView';
-import { ImageComponentView } from '../components/ImageComponentView';
-import { CardComponentView } from '../components/CardComponentView';
-import { NavigationComponentView } from '../components/NavigationComponentView';
-import { QuestionComponentView } from '../components/QuestionComponentView';
-import { GameComponentView } from '../components/GameComponentView';
-import { LayeredInfoComponentView } from '../components/LayeredInfoComponentView';
-import { LearningBridgeComponentView } from '../components/LearningBridgeComponentView';
-import { getResolvedComponentStyle } from '../core/style/resolveComponentStyle';
-import { getSkinClassForComponent } from '../core/style-packs/component-skin';
 import { getBackgroundPatternForStylePack } from '../core/style-packs/background-pattern';
 import { getCoverClassForStylePack } from '../core/style-packs/cover-decoration';
 import { getMicroAnimationForStylePack } from '../core/style-packs/micro-animation';
@@ -29,7 +18,7 @@ import { buildSceneRenderPlanForPage } from '../core/scene-renderer';
 import { SceneRendererView } from '../components/SceneRendererView';
 import { NavigationToolbarBlock, ProgressBarBlock } from '../components/scene-blocks';
 import { getDesignContractWithProjectStyle } from '../core/mpi-design-contract';
-import type { GameComponent, NavigationComponent, QuestionComponent } from '../core/types';
+import type { GameComponent, QuestionComponent } from '../core/types';
 
 const CANVAS_WIDTH = 1280;
 const CANVAS_HEIGHT = 720;
@@ -38,17 +27,12 @@ export function PreviewApp() {
   const project = useEditorStore((s) => s.project);
   const isOpen = usePreviewStore((s) => s.isOpen);
   const currentPageId = usePreviewStore((s) => s.currentPageId);
-  const questionAnswers = usePreviewStore((s) => s.questionAnswers);
-  const gameStates = usePreviewStore((s) => s.gameStates);
   const totalScore = usePreviewStore((s) => s.totalScore);
   const closePreview = usePreviewStore((s) => s.closePreview);
   const navigateNext = usePreviewStore((s) => s.navigateNext);
   const navigatePrev = usePreviewStore((s) => s.navigatePrev);
-  const navigateGoto = usePreviewStore((s) => s.navigateGoto);
   const answerQuestion = usePreviewStore((s) => s.answerQuestion);
   const answerGameMission = usePreviewStore((s) => s.answerGameMission);
-  const nextGameMission = usePreviewStore((s) => s.nextGameMission);
-  const resetGame = usePreviewStore((s) => s.resetGame);
 
   if (!isOpen) return null;
 
@@ -87,30 +71,13 @@ export function PreviewApp() {
   const isCover = currentPage.role === 'cover';
   const isClosing = currentPage.role === 'closing';
 
-  // FOUNDATION-INTEGRATION-01: jika page scene-renderable, pakai SceneRendererView.
-  // Jalur lama tetap fallback untuk page tanpa scene.
+  // Fase 2b Step 5: Always build scene render plan (no more useSceneRenderer flag).
+  // ALL pages now go through SceneRendererView — single render path.
   const sceneRenderPlan = buildSceneRenderPlanForPage(project, currentPage);
-  const useSceneRenderer = !!sceneRenderPlan;
 
   const currentIdx = project.pages.findIndex((p) => p.id === currentPageId);
   const isFirst = currentIdx === 0;
   const isLast = currentIdx === project.pages.length - 1;
-
-  const handleNavigationClick = (component: NavigationComponent) => {
-    switch (component.action) {
-      case 'next':
-        navigateNext();
-        break;
-      case 'prev':
-        navigatePrev();
-        break;
-      case 'goto':
-        if (component.targetPageId) {
-          navigateGoto(component.targetPageId);
-        }
-        break;
-    }
-  };
 
   return (
     <div className="preview-overlay" data-testid="preview-overlay">
@@ -184,9 +151,9 @@ export function PreviewApp() {
             </div>
           )}
 
-          {/* FOUNDATION-INTEGRATION-01: Scene renderer path (jika page scene-renderable).
-              Jalur lama tetap fallback untuk page tanpa scene. */}
-          {useSceneRenderer && sceneRenderPlan && (
+          {/* Fase 2b Step 5: Scene renderer — single render path for ALL pages.
+              No more legacy component-view fallback. */}
+          {sceneRenderPlan && (
             <div data-testid="scene-renderer-mount-preview" style={{ position: 'absolute', inset: 0, zIndex: 2 }}>
               <SceneRendererView
                 plan={sceneRenderPlan}
@@ -214,116 +181,26 @@ export function PreviewApp() {
             </div>
           )}
 
-          {!useSceneRenderer && currentPage.components.map((component) => {
-            // M6 PATCH: resolve style via shared resolver (same as editor + export)
-            const resolvedStyle = getResolvedComponentStyle(project, currentPage, component);
-
-            if (isTextComponent(component)) {
-              return <TextComponentView key={component.id} component={component} resolvedStyle={resolvedStyle} skinClass={getSkinClassForComponent('text', project.stylePackId)} />;
-            }
-            if (isImageComponent(component)) {
-              return <ImageComponentView key={component.id} component={component} resolvedStyle={resolvedStyle} />;
-            }
-            if (isCardComponent(component)) {
-              return <CardComponentView key={component.id} component={component} resolvedStyle={resolvedStyle} skinClass={getSkinClassForComponent('card', project.stylePackId)} />;
-            }
-            if (isNavigationComponent(component)) {
-              return (
-                <NavigationComponentView
-                  key={component.id}
-                  component={component}
-                  resolvedStyle={resolvedStyle}
-                  onNavigate={() => handleNavigationClick(component as NavigationComponent)}
-                  skinClass={getSkinClassForComponent('navigation', project.stylePackId)}
-                />
-              );
-            }
-            if (isQuestionComponent(component)) {
-              const qa = questionAnswers[component.id] ?? { selectedChoiceIndex: null, isAnswered: false };
-              const qc = component as QuestionComponent;
-              return (
-                <QuestionComponentView
-                  key={component.id}
-                  component={qc}
-                  resolvedStyle={resolvedStyle}
-                  onAnswer={(choiceIndex) => answerQuestion(qc.id, choiceIndex, qc.correctChoiceIndex, qc.points)}
-                  selectedChoiceIndex={qa.selectedChoiceIndex}
-                  isAnswered={qa.isAnswered}
-                  skinClass={getSkinClassForComponent('question', project.stylePackId)}
-                  stylePackId={project.stylePackId}
-                />
-              );
-            }
-            if (isGameComponent(component)) {
-              const gc = component as GameComponent;
-              const gs = gameStates[gc.id] ?? { currentMissionIndex: 0, selectedChoiceIndex: null, isAnswered: false, score: 0, completed: false };
-              return (
-                <GameComponentView
-                  key={component.id}
-                  component={gc}
-                  resolvedStyle={resolvedStyle}
-                  onAnswer={(missionIdx, choiceIdx) => {
-                    const mission = gc.missions[missionIdx];
-                    if (mission) {
-                      answerGameMission(gc.id, missionIdx, choiceIdx, mission.correctChoiceIndex, mission.points);
-                    }
-                  }}
-                  onNextMission={() => nextGameMission(gc.id, gc.missions.length)}
-                  onRetry={() => resetGame(gc.id)}
-                  gameState={gs}
-                  skinClass={getSkinClassForComponent('game', project.stylePackId)}
-                />
-              );
-            }
-            if (isLayeredInfoComponent(component)) {
-              return (
-                <LayeredInfoComponentView
-                  key={component.id}
-                  component={component}
-                  resolvedStyle={resolvedStyle}
-                  interactive={true}
-                  skinClass={getSkinClassForComponent('layered-info', project.stylePackId)}
-                />
-              );
-            }
-            if (isLearningBridgeComponent(component)) {
-              return (
-                <LearningBridgeComponentView
-                  key={component.id}
-                  component={component}
-                  resolvedStyle={resolvedStyle}
-                  skinClass={getSkinClassForComponent('learning-bridge', project.stylePackId)}
-                />
-              );
-            }
-            return null;
-          })}
-
           {/* BUG-NAV-02 (Option C): Navigation toolbar + progress bar rendered
               INSIDE canvas-frame as floating pill overlay, matching export HTML.
-              Positioned at bottom-center via .preview-canvas .silse-block-nav-toolbar
-              CSS rule in styles.css. pointer-events: auto on the toolbar ensures
-              clicks pass through to buttons despite .silse-premium-decoration
-              wrapper's pointer-events: none. */}
-          {useSceneRenderer && (
-            <>
-              <NavigationToolbarBlock
-                contract={getDesignContractWithProjectStyle(project.stylePackId, project.style)}
-                currentSceneIndex={currentIdx}
-                totalScenes={project.pages.length}
-                sceneTitle={currentPage.title}
-                onPrev={navigatePrev}
-                onNext={navigateNext}
-                canPrev={!isFirst}
-                canNext={!isLast}
-              />
-              <ProgressBarBlock
-                contract={getDesignContractWithProjectStyle(project.stylePackId, project.style)}
-                currentSceneIndex={currentIdx}
-                totalScenes={project.pages.length}
-              />
-            </>
-          )}
+              Fase 2b Step 5: Always shown (no more useSceneRenderer gate). */}
+          <>
+            <NavigationToolbarBlock
+              contract={getDesignContractWithProjectStyle(project.stylePackId, project.style)}
+              currentSceneIndex={currentIdx}
+              totalScenes={project.pages.length}
+              sceneTitle={currentPage.title}
+              onPrev={navigatePrev}
+              onNext={navigateNext}
+              canPrev={!isFirst}
+              canNext={!isLast}
+            />
+            <ProgressBarBlock
+              contract={getDesignContractWithProjectStyle(project.stylePackId, project.style)}
+              currentSceneIndex={currentIdx}
+              totalScenes={project.pages.length}
+            />
+          </>
         </div>
       </div>
     </div>
