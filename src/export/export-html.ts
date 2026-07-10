@@ -26,6 +26,7 @@ import { getMicroAnimationForStylePack } from '../core/style-packs/micro-animati
 import { getCelebrationEffectForStylePack } from '../core/style-packs/celebration-effect';
 import { buildMotionPresetCss } from '../core/style-packs/motion-preset';
 import { getPremiumExportProfileWithProjectStyle, type PremiumExportProfile } from '../core/style-packs/premium-export-profile';
+import { buildAnimationsCss } from '../core/style/premiumCss';
 import { buildSceneRenderPlanForPage, type SceneRenderPlan } from '../core/scene-renderer';
 import { sanitizeCustomStyle, styleMapToCssString } from '../core/style/sanitize';
 import { getDesignContractWithProjectStyle } from '../core/mpi-design-contract';
@@ -752,31 +753,14 @@ body {
 .silse-feedback-correct { border-left:4px solid var(--color-success-strong); background:linear-gradient(135deg,rgba(22,163,74,0.08) 0%,rgba(22,163,74,0.02) 100%); font-weight:500; }
 .silse-feedback-wrong { border-left:4px solid var(--color-danger-strong); background:linear-gradient(135deg,rgba(220,38,38,0.08) 0%,rgba(220,38,38,0.02) 100%); font-weight:500; }
 .silse-block-chip { background:linear-gradient(135deg,rgba(249,193,46,0.18) 0%,rgba(249,193,46,0.08) 100%) !important; box-shadow:0 1px 3px rgba(249,193,46,0.15),inset 0 1px 0 rgba(255,255,255,0.1); }
-/* MICRO-ANIMATION-SYSTEM-V1: micro animation + prefers-reduced-motion */
-@keyframes silse-fade-in-soft { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
-@keyframes silse-fade-in-warm { from{opacity:0;transform:translateY(6px) scale(0.998)} to{opacity:1;transform:translateY(0) scale(1)} }
-@keyframes silse-fade-in-mission { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
-@keyframes silse-feedback-pop { from{opacity:0;transform:translateY(-2px)} to{opacity:1;transform:translateY(0)} }
-@keyframes silse-mission-pulse { 0%,100%{box-shadow:0 0 16px rgba(59,130,246,0.15)} 50%{box-shadow:0 0 20px rgba(59,130,246,0.25)} }
-.silse-anim-page-soft-in { animation:silse-fade-in-soft 220ms ease-out; }
-.silse-anim-page-warm-in { animation:silse-fade-in-warm 260ms ease-out; }
-.silse-anim-page-mission-in { animation:silse-fade-in-mission 200ms ease-out; }
-.silse-anim-button-clean { transition:transform 150ms ease-out,box-shadow 150ms ease-out; }
-.silse-anim-button-clean:hover { transform:translateY(-1px); }
-.silse-anim-button-soft { transition:transform 150ms ease-out,box-shadow 150ms ease-out; }
-.silse-anim-button-soft:hover { transform:translateY(-1px); }
-.silse-anim-button-mission { transition:transform 120ms ease-out,box-shadow 120ms ease-out; }
-.silse-anim-button-mission:hover { transform:translateY(-1px); }
-.silse-anim-choice-clean { transition:border-color 150ms ease-out,background-color 150ms ease-out; }
-.silse-anim-choice-soft { transition:border-color 180ms ease-out,background-color 180ms ease-out,border-radius 180ms; }
-.silse-anim-choice-mission { transition:border-color 120ms ease-out,background-color 120ms ease-out,box-shadow 120ms; }
-.silse-anim-feedback-soft { animation:silse-feedback-pop 200ms ease-out; }
-.silse-anim-feedback-warm { animation:silse-feedback-pop 240ms ease-out; }
-.silse-anim-feedback-mission { animation:silse-feedback-pop 180ms ease-out; }
-.silse-anim-game-clean { transition:border-color 150ms ease-out; }
-.silse-anim-game-soft { transition:border-color 180ms ease-out,border-radius 180ms; }
-.silse-anim-game-mission { transition:box-shadow 150ms ease-out; }
-.silse-anim-game-mission.silse-game-mission { animation:silse-mission-pulse 3s ease-in-out infinite; }
+/* MICRO-ANIMATION-SYSTEM-V1: micro animation + prefers-reduced-motion
+   NOTE (Fase 3a Commit 2): @keyframes + .silse-anim-* class definitions
+   extracted to src/core/style/premiumCss.ts → buildAnimationsCss().
+   They are inlined into this baseCss via buildAnimationsCss() (called
+   just below). Only the @media (prefers-reduced-motion: reduce) block
+   remains inline because it is DRIFTED between consumers (deferred to
+   sub-fase 3b). */
+${buildAnimationsCss()}
 @media (prefers-reduced-motion: reduce) {
   *,*::before,*::after { animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; }
   .silse-anim-page-soft-in,.silse-anim-page-warm-in,.silse-anim-page-mission-in,
@@ -784,9 +768,10 @@ body {
   .silse-anim-game-mission.silse-game-mission { animation:none !important; }
 }
 /* MOTION-PRESET-01: motion CSS is injected by buildMotionPresetCss() at the end of generateCSS — single source of truth. */
-/* CELEBRATION-EFFECT-V1: CSS-only celebration on correct answer */
-@keyframes silse-celebrate-burst-ring { 0%{opacity:0.8;transform:scale(0.5)} 100%{opacity:0;transform:scale(1.4)} }
-@keyframes silse-celebrate-sparkle { 0%,100%{opacity:0} 30%{opacity:1} 60%{opacity:0.5} }
+/* CELEBRATION-EFFECT-V1: CSS-only celebration on correct answer
+   NOTE (Fase 3a Commit 2): @keyframes silse-celebrate-burst-ring and
+   silse-celebrate-sparkle extracted to premiumCss.ts buildAnimationsCss().
+   The .silse-celebrate-* classes below remain inline pending Commit 4. */
 .silse-celebrate-success-clean { position:relative; overflow:visible; }
 .silse-celebrate-burst-clean::before { content:''; position:absolute; inset:-2px; border:2px solid rgba(22,163,74,0.4); border-radius:8px; animation:silse-celebrate-burst-ring 800ms ease-out; pointer-events:none; }
 .silse-celebrate-particle-clean::before, .silse-celebrate-particle-clean::after { content:'✦'; position:absolute; font-size:10px; color:rgba(22,163,74,0.6); animation:silse-celebrate-sparkle 800ms ease-out; pointer-events:none; }
@@ -997,7 +982,8 @@ body {
   border-radius: 50%;
   border: 3px dashed rgba(255,183,3,0.8);
 }
-@keyframes silse-award-shine { to { transform: rotate(360deg); } }
+/* @keyframes silse-award-shine — extracted to premiumCss.ts buildAnimationsCss()
+   (Fase 3a Commit 2). Inlined via buildAnimationsCss() at end of baseCss. */
 
 #silse-canvas .silse-award-ribbon {
   position: absolute;

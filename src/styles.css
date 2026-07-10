@@ -3773,61 +3773,13 @@ textarea {
 
 /* =========================================================================
    MICRO-ANIMATION-SYSTEM-V1 — micro animation classes + prefers-reduced-motion
-   ========================================================================= */
-
-/* Page enter animations — 200-260ms fade + slight translateY */
-@keyframes silse-fade-in-soft {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes silse-fade-in-warm {
-  from { opacity: 0; transform: translateY(6px) scale(0.998); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-@keyframes silse-fade-in-mission {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.silse-anim-page-soft-in { animation: silse-fade-in-soft 220ms ease-out; }
-.silse-anim-page-warm-in { animation: silse-fade-in-warm 260ms ease-out; }
-.silse-anim-page-mission-in { animation: silse-fade-in-mission 200ms ease-out; }
-
-/* Button hover lift — 1px */
-.silse-anim-button-clean { transition: transform 150ms ease-out, box-shadow 150ms ease-out; }
-.silse-anim-button-clean:hover { transform: translateY(-1px); }
-.silse-anim-button-soft { transition: transform 150ms ease-out, box-shadow 150ms ease-out; }
-.silse-anim-button-soft:hover { transform: translateY(-1px); }
-.silse-anim-button-mission { transition: transform 120ms ease-out, box-shadow 120ms ease-out; }
-.silse-anim-button-mission:hover { transform: translateY(-1px); }
-
-/* Choice hover + select — very subtle */
-.silse-anim-choice-clean { transition: border-color 150ms ease-out, background-color 150ms ease-out; }
-.silse-anim-choice-soft { transition: border-color 180ms ease-out, background-color 180ms ease-out, border-radius 180ms; }
-.silse-anim-choice-mission { transition: border-color 120ms ease-out, background-color 120ms ease-out, box-shadow 120ms; }
-
-/* Feedback pop — very small */
-@keyframes silse-feedback-pop {
-  from { opacity: 0; transform: translateY(-2px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.silse-anim-feedback-soft { animation: silse-feedback-pop 200ms ease-out; }
-.silse-anim-feedback-warm { animation: silse-feedback-pop 240ms ease-out; }
-.silse-anim-feedback-mission { animation: silse-feedback-pop 180ms ease-out; }
-
-/* Game panel — subtle enter */
-.silse-anim-game-clean { transition: border-color 150ms ease-out; }
-.silse-anim-game-soft { transition: border-color 180ms ease-out, border-radius 180ms; }
-.silse-anim-game-mission { transition: box-shadow 150ms ease-out; }
-
-/* Mission pulse — very subtle, can be disabled */
-@keyframes silse-mission-pulse {
-  0%, 100% { box-shadow: 0 0 16px rgba(59,130,246,0.15); }
-  50% { box-shadow: 0 0 20px rgba(59,130,246,0.25); }
-}
-.silse-anim-game-mission.silse-game-mission {
-  animation: silse-mission-pulse 3s ease-in-out infinite;
-}
+   =========================================================================
+   NOTE (Fase 3a Commit 2): The @keyframes + .silse-anim-* class definitions
+   were extracted to src/core/style/premiumCss.ts → buildAnimationsCss().
+   They are regenerated into src/styles/premium-generated.css (imported at
+   the top of this file) and shared 1:1 with export-html.ts. Only the
+   @media (prefers-reduced-motion: reduce) block remains here because it is
+   DRIFTED between consumers (deferred to sub-fase 3b). */
 
 /* PREFERS-REDUCED-MOTION: disable all animations */
 @media (prefers-reduced-motion: reduce) {
@@ -3957,18 +3909,11 @@ textarea {
 
 /* =========================================================================
    CELEBRATION-EFFECT-V1 — CSS-only celebration on correct answer
-   ========================================================================= */
-
-/* Success burst keyframes — 800ms, one-shot */
-@keyframes silse-celebrate-burst-ring {
-  0% { opacity: 0.8; transform: scale(0.5); }
-  100% { opacity: 0; transform: scale(1.4); }
-}
-@keyframes silse-celebrate-sparkle {
-  0%, 100% { opacity: 0; }
-  30% { opacity: 1; }
-  60% { opacity: 0.5; }
-}
+   =========================================================================
+   NOTE (Fase 3a Commit 2): The @keyframes silse-celebrate-burst-ring and
+   @keyframes silse-celebrate-sparkle were extracted to premiumCss.ts
+   buildAnimationsCss() (animation primitives live with other keyframes).
+   The .silse-celebrate-* classes below remain here pending Commit 4. */
 
 /* Modern Clean celebration */
 .silse-celebrate-success-clean {
@@ -4330,11 +4275,9 @@ textarea {
   white-space: nowrap;
 }
 
-@keyframes silse-award-shine {
-  to {
-    transform: rotate(360deg);
-  }
-}
+/* @keyframes silse-award-shine — extracted to premiumCss.ts buildAnimationsCss()
+   (Fase 3a Commit 2). The .silse-award-medal .silse-award-shine rule above
+   still uses it; the keyframe is now in premium-generated.css. */
 
 /* Premium decoration layer — wrapper for auto-injected elements */
 .canvas-frame .silse-premium-decoration {

@@ -4,21 +4,98 @@
  * Source: src/core/style/premiumCss.ts
  * Regenerate with: npm run generate:css
  *
- * This file is imported by src/styles.css at the END so its specificity
- * wins over earlier rules. export-html.ts does NOT import this file;
+ * This file is imported by src/styles.css at the TOP per CSS spec
+ * (Vite warns otherwise). export-html.ts does NOT import this file;
  * it imports premiumCss.ts functions directly (per Bapak directive).
+ * Specificity ties are not a concern: each migrated rule is REMOVED from
+ * styles.css in the same commit it is added to premiumCss.ts, so there
+ * are no duplicate definitions in steady state.
  * ==========================================================================
  */
 
-/* Group 1 — Glass panel — (empty, scaffolding) */
+/* Group 1 — Animations */
+/* Group 1 — Animations (extracted from MICRO-ANIMATION-SYSTEM-V1)
+   Source of truth: src/core/style/premiumCss.ts (Commit 2, Fase 3a).
+   DO NOT duplicate in styles.css or export-html.ts:generateCSS(). */
 
-/* Group 2 — Hero gradient — (empty, scaffolding) */
+/* Page enter animations — 200-260ms fade + slight translateY */
+@keyframes silse-fade-in-soft {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes silse-fade-in-warm {
+  from { opacity: 0; transform: translateY(6px) scale(0.998); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes silse-fade-in-mission {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
-/* Group 3 — Badges — (empty, scaffolding) */
+.silse-anim-page-soft-in { animation: silse-fade-in-soft 220ms ease-out; }
+.silse-anim-page-warm-in { animation: silse-fade-in-warm 260ms ease-out; }
+.silse-anim-page-mission-in { animation: silse-fade-in-mission 200ms ease-out; }
 
-/* Group 4 — Decorative — (empty, scaffolding) */
+/* Button hover lift — 1px */
+.silse-anim-button-clean { transition: transform 150ms ease-out, box-shadow 150ms ease-out; }
+.silse-anim-button-clean:hover { transform: translateY(-1px); }
+.silse-anim-button-soft { transition: transform 150ms ease-out, box-shadow 150ms ease-out; }
+.silse-anim-button-soft:hover { transform: translateY(-1px); }
+.silse-anim-button-mission { transition: transform 120ms ease-out, box-shadow 120ms ease-out; }
+.silse-anim-button-mission:hover { transform: translateY(-1px); }
 
-/* Group 5 — Cards — (empty, scaffolding) */
+/* Choice hover + select — very subtle */
+.silse-anim-choice-clean { transition: border-color 150ms ease-out, background-color 150ms ease-out; }
+.silse-anim-choice-soft { transition: border-color 180ms ease-out, background-color 180ms ease-out, border-radius 180ms; }
+.silse-anim-choice-mission { transition: border-color 120ms ease-out, background-color 120ms ease-out, box-shadow 120ms; }
 
-/* Group 6 — Layout — (empty, scaffolding) */
+/* Feedback pop — very small */
+@keyframes silse-feedback-pop {
+  from { opacity: 0; transform: translateY(-2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.silse-anim-feedback-soft { animation: silse-feedback-pop 200ms ease-out; }
+.silse-anim-feedback-warm { animation: silse-feedback-pop 240ms ease-out; }
+.silse-anim-feedback-mission { animation: silse-feedback-pop 180ms ease-out; }
+
+/* Game panel — subtle enter */
+.silse-anim-game-clean { transition: border-color 150ms ease-out; }
+.silse-anim-game-soft { transition: border-color 180ms ease-out, border-radius 180ms; }
+.silse-anim-game-mission { transition: box-shadow 150ms ease-out; }
+
+/* Mission pulse — very subtle, can be disabled */
+@keyframes silse-mission-pulse {
+  0%, 100% { box-shadow: 0 0 16px rgba(59,130,246,0.15); }
+  50% { box-shadow: 0 0 20px rgba(59,130,246,0.25); }
+}
+.silse-anim-game-mission.silse-game-mission {
+  animation: silse-mission-pulse 3s ease-in-out infinite;
+}
+
+/* Celebration keyframes (used by Group 5 celebration classes — kept here
+   because they are animation primitives, not visual decorations) */
+@keyframes silse-celebrate-burst-ring {
+  0% { opacity: 0.8; transform: scale(0.5); }
+  100% { opacity: 0; transform: scale(1.4); }
+}
+@keyframes silse-celebrate-sparkle {
+  0%, 100% { opacity: 0; }
+  30% { opacity: 1; }
+  60% { opacity: 0.5; }
+}
+
+/* Award medal shine — used by closing-award scene */
+@keyframes silse-award-shine {
+  to { transform: rotate(360deg); }
+}
+
+/* Group 2 — Cover decoration — (empty, scaffolding) */
+
+/* Group 3 — Background patterns — (empty, scaffolding) */
+
+/* Group 4 — Premium block panel — (empty, scaffolding) */
+
+/* Group 5 — Celebration effects — (empty, scaffolding) */
+
+/* Group 6 — Choice defaults + identical skins — (empty, scaffolding) */
 
