@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "audit:pointer-events": "node scripts/audit-pointer-events.mjs",
-    "audit": "npm run audit:pointer-events"
+    "audit": "npm run audit:pointer-events",
+    "generate:css": "node scripts/generate-css.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

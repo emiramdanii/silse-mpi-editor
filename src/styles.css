@@ -4,6 +4,21 @@
  * Palet: hangat (krem + biru cangkir), tipografi rapi, section jelas.
  */
 
+/* -------------------------------------------------------------------------
+ * Premium CSS library — generated from src/core/style/premiumCss.ts.
+ * Sub-fase 3a: shared SSOT for editor (styles.css) + export (export-html.ts).
+ * Regenerate with `npm run generate:css` whenever premiumCss.ts changes.
+ *
+ * The @import sits at the TOP per CSS spec (Vite warns otherwise). Specificity
+ * ties resolve to LATER rules in the cascade — so any rule defined later in
+ * THIS file would win over an identical selector in premium-generated.css.
+ * This is intentional and safe: per Bapak's sub-fase 3a plan, every migrated
+ * rule is REMOVED from styles.css in the same commit it's added to premiumCss.ts.
+ * So during steady state there are no duplicate definitions; the only rules in
+ * premium-generated.css are the ones styles.css no longer defines.
+ * ------------------------------------------------------------------------- */
+@import "./styles/premium-generated.css";
+
 :root {
   /* Surface */
   --color-bg: #f8f6f1;
