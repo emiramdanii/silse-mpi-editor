@@ -26,7 +26,7 @@ import { getMicroAnimationForStylePack } from '../core/style-packs/micro-animati
 import { getCelebrationEffectForStylePack } from '../core/style-packs/celebration-effect';
 import { buildMotionPresetCss } from '../core/style-packs/motion-preset';
 import { getPremiumExportProfileWithProjectStyle, type PremiumExportProfile } from '../core/style-packs/premium-export-profile';
-import { buildAnimationsCss, buildCoverDecorationCss, buildBackgroundPatternCss, buildPremiumBlockCss, buildCelebrationCss, buildMiscIdenticalCss, buildSkinBaseCss, buildPremiumHeroCss, buildPremiumSkinCss, derivePremiumVars } from '../core/style/premiumCss';
+import { buildAnimationsCss, buildCoverDecorationCss, buildBackgroundPatternCss, buildPremiumBlockCss, buildCelebrationCss, buildMiscIdenticalCss, buildSkinBaseCss, buildQuizFeedbackCss, buildPremiumHeroCss, buildPremiumSkinCss, derivePremiumVars } from '../core/style/premiumCss';
 import { buildSceneRenderPlanForPage, type SceneRenderPlan } from '../core/scene-renderer';
 import { sanitizeCustomStyle, styleMapToCssString } from '../core/style/sanitize';
 import { getDesignContractWithProjectStyle } from '../core/mpi-design-contract';
@@ -700,11 +700,7 @@ ${buildCoverDecorationCss()}
    premium polish section below — it is DRIFTED (deferred to 3b). .silse-score
    also extracted. */
 ${buildMiscIdenticalCss()}
-.silse-choice-selected { border-left:3px solid var(--silse-color-primary,var(--color-accent)); box-shadow:inset 0 0 0 1px rgba(30,91,143,0.2); }
-.silse-choice-correct { border-left:4px solid var(--color-success-strong); box-shadow:inset 0 0 0 1px rgba(22,163,74,0.2); }
-.silse-choice-wrong { border-left:4px solid var(--color-danger-strong); box-shadow:inset 0 0 0 1px rgba(220,38,38,0.15); }
-.silse-feedback-correct { border-left:4px solid var(--color-success-strong); font-weight:500; }
-.silse-feedback-wrong { border-left:4px solid var(--color-danger-strong); font-weight:500; }
+${buildQuizFeedbackCss()}
 /* .silse-score extracted to premiumCss.ts buildMiscIdenticalCss() (Fase 3a Commit 5). */
 .silse-quiz-mission .silse-question-choice, .silse-game-mission .silse-game-choice { border-radius:4px; letter-spacing:0.3px; }
 .silse-quiz-mission .silse-choice-correct, .silse-game-mission .silse-choice-correct { box-shadow:0 0 8px rgba(34,197,94,0.3); }
@@ -726,11 +722,9 @@ ${buildMiscIdenticalCss()}
 ${buildPremiumBlockCss()}
 /* .silse-choice-default:hover (premium override) extracted to premiumCss.ts
    buildMiscIdenticalCss() (Fase 3a Commit 5). */
-.silse-choice-selected { border-left:3px solid var(--silse-color-primary,var(--color-accent)); box-shadow:inset 0 0 0 1px rgba(30,91,143,0.2),0 2px 12px rgba(30,91,143,0.15); background:linear-gradient(135deg,rgba(30,91,143,0.06) 0%,rgba(30,91,143,0.02) 100%); }
-.silse-choice-correct { border-left:4px solid var(--color-success-strong); box-shadow:inset 0 0 0 1px rgba(22,163,74,0.25),0 2px 16px rgba(22,163,74,0.18); background:linear-gradient(135deg,rgba(22,163,74,0.08) 0%,rgba(22,163,74,0.02) 100%); }
-.silse-choice-wrong { border-left:4px solid var(--color-danger-strong); box-shadow:inset 0 0 0 1px rgba(220,38,38,0.2),0 2px 12px rgba(220,38,38,0.12); }
-.silse-feedback-correct { border-left:4px solid var(--color-success-strong); background:linear-gradient(135deg,rgba(22,163,74,0.08) 0%,rgba(22,163,74,0.02) 100%); font-weight:500; }
-.silse-feedback-wrong { border-left:4px solid var(--color-danger-strong); background:linear-gradient(135deg,rgba(220,38,38,0.08) 0%,rgba(220,38,38,0.02) 100%); font-weight:500; }
+/* .silse-choice-selected/correct/wrong and .silse-feedback-correct/wrong
+   (VISUAL-PREMIUM-01 override) extracted to premiumCss.ts buildQuizFeedbackCss()
+   (Fase 3b Commit 3). */
 /* .silse-block-chip extracted to premiumCss.ts buildPremiumBlockCss() (Fase 3a Commit 4). */
 /* MICRO-ANIMATION-SYSTEM-V1: micro animation + prefers-reduced-motion
    NOTE (Fase 3a Commit 2): @keyframes + .silse-anim-* class definitions

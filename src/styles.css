@@ -3355,28 +3355,9 @@ textarea {
    premiumCss.ts buildMiscIdenticalCss() (Fase 3a Commit 5). The VISUAL-PREMIUM-01
    override (.silse-choice-default:hover with box-shadow + transform) stays
    below — it is DRIFTED (deferred to 3b). */
-.silse-choice-selected {
-  border-left: 3px solid var(--silse-color-primary, var(--color-accent));
-  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.2);
-}
-.silse-choice-correct {
-  border-left: 4px solid var(--silse-color-success, var(--color-success));
-  box-shadow: inset 0 0 0 1px rgba(47, 125, 79, 0.2);
-}
-.silse-choice-wrong {
-  border-left: 4px solid var(--silse-color-danger, var(--color-danger));
-  box-shadow: inset 0 0 0 1px rgba(192, 57, 43, 0.15);
-}
-
-/* Feedback box polish */
-.silse-feedback-correct {
-  border-left: 4px solid var(--silse-color-success, var(--color-success));
-  font-weight: 500;
-}
-.silse-feedback-wrong {
-  border-left: 4px solid var(--silse-color-danger, var(--color-danger));
-  font-weight: 500;
-}
+/* .silse-choice-selected/correct/wrong and .silse-feedback-correct/wrong
+   extracted to premiumCss.ts buildQuizFeedbackCss() (Fase 3b Commit 3).
+   Drift fix: unified on --color-success-strong / --color-danger-strong. */
 
 /* Game/mission panel polish */
 .silse-game {
@@ -3504,38 +3485,9 @@ textarea {
 /* Choice card: gradient border accent on hover */
 /* .silse-choice-default:hover (premium override) extracted to premiumCss.ts
    buildMiscIdenticalCss() (Fase 3a Commit 5). */
-.silse-choice-selected {
-  border-left: 3px solid var(--silse-color-primary, var(--color-accent));
-  box-shadow:
-    inset 0 0 0 1px rgba(30,91,143,0.2),
-    0 2px 12px rgba(30,91,143,0.15);
-  background: linear-gradient(135deg, rgba(30,91,143,0.06) 0%, rgba(30,91,143,0.02) 100%);
-}
-.silse-choice-correct {
-  border-left: 4px solid var(--silse-color-success, var(--color-success));
-  box-shadow:
-    inset 0 0 0 1px rgba(47,125,79,0.25),
-    0 2px 16px rgba(47,125,79,0.18);
-  background: linear-gradient(135deg, rgba(47,125,79,0.08) 0%, rgba(47,125,79,0.02) 100%);
-}
-.silse-choice-wrong {
-  border-left: 4px solid var(--silse-color-danger, var(--color-danger));
-  box-shadow:
-    inset 0 0 0 1px rgba(192,57,43,0.2),
-    0 2px 12px rgba(192,57,43,0.12);
-}
-
-/* Feedback box: color wash background */
-.silse-feedback-correct {
-  border-left: 4px solid var(--silse-color-success, var(--color-success));
-  background: linear-gradient(135deg, rgba(47,125,79,0.08) 0%, rgba(47,125,79,0.02) 100%);
-  font-weight: 500;
-}
-.silse-feedback-wrong {
-  border-left: 4px solid var(--silse-color-danger, var(--color-danger));
-  background: linear-gradient(135deg, rgba(192,57,43,0.08) 0%, rgba(192,57,43,0.02) 100%);
-  font-weight: 500;
-}
+/* .silse-choice-selected/correct/wrong and .silse-feedback-correct/wrong
+   (VISUAL-PREMIUM-01 override) extracted to premiumCss.ts buildQuizFeedbackCss()
+   (Fase 3b Commit 3). */
 
 /* Badge/chip: gradient background (not flat) */
 /* .silse-block-chip extracted to premiumCss.ts buildPremiumBlockCss() (Fase 3a Commit 4). */

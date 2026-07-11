@@ -95,6 +95,7 @@ const sections = [
   { name: 'Group 5 — Celebration effects',  fn: 'buildCelebrationCss' },
   { name: 'Group 6 — Choice defaults + identical skins', fn: 'buildMiscIdenticalCss' },
   { name: 'Group 6b — Skin base classes (drift fix)', fn: 'buildSkinBaseCss' },
+  { name: 'Group 6c — Quiz/feedback states (drift fix)', fn: 'buildQuizFeedbackCss' },
 ];
 
 const chunks = [];

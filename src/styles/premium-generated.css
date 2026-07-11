@@ -232,3 +232,23 @@
 .skin-layered-soft { border:2px solid rgba(255,200,200,0.3); border-radius:16px; background:linear-gradient(135deg,var(--silse-color-surface, var(--color-warning-soft)) 0%,rgba(255,255,255,0.7) 100%); }
 .skin-layered-bold { border:2px solid var(--silse-color-primary, var(--color-marker-text)); border-radius:8px; background:var(--silse-color-surface, var(--color-text)); box-shadow:0 0 16px rgba(59,130,246,0.15); }
 
+/* Group 6c — Quiz/feedback states (drift fix) */
+/* Group 6c — Quiz/feedback choice states (drift fix, Fase 3b Commit 3)
+   Source of truth: src/core/style/premiumCss.ts.
+   Unified on --color-success-strong / --color-danger-strong (Fase 1 Tailwind tokens)
+   with --silse-color-* indirection for style-pack override. */
+
+/* Base choice states — QUIZ-GAME-VISUAL-POLISH-01 */
+.silse-choice-selected { border-left:3px solid var(--silse-color-primary, var(--color-accent)); box-shadow:inset 0 0 0 1px rgba(30,91,143,0.2); }
+.silse-choice-correct { border-left:4px solid var(--silse-color-success, var(--color-success-strong)); box-shadow:inset 0 0 0 1px rgba(22,163,74,0.2); }
+.silse-choice-wrong { border-left:4px solid var(--silse-color-danger, var(--color-danger-strong)); box-shadow:inset 0 0 0 1px rgba(220,38,38,0.15); }
+.silse-feedback-correct { border-left:4px solid var(--silse-color-success, var(--color-success-strong)); font-weight:500; }
+.silse-feedback-wrong { border-left:4px solid var(--silse-color-danger, var(--color-danger-strong)); font-weight:500; }
+
+/* Premium override — VISUAL-PREMIUM-01 (gradient background + multi-layer shadow) */
+.silse-choice-selected { border-left:3px solid var(--silse-color-primary, var(--color-accent)); box-shadow:inset 0 0 0 1px rgba(30,91,143,0.2),0 2px 12px rgba(30,91,143,0.15); background:linear-gradient(135deg,rgba(30,91,143,0.06) 0%,rgba(30,91,143,0.02) 100%); }
+.silse-choice-correct { border-left:4px solid var(--silse-color-success, var(--color-success-strong)); box-shadow:inset 0 0 0 1px rgba(22,163,74,0.25),0 2px 16px rgba(22,163,74,0.18); background:linear-gradient(135deg,rgba(22,163,74,0.08) 0%,rgba(22,163,74,0.02) 100%); }
+.silse-choice-wrong { border-left:4px solid var(--silse-color-danger, var(--color-danger-strong)); box-shadow:inset 0 0 0 1px rgba(220,38,38,0.2),0 2px 12px rgba(220,38,38,0.12); }
+.silse-feedback-correct { border-left:4px solid var(--silse-color-success, var(--color-success-strong)); background:linear-gradient(135deg,rgba(22,163,74,0.08) 0%,rgba(22,163,74,0.02) 100%); font-weight:500; }
+.silse-feedback-wrong { border-left:4px solid var(--silse-color-danger, var(--color-danger-strong)); background:linear-gradient(135deg,rgba(220,38,38,0.08) 0%,rgba(220,38,38,0.02) 100%); font-weight:500; }
+

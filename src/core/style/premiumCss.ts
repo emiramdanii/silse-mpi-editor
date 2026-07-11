@@ -440,6 +440,54 @@ export function buildSkinBaseCss(): string {
 }
 
 // ===========================================================================
+// Group 6c — Quiz/feedback choice states (drift fix, Fase 3b Commit 3)
+// ===========================================================================
+
+/**
+ * Quiz choice and feedback state styles — the 5 drifted selectors from Fase 3a.
+ *
+ * Source: QUIZ-GAME-VISUAL-POLISH-01 (base) + VISUAL-PREMIUM-01 (override) sections.
+ *
+ * Extracted in Commit 3b-3 — 5 selectors (each appears twice: base + premium override):
+ *   .silse-choice-selected, .silse-choice-correct, .silse-choice-wrong
+ *   .silse-feedback-correct, .silse-feedback-wrong
+ *
+ * Drift that was fixed:
+ *   - styles.css used --color-success (#2f7d4f, RGB 47,125,79) with rgba(47,125,79,…).
+ *   - export used --color-success-strong (#16a34a, RGB 22,163,74) with rgba(22,163,74,…).
+ *   - Same pattern for danger: --color-danger (#c0392b, RGB 192,57,43) vs
+ *     --color-danger-strong (#dc2626, RGB 220,38,38).
+ *
+ * Winner (per Bapak's directive): export color (--color-success-strong /
+ * --color-danger-strong — the Fase 1 Tailwind tokens) with styles.css indirection
+ * (var(--silse-color-success, …) for style-pack override hook).
+ *
+ * Unified form:
+ *   border-left: ... var(--silse-color-success, var(--color-success-strong));
+ *   box-shadow: ... rgba(22,163,74,…);  // matches --color-success-strong
+ */
+export function buildQuizFeedbackCss(): string {
+  return `/* Group 6c — Quiz/feedback choice states (drift fix, Fase 3b Commit 3)
+   Source of truth: src/core/style/premiumCss.ts.
+   Unified on --color-success-strong / --color-danger-strong (Fase 1 Tailwind tokens)
+   with --silse-color-* indirection for style-pack override. */
+
+/* Base choice states — QUIZ-GAME-VISUAL-POLISH-01 */
+.silse-choice-selected { border-left:3px solid var(--silse-color-primary, var(--color-accent)); box-shadow:inset 0 0 0 1px rgba(30,91,143,0.2); }
+.silse-choice-correct { border-left:4px solid var(--silse-color-success, var(--color-success-strong)); box-shadow:inset 0 0 0 1px rgba(22,163,74,0.2); }
+.silse-choice-wrong { border-left:4px solid var(--silse-color-danger, var(--color-danger-strong)); box-shadow:inset 0 0 0 1px rgba(220,38,38,0.15); }
+.silse-feedback-correct { border-left:4px solid var(--silse-color-success, var(--color-success-strong)); font-weight:500; }
+.silse-feedback-wrong { border-left:4px solid var(--silse-color-danger, var(--color-danger-strong)); font-weight:500; }
+
+/* Premium override — VISUAL-PREMIUM-01 (gradient background + multi-layer shadow) */
+.silse-choice-selected { border-left:3px solid var(--silse-color-primary, var(--color-accent)); box-shadow:inset 0 0 0 1px rgba(30,91,143,0.2),0 2px 12px rgba(30,91,143,0.15); background:linear-gradient(135deg,rgba(30,91,143,0.06) 0%,rgba(30,91,143,0.02) 100%); }
+.silse-choice-correct { border-left:4px solid var(--silse-color-success, var(--color-success-strong)); box-shadow:inset 0 0 0 1px rgba(22,163,74,0.25),0 2px 16px rgba(22,163,74,0.18); background:linear-gradient(135deg,rgba(22,163,74,0.08) 0%,rgba(22,163,74,0.02) 100%); }
+.silse-choice-wrong { border-left:4px solid var(--silse-color-danger, var(--color-danger-strong)); box-shadow:inset 0 0 0 1px rgba(220,38,38,0.2),0 2px 12px rgba(220,38,38,0.12); }
+.silse-feedback-correct { border-left:4px solid var(--silse-color-success, var(--color-success-strong)); background:linear-gradient(135deg,rgba(22,163,74,0.08) 0%,rgba(22,163,74,0.02) 100%); font-weight:500; }
+.silse-feedback-wrong { border-left:4px solid var(--silse-color-danger, var(--color-danger-strong)); background:linear-gradient(135deg,rgba(220,38,38,0.08) 0%,rgba(220,38,38,0.02) 100%); font-weight:500; }`;
+}
+
+// ===========================================================================
 // Group 7 — Parameterised premium styles (per PremiumExportProfile)
 // ===========================================================================
 
