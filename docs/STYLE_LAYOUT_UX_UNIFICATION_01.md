@@ -87,3 +87,17 @@ Total: 15 test, all PASS.
 3. Safety hint bersifat statis (teks), bukan dynamic verification. Test guard memverifikasi safety secara programatik.
 4. Tidak ada undo untuk style/layout change. Guru bisa klik lagi untuk kembali ke preset lain.
 5. Style pack picker dan layout preset picker tetap punya label masing-masing ("Tampilan Media" / "Susunan Halaman") sebagai sub-heading di dalam section — ini intentional untuk clarity.
+
+
+## Update: LAYOUT-STYLE-01 Integration (Level 2)
+
+Tanggal: 2026-07-12
+
+Sistem `customStyle.grid` (LAYOUT-STYLE-01) kini terintegrasi penuh dengan arsitektur unifikasi ini:
+
+- **AI dapat mengatur grid layout** melalui `sceneCustomStyle.grid` di AI JSON.
+- **Sanitizer** memastikan hanya pattern aman yang lolos (whitelist + value validation).
+- **SceneGrid** (React) dan **exportGrid** (Export) membaca overlay dari context/closure.
+- **Adopsi penuh** di 5 scene composer + 3 inline renderer + 3 export renderer.
+
+Dokumentasi lengkap: `docs/LAYOUT_STYLE_01.md`.
