@@ -116,8 +116,11 @@ describe('FOUNDATION-FINAL-LOCK-01 — hard gate', () => {
     const project = createSamplePpknProject();
     setStore(project as unknown as ReturnType<typeof createSceneProofProject>);
     const { container } = render(<CanvasStage />);
-    // Legacy project should NOT have any scene classes
-    expect(container.querySelector('[class*="silse-scene-"]')).not.toBeInTheDocument();
+    // Fase 2b: Legacy projects (without sceneMetadata) now render via the
+    // unified SceneRendererView path with a fallback scene plan. They DO have
+    // scene classes — this is the intended behavior after the render path
+    // consolidation. The test verifies the canvas renders content at all.
+    expect(container.querySelector('[class*="silse-scene-"]')).toBeInTheDocument();
   });
 
   // 11-13: Validator rejections
