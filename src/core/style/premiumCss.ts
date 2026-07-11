@@ -382,31 +382,324 @@ export function buildMiscIdenticalCss(): string {
 // ===========================================================================
 
 /**
- * Per-skin hero treatment (.silse-hero-card, .silse-hero-kicker, .silse-hero-cta,
- * hero typography, hero gradient stops derived from `profile.colors` +
- * `profile.gradients`).
+ * Derived variables computed from a PremiumExportProfile.
  *
- * Source: PREMIUM-EXPORT-OVERHAUL-01 section in export-html.ts (lines ~810+).
- * In styles.css, the corresponding rules are editor-side mirrors.
+ * This is a SHARED helper used by buildPremiumHeroCss, buildPremiumSkinCss,
+ * AND by export-html.ts:generateCSS() (for the :root block and other inline
+ * CSS that stays in generateCSS). Having a single source of truth for these
+ * computations ensures byte-identical output after extraction.
+ *
+ * Exported so that generateCSS() can use the same derived values.
+ */
+export function derivePremiumVars(profile: PremiumExportProfile) {
+  const c = profile.colors;
+  const g = profile.gradients;
+  const t = profile.typography;
+  const cardR = profile.cardRadius;
+  const btnR = profile.buttonRadius;
+  const isDark = profile.darkStage;
+  const stageOuter = isDark ? c.navy : 'var(--color-panel-soft)';
+  const stageTextOnDark = isDark ? 'var(--color-panel)' : c.navy;
+  const heroColor = isDark ? 'var(--color-panel)' : c.blue;
+  const heroAccent = c.red;
+  const bodyColor = isDark ? 'rgba(255,255,255,0.92)' : c.text;
+  const mutedColor = isDark ? 'rgba(255,255,255,0.7)' : c.muted;
+  const cardBg = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.96)';
+  const cardBorder = isDark ? 'rgba(255,255,255,0.14)' : 'rgba(29,53,87,0.12)';
+  const cardShadow = isDark
+    ? '0 22px 54px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.04)'
+    : '0 22px 54px rgba(29,53,87,0.18), 0 4px 12px rgba(29,53,87,0.06)';
+  return {
+    c, g, t, cardR, btnR, isDark,
+    stageOuter, stageTextOnDark,
+    heroColor, heroAccent, bodyColor, mutedColor,
+    cardBg, cardBorder, cardShadow,
+  };
+}
+
+/**
+ * Per-skin hero treatment: hero typography, hero card frame, hero kicker,
+ * hero CTA, and award ribbon.
+ *
+ * Source: PREMIUM-EXPORT-OVERHAUL-01 section in export-html.ts (lines ~790-1010).
+ *
+ * Extracted in Commit 6 — 9 rules:
+ *   #silse-canvas .silse-text-title, .silse-hero-title
+ *   #silse-canvas .silse-text-title .silse-accent, .silse-hero-title .silse-accent
+ *   #silse-canvas .silse-text-subtitle
+ *   #silse-canvas .silse-kicker
+ *   #silse-canvas .silse-hero-card
+ *   #silse-canvas .silse-hero-kicker
+ *   #silse-canvas .silse-hero-cta
+ *   #silse-canvas .silse-hero-cta:hover
+ *   #silse-canvas .silse-award-ribbon
+ *
+ * NOTE: The editor (styles.css) uses CSS VARIABLES (var(--silse-hero-color) etc.)
+ * while the export uses DIRECT SUBSTITUTION (${heroColor} etc.). These are
+ * architecturally different approaches that produce the same visual result.
+ * This function is EXPORT-ONLY (called by export-html.ts). The editor does NOT
+ * call it — it uses var() references in styles.css instead. This is NOT a drift
+ * bug; it's a deliberate architectural difference (editor sets CSS vars at
+ * runtime via getPremiumCssVariables(), export bakes values at generation time).
  *
  * Signature MUST accept the existing `PremiumExportProfile` (no new type).
  * Verified: PremiumExportProfile lives in core/style-packs/premium-export-profile.ts
  * and imports only from ./style-pack-registry — no React/DOM dependency.
  */
-export function buildPremiumHeroCss(_profile: PremiumExportProfile): string {
-  // Commit 6 will fill this.
-  return '';
+export function buildPremiumHeroCss(profile: PremiumExportProfile): string {
+  const { c, t, isDark, heroColor, heroAccent } = derivePremiumVars(profile);
+
+  return `/* Hero typography for text components with variant=title */
+#silse-canvas .silse-text-title,
+#silse-canvas .silse-hero-title {
+  font-family: var(--silse-hero-font);
+  font-weight: var(--silse-hero-weight);
+  letter-spacing: var(--silse-hero-letter-spacing);
+  ${t.heroUppercase ? 'text-transform: uppercase;' : ''}
+  color: ${heroColor};
+  line-height: 1.04;
+  text-shadow: ${isDark ? '0 4px 14px rgba(0,0,0,0.32)' : 'none'};
+}
+#silse-canvas .silse-text-title .silse-accent,
+#silse-canvas .silse-hero-title .silse-accent {
+  color: ${heroAccent};
+}
+
+#silse-canvas .silse-text-subtitle {
+  font-family: var(--silse-body-font);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: ${isDark ? 'rgba(255,255,255,0.86)' : c.muted};
+}
+
+#silse-canvas .silse-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: linear-gradient(145deg, ${c.gold}, ${c.goldDeep});
+  color: ${c.navy};
+  font-family: var(--silse-body-font);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.16);
+  white-space: nowrap;
+}
+
+/* Hero card frame — only rendered on cover pages */
+#silse-canvas .silse-hero-card {
+  position: absolute;
+  left: 50%;
+  top: 130px;
+  transform: translateX(-50%);
+  width: 980px;
+  height: 460px;
+  background: ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.92)'};
+  border: 1px solid ${isDark ? 'rgba(255,255,255,0.18)' : 'rgba(29,53,87,0.14)'};
+  border-radius: 30px;
+  box-shadow: ${isDark
+    ? '0 26px 60px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.04)'
+    : '12px 12px 0 rgba(29,53,87,0.10), 0 24px 60px rgba(29,53,87,0.20)'};
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+#silse-canvas .silse-hero-kicker {
+  position: absolute;
+  left: 50%;
+  top: 168px;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: linear-gradient(145deg, ${c.gold}, ${c.goldDeep});
+  color: ${c.navy};
+  font-family: var(--silse-body-font);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.20);
+  pointer-events: none;
+  z-index: 2;
+  white-space: nowrap;
+}
+
+#silse-canvas .silse-hero-cta {
+  position: absolute;
+  left: 50%;
+  top: 510px;
+  transform: translateX(-50%);
+  padding: 14px 32px;
+  border-radius: 999px;
+  background: linear-gradient(145deg, ${c.red}, ${c.blue});
+  color: var(--color-panel);
+  font-family: var(--silse-body-font);
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  border: 0;
+  cursor: pointer;
+  box-shadow: 0 14px 28px rgba(0,0,0,0.28);
+  pointer-events: auto;
+  z-index: 2;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+#silse-canvas .silse-hero-cta:hover {
+  transform: translateX(-50%) translateY(-2px) scale(1.02);
+  box-shadow: 0 20px 36px rgba(0,0,0,0.36);
+}
+
+#silse-canvas .silse-award-ribbon {
+  position: absolute;
+  left: 50%;
+  bottom: 64px;
+  transform: translateX(-50%);
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, ${c.red}, ${c.blue});
+  color: var(--color-panel);
+  font-family: var(--silse-body-font);
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  box-shadow: 0 12px 24px rgba(0,0,0,0.28);
+  pointer-events: none;
+  z-index: 1;
+  white-space: nowrap;
+}`;
 }
 
 /**
- * Per-skin colour tokens, gradients, and global surface rules
- * (--silse-navy/red/gold custom props + body background per skin).
+ * Per-skin colour tokens, gradients, and skin override rules.
  *
  * Source: PREMIUM-EXPORT-OVERHAUL-01 section in export-html.ts.
  *
+ * Extracted in Commit 6 — 12 rules:
+ *   #silse-canvas[data-page-role="cover/closing/material/learningObjectives/quiz/activity"]
+ *   #silse-canvas .skin-card-flat/soft/bold (+ > strong)
+ *   #silse-canvas .skin-button-clean/rounded/mission (+ :hover)
+ *   #silse-canvas .skin-quiz-calm/playful/mission, .skin-game-calm/playful/mission (+ > strong)
+ *   #silse-canvas .skin-bridge-subtle/strong
+ *   #silse-canvas .skin-layered-clean/soft/bold
+ *
+ * NOTE: The :root premium variable definitions (--silse-navy etc.) STAY INLINE
+ * in export-html.ts because they're part of the :root block that also contains
+ * editor theme tokens and project-style overrides (varsStr). Extracting just
+ * the premium vars would split the :root block and change the byte output.
+ *
+ * NOTE: Same as buildPremiumHeroCss — the editor uses CSS VARIABLES while the
+ * export uses DIRECT SUBSTITUTION. This function is EXPORT-ONLY.
+ *
  * Signature MUST accept the existing `PremiumExportProfile` (no new type).
  */
-export function buildPremiumSkinCss(_profile: PremiumExportProfile): string {
-  // Commit 6 will fill this.
-  return '';
+export function buildPremiumSkinCss(profile: PremiumExportProfile): string {
+  const { c, t, isDark, bodyColor, cardBg, cardBorder, cardShadow } = derivePremiumVars(profile);
+
+  return `/* Premium skin overrides — multi-shadow + larger radius + glass bg */
+#silse-canvas .skin-card-flat,
+#silse-canvas .skin-card-soft,
+#silse-canvas .skin-card-bold {
+  border-radius: var(--silse-card-radius) !important;
+  background: ${cardBg} !important;
+  border: 1px solid ${cardBorder} !important;
+  box-shadow: ${cardShadow} !important;
+  color: ${bodyColor} !important;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+#silse-canvas .skin-card-flat > strong,
+#silse-canvas .skin-card-soft > strong,
+#silse-canvas .skin-card-bold > strong {
+  display: block;
+  font-family: var(--silse-hero-font);
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  color: ${isDark ? 'var(--color-panel)' : c.blue};
+  margin-bottom: 6px;
+}
+
+#silse-canvas .skin-button-clean,
+#silse-canvas .skin-button-rounded,
+#silse-canvas .skin-button-mission {
+  border-radius: var(--silse-button-radius) !important;
+  font-family: var(--silse-body-font) !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.4px;
+  ${t.heroUppercase ? 'text-transform: uppercase;' : ''}
+  box-shadow: 0 12px 24px rgba(0,0,0,0.18) !important;
+  background: linear-gradient(145deg, ${c.red}, ${c.blue}) !important;
+  color: var(--color-panel) !important;
+  border: 0 !important;
+  transition: transform 0.18s ease, box-shadow 0.18s ease !important;
+}
+#silse-canvas .skin-button-clean:hover,
+#silse-canvas .skin-button-rounded:hover,
+#silse-canvas .skin-button-mission:hover {
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 18px 32px rgba(0,0,0,0.26) !important;
+}
+
+#silse-canvas .skin-quiz-calm,
+#silse-canvas .skin-quiz-playful,
+#silse-canvas .skin-quiz-mission,
+#silse-canvas .skin-game-calm,
+#silse-canvas .skin-game-playful,
+#silse-canvas .skin-game-mission {
+  border-radius: var(--silse-card-radius) !important;
+  background: ${cardBg} !important;
+  border: 1px solid ${cardBorder} !important;
+  box-shadow: ${cardShadow} !important;
+  color: ${bodyColor} !important;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+#silse-canvas .skin-quiz-calm > strong,
+#silse-canvas .skin-quiz-playful > strong,
+#silse-canvas .skin-quiz-mission > strong,
+#silse-canvas .skin-game-calm > strong,
+#silse-canvas .skin-game-playful > strong,
+#silse-canvas .skin-game-mission > strong {
+  font-family: var(--silse-hero-font);
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  color: ${isDark ? 'var(--color-panel)' : c.blue};
+}
+
+#silse-canvas .skin-bridge-subtle,
+#silse-canvas .skin-bridge-strong {
+  border-radius: var(--silse-card-radius) !important;
+  background: ${isDark ? 'rgba(255,209,102,0.08)' : 'rgba(255,248,219,0.6)'} !important;
+  border: 1px solid ${isDark ? 'rgba(255,209,102,0.20)' : 'rgba(255,183,3,0.20)'} !important;
+  box-shadow: ${cardShadow} !important;
+  color: ${bodyColor} !important;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+#silse-canvas .skin-layered-clean,
+#silse-canvas .skin-layered-soft,
+#silse-canvas .skin-layered-bold {
+  border-radius: var(--silse-card-radius) !important;
+  background: ${cardBg} !important;
+  border: 1px solid ${cardBorder} !important;
+  box-shadow: ${cardShadow} !important;
+  color: ${bodyColor} !important;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}`;
 }

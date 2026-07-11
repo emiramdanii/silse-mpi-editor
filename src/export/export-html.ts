@@ -26,7 +26,7 @@ import { getMicroAnimationForStylePack } from '../core/style-packs/micro-animati
 import { getCelebrationEffectForStylePack } from '../core/style-packs/celebration-effect';
 import { buildMotionPresetCss } from '../core/style-packs/motion-preset';
 import { getPremiumExportProfileWithProjectStyle, type PremiumExportProfile } from '../core/style-packs/premium-export-profile';
-import { buildAnimationsCss, buildCoverDecorationCss, buildBackgroundPatternCss, buildPremiumBlockCss, buildCelebrationCss, buildMiscIdenticalCss } from '../core/style/premiumCss';
+import { buildAnimationsCss, buildCoverDecorationCss, buildBackgroundPatternCss, buildPremiumBlockCss, buildCelebrationCss, buildMiscIdenticalCss, buildPremiumHeroCss, buildPremiumSkinCss, derivePremiumVars } from '../core/style/premiumCss';
 import { buildSceneRenderPlanForPage, type SceneRenderPlan } from '../core/scene-renderer';
 import { sanitizeCustomStyle, styleMapToCssString } from '../core/style/sanitize';
 import { getDesignContractWithProjectStyle } from '../core/mpi-design-contract';
@@ -336,23 +336,9 @@ function generateCssVariablesString(vars: Record<string, string>): string {
 
 function generateCSS(cssVars: Record<string, string>, profile: PremiumExportProfile): string {
   const varsStr = generateCssVariablesString(cssVars);
-  const c = profile.colors;
-  const g = profile.gradients;
-  const t = profile.typography;
-  const cardR = profile.cardRadius;
-  const btnR = profile.buttonRadius;
-  const isDark = profile.darkStage;
-  const stageOuter = isDark ? c.navy : 'var(--color-panel-soft)';
-  const stageTextOnDark = isDark ? 'var(--color-panel)' : c.navy;
-  const heroColor = isDark ? 'var(--color-panel)' : c.blue;
-  const heroAccent = c.red;
-  const bodyColor = isDark ? 'rgba(255,255,255,0.92)' : c.text;
-  const mutedColor = isDark ? 'rgba(255,255,255,0.7)' : c.muted;
-  const cardBg = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.96)';
-  const cardBorder = isDark ? 'rgba(255,255,255,0.14)' : 'rgba(29,53,87,0.12)';
-  const cardShadow = isDark
-    ? `0 22px 54px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.04)`
-    : `0 22px 54px rgba(29,53,87,0.18), 0 4px 12px rgba(29,53,87,0.06)`;
+  // Fase 3a Commit 6: derived variables now come from premiumCss.ts derivePremiumVars()
+  // — single source of truth shared with buildPremiumHeroCss/buildPremiumSkinCss.
+  const { c, g, t, cardR, btnR, isDark, stageOuter, stageTextOnDark, bodyColor, mutedColor } = derivePremiumVars(profile);
 
   const baseCss = `
 :root {
@@ -787,140 +773,8 @@ ${buildCelebrationCss()}
 
 #silse-canvas > #silse-toolbar { position: absolute; z-index: 50; }
 
-/* Hero typography for text components with variant=title */
-#silse-canvas .silse-text-title,
-#silse-canvas .silse-hero-title {
-  font-family: var(--silse-hero-font);
-  font-weight: var(--silse-hero-weight);
-  letter-spacing: var(--silse-hero-letter-spacing);
-  ${t.heroUppercase ? 'text-transform: uppercase;' : ''}
-  color: ${heroColor};
-  line-height: 1.04;
-  text-shadow: ${isDark ? '0 4px 14px rgba(0,0,0,0.32)' : 'none'};
-}
-#silse-canvas .silse-text-title .silse-accent,
-#silse-canvas .silse-hero-title .silse-accent {
-  color: ${heroAccent};
-}
-
-#silse-canvas .silse-text-subtitle {
-  font-family: var(--silse-body-font);
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  color: ${isDark ? 'rgba(255,255,255,0.86)' : c.muted};
-}
-
-#silse-canvas .silse-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 16px;
-  border-radius: 999px;
-  background: linear-gradient(145deg, ${c.gold}, ${c.goldDeep});
-  color: ${c.navy};
-  font-family: var(--silse-body-font);
-  font-size: 13px;
-  font-weight: 900;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.16);
-  white-space: nowrap;
-}
-
-/* Premium skin overrides — multi-shadow + larger radius + glass bg */
-#silse-canvas .skin-card-flat,
-#silse-canvas .skin-card-soft,
-#silse-canvas .skin-card-bold {
-  border-radius: var(--silse-card-radius) !important;
-  background: ${cardBg} !important;
-  border: 1px solid ${cardBorder} !important;
-  box-shadow: ${cardShadow} !important;
-  color: ${bodyColor} !important;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-#silse-canvas .skin-card-flat > strong,
-#silse-canvas .skin-card-soft > strong,
-#silse-canvas .skin-card-bold > strong {
-  display: block;
-  font-family: var(--silse-hero-font);
-  font-size: 22px;
-  font-weight: 900;
-  letter-spacing: -0.01em;
-  color: ${isDark ? 'var(--color-panel)' : c.blue};
-  margin-bottom: 6px;
-}
-
-#silse-canvas .skin-button-clean,
-#silse-canvas .skin-button-rounded,
-#silse-canvas .skin-button-mission {
-  border-radius: var(--silse-button-radius) !important;
-  font-family: var(--silse-body-font) !important;
-  font-weight: 900 !important;
-  letter-spacing: 0.4px;
-  ${t.heroUppercase ? 'text-transform: uppercase;' : ''}
-  box-shadow: 0 12px 24px rgba(0,0,0,0.18) !important;
-  background: linear-gradient(145deg, ${c.red}, ${c.blue}) !important;
-  color: var(--color-panel) !important;
-  border: 0 !important;
-  transition: transform 0.18s ease, box-shadow 0.18s ease !important;
-}
-#silse-canvas .skin-button-clean:hover,
-#silse-canvas .skin-button-rounded:hover,
-#silse-canvas .skin-button-mission:hover {
-  transform: translateY(-2px) scale(1.02) !important;
-  box-shadow: 0 18px 32px rgba(0,0,0,0.26) !important;
-}
-
-#silse-canvas .skin-quiz-calm,
-#silse-canvas .skin-quiz-playful,
-#silse-canvas .skin-quiz-mission,
-#silse-canvas .skin-game-calm,
-#silse-canvas .skin-game-playful,
-#silse-canvas .skin-game-mission {
-  border-radius: var(--silse-card-radius) !important;
-  background: ${cardBg} !important;
-  border: 1px solid ${cardBorder} !important;
-  box-shadow: ${cardShadow} !important;
-  color: ${bodyColor} !important;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-#silse-canvas .skin-quiz-calm > strong,
-#silse-canvas .skin-quiz-playful > strong,
-#silse-canvas .skin-quiz-mission > strong,
-#silse-canvas .skin-game-calm > strong,
-#silse-canvas .skin-game-playful > strong,
-#silse-canvas .skin-game-mission > strong {
-  font-family: var(--silse-hero-font);
-  font-size: 22px;
-  font-weight: 900;
-  letter-spacing: -0.01em;
-  color: ${isDark ? 'var(--color-panel)' : c.blue};
-}
-
-#silse-canvas .skin-bridge-subtle,
-#silse-canvas .skin-bridge-strong {
-  border-radius: var(--silse-card-radius) !important;
-  background: ${isDark ? 'rgba(255,209,102,0.08)' : 'rgba(255,248,219,0.6)'} !important;
-  border: 1px solid ${isDark ? 'rgba(255,209,102,0.20)' : 'rgba(255,183,3,0.20)'} !important;
-  box-shadow: ${cardShadow} !important;
-  color: ${bodyColor} !important;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-
-#silse-canvas .skin-layered-clean,
-#silse-canvas .skin-layered-soft,
-#silse-canvas .skin-layered-bold {
-  border-radius: var(--silse-card-radius) !important;
-  background: ${cardBg} !important;
-  border: 1px solid ${cardBorder} !important;
-  box-shadow: ${cardShadow} !important;
-  color: ${bodyColor} !important;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
+${buildPremiumHeroCss(profile)}
+${buildPremiumSkinCss(profile)}
 
 /* Award medal — only rendered on closing pages */
 #silse-canvas .silse-award-medal {
@@ -971,98 +825,9 @@ ${buildCelebrationCss()}
 }
 /* @keyframes silse-award-shine — extracted to premiumCss.ts buildAnimationsCss()
    (Fase 3a Commit 2). Inlined via buildAnimationsCss() at end of baseCss. */
-
-#silse-canvas .silse-award-ribbon {
-  position: absolute;
-  left: 50%;
-  bottom: 64px;
-  transform: translateX(-50%);
-  padding: 10px 22px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, ${c.red}, ${c.blue});
-  color: var(--color-panel);
-  font-family: var(--silse-body-font);
-  font-size: 14px;
-  font-weight: 900;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-  box-shadow: 0 12px 24px rgba(0,0,0,0.28);
-  pointer-events: none;
-  z-index: 1;
-  white-space: nowrap;
-}
-
-/* Hero card frame — only rendered on cover pages */
-#silse-canvas .silse-hero-card {
-  position: absolute;
-  left: 50%;
-  top: 130px;
-  transform: translateX(-50%);
-  width: 980px;
-  height: 460px;
-  background: ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.92)'};
-  border: 1px solid ${isDark ? 'rgba(255,255,255,0.18)' : 'rgba(29,53,87,0.14)'};
-  border-radius: 30px;
-  box-shadow: ${isDark
-    ? '0 26px 60px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.04)'
-    : '12px 12px 0 rgba(29,53,87,0.10), 0 24px 60px rgba(29,53,87,0.20)'};
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  pointer-events: none;
-  z-index: 1;
-}
-
-#silse-canvas .silse-hero-kicker {
-  position: absolute;
-  left: 50%;
-  top: 168px;
-  transform: translateX(-50%);
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 18px;
-  border-radius: 999px;
-  background: linear-gradient(145deg, ${c.gold}, ${c.goldDeep});
-  color: ${c.navy};
-  font-family: var(--silse-body-font);
-  font-size: 13px;
-  font-weight: 900;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.20);
-  pointer-events: none;
-  z-index: 2;
-  white-space: nowrap;
-}
-
-#silse-canvas .silse-hero-cta {
-  position: absolute;
-  left: 50%;
-  top: 510px;
-  transform: translateX(-50%);
-  padding: 14px 32px;
-  border-radius: 999px;
-  background: linear-gradient(145deg, ${c.red}, ${c.blue});
-  color: var(--color-panel);
-  font-family: var(--silse-body-font);
-  font-size: 16px;
-  font-weight: 900;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-  border: 0;
-  cursor: pointer;
-  box-shadow: 0 14px 28px rgba(0,0,0,0.28);
-  pointer-events: auto;
-  z-index: 2;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-#silse-canvas .silse-hero-cta:hover {
-  transform: translateX(-50%) translateY(-2px) scale(1.02);
-  box-shadow: 0 20px 36px rgba(0,0,0,0.36);
-}
+/* Fase 3a Commit 6: .silse-award-ribbon, .silse-hero-card, .silse-hero-kicker,
+   .silse-hero-cta, .silse-hero-cta:hover extracted to premiumCss.ts
+   buildPremiumHeroCss(profile) — inlined above. */
 
 /* Note: reduced-motion is handled globally by MICRO-ANIMATION-SYSTEM-V1
    (animation-duration:0.01ms !important; animation-iteration-count:1 !important;
