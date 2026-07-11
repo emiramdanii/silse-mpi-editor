@@ -82,3 +82,27 @@ export function getReadableTextColor(backgroundColor: string): string {
 export function getReadableMutedTextColor(backgroundColor: string): string {
   return isDarkColor(backgroundColor) ? '#d1d5db' : '#6b7280';
 }
+
+// ---------------------------------------------------------------------------
+// EXPORT-CONTRAST-01: Contrast-aware text color for scenes with dark backgrounds.
+// Cover/closing scenes often use dark gradient backgrounds, but contract.palette.text
+// is dark (#1f2937). This helper returns white text when the scene role is known
+// to have a dark background (cover, closing), ensuring readability.
+//
+// Fase 3b Commit 1: Extracted from SceneRendererView.tsx to this shared pure
+// module so that export-html.ts can use the same logic (via an inline JS
+// equivalent in generateJS()). The returned value uses --silse-color-surface
+// indirection with --color-panel fallback, allowing style packs to override
+// the surface color and have cover/closing text adapt.
+//
+// Pure function — no React, no DOM, no window. Safe to import from any layer.
+// ---------------------------------------------------------------------------
+
+export const DARK_BACKGROUND_ROLES = new Set(['cover', 'closing']);
+
+export function getContrastAwareTextColor(role: string | undefined, defaultColor: string): string {
+  if (role && DARK_BACKGROUND_ROLES.has(role)) {
+    return 'var(--silse-color-surface, var(--color-panel))';
+  }
+  return defaultColor;
+}

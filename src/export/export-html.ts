@@ -869,6 +869,24 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
   // CSS strings are pre-computed at build time — browser just appends them.
   var _sceneCustomStyleCss = undefined;
 
+  // Fase 3b Commit 1: Track current page role for getContrastAwareTextColor().
+  // Set in renderSceneFromPlan() — read by renderCoverHeroSceneContent and
+  // renderClosingAwardSceneContent to pick contrast-aware text color.
+  var _currentPageRole = undefined;
+
+  // Fase 3b Commit 1: Inline JS equivalent of getContrastAwareTextColor()
+  // from src/core/design/contrast.ts. Pure function — no React/DOM deps.
+  // Used by renderCoverHeroSceneContent and renderClosingAwardSceneContent
+  // to pick contrast-aware text color (white on dark cover/closing backgrounds).
+  // MUST stay byte-identical with the TS version in contrast.ts.
+  var _DARK_BACKGROUND_ROLES = new Set(['cover', 'closing']);
+  function getContrastAwareTextColor(role, defaultColor) {
+    if (role && _DARK_BACKGROUND_ROLES.has(role)) {
+      return 'var(--silse-color-surface, var(--color-panel))';
+    }
+    return defaultColor;
+  }
+
   var canvas = document.getElementById('silse-canvas');
   var prevBtn = document.getElementById('silse-nav-prev');
   var nextBtn = document.getElementById('silse-nav-next');
@@ -991,6 +1009,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     // exportHeader, exportPanel, exportActionButton can read and apply
     // per-element CSS strings (shell/header/panel/chip/button).
     _sceneCustomStyleCss = page ? page.customStyleCss : undefined;
+    // Fase 3b Commit 1: track page role for getContrastAwareTextColor().
+    _currentPageRole = page ? page.role : undefined;
 
     // PATCH B: Check sceneType for scene-level composers
     var sceneTypeRenderers = {
@@ -1539,8 +1559,9 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var title = document.createElement('div');
     title.className = 'silse-cover-title';
     // EXPORT-CONTRAST-01: cover scenes use dark gradient backgrounds.
-    // Force white text for title/subtitle to ensure readability.
-    var titleCss = 'text-align:center;color:var(--color-panel);';
+    // Fase 3b Commit 1: Use getContrastAwareTextColor() for parity with editor.
+    var titleColor = getContrastAwareTextColor(_currentPageRole, palette.text || 'var(--color-text)');
+    var titleCss = 'text-align:center;color:' + titleColor + ';';
     if (ty.fontFamily) titleCss += 'font-family:' + ty.fontFamily + ';';
     if (ty.fontSize) titleCss += 'font-size:' + ty.fontSize + 'px;';
     if (ty.fontWeight) titleCss += 'font-weight:' + ty.fontWeight + ';';
@@ -1552,8 +1573,9 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.heroSubtitle) {
       var subtitle = document.createElement('div');
       subtitle.className = 'silse-cover-subtitle';
-      // EXPORT-CONTRAST-01: white subtitle for dark cover background
-      subtitle.style.cssText = 'font-size:20px;color:var(--color-panel);text-align:center;';
+      // EXPORT-CONTRAST-01: Fase 3b Commit 1 — use getContrastAwareTextColor().
+      var subtitleColor = getContrastAwareTextColor(_currentPageRole, palette.mutedText || 'var(--color-text-soft)');
+      subtitle.style.cssText = 'font-size:20px;color:' + subtitleColor + ';text-align:center;';
       subtitle.textContent = content.heroSubtitle;
       wrapper.appendChild(subtitle);
     }
@@ -1605,16 +1627,18 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.achievement) {
       var ach = document.createElement('div');
       ach.className = 'silse-closing-achievement';
-      // EXPORT-CONTRAST-01: closing scenes use dark gradient backgrounds. Force white text.
-      ach.style.cssText = 'font-family:' + ty.heroFont + ';font-size:' + ty.titleSize + 'px;font-weight:' + ty.titleWeight + ';color:var(--color-panel);text-align:center;';
+      // EXPORT-CONTRAST-01: Fase 3b Commit 1 — use getContrastAwareTextColor().
+      var achColor = getContrastAwareTextColor(_currentPageRole, palette.text || 'var(--color-text)');
+      ach.style.cssText = 'font-family:' + ty.heroFont + ';font-size:' + ty.titleSize + 'px;font-weight:' + ty.titleWeight + ';color:' + achColor + ';text-align:center;';
       ach.textContent = content.achievement;
       wrapper.appendChild(ach);
     }
     if (content.summary) {
       var sum = document.createElement('div');
       sum.className = 'silse-closing-summary';
-      // EXPORT-CONTRAST-01: white summary for dark closing background
-      sum.style.cssText = 'font-size:18px;color:var(--color-panel);text-align:center;max-width:800px;';
+      // EXPORT-CONTRAST-01: Fase 3b Commit 1 — use getContrastAwareTextColor().
+      var sumColor = getContrastAwareTextColor(_currentPageRole, palette.mutedText || 'var(--color-text-soft)');
+      sum.style.cssText = 'font-size:18px;color:' + sumColor + ';text-align:center;max-width:800px;';
       sum.textContent = content.summary;
       wrapper.appendChild(sum);
     }
@@ -1653,8 +1677,9 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.nextLearning) {
       var nl = document.createElement('div');
       nl.className = 'silse-closing-next-learning';
-      // EXPORT-CONTRAST-01: white nextLearning for dark closing background
-      nl.style.cssText = 'font-size:13px;color:var(--color-panel);';
+      // EXPORT-CONTRAST-01: Fase 3b Commit 1 — use getContrastAwareTextColor().
+      var nlColor = getContrastAwareTextColor(_currentPageRole, palette.mutedText || 'var(--color-text-soft)');
+      nl.style.cssText = 'font-size:13px;color:' + nlColor + ';';
       nl.textContent = content.nextLearning;
       wrapper.appendChild(nl);
     }

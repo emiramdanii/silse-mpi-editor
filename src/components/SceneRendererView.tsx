@@ -24,6 +24,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import type { SceneRenderPlan, SceneRenderSlot } from '../core/scene-renderer';
 import type { MpiDesignContract } from '../core/mpi-design-contract';
 import { sanitizeCustomStyle } from '../core/style/sanitize';
+import { getContrastAwareTextColor } from '../core/design/contrast';
 import { CustomStyleProvider } from './scene-blocks';
 import {
   CurriculumGuideComposer, ObjectivesPathComposer, StarterReviewComposer,
@@ -918,21 +919,9 @@ function LearningMaterialContent({
 // FOUNDATION-FINAL-LOCK-01 — CoverHeroContent (cover scene)
 // ---------------------------------------------------------------------------
 
-// ---------------------------------------------------------------------------
-// EXPORT-CONTRAST-01: Contrast-aware text color for scenes with dark backgrounds.
-// Cover/closing scenes often use dark gradient backgrounds, but contract.palette.text
-// is dark (#1f2937). This helper returns white text when the scene role is known
-// to have a dark background (cover, closing), ensuring readability.
-// ---------------------------------------------------------------------------
-
-const DARK_BACKGROUND_ROLES = new Set(['cover', 'closing']);
-
-function getContrastAwareTextColor(role: string | undefined, defaultColor: string): string {
-  if (role && DARK_BACKGROUND_ROLES.has(role)) {
-    return 'var(--silse-color-surface, var(--color-panel))';
-  }
-  return defaultColor;
-}
+// NOTE (Fase 3b Commit 1): getContrastAwareTextColor + DARK_BACKGROUND_ROLES
+// extracted to src/core/design/contrast.ts — shared pure module imported by
+// both editor (here) and export-html.ts (via inline JS equivalent in generateJS()).
 
 function CoverHeroContent({
   slot,
