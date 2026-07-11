@@ -26,7 +26,7 @@ import { getMicroAnimationForStylePack } from '../core/style-packs/micro-animati
 import { getCelebrationEffectForStylePack } from '../core/style-packs/celebration-effect';
 import { buildMotionPresetCss } from '../core/style-packs/motion-preset';
 import { getPremiumExportProfileWithProjectStyle, type PremiumExportProfile } from '../core/style-packs/premium-export-profile';
-import { buildAnimationsCss, buildCoverDecorationCss, buildBackgroundPatternCss, buildPremiumBlockCss, buildCelebrationCss, buildMiscIdenticalCss, buildPremiumHeroCss, buildPremiumSkinCss, derivePremiumVars } from '../core/style/premiumCss';
+import { buildAnimationsCss, buildCoverDecorationCss, buildBackgroundPatternCss, buildPremiumBlockCss, buildCelebrationCss, buildMiscIdenticalCss, buildSkinBaseCss, buildPremiumHeroCss, buildPremiumSkinCss, derivePremiumVars } from '../core/style/premiumCss';
 import { buildSceneRenderPlanForPage, type SceneRenderPlan } from '../core/scene-renderer';
 import { sanitizeCustomStyle, styleMapToCssString } from '../core/style/sanitize';
 import { getDesignContractWithProjectStyle } from '../core/mpi-design-contract';
@@ -661,24 +661,12 @@ body {
   overflow-wrap: anywhere;
 }
 
-/* COMPONENT-SKIN-V2: Component skin classes (3 style packs × 5 component types) */
-.skin-card-flat { border:1px solid var(--silse-color-border); border-radius:10px; background:var(--silse-color-surface); box-shadow:0 2px 8px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04); }
-.skin-card-soft { border:1px solid rgba(255,200,200,0.4); border-radius:18px; background:linear-gradient(135deg,var(--silse-color-surface) 0%,rgba(255,255,255,0.7) 100%); box-shadow:0 4px 16px rgba(0,0,0,0.08),0 1px 4px rgba(0,0,0,0.04); }
-.skin-card-bold { border:2px solid var(--silse-color-primary); border-radius:10px; background:var(--silse-color-surface); box-shadow:0 0 0 1px rgba(59,130,246,0.3),0 6px 20px rgba(0,0,0,0.5),0 2px 8px rgba(59,130,246,0.15); }
-.skin-button-clean { border:1px solid var(--silse-color-primary, var(--color-accent)); border-radius:6px; background:var(--silse-color-primary, var(--color-accent)); color:var(--silse-color-surface, var(--color-panel)); font-weight:600; box-shadow:0 1px 2px rgba(30,91,143,0.2); }
-.skin-button-rounded { border:none; border-radius:24px; background:linear-gradient(135deg,var(--silse-color-primary, var(--color-accent)) 0%,var(--silse-color-secondary, var(--color-warning)) 100%); color:var(--silse-color-surface, var(--color-panel)); font-weight:600; box-shadow:0 2px 6px rgba(185,116,14,0.3); }
-.skin-button-mission { border:2px solid var(--silse-color-primary); border-radius:4px; background:var(--silse-color-surface); color:var(--silse-color-primary); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; box-shadow:0 0 12px rgba(59,130,246,0.4); }
-.skin-quiz-calm { border:1px solid var(--silse-color-border); border-radius:10px; background:var(--silse-color-surface); }
-/* .skin-quiz-playful extracted to premiumCss.ts buildMiscIdenticalCss() (Fase 3a Commit 5). */
-.skin-quiz-mission { border:2px solid var(--silse-color-primary); border-radius:8px; background:var(--silse-color-surface); box-shadow:0 0 16px rgba(59,130,246,0.2); }
-.skin-bridge-subtle { border-left:4px solid var(--silse-color-primary); background:rgba(37,99,235,0.04); }
-.skin-bridge-strong { border-left:6px solid var(--silse-color-primary); background:linear-gradient(90deg,rgba(59,130,246,0.15) 0%,transparent 100%); box-shadow:0 0 12px rgba(59,130,246,0.2); }
-.skin-game-calm { border:1px solid var(--silse-color-border); border-radius:10px; background:var(--silse-color-surface); }
-/* .skin-game-playful extracted to premiumCss.ts buildMiscIdenticalCss() (Fase 3a Commit 5). */
-.skin-game-mission { border:2px solid var(--silse-color-primary); border-radius:8px; background:var(--silse-color-surface); box-shadow:0 0 20px rgba(59,130,246,0.3); }
-.skin-layered-clean { border:1px solid var(--silse-color-border); border-radius:10px; background:var(--silse-color-surface); }
-.skin-layered-soft { border:2px solid rgba(255,200,200,0.3); border-radius:16px; background:linear-gradient(135deg,var(--silse-color-surface) 0%,rgba(255,255,255,0.7) 100%); }
-.skin-layered-bold { border:2px solid var(--silse-color-primary); border-radius:8px; background:var(--silse-color-surface); box-shadow:0 0 16px rgba(59,130,246,0.15); }
+/* COMPONENT-SKIN-V2: Component skin classes (3 style packs × 5 component types)
+   NOTE (Fase 3b Commit 2): All 15 base skin classes extracted to premiumCss.ts
+   buildSkinBaseCss() — inlined below. Unified with var() fallbacks (drift fix).
+   The .skin-quiz-playful and .skin-game-playful were already extracted in
+   Fase 3a Commit 5 (buildMiscIdenticalCss). */
+${buildSkinBaseCss()}
 /* .skin-text-clean, .skin-text-soft, .skin-text-bold extracted to
    premiumCss.ts buildMiscIdenticalCss() (Fase 3a Commit 5). */
 /* BACKGROUND-PATTERN-SYSTEM-V1: background pattern classes

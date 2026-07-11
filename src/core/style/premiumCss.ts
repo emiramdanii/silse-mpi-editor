@@ -378,6 +378,68 @@ export function buildMiscIdenticalCss(): string {
 }
 
 // ===========================================================================
+// Group 6b — Skin base classes (drift fix, Fase 3b Commit 2)
+// ===========================================================================
+
+/**
+ * Component skin base classes — the 15 drifted selectors from Fase 3a drift-check.
+ *
+ * Source: COMPONENT-SKIN-V2 section in both consumers.
+ *
+ * Extracted in Commit 3b-2 — 15 selectors (drift fix):
+ *   .skin-card-flat/soft/bold
+ *   .skin-button-clean/rounded/mission
+ *   .skin-quiz-calm/mission
+ *   .skin-game-calm/mission
+ *   .skin-layered-clean/soft/bold
+ *   .skin-bridge-subtle/strong
+ *
+ * Drift that was fixed:
+ *   - styles.css used var(--token, fallback) — required for editor correctness
+ *     (--silse-color-* unset at editor runtime).
+ *   - export used var(--token) without fallback — broke when no style pack.
+ *   - Some skins had different fallback values (e.g., skin-button-clean color:
+ *     styles.css 'white' vs export var(--color-panel)).
+ *
+ * Winner: styles.css pattern (with fallback). All 15 now unified with fallbacks.
+ * The premium override rules (in buildPremiumSkinCss) apply on top of these
+ * base rules via #silse-canvas .skin-* selectors with !important.
+ */
+export function buildSkinBaseCss(): string {
+  return `/* Group 6b — Skin base classes (drift fix, Fase 3b Commit 2)
+   Source of truth: src/core/style/premiumCss.ts.
+   Unified with var() fallbacks (styles.css pattern) — required for editor
+   correctness and for export when no style pack is chosen. */
+
+/* Card skins */
+.skin-card-flat { border:1px solid var(--silse-color-border, var(--color-border)); border-radius:10px; background:var(--silse-color-surface, var(--color-panel-soft)); box-shadow:0 2px 8px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04); }
+.skin-card-soft { border:1px solid rgba(255,200,200,0.4); border-radius:18px; background:linear-gradient(135deg,var(--silse-color-surface, var(--color-warning-soft)) 0%,rgba(255,255,255,0.7) 100%); box-shadow:0 4px 16px rgba(0,0,0,0.08),0 1px 4px rgba(0,0,0,0.04); }
+.skin-card-bold { border:2px solid var(--silse-color-primary, var(--color-marker-text)); border-radius:10px; background:var(--silse-color-surface, var(--color-text)); box-shadow:0 0 0 1px rgba(59,130,246,0.3),0 6px 20px rgba(0,0,0,0.5),0 2px 8px rgba(59,130,246,0.15); }
+
+/* Button skins */
+.skin-button-clean { border:1px solid var(--silse-color-primary, var(--color-accent)); border-radius:6px; background:var(--silse-color-primary, var(--color-accent)); color:white; font-weight:600; box-shadow:0 1px 2px rgba(37,99,235,0.2); }
+.skin-button-rounded { border:none; border-radius:24px; background:linear-gradient(135deg,var(--silse-color-primary, var(--color-warning-strong)) 0%,var(--silse-color-secondary, var(--silse-gold)) 100%); color:white; font-weight:600; box-shadow:0 2px 6px rgba(245,158,11,0.3); }
+.skin-button-mission { border:2px solid var(--silse-color-primary, var(--color-marker-text)); border-radius:4px; background:var(--silse-color-surface, var(--color-text)); color:var(--silse-color-primary, var(--color-marker-text)); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; box-shadow:0 0 12px rgba(59,130,246,0.4); }
+
+/* Quiz skins */
+.skin-quiz-calm { border:1px solid var(--silse-color-border, var(--color-border)); border-radius:10px; background:var(--silse-color-surface, var(--color-panel-soft)); }
+.skin-quiz-mission { border:2px solid var(--silse-color-primary, var(--color-marker-text)); border-radius:8px; background:var(--silse-color-surface, var(--color-text)); box-shadow:0 0 16px rgba(59,130,246,0.2); }
+
+/* Bridge skins */
+.skin-bridge-subtle { border-left:4px solid var(--silse-color-primary, var(--color-accent)); background:rgba(37,99,235,0.04); }
+.skin-bridge-strong { border-left:6px solid var(--silse-color-primary, var(--color-marker-text)); background:linear-gradient(90deg,rgba(59,130,246,0.15) 0%,transparent 100%); box-shadow:0 0 12px rgba(59,130,246,0.2); }
+
+/* Game skins */
+.skin-game-calm { border:1px solid var(--silse-color-border, var(--color-border)); border-radius:10px; background:var(--silse-color-surface, var(--color-panel-soft)); }
+.skin-game-mission { border:2px solid var(--silse-color-primary, var(--color-marker-text)); border-radius:8px; background:var(--silse-color-surface, var(--color-text)); box-shadow:0 0 20px rgba(59,130,246,0.3); }
+
+/* Layered info skins */
+.skin-layered-clean { border:1px solid var(--silse-color-border, var(--color-border)); border-radius:10px; background:var(--silse-color-surface, var(--color-panel-soft)); }
+.skin-layered-soft { border:2px solid rgba(255,200,200,0.3); border-radius:16px; background:linear-gradient(135deg,var(--silse-color-surface, var(--color-warning-soft)) 0%,rgba(255,255,255,0.7) 100%); }
+.skin-layered-bold { border:2px solid var(--silse-color-primary, var(--color-marker-text)); border-radius:8px; background:var(--silse-color-surface, var(--color-text)); box-shadow:0 0 16px rgba(59,130,246,0.15); }`;
+}
+
+// ===========================================================================
 // Group 7 — Parameterised premium styles (per PremiumExportProfile)
 // ===========================================================================
 

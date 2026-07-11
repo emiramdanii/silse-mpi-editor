@@ -94,6 +94,7 @@ const sections = [
   { name: 'Group 4 — Premium block panel',  fn: 'buildPremiumBlockCss' },
   { name: 'Group 5 — Celebration effects',  fn: 'buildCelebrationCss' },
   { name: 'Group 6 — Choice defaults + identical skins', fn: 'buildMiscIdenticalCss' },
+  { name: 'Group 6b — Skin base classes (drift fix)', fn: 'buildSkinBaseCss' },
 ];
 
 const chunks = [];
