@@ -178,14 +178,45 @@ export function buildAnimationsCss(): string {
  *   .silse-cover-soft::before, .silse-cover-soft::after,
  *   .silse-cover-mission::before, .silse-cover-mission::after
  *
- * NOTE: `.silse-cover-clean [data-variant="title"]` etc. are also in
- * COVER-PREMIUM-POLISH-01 — these are byte-identical between consumers
- * (verified by drift-check) but use `[data-variant=...]` selectors. They
- * will be extracted here in Commit 3.
+ * NOTE: `.silse-cover-clean [data-variant="title"]` etc. are NOT duplicated
+ * identically — styles.css uses `[data-component-type="text"][data-variant="title"]`
+ * while export-html.ts uses just `[data-variant="title"]`. Different selectors,
+ * both stay in their original files.
  */
 export function buildCoverDecorationCss(): string {
-  // Commit 3 will fill this.
-  return '';
+  return `/* Group 2 — Cover decoration (extracted from COVER-PREMIUM-POLISH-01)
+   Source of truth: src/core/style/premiumCss.ts (Commit 3, Fase 3a).
+   DO NOT duplicate in styles.css or export-html.ts:generateCSS(). */
+
+/* Modern Clean cover: bold hero gradient + geometric accent shape */
+.silse-cover-clean::before {
+  background: linear-gradient(160deg, rgba(37,99,235,0.12) 0%, rgba(37,99,235,0.03) 35%, transparent 55%, rgba(37,99,235,0.08) 100%) !important;
+}
+.silse-cover-clean::after {
+  content: ''; position: absolute; top: -60px; right: -60px; width: 240px; height: 240px;
+  background: radial-gradient(circle, rgba(37,99,235,0.1) 0%, transparent 70%);
+  border-radius: 50%; pointer-events: none; z-index: 0;
+}
+
+/* Soft Classroom cover: warm pastel hero + soft rounded shape */
+.silse-cover-soft::before {
+  background: linear-gradient(135deg, rgba(254,243,199,0.35) 0%, rgba(254,226,226,0.2) 40%, rgba(254,215,170,0.15) 70%, rgba(253,230,138,0.1) 100%) !important;
+}
+.silse-cover-soft::after {
+  content: ''; position: absolute; bottom: -80px; left: -80px; width: 280px; height: 280px;
+  background: radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%);
+  border-radius: 50%; pointer-events: none; z-index: 0;
+}
+
+/* Mission Dark cover: bold radial glow + diagonal mission accent line */
+.silse-cover-mission::before {
+  background: radial-gradient(ellipse at 50% 35%, rgba(59,130,246,0.2) 0%, transparent 45%, rgba(59,130,246,0.1) 100%) !important;
+}
+.silse-cover-mission::after {
+  content: ''; position: absolute; top: 0; right: 0; width: 100%; height: 6px;
+  background: linear-gradient(90deg, transparent 30%, rgba(59,130,246,0.5) 50%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}`;
 }
 
 // ===========================================================================
@@ -203,11 +234,75 @@ export function buildCoverDecorationCss(): string {
  *
  * NOTE: `.silse-bg-page-clean` (base rule, no ::before) is DRIFTED —
  * styles.css sets `position: relative`, export-html.ts sets `--silse-shadow-feel`
- * custom props. Deferred to 3b.
+ * custom props. Deferred to 3b. The `.silse-bg-page-* > *` z-index helper
+ * rules are only in styles.css (not duplicated in export-html.ts which has
+ * `#silse-canvas > *` instead) — they stay in styles.css.
  */
 export function buildBackgroundPatternCss(): string {
-  // Commit 3 will fill this.
-  return '';
+  return `/* Group 3 — Background patterns (extracted from BACKGROUND-PATTERN-SYSTEM-V1)
+   Source of truth: src/core/style/premiumCss.ts (Commit 3, Fase 3a).
+   DO NOT duplicate in styles.css or export-html.ts:generateCSS(). */
+
+/* Page background classes — gradient base applied as overlay on canvas-frame */
+.silse-bg-page-clean::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(248,250,252,0.5) 0%, transparent 30%, transparent 70%, rgba(241,245,249,0.3) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+.silse-bg-page-soft::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(254,243,199,0.15) 0%, rgba(254,226,226,0.1) 50%, rgba(254,215,170,0.08) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+.silse-bg-page-mission::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 30%, rgba(59,130,246,0.08) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Pattern overlay classes — subtle decorative pattern */
+.silse-bg-pattern-subtle-grid::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(37,99,235,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(37,99,235,0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.silse-bg-pattern-soft-dots::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(245,158,11,0.04) 1.5px, transparent 1.5px);
+  background-size: 28px 28px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.silse-bg-pattern-mission-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
+}`;
 }
 
 // ===========================================================================

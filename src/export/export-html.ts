@@ -26,7 +26,7 @@ import { getMicroAnimationForStylePack } from '../core/style-packs/micro-animati
 import { getCelebrationEffectForStylePack } from '../core/style-packs/celebration-effect';
 import { buildMotionPresetCss } from '../core/style-packs/motion-preset';
 import { getPremiumExportProfileWithProjectStyle, type PremiumExportProfile } from '../core/style-packs/premium-export-profile';
-import { buildAnimationsCss } from '../core/style/premiumCss';
+import { buildAnimationsCss, buildCoverDecorationCss, buildBackgroundPatternCss } from '../core/style/premiumCss';
 import { buildSceneRenderPlanForPage, type SceneRenderPlan } from '../core/scene-renderer';
 import { sanitizeCustomStyle, styleMapToCssString } from '../core/style/sanitize';
 import { getDesignContractWithProjectStyle } from '../core/mpi-design-contract';
@@ -696,30 +696,28 @@ body {
 .skin-text-clean { text-shadow:none; }
 .skin-text-soft { text-shadow:0 1px 2px rgba(0,0,0,0.03); }
 .skin-text-bold { text-shadow:0 0 8px rgba(59,130,246,0.2); font-weight:500; }
-/* BACKGROUND-PATTERN-SYSTEM-V1: background pattern classes */
-.silse-bg-page-clean::before { content:''; position:absolute; inset:0; background:linear-gradient(180deg,rgba(248,250,252,0.5) 0%,transparent 30%,transparent 70%,rgba(241,245,249,0.3) 100%); pointer-events:none; z-index:0; }
-.silse-bg-page-soft::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(254,243,199,0.15) 0%,rgba(254,226,226,0.1) 50%,rgba(254,215,170,0.08) 100%); pointer-events:none; z-index:0; }
-.silse-bg-page-mission::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 30%,rgba(59,130,246,0.08) 0%,transparent 60%); pointer-events:none; z-index:0; }
-.silse-bg-pattern-subtle-grid::after { content:''; position:absolute; inset:0; background-image:linear-gradient(rgba(37,99,235,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,0.02) 1px,transparent 1px); background-size:40px 40px; pointer-events:none; z-index:0; }
-.silse-bg-pattern-soft-dots::after { content:''; position:absolute; inset:0; background-image:radial-gradient(circle,rgba(245,158,11,0.04) 1.5px,transparent 1.5px); background-size:28px 28px; pointer-events:none; z-index:0; }
-.silse-bg-pattern-mission-glow::after { content:''; position:absolute; inset:0; background-image:linear-gradient(rgba(59,130,246,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,0.03) 1px,transparent 1px); background-size:60px 60px; pointer-events:none; z-index:0; }
+/* BACKGROUND-PATTERN-SYSTEM-V1: background pattern classes
+   NOTE (Fase 3a Commit 3): .silse-bg-page-*::before and .silse-bg-pattern-*::after
+   extracted to premiumCss.ts buildBackgroundPatternCss() — inlined below via
+   that function. The .silse-bg-page-* base rules with custom props stay inline
+   (drifted from styles.css base rules — deferred to 3b). */
+${buildBackgroundPatternCss()}
 #silse-canvas { position:relative; }
 #silse-canvas > * { position:relative; z-index:1; }
 /* PREMIUM-STYLE-PACK-V2: visual personality polish */
 .silse-bg-page-clean { --silse-shadow-feel:0 1px 3px rgba(0,0,0,0.04); --silse-radius-feel:8px; }
 .silse-bg-page-soft { --silse-shadow-feel:0 2px 8px rgba(0,0,0,0.06); --silse-radius-feel:16px; }
 .silse-bg-page-mission { --silse-shadow-feel:0 0 16px rgba(59,130,246,0.15); --silse-radius-feel:6px; }
-/* COVER-PREMIUM-POLISH-01: cover decoration per style pack */
-.silse-cover-clean::before { background:linear-gradient(160deg,rgba(37,99,235,0.12) 0%,rgba(37,99,235,0.03) 35%,transparent 55%,rgba(37,99,235,0.08) 100%) !important; }
-.silse-cover-clean::after { content:''; position:absolute; top:-60px; right:-60px; width:240px; height:240px; background:radial-gradient(circle,rgba(37,99,235,0.1) 0%,transparent 70%); border-radius:50%; pointer-events:none; z-index:0; }
+/* COVER-PREMIUM-POLISH-01: cover decoration per style pack
+   NOTE (Fase 3a Commit 3): .silse-cover-*::before and ::after extracted to
+   premiumCss.ts buildCoverDecorationCss() — inlined below via that function.
+   The [data-variant="title"] / [data-variant="subtitle"] rules stay inline
+   (different selectors in styles.css vs export-html.ts). */
+${buildCoverDecorationCss()}
 .silse-cover-clean [data-variant="title"] { text-shadow:0 2px 12px rgba(0,0,0,0.1); letter-spacing:-0.8px; font-weight:700; }
 .silse-cover-clean [data-variant="subtitle"] { letter-spacing:1px; opacity:0.7; text-transform:uppercase; font-size:0.85em; font-weight:500; }
-.silse-cover-soft::before { background:linear-gradient(135deg,rgba(254,243,199,0.35) 0%,rgba(254,226,226,0.2) 40%,rgba(254,215,170,0.15) 70%,rgba(253,230,138,0.1) 100%) !important; }
-.silse-cover-soft::after { content:''; position:absolute; bottom:-80px; left:-80px; width:280px; height:280px; background:radial-gradient(circle,rgba(245,158,11,0.12) 0%,transparent 70%); border-radius:50%; pointer-events:none; z-index:0; }
 .silse-cover-soft [data-variant="title"] { text-shadow:0 2px 8px rgba(245,158,11,0.15); letter-spacing:-0.5px; font-weight:700; }
 .silse-cover-soft [data-variant="subtitle"] { letter-spacing:0.5px; opacity:0.75; font-weight:500; }
-.silse-cover-mission::before { background:radial-gradient(ellipse at 50% 35%,rgba(59,130,246,0.2) 0%,transparent 45%,rgba(59,130,246,0.1) 100%) !important; }
-.silse-cover-mission::after { content:''; position:absolute; top:0; right:0; width:100%; height:6px; background:linear-gradient(90deg,transparent 30%,rgba(59,130,246,0.5) 50%,transparent 70%); pointer-events:none; z-index:0; }
 .silse-cover-mission [data-variant="title"] { text-shadow:0 0 24px rgba(59,130,246,0.4),0 2px 8px rgba(0,0,0,0.3); letter-spacing:-0.8px; font-weight:700; }
 .silse-cover-mission [data-variant="subtitle"] { letter-spacing:2px; opacity:0.65; text-transform:uppercase; font-size:0.8em; font-weight:600; }
 /* QUIZ-GAME-VISUAL-POLISH-01: quiz/game visual polish */
