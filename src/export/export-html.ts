@@ -412,11 +412,17 @@ ${varsStr}
   --silse-stage-text: ${stageTextOnDark};
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+/* Fase 3b Commit 4: global reset unified with styles.css pattern.
+   Previously: * { box-sizing; margin:0; padding:0 } (agresif).
+   Now: * { box-sizing } only — margin/padding reset moved to html, body
+   below (matches styles.css approach, avoids masking component-level margins). */
+* { box-sizing: border-box; }
 
 html, body {
   width: 100%;
   height: 100%;
+  margin: 0;
+  padding: 0;
   overflow: hidden;
   font-family: var(--silse-body-font, 'Segoe UI', Arial, sans-serif);
   background: var(--silse-stage-outer);
@@ -672,15 +678,14 @@ ${buildSkinBaseCss()}
 /* BACKGROUND-PATTERN-SYSTEM-V1: background pattern classes
    NOTE (Fase 3a Commit 3): .silse-bg-page-*::before and .silse-bg-pattern-*::after
    extracted to premiumCss.ts buildBackgroundPatternCss() — inlined below via
-   that function. The .silse-bg-page-* base rules with custom props stay inline
-   (drifted from styles.css base rules — deferred to 3b). */
+   that function. Fase 3b Commit 4: base position:relative rules + z-index
+   helpers moved to buildBackgroundPatternCss(). Dead --silse-shadow-feel /
+   --silse-radius-feel custom props removed (YAGNI — never consumed). */
 ${buildBackgroundPatternCss()}
 #silse-canvas { position:relative; }
 #silse-canvas > * { position:relative; z-index:1; }
-/* PREMIUM-STYLE-PACK-V2: visual personality polish */
-.silse-bg-page-clean { --silse-shadow-feel:0 1px 3px rgba(0,0,0,0.04); --silse-radius-feel:8px; }
-.silse-bg-page-soft { --silse-shadow-feel:0 2px 8px rgba(0,0,0,0.06); --silse-radius-feel:16px; }
-.silse-bg-page-mission { --silse-shadow-feel:0 0 16px rgba(59,130,246,0.15); --silse-radius-feel:6px; }
+/* PREMIUM-STYLE-PACK-V2: visual personality polish
+   NOTE (Fase 3b Commit 4): .silse-bg-page-* dead custom props removed. */
 /* COVER-PREMIUM-POLISH-01: cover decoration per style pack
    NOTE (Fase 3a Commit 3): .silse-cover-*::before and ::after extracted to
    premiumCss.ts buildCoverDecorationCss() — inlined below via that function.

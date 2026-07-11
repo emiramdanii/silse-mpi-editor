@@ -3253,50 +3253,15 @@ textarea {
    NOTE (Fase 3a Commit 3): The .silse-bg-page-*::before and
    .silse-bg-pattern-*::after rules were extracted to premiumCss.ts
    buildBackgroundPatternCss() — regenerated into premium-generated.css.
-   The .silse-bg-page-* base rules (position: relative) and the
-   .silse-bg-page-* > * z-index helpers stay here (not duplicated in
-   export-html.ts). */
-
-/* Page background classes — gradient base applied as overlay on canvas-frame */
-.silse-bg-page-clean {
-  position: relative;
-}
-.silse-bg-page-clean > * { position: relative; z-index: 1; }
-
-.silse-bg-page-soft {
-  position: relative;
-}
-.silse-bg-page-soft > * { position: relative; z-index: 1; }
-
-.silse-bg-page-mission {
-  position: relative;
-}
-.silse-bg-page-mission > * { position: relative; z-index: 1; }
+   Fase 3b Commit 4: base position:relative rules + z-index helpers moved
+   to buildBackgroundPatternCss(). Dead --silse-shadow-feel / --silse-radius-feel
+   custom props removed (YAGNI — never consumed by any rule). */
 
 /* =========================================================================
    PREMIUM-STYLE-PACK-V2 — visual personality polish per style pack
-   ========================================================================= */
-
-/* Modern Clean: minimal shadow, medium radius, clean focus ring */
-.silse-bg-page-clean .canvas-frame,
-.silse-bg-page-clean.canvas-frame {
-  --silse-shadow-feel: 0 1px 3px rgba(0,0,0,0.04);
-  --silse-radius-feel: 8px;
-}
-
-/* Soft Classroom: soft shadow, larger radius, warm focus */
-.silse-bg-page-soft .canvas-frame,
-.silse-bg-page-soft.canvas-frame {
-  --silse-shadow-feel: 0 2px 8px rgba(0,0,0,0.06);
-  --silse-radius-feel: 16px;
-}
-
-/* Mission Dark: glow shadow, tegas radius, mission focus */
-.silse-bg-page-mission .canvas-frame,
-.silse-bg-page-mission.canvas-frame {
-  --silse-shadow-feel: 0 0 16px rgba(59,130,246,0.15);
-  --silse-radius-feel: 6px;
-}
+   NOTE (Fase 3b Commit 4): The .silse-bg-page-*.canvas-frame rules that set
+   --silse-shadow-feel / --silse-radius-feel were DEAD CODE (never consumed).
+   Removed entirely. */
 
 /* Focus ring polish per style pack */
 .silse-bg-page-clean [data-component-type]:focus-visible {
