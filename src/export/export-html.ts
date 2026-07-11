@@ -26,7 +26,7 @@ import { getMicroAnimationForStylePack } from '../core/style-packs/micro-animati
 import { getCelebrationEffectForStylePack } from '../core/style-packs/celebration-effect';
 import { buildMotionPresetCss } from '../core/style-packs/motion-preset';
 import { getPremiumExportProfileWithProjectStyle, type PremiumExportProfile } from '../core/style-packs/premium-export-profile';
-import { buildAnimationsCss, buildCoverDecorationCss, buildBackgroundPatternCss } from '../core/style/premiumCss';
+import { buildAnimationsCss, buildCoverDecorationCss, buildBackgroundPatternCss, buildPremiumBlockCss, buildCelebrationCss } from '../core/style/premiumCss';
 import { buildSceneRenderPlanForPage, type SceneRenderPlan } from '../core/scene-renderer';
 import { sanitizeCustomStyle, styleMapToCssString } from '../core/style/sanitize';
 import { getDesignContractWithProjectStyle } from '../core/mpi-design-contract';
@@ -742,15 +742,18 @@ ${buildCoverDecorationCss()}
 .silse-cover-clean .silse-block-header::before,.silse-cover-soft .silse-block-header::before,.silse-cover-mission .silse-block-header::before { content:''; position:absolute; top:50%; left:50%; width:320px; height:180px; transform:translate(-50%,-50%); background:radial-gradient(ellipse,rgba(249,193,46,0.18) 0%,transparent 65%); filter:blur(20px); z-index:-1; pointer-events:none; }
 .silse-cover-clean .silse-block-shell::after,.silse-cover-soft .silse-block-shell::after,.silse-cover-mission .silse-block-shell::after { content:''; position:absolute; bottom:-40px; left:-40px; width:200px; height:200px; background:radial-gradient(circle,rgba(249,193,46,0.10) 0%,transparent 70%); border-radius:50%; pointer-events:none; z-index:0; }
 .silse-cover-clean .silse-block-shell::before,.silse-cover-soft .silse-block-shell::before,.silse-cover-mission .silse-block-shell::before { content:''; position:absolute; top:24px; right:24px; width:48px; height:2px; background:linear-gradient(90deg,transparent,rgba(249,193,46,0.6),transparent); pointer-events:none; z-index:0; }
-.silse-block-panel { position:relative; box-shadow:0 1px 2px rgba(0,0,0,0.04),0 4px 12px rgba(0,0,0,0.06),0 12px 32px rgba(0,0,0,0.04) !important; border:1px solid rgba(255,255,255,0.06) !important; }
-.silse-block-panel::before { content:''; position:absolute; top:0; left:12px; right:12px; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent); pointer-events:none; }
+/* VISUAL-PREMIUM-01: .silse-block-panel, .silse-block-panel::before,
+   .silse-block-chip extracted to premiumCss.ts buildPremiumBlockCss() —
+   inlined via that function. The drifted .silse-cover-* and .silse-choice-*
+   overrides stay inline (deferred to 3b). */
+${buildPremiumBlockCss()}
 .silse-choice-default:hover { border-left-color:var(--silse-color-primary,var(--color-accent)); box-shadow:0 2px 8px rgba(30,91,143,0.12); transform:translateY(-1px); }
 .silse-choice-selected { border-left:3px solid var(--silse-color-primary,var(--color-accent)); box-shadow:inset 0 0 0 1px rgba(30,91,143,0.2),0 2px 12px rgba(30,91,143,0.15); background:linear-gradient(135deg,rgba(30,91,143,0.06) 0%,rgba(30,91,143,0.02) 100%); }
 .silse-choice-correct { border-left:4px solid var(--color-success-strong); box-shadow:inset 0 0 0 1px rgba(22,163,74,0.25),0 2px 16px rgba(22,163,74,0.18); background:linear-gradient(135deg,rgba(22,163,74,0.08) 0%,rgba(22,163,74,0.02) 100%); }
 .silse-choice-wrong { border-left:4px solid var(--color-danger-strong); box-shadow:inset 0 0 0 1px rgba(220,38,38,0.2),0 2px 12px rgba(220,38,38,0.12); }
 .silse-feedback-correct { border-left:4px solid var(--color-success-strong); background:linear-gradient(135deg,rgba(22,163,74,0.08) 0%,rgba(22,163,74,0.02) 100%); font-weight:500; }
 .silse-feedback-wrong { border-left:4px solid var(--color-danger-strong); background:linear-gradient(135deg,rgba(220,38,38,0.08) 0%,rgba(220,38,38,0.02) 100%); font-weight:500; }
-.silse-block-chip { background:linear-gradient(135deg,rgba(249,193,46,0.18) 0%,rgba(249,193,46,0.08) 100%) !important; box-shadow:0 1px 3px rgba(249,193,46,0.15),inset 0 1px 0 rgba(255,255,255,0.1); }
+/* .silse-block-chip extracted to premiumCss.ts buildPremiumBlockCss() (Fase 3a Commit 4). */
 /* MICRO-ANIMATION-SYSTEM-V1: micro animation + prefers-reduced-motion
    NOTE (Fase 3a Commit 2): @keyframes + .silse-anim-* class definitions
    extracted to src/core/style/premiumCss.ts → buildAnimationsCss().
@@ -769,28 +772,10 @@ ${buildAnimationsCss()}
 /* CELEBRATION-EFFECT-V1: CSS-only celebration on correct answer
    NOTE (Fase 3a Commit 2): @keyframes silse-celebrate-burst-ring and
    silse-celebrate-sparkle extracted to premiumCss.ts buildAnimationsCss().
-   The .silse-celebrate-* classes below remain inline pending Commit 4. */
-.silse-celebrate-success-clean { position:relative; overflow:visible; }
-.silse-celebrate-burst-clean::before { content:''; position:absolute; inset:-2px; border:2px solid rgba(22,163,74,0.4); border-radius:8px; animation:silse-celebrate-burst-ring 800ms ease-out; pointer-events:none; }
-.silse-celebrate-particle-clean::before, .silse-celebrate-particle-clean::after { content:'✦'; position:absolute; font-size:10px; color:rgba(22,163,74,0.6); animation:silse-celebrate-sparkle 800ms ease-out; pointer-events:none; }
-.silse-celebrate-particle-clean::before { top:-4px; right:8px; }
-.silse-celebrate-particle-clean::after { top:-2px; right:24px; animation-delay:150ms; }
-.silse-celebrate-success-soft { position:relative; overflow:visible; }
-.silse-celebrate-burst-soft::before { content:''; position:absolute; inset:-2px; border:2px solid rgba(245,158,11,0.4); border-radius:12px; animation:silse-celebrate-burst-ring 900ms ease-out; pointer-events:none; }
-.silse-celebrate-particle-soft::before, .silse-celebrate-particle-soft::after { content:'★'; position:absolute; font-size:11px; color:rgba(245,158,11,0.6); animation:silse-celebrate-sparkle 900ms ease-out; pointer-events:none; }
-.silse-celebrate-particle-soft::before { top:-4px; right:8px; }
-.silse-celebrate-particle-soft::after { top:-2px; right:24px; animation-delay:150ms; }
-.silse-celebrate-success-mission { position:relative; overflow:visible; }
-.silse-celebrate-burst-mission::before { content:''; position:absolute; inset:-2px; border:2px solid rgba(59,130,246,0.5); border-radius:6px; animation:silse-celebrate-burst-ring 700ms ease-out; pointer-events:none; box-shadow:0 0 12px rgba(59,130,246,0.3); }
-.silse-celebrate-particle-mission::before, .silse-celebrate-particle-mission::after { content:'◆'; position:absolute; font-size:10px; color:rgba(59,130,246,0.7); animation:silse-celebrate-sparkle 700ms ease-out; pointer-events:none; }
-.silse-celebrate-particle-mission::before { top:-4px; right:8px; }
-.silse-celebrate-particle-mission::after { top:-2px; right:24px; animation-delay:120ms; }
-@media (prefers-reduced-motion: reduce) {
-  .silse-celebrate-burst-clean::before, .silse-celebrate-burst-soft::before, .silse-celebrate-burst-mission::before,
-  .silse-celebrate-particle-clean::before, .silse-celebrate-particle-clean::after,
-  .silse-celebrate-particle-soft::before, .silse-celebrate-particle-soft::after,
-  .silse-celebrate-particle-mission::before, .silse-celebrate-particle-mission::after { animation:none !important; display:none !important; }
-}
+   NOTE (Fase 3a Commit 4): .silse-celebrate-* classes and celebration-specific
+   @media (prefers-reduced-motion: reduce) extracted to premiumCss.ts
+   buildCelebrationCss() — inlined via that function. */
+${buildCelebrationCss()}
 
 /* ----------------------------------------------------------------------- */
 /* PREMIUM-EXPORT-OVERHAUL-01 — premium visual layers (on top of existing)  */

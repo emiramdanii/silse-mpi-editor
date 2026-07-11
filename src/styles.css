@@ -3632,26 +3632,9 @@ textarea {
 }
 
 /* --- Layer 2: Card/panel premium depth --- */
-
-/* Multi-layer shadow for panels (ambient + key + rim) */
-.silse-block-panel {
-  position: relative;
-  box-shadow:
-    0 1px 2px rgba(0,0,0,0.04),
-    0 4px 12px rgba(0,0,0,0.06),
-    0 12px 32px rgba(0,0,0,0.04) !important;
-  border: 1px solid rgba(255,255,255,0.06) !important;
-}
-
-/* Inner highlight (top edge, glass-like) */
-.silse-block-panel::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 12px; right: 12px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
-  pointer-events: none;
-}
+/* NOTE (Fase 3a Commit 4): .silse-block-panel, .silse-block-panel::before,
+   and .silse-block-chip extracted to premiumCss.ts buildPremiumBlockCss() —
+   regenerated into premium-generated.css. */
 
 /* --- Layer 3: Choice/badge polish --- */
 
@@ -3695,10 +3678,7 @@ textarea {
 }
 
 /* Badge/chip: gradient background (not flat) */
-.silse-block-chip {
-  background: linear-gradient(135deg, rgba(249,193,46,0.18) 0%, rgba(249,193,46,0.08) 100%) !important;
-  box-shadow: 0 1px 3px rgba(249,193,46,0.15), inset 0 1px 0 rgba(255,255,255,0.1);
-}
+/* .silse-block-chip extracted to premiumCss.ts buildPremiumBlockCss() (Fase 3a Commit 4). */
 
 /* =========================================================================
    MICRO-ANIMATION-SYSTEM-V1 — micro animation classes + prefers-reduced-motion
@@ -3842,102 +3822,10 @@ textarea {
    NOTE (Fase 3a Commit 2): The @keyframes silse-celebrate-burst-ring and
    @keyframes silse-celebrate-sparkle were extracted to premiumCss.ts
    buildAnimationsCss() (animation primitives live with other keyframes).
-   The .silse-celebrate-* classes below remain here pending Commit 4. */
-
-/* Modern Clean celebration */
-.silse-celebrate-success-clean {
-  position: relative;
-  overflow: visible;
-}
-.silse-celebrate-burst-clean::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border: 2px solid rgba(22, 163, 74, 0.4);
-  border-radius: 8px;
-  animation: silse-celebrate-burst-ring 800ms ease-out;
-  pointer-events: none;
-}
-.silse-celebrate-particle-clean::before,
-.silse-celebrate-particle-clean::after {
-  content: '✦';
-  position: absolute;
-  font-size: 10px;
-  color: rgba(22, 163, 74, 0.6);
-  animation: silse-celebrate-sparkle 800ms ease-out;
-  pointer-events: none;
-}
-.silse-celebrate-particle-clean::before { top: -4px; right: 8px; }
-.silse-celebrate-particle-clean::after { top: -2px; right: 24px; animation-delay: 150ms; }
-
-/* Soft Classroom celebration */
-.silse-celebrate-success-soft {
-  position: relative;
-  overflow: visible;
-}
-.silse-celebrate-burst-soft::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border: 2px solid rgba(245, 158, 11, 0.4);
-  border-radius: 12px;
-  animation: silse-celebrate-burst-ring 900ms ease-out;
-  pointer-events: none;
-}
-.silse-celebrate-particle-soft::before,
-.silse-celebrate-particle-soft::after {
-  content: '★';
-  position: absolute;
-  font-size: 11px;
-  color: rgba(245, 158, 11, 0.6);
-  animation: silse-celebrate-sparkle 900ms ease-out;
-  pointer-events: none;
-}
-.silse-celebrate-particle-soft::before { top: -4px; right: 8px; }
-.silse-celebrate-particle-soft::after { top: -2px; right: 24px; animation-delay: 150ms; }
-
-/* Mission Dark celebration */
-.silse-celebrate-success-mission {
-  position: relative;
-  overflow: visible;
-}
-.silse-celebrate-burst-mission::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border: 2px solid rgba(59, 130, 246, 0.5);
-  border-radius: 6px;
-  animation: silse-celebrate-burst-ring 700ms ease-out;
-  pointer-events: none;
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
-}
-.silse-celebrate-particle-mission::before,
-.silse-celebrate-particle-mission::after {
-  content: '◆';
-  position: absolute;
-  font-size: 10px;
-  color: rgba(59, 130, 246, 0.7);
-  animation: silse-celebrate-sparkle 700ms ease-out;
-  pointer-events: none;
-}
-.silse-celebrate-particle-mission::before { top: -4px; right: 8px; }
-.silse-celebrate-particle-mission::after { top: -2px; right: 24px; animation-delay: 120ms; }
-
-/* prefers-reduced-motion: disable celebration */
-@media (prefers-reduced-motion: reduce) {
-  .silse-celebrate-burst-clean::before,
-  .silse-celebrate-burst-soft::before,
-  .silse-celebrate-burst-mission::before,
-  .silse-celebrate-particle-clean::before,
-  .silse-celebrate-particle-clean::after,
-  .silse-celebrate-particle-soft::before,
-  .silse-celebrate-particle-soft::after,
-  .silse-celebrate-particle-mission::before,
-  .silse-celebrate-particle-mission::after {
-    animation: none !important;
-    display: none !important;
-  }
-}
+   NOTE (Fase 3a Commit 4): The .silse-celebrate-* classes and the
+   celebration-specific @media (prefers-reduced-motion: reduce) block were
+   extracted to premiumCss.ts buildCelebrationCss() — regenerated into
+   premium-generated.css. */
 
 /* =========================================================================
    PREMIUM-EXPORT-OVERHAUL-01 PATCH-1 — premium visual classes for editor/preview

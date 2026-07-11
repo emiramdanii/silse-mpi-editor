@@ -95,34 +95,16 @@
    DO NOT duplicate in styles.css or export-html.ts:generateCSS(). */
 
 /* Modern Clean cover: bold hero gradient + geometric accent shape */
-.silse-cover-clean::before {
-  background: linear-gradient(160deg, rgba(37,99,235,0.12) 0%, rgba(37,99,235,0.03) 35%, transparent 55%, rgba(37,99,235,0.08) 100%) !important;
-}
-.silse-cover-clean::after {
-  content: ''; position: absolute; top: -60px; right: -60px; width: 240px; height: 240px;
-  background: radial-gradient(circle, rgba(37,99,235,0.1) 0%, transparent 70%);
-  border-radius: 50%; pointer-events: none; z-index: 0;
-}
+.silse-cover-clean::before { background:linear-gradient(160deg,rgba(37,99,235,0.12) 0%,rgba(37,99,235,0.03) 35%,transparent 55%,rgba(37,99,235,0.08) 100%) !important; }
+.silse-cover-clean::after { content:''; position:absolute; top:-60px; right:-60px; width:240px; height:240px; background:radial-gradient(circle,rgba(37,99,235,0.1) 0%,transparent 70%); border-radius:50%; pointer-events:none; z-index:0; }
 
 /* Soft Classroom cover: warm pastel hero + soft rounded shape */
-.silse-cover-soft::before {
-  background: linear-gradient(135deg, rgba(254,243,199,0.35) 0%, rgba(254,226,226,0.2) 40%, rgba(254,215,170,0.15) 70%, rgba(253,230,138,0.1) 100%) !important;
-}
-.silse-cover-soft::after {
-  content: ''; position: absolute; bottom: -80px; left: -80px; width: 280px; height: 280px;
-  background: radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%);
-  border-radius: 50%; pointer-events: none; z-index: 0;
-}
+.silse-cover-soft::before { background:linear-gradient(135deg,rgba(254,243,199,0.35) 0%,rgba(254,226,226,0.2) 40%,rgba(254,215,170,0.15) 70%,rgba(253,230,138,0.1) 100%) !important; }
+.silse-cover-soft::after { content:''; position:absolute; bottom:-80px; left:-80px; width:280px; height:280px; background:radial-gradient(circle,rgba(245,158,11,0.12) 0%,transparent 70%); border-radius:50%; pointer-events:none; z-index:0; }
 
 /* Mission Dark cover: bold radial glow + diagonal mission accent line */
-.silse-cover-mission::before {
-  background: radial-gradient(ellipse at 50% 35%, rgba(59,130,246,0.2) 0%, transparent 45%, rgba(59,130,246,0.1) 100%) !important;
-}
-.silse-cover-mission::after {
-  content: ''; position: absolute; top: 0; right: 0; width: 100%; height: 6px;
-  background: linear-gradient(90deg, transparent 30%, rgba(59,130,246,0.5) 50%, transparent 70%);
-  pointer-events: none; z-index: 0;
-}
+.silse-cover-mission::before { background:radial-gradient(ellipse at 50% 35%,rgba(59,130,246,0.2) 0%,transparent 45%,rgba(59,130,246,0.1) 100%) !important; }
+.silse-cover-mission::after { content:''; position:absolute; top:0; right:0; width:100%; height:6px; background:linear-gradient(90deg,transparent 30%,rgba(59,130,246,0.5) 50%,transparent 70%); pointer-events:none; z-index:0; }
 
 /* Group 3 — Background patterns */
 /* Group 3 — Background patterns (extracted from BACKGROUND-PATTERN-SYSTEM-V1)
@@ -130,69 +112,64 @@
    DO NOT duplicate in styles.css or export-html.ts:generateCSS(). */
 
 /* Page background classes — gradient base applied as overlay on canvas-frame */
-.silse-bg-page-clean::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(248,250,252,0.5) 0%, transparent 30%, transparent 70%, rgba(241,245,249,0.3) 100%);
-  pointer-events: none;
-  z-index: 0;
-}
-.silse-bg-page-soft::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(254,243,199,0.15) 0%, rgba(254,226,226,0.1) 50%, rgba(254,215,170,0.08) 100%);
-  pointer-events: none;
-  z-index: 0;
-}
-.silse-bg-page-mission::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at 50% 30%, rgba(59,130,246,0.08) 0%, transparent 60%);
-  pointer-events: none;
-  z-index: 0;
-}
+.silse-bg-page-clean::before { content:''; position:absolute; inset:0; background:linear-gradient(180deg,rgba(248,250,252,0.5) 0%,transparent 30%,transparent 70%,rgba(241,245,249,0.3) 100%); pointer-events:none; z-index:0; }
+.silse-bg-page-soft::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(254,243,199,0.15) 0%,rgba(254,226,226,0.1) 50%,rgba(254,215,170,0.08) 100%); pointer-events:none; z-index:0; }
+.silse-bg-page-mission::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 30%,rgba(59,130,246,0.08) 0%,transparent 60%); pointer-events:none; z-index:0; }
 
 /* Pattern overlay classes — subtle decorative pattern */
-.silse-bg-pattern-subtle-grid::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(37,99,235,0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(37,99,235,0.02) 1px, transparent 1px);
-  background-size: 40px 40px;
-  pointer-events: none;
-  z-index: 0;
+.silse-bg-pattern-subtle-grid::after { content:''; position:absolute; inset:0; background-image:linear-gradient(rgba(37,99,235,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,0.02) 1px,transparent 1px); background-size:40px 40px; pointer-events:none; z-index:0; }
+.silse-bg-pattern-soft-dots::after { content:''; position:absolute; inset:0; background-image:radial-gradient(circle,rgba(245,158,11,0.04) 1.5px,transparent 1.5px); background-size:28px 28px; pointer-events:none; z-index:0; }
+.silse-bg-pattern-mission-glow::after { content:''; position:absolute; inset:0; background-image:linear-gradient(rgba(59,130,246,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,0.03) 1px,transparent 1px); background-size:60px 60px; pointer-events:none; z-index:0; }
+
+/* Group 4 — Premium block panel */
+/* Group 4 — Premium block panel (extracted from VISUAL-PREMIUM-01)
+   Source of truth: src/core/style/premiumCss.ts (Commit 4, Fase 3a).
+   DO NOT duplicate in styles.css or export-html.ts:generateCSS(). */
+
+/* Multi-layer shadow for panels (ambient + key + rim) */
+.silse-block-panel { position:relative; box-shadow:0 1px 2px rgba(0,0,0,0.04),0 4px 12px rgba(0,0,0,0.06),0 12px 32px rgba(0,0,0,0.04) !important; border:1px solid rgba(255,255,255,0.06) !important; }
+
+/* Inner highlight (top edge, glass-like) */
+.silse-block-panel::before { content:''; position:absolute; top:0; left:12px; right:12px; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent); pointer-events:none; }
+
+/* Badge/chip: gradient background (not flat) */
+.silse-block-chip { background:linear-gradient(135deg,rgba(249,193,46,0.18) 0%,rgba(249,193,46,0.08) 100%) !important; box-shadow:0 1px 3px rgba(249,193,46,0.15),inset 0 1px 0 rgba(255,255,255,0.1); }
+
+/* Group 5 — Celebration effects */
+/* Group 5 — Celebration effects (extracted from CELEBRATION-EFFECT-V1)
+   Source of truth: src/core/style/premiumCss.ts (Commit 4, Fase 3a).
+   DO NOT duplicate in styles.css or export-html.ts:generateCSS().
+   The @keyframes silse-celebrate-burst-ring and silse-celebrate-sparkle
+   are in Group 1 (buildAnimationsCss) — animation primitives. */
+
+/* Modern Clean celebration */
+.silse-celebrate-success-clean { position:relative; overflow:visible; }
+.silse-celebrate-burst-clean::before { content:''; position:absolute; inset:-2px; border:2px solid rgba(22,163,74,0.4); border-radius:8px; animation:silse-celebrate-burst-ring 800ms ease-out; pointer-events:none; }
+.silse-celebrate-particle-clean::before, .silse-celebrate-particle-clean::after { content:'✦'; position:absolute; font-size:10px; color:rgba(22,163,74,0.6); animation:silse-celebrate-sparkle 800ms ease-out; pointer-events:none; }
+.silse-celebrate-particle-clean::before { top:-4px; right:8px; }
+.silse-celebrate-particle-clean::after { top:-2px; right:24px; animation-delay:150ms; }
+
+/* Soft Classroom celebration */
+.silse-celebrate-success-soft { position:relative; overflow:visible; }
+.silse-celebrate-burst-soft::before { content:''; position:absolute; inset:-2px; border:2px solid rgba(245,158,11,0.4); border-radius:12px; animation:silse-celebrate-burst-ring 900ms ease-out; pointer-events:none; }
+.silse-celebrate-particle-soft::before, .silse-celebrate-particle-soft::after { content:'★'; position:absolute; font-size:11px; color:rgba(245,158,11,0.6); animation:silse-celebrate-sparkle 900ms ease-out; pointer-events:none; }
+.silse-celebrate-particle-soft::before { top:-4px; right:8px; }
+.silse-celebrate-particle-soft::after { top:-2px; right:24px; animation-delay:150ms; }
+
+/* Mission Dark celebration */
+.silse-celebrate-success-mission { position:relative; overflow:visible; }
+.silse-celebrate-burst-mission::before { content:''; position:absolute; inset:-2px; border:2px solid rgba(59,130,246,0.5); border-radius:6px; animation:silse-celebrate-burst-ring 700ms ease-out; pointer-events:none; box-shadow:0 0 12px rgba(59,130,246,0.3); }
+.silse-celebrate-particle-mission::before, .silse-celebrate-particle-mission::after { content:'◆'; position:absolute; font-size:10px; color:rgba(59,130,246,0.7); animation:silse-celebrate-sparkle 700ms ease-out; pointer-events:none; }
+.silse-celebrate-particle-mission::before { top:-4px; right:8px; }
+.silse-celebrate-particle-mission::after { top:-2px; right:24px; animation-delay:120ms; }
+
+/* prefers-reduced-motion: disable celebration */
+@media (prefers-reduced-motion: reduce) {
+  .silse-celebrate-burst-clean::before, .silse-celebrate-burst-soft::before, .silse-celebrate-burst-mission::before,
+  .silse-celebrate-particle-clean::before, .silse-celebrate-particle-clean::after,
+  .silse-celebrate-particle-soft::before, .silse-celebrate-particle-soft::after,
+  .silse-celebrate-particle-mission::before, .silse-celebrate-particle-mission::after { animation:none !important; display:none !important; }
 }
-
-.silse-bg-pattern-soft-dots::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(circle, rgba(245,158,11,0.04) 1.5px, transparent 1.5px);
-  background-size: 28px 28px;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.silse-bg-pattern-mission-glow::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
-  background-size: 60px 60px;
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* Group 4 — Premium block panel — (empty, scaffolding) */
-
-/* Group 5 — Celebration effects — (empty, scaffolding) */
 
 /* Group 6 — Choice defaults + identical skins — (empty, scaffolding) */
 
