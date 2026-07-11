@@ -143,7 +143,7 @@ describe('BASELINE-SYNC — Classification Game', () => {
     const { container } = render(<ClassificationGameComposer contract={contract} content={gameContent} />);
     expect(container.querySelector('.silse-scene-classification-game')).toBeInTheDocument();
     expect(container.querySelector('[data-testid="classification-pool"]')).toBeInTheDocument();
-    expect(container.querySelector('[data-testid="classification-columns"]')).toBeInTheDocument();
+    expect(container.querySelector('.silse-classification-column-grid')).toBeInTheDocument();
   });
 
   it('8. classification game: select item → place in column → score increases', () => {

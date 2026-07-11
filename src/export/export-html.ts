@@ -1725,11 +1725,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       }
     }
     children.push(pool);
-    // Category columns
-    var grid = document.createElement('div');
-    grid.className = 'silse-classification-column-grid silse-premium-game-columns';
-    grid.setAttribute('data-testid', 'classification-columns');
-    grid.style.cssText = 'display:grid;grid-template-columns:repeat(' + Math.min((content.categories || []).length, 4) + ', 1fr);gap:10px;';
+    // Category columns — LAYOUT-STYLE-01: use exportGrid for customStyle.grid support
+    var catCols = [];
     if (content.categories) {
       for (var ci = 0; ci < content.categories.length; ci++) {
         (function(cat) {
@@ -1745,11 +1742,13 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
           colItems.className = 'silse-classification-placed-items silse-premium-game-placed-list';
           colItems.style.cssText = 'display:flex;flex-direction:column;gap:6px;';
           col.appendChild(colItems);
-          grid.appendChild(col);
+          catCols.push(col);
         })(content.categories[ci]);
       }
     }
-    children.push(grid);
+    var catGrid = exportGrid(plan, 'silse-classification-column-grid silse-premium-game-columns', catCols, 'repeat(' + Math.min((content.categories || []).length, 4) + ', 1fr)', 10);
+    catGrid.setAttribute('data-testid', 'classification-columns');
+    children.push(catGrid);
     // Reset button
     children.push(exportActionButton(plan, '↺ Reset', 'secondary'));
     var shell = exportShell(plan, 'silse-scene-classification-game', children);
@@ -1816,8 +1815,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     fbEl.className = 'silse-matching-feedback silse-premium-matching-feedback';
     fbEl.style.cssText = 'display:none;padding:10px 14px;border-radius:16px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;box-shadow:' + premiumShadow + ';';
     children.push(fbEl);
-    var grid = document.createElement('div');
-    grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:12px;';
+    // LAYOUT-STYLE-01: use exportGrid for customStyle.grid support
     var leftCol = document.createElement('div');
     leftCol.className = 'silse-matching-left silse-premium-matching-left';
     var leftLabel = document.createElement('div');
@@ -1833,7 +1831,6 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       lbtn.textContent = leftItems[li].label;
       leftCol.appendChild(lbtn);
     }
-    grid.appendChild(leftCol);
     var rightCol = document.createElement('div');
     rightCol.className = 'silse-matching-right silse-premium-matching-right';
     var rightLabel = document.createElement('div');
@@ -1849,8 +1846,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       rbtn.textContent = rightItems[ri].label;
       rightCol.appendChild(rbtn);
     }
-    grid.appendChild(rightCol);
-    children.push(grid);
+    children.push(exportGrid(plan, 'silse-matching-grid', [leftCol, rightCol], '1fr 1fr', 12));
     children.push(exportActionButton(plan, '↺ Reset', 'secondary'));
     var shell = exportShell(plan, 'silse-scene-matching-game', children);
     shell.style.overflow = 'hidden';
@@ -2303,8 +2299,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var p = plan.palette || {};
     var children = [exportHeader(plan, '📖 Glosarium', p.secondary, content.title || 'Glosarium')];
     var terms = content.terms || [];
-    var grid = document.createElement('div');
-    grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;';
+    var gridCards = [];
     for (var ti = 0; ti < terms.length; ti++) {
       var card = document.createElement('div');
       card.className = 'silse-glossary-card';
@@ -2333,9 +2328,9 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         exEl.textContent = 'Contoh: ' + terms[ti].example;
         card.appendChild(exEl);
       }
-      grid.appendChild(card);
+      gridCards.push(card);
     }
-    children.push(grid);
+    children.push(exportGrid(plan, 'silse-glossary-grid', gridCards, 'repeat(auto-fill, minmax(280px, 1fr))', 10));
     return exportShell(plan, 'silse-scene-glossary-cards', children);
   }
 

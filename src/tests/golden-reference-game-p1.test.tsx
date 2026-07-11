@@ -55,7 +55,7 @@ describe('GOLDEN-REFERENCE-GAME-P1 — classification game', () => {
   // 3: Category columns muncul
   it('3. category columns muncul', () => {
     const { container } = render(<ClassificationGameComposer contract={contract} content={gameContent} />);
-    expect(container.querySelector('[data-testid="classification-columns"]')).toBeInTheDocument();
+    expect(container.querySelector('.silse-classification-column-grid')).toBeInTheDocument();
     expect(container.querySelector('[data-category="Agama"]')).toBeInTheDocument();
     expect(container.querySelector('[data-category="Hukum"]')).toBeInTheDocument();
   });

@@ -441,7 +441,7 @@ export function ClassificationGameComposer({
       )}
 
       {/* Category Columns */}
-      <div className="silse-classification-column-grid silse-premium-game-columns" data-testid="classification-columns" style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(categories.length, 4)}, 1fr)`, gap: 10 }}>
+      <SceneGrid contract={contract} className="silse-classification-column-grid silse-premium-game-columns" columns={`repeat(${Math.min(categories.length, 4)}, 1fr)`} gap={10}>
         {categories.map(cat => {
           const placedInCategory = items.filter(i => state.placedItems[i.id] === cat);
           return (
@@ -480,7 +480,7 @@ export function ClassificationGameComposer({
             </div>
           );
         })}
-      </div>
+      </SceneGrid>
 
       {/* Reset + Completion */}
       <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -666,7 +666,7 @@ export function MatchingGameComposer({
           {feedback.text}
         </div>
       )}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+      <SceneGrid contract={contract} columns="1fr 1fr" gap={12}>
         <div className="silse-matching-left silse-premium-matching-left">
           <div style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', color: contract.palette.mutedText, marginBottom: 8 }}>Kolom Kiri</div>
           {leftItems.map((item) => {
@@ -736,7 +736,7 @@ export function MatchingGameComposer({
             );
           })}
         </div>
-      </div>
+      </SceneGrid>
       <ActionButtonBlock contract={contract} label="↺ Reset" onClick={handleReset} variant="secondary" />
     </SceneShell>
   );
@@ -1172,12 +1172,14 @@ export function WorksheetActivityComposer({
       ))}
       {fields.length > 0 && (
         <ScenePanel contract={contract} title="Input Fields">
-          {fields.map((f) => (
-            <div key={f.id} style={{ marginBottom: 8 }}>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: contract.palette.mutedText, marginBottom: 3 }}>{f.label}</label>
-              <input type="text" placeholder={f.placeholder || ''} style={{ width: '100%', padding: '6px 8px', border: `1px solid ${contract.palette.border}`, borderRadius: 6, fontSize: 13, background: 'rgba(255,255,255,0.04)', color: contract.palette.text, boxSizing: 'border-box' }} />
-            </div>
-          ))}
+          <SceneGrid contract={contract} columns="repeat(auto-fill, minmax(240px, 1fr))" gap={8}>
+            {fields.map((f) => (
+              <div key={f.id}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: contract.palette.mutedText, marginBottom: 3 }}>{f.label}</label>
+                <input type="text" placeholder={f.placeholder || ''} style={{ width: '100%', padding: '6px 8px', border: `1px solid ${contract.palette.border}`, borderRadius: 6, fontSize: 13, background: 'rgba(255,255,255,0.04)', color: contract.palette.text, boxSizing: 'border-box' }} />
+              </div>
+            ))}
+          </SceneGrid>
         </ScenePanel>
       )}
     </SceneShell>
@@ -1407,7 +1409,7 @@ export function GlossaryCardsComposer({
   return (
     <SceneShell contract={contract} className="silse-scene-glossary-cards">
       <SceneHeader contract={contract} chipIcon="📖" chipLabel="Glosarium" chipColor={contract.palette.secondary} title={content.title || 'Glosarium'} />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 10 }}>
+      <SceneGrid contract={contract} columns="repeat(auto-fill, minmax(280px, 1fr))" gap={10}>
         {terms.map((t) => {
           const revealed = revealedTerms.has(t.id);
           return (
@@ -1428,7 +1430,7 @@ export function GlossaryCardsComposer({
             </div>
           );
         })}
-      </div>
+      </SceneGrid>
     </SceneShell>
   );
 }
