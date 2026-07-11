@@ -96,6 +96,8 @@ const sections = [
   { name: 'Group 6 — Choice defaults + identical skins', fn: 'buildMiscIdenticalCss' },
   { name: 'Group 6b — Skin base classes (drift fix)', fn: 'buildSkinBaseCss' },
   { name: 'Group 6c — Quiz/feedback states (drift fix)', fn: 'buildQuizFeedbackCss' },
+  { name: 'Group 6d — Micro-anim reduced-motion (drift fix)', fn: 'buildMicroAnimationReducedMotionCss' },
+  { name: 'Motion preset (re-exported from motion-preset.ts)', fn: 'buildMotionPresetCss' },
 ];
 
 const chunks = [];

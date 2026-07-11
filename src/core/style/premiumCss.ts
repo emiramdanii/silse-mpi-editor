@@ -63,6 +63,13 @@
 
 import type { PremiumExportProfile } from '../style-packs/premium-export-profile';
 
+// Fase 3b Commit 5: Re-export buildMotionPresetCss so the dev-time generator
+// (scripts/generate-css.mjs) can include motion-preset CSS in premium-generated.css.
+// This allows styles.css to get motion-preset CSS (including the reduced-motion
+// @media block) via premium-generated.css instead of duplicating it inline.
+// export-html.ts continues to call buildMotionPresetCss() directly at runtime.
+export { buildMotionPresetCss } from '../style-packs/motion-preset';
+
 // ===========================================================================
 // Group 1 — Animations (@keyframes + .silse-anim-* classes)
 // ===========================================================================
@@ -496,6 +503,54 @@ export function buildQuizFeedbackCss(): string {
 .silse-choice-wrong { border-left:4px solid var(--silse-color-danger, var(--color-danger-strong)); box-shadow:inset 0 0 0 1px rgba(220,38,38,0.2),0 2px 12px rgba(220,38,38,0.12); }
 .silse-feedback-correct { border-left:4px solid var(--silse-color-success, var(--color-success-strong)); background:linear-gradient(135deg,rgba(22,163,74,0.08) 0%,rgba(22,163,74,0.02) 100%); font-weight:500; }
 .silse-feedback-wrong { border-left:4px solid var(--silse-color-danger, var(--color-danger-strong)); background:linear-gradient(135deg,rgba(220,38,38,0.08) 0%,rgba(220,38,38,0.02) 100%); font-weight:500; }`;
+}
+
+// ===========================================================================
+// Group 6d — Micro-anim reduced-motion (drift fix, Fase 3b Commit 5)
+// ===========================================================================
+
+/**
+ * @media (prefers-reduced-motion: reduce) block for micro-anim classes.
+ *
+ * Source: MICRO-ANIMATION-SYSTEM-V1 section in both consumers.
+ *
+ * Extracted in Commit 3b-5 — 1 @media block (was drifted: styles.css had it
+ * inline, export had it inline, both semantically identical but textually
+ * different).
+ *
+ * NOTE: The motion-preset reduced-motion block is in buildMotionPresetCss()
+ * (src/core/style-packs/motion-preset.ts) — that function is called by
+ * export-html.ts at the end of generateCSS. For the editor, styles.css
+ * previously had the motion-preset block INLINE — that was removed in this
+ * commit (rely on premium-generated.css which now includes motion-preset CSS
+ * via the generator).
+ *
+ * NOTE: The celebration reduced-motion block is in buildCelebrationCss()
+ * (already extracted in Fase 3a Commit 4).
+ */
+export function buildMicroAnimationReducedMotionCss(): string {
+  return `/* Group 6d — Micro-anim reduced-motion (drift fix, Fase 3b Commit 5)
+   Source of truth: src/core/style/premiumCss.ts. */
+
+/* PREFERS-REDUCED-MOTION: disable all animations */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .silse-anim-page-soft-in,
+  .silse-anim-page-warm-in,
+  .silse-anim-page-mission-in,
+  .silse-anim-feedback-soft,
+  .silse-anim-feedback-warm,
+  .silse-anim-feedback-mission {
+    animation: none !important;
+  }
+  .silse-anim-game-mission.silse-game-mission {
+    animation: none !important;
+  }
+}`;
 }
 
 // ===========================================================================

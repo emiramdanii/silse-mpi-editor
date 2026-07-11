@@ -26,7 +26,7 @@ import { getMicroAnimationForStylePack } from '../core/style-packs/micro-animati
 import { getCelebrationEffectForStylePack } from '../core/style-packs/celebration-effect';
 import { buildMotionPresetCss } from '../core/style-packs/motion-preset';
 import { getPremiumExportProfileWithProjectStyle, type PremiumExportProfile } from '../core/style-packs/premium-export-profile';
-import { buildAnimationsCss, buildCoverDecorationCss, buildBackgroundPatternCss, buildPremiumBlockCss, buildCelebrationCss, buildMiscIdenticalCss, buildSkinBaseCss, buildQuizFeedbackCss, buildPremiumHeroCss, buildPremiumSkinCss, derivePremiumVars } from '../core/style/premiumCss';
+import { buildAnimationsCss, buildCoverDecorationCss, buildBackgroundPatternCss, buildPremiumBlockCss, buildCelebrationCss, buildMiscIdenticalCss, buildSkinBaseCss, buildQuizFeedbackCss, buildMicroAnimationReducedMotionCss, buildPremiumHeroCss, buildPremiumSkinCss, derivePremiumVars } from '../core/style/premiumCss';
 import { buildSceneRenderPlanForPage, type SceneRenderPlan } from '../core/scene-renderer';
 import { sanitizeCustomStyle, styleMapToCssString } from '../core/style/sanitize';
 import { getDesignContractWithProjectStyle } from '../core/mpi-design-contract';
@@ -739,12 +739,7 @@ ${buildPremiumBlockCss()}
    remains inline because it is DRIFTED between consumers (deferred to
    sub-fase 3b). */
 ${buildAnimationsCss()}
-@media (prefers-reduced-motion: reduce) {
-  *,*::before,*::after { animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; }
-  .silse-anim-page-soft-in,.silse-anim-page-warm-in,.silse-anim-page-mission-in,
-  .silse-anim-feedback-soft,.silse-anim-feedback-warm,.silse-anim-feedback-mission { animation:none !important; }
-  .silse-anim-game-mission.silse-game-mission { animation:none !important; }
-}
+${buildMicroAnimationReducedMotionCss()}
 /* MOTION-PRESET-01: motion CSS is injected by buildMotionPresetCss() at the end of generateCSS — single source of truth. */
 /* CELEBRATION-EFFECT-V1: CSS-only celebration on correct answer
    NOTE (Fase 3a Commit 2): @keyframes silse-celebrate-burst-ring and
