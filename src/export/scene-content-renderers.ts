@@ -78,10 +78,8 @@ export function getSceneContentRendererJs(): string {
     target.appendChild(targetText);
     wrapper.appendChild(target);
 
-    // Action grid
-    var actionGrid = document.createElement('div');
-    actionGrid.className = 'silse-game-action-grid';
-    actionGrid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:8px;';
+    // Action grid — LAYOUT-STYLE-01: use exportGrid for customStyle.grid support
+    var actionCards = [];
     for (var ai = 0; ai < content.actions.length; ai++) {
       (function(actionIdx, action) {
         var card = document.createElement('div');
@@ -102,10 +100,10 @@ export function getSceneContentRendererJs(): string {
         var actionText = document.createElement('span');
         actionText.textContent = action.label;
         card.appendChild(actionText);
-        actionGrid.appendChild(card);
+        actionCards.push(card);
       })(ai, content.actions[ai]);
     }
-    wrapper.appendChild(actionGrid);
+    wrapper.appendChild(exportGrid(plan, 'silse-game-action-grid', actionCards, 'repeat(auto-fill, minmax(180px, 1fr))', 8));
 
     // Reward preview
     var reward = document.createElement('div');
@@ -165,10 +163,8 @@ export function getSceneContentRendererJs(): string {
     prompt.textContent = content.prompt || '';
     wrapper.appendChild(prompt);
 
-    // Answer grid
-    var answerGrid = document.createElement('div');
-    answerGrid.className = 'silse-quiz-answer-grid silse-premium-quiz-grid';
-    answerGrid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));gap:10px;';
+    // Answer grid — LAYOUT-STYLE-01: use exportGrid for customStyle.grid support
+    var answerCards = [];
     for (var ci = 0; ci < content.choices.length; ci++) {
       (function(choiceIdx, choice) {
         var card = document.createElement('div');
@@ -192,10 +188,10 @@ export function getSceneContentRendererJs(): string {
         var choiceText = document.createElement('span');
         choiceText.textContent = choice.text;
         card.appendChild(choiceText);
-        answerGrid.appendChild(card);
+        answerCards.push(card);
       })(ci, content.choices[ci]);
     }
-    wrapper.appendChild(answerGrid);
+    wrapper.appendChild(exportGrid(plan, 'silse-quiz-answer-grid silse-premium-quiz-grid', answerCards, 'repeat(auto-fill, minmax(200px, 1fr))', 10));
 
     // Feedback placeholder
     var feedback = document.createElement('div');
@@ -259,11 +255,9 @@ export function getSceneContentRendererJs(): string {
     explanation.textContent = content.explanation || '';
     wrapper.appendChild(explanation);
 
-    // Example cards
+    // Example cards — LAYOUT-STYLE-01: use exportGrid for customStyle.grid support
     if (content.examples && content.examples.length > 0) {
-      var exampleGrid = document.createElement('div');
-      exampleGrid.className = 'silse-learning-example-grid silse-premium-learning-example-grid';
-      exampleGrid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:10px;';
+      var exampleCards = [];
       for (var ei = 0; ei < content.examples.length; ei++) {
         (function(ex) {
           var card = document.createElement('div');
@@ -283,10 +277,10 @@ export function getSceneContentRendererJs(): string {
           cardBody.style.cssText = 'font-size:13px;line-height:1.5;color:' + palette.text + ';';
           cardBody.textContent = ex.body;
           card.appendChild(cardBody);
-          exampleGrid.appendChild(card);
+          exampleCards.push(card);
         })(content.examples[ei]);
       }
-      wrapper.appendChild(exampleGrid);
+      wrapper.appendChild(exportGrid(plan, 'silse-learning-example-grid silse-premium-learning-example-grid', exampleCards, 'repeat(auto-fill, minmax(280px, 1fr))', 10));
     }
 
     // FOUNDATION-HARDENING-01: Key point — visual dari plan.learning.keyPointPanel (contract token)

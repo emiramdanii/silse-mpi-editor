@@ -25,7 +25,7 @@ import type { SceneRenderPlan, SceneRenderSlot } from '../core/scene-renderer';
 import type { MpiDesignContract } from '../core/mpi-design-contract';
 import { sanitizeCustomStyle } from '../core/style/sanitize';
 import { getContrastAwareTextColor } from '../core/design/contrast';
-import { CustomStyleProvider } from './scene-blocks';
+import { CustomStyleProvider, SceneGrid } from './scene-blocks';
 import {
   CurriculumGuideComposer, ObjectivesPathComposer, StarterReviewComposer,
   DiscussionSceneComposer, CaseAnalysisComposer, ResultSummaryComposer,
@@ -596,8 +596,8 @@ function GameMissionContent({
         <div style={{ fontSize: 14, color: 'var(--silse-color-text, var(--color-text))' }}>{content.missionTarget}</div>
       </div>
 
-      {/* Action grid */}
-      <div className="silse-game-action-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 8 }}>
+      {/* Action grid — LAYOUT-STYLE-01: SceneGrid for customStyle.grid support */}
+      <SceneGrid contract={contract} className="silse-game-action-grid" columns="repeat(auto-fill, minmax(180px, 1fr))" gap={8}>
         {content.actions.map((action, idx) => (
           <div
             key={action.id}
@@ -631,7 +631,7 @@ function GameMissionContent({
             <span>{action.label}</span>
           </div>
         ))}
-      </div>
+      </SceneGrid>
 
       {/* Reward preview */}
       <div className="silse-game-reward" style={{ padding: 12, borderRadius: 10, background: 'var(--silse-color-warning-soft, var(--color-warning-soft))', border: '2px solid var(--silse-color-warning, var(--color-warning))', display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -702,8 +702,8 @@ function QuizQuestionContent({
         {content.prompt}
       </div>
 
-      {/* Answer grid */}
-      <div className="silse-quiz-answer-grid silse-premium-quiz-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
+      {/* Answer grid — LAYOUT-STYLE-01: SceneGrid for customStyle.grid support */}
+      <SceneGrid contract={contract} className="silse-quiz-answer-grid silse-premium-quiz-grid" columns="repeat(auto-fill, minmax(200px, 1fr))" gap={10}>
         {content.choices.map((choice, idx) => (
           <div
             key={choice.id}
@@ -755,7 +755,7 @@ function QuizQuestionContent({
             <span>{choice.text}</span>
           </div>
         ))}
-      </div>
+      </SceneGrid>
 
       {/* Feedback (jika ada — feedback slot terpisah akan render sendiri) */}
       <div className="silse-quiz-feedback" data-testid="silse-quiz-feedback-placeholder" style={{ display: 'none' }}>
@@ -837,9 +837,9 @@ function LearningMaterialContent({
         {content.explanation}
       </div>
 
-      {/* Example cards */}
+      {/* Example cards — LAYOUT-STYLE-01: SceneGrid for customStyle.grid support */}
       {content.examples && content.examples.length > 0 && (
-        <div className="silse-learning-example-grid silse-premium-learning-example-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 10 }}>
+        <SceneGrid contract={contract} className="silse-learning-example-grid silse-premium-learning-example-grid" columns="repeat(auto-fill, minmax(280px, 1fr))" gap={10}>
           {content.examples.map((ex) => (
             <div key={ex.id} className="silse-learning-example-card silse-premium-learning-example-card" style={{
               padding: surfPadding,
@@ -853,7 +853,7 @@ function LearningMaterialContent({
               <div style={{ fontSize: 13, lineHeight: 1.5, color: contract.palette.text }}>{ex.body}</div>
             </div>
           ))}
-        </div>
+        </SceneGrid>
       )}
 
       {/* Key point — FOUNDATION-HARDENING-01: visual dari contract.learning.keyPointPanel */}
