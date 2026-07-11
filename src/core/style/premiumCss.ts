@@ -349,8 +349,32 @@ export function buildCelebrationCss(): string {
  * deferred to 3b.
  */
 export function buildMiscIdenticalCss(): string {
-  // Commit 5 will fill this.
-  return '';
+  return `/* Group 6 — Choice defaults + score + identical skins
+   Source of truth: src/core/style/premiumCss.ts (Commit 5, Fase 3a).
+   DO NOT duplicate in styles.css or export-html.ts:generateCSS().
+   These are the ONLY skin classes that happen to be byte-identical between
+   consumers. The rest (.skin-card-*, .skin-button-*, etc.) are DRIFTED
+   (styles.css has var() fallbacks, export-html.ts doesn't) — deferred to 3b. */
+
+/* Quiz playful skin */
+.skin-quiz-playful { border:2px solid rgba(245,158,11,0.3); border-radius:16px; background:linear-gradient(135deg,rgba(254,243,199,0.5) 0%,rgba(255,255,255,0.8) 100%); }
+
+/* Game playful skin */
+.skin-game-playful { border:2px solid rgba(34,197,94,0.3); border-radius:16px; background:linear-gradient(135deg,rgba(220,252,231,0.5) 0%,rgba(255,255,255,0.8) 100%); }
+
+/* Text skins (clean/soft/bold) */
+.skin-text-clean { text-shadow:none; }
+.skin-text-soft { text-shadow:0 1px 2px rgba(0,0,0,0.03); }
+.skin-text-bold { text-shadow:0 0 8px rgba(59,130,246,0.2); font-weight:500; }
+
+/* Choice default (base state — no selection, no correctness) */
+.silse-choice-default { border-left:3px solid transparent; transition:border-color 0.15s,background-color 0.15s; }
+.silse-choice-default:hover { border-left-color:var(--silse-color-primary,var(--color-accent)); }
+/* Premium override for choice-default:hover (from the premium polish section) */
+.silse-choice-default:hover { border-left-color:var(--silse-color-primary,var(--color-accent)); box-shadow:0 2px 8px rgba(30,91,143,0.12); transform:translateY(-1px); }
+
+/* Score display */
+.silse-score { font-weight:600; padding:4px 12px; border-radius:12px; background:rgba(255,255,255,0.15); }`;
 }
 
 // ===========================================================================

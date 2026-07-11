@@ -3293,11 +3293,7 @@ textarea {
   background: var(--silse-color-surface, var(--color-panel-soft));
 }
 
-.skin-quiz-playful {
-  border: 2px solid rgba(245, 158, 11, 0.3);
-  border-radius: 16px;
-  background: linear-gradient(135deg, rgba(254, 243, 199, 0.5) 0%, rgba(255,255,255,0.8) 100%);
-}
+/* .skin-quiz-playful extracted to premiumCss.ts buildMiscIdenticalCss() (Fase 3a Commit 5). */
 
 .skin-quiz-mission {
   border: 2px solid var(--silse-color-primary, var(--color-marker-text));
@@ -3325,11 +3321,7 @@ textarea {
   background: var(--silse-color-surface, var(--color-panel-soft));
 }
 
-.skin-game-playful {
-  border: 2px solid rgba(34, 197, 94, 0.3);
-  border-radius: 16px;
-  background: linear-gradient(135deg, rgba(220, 252, 231, 0.5) 0%, rgba(255,255,255,0.8) 100%);
-}
+/* .skin-game-playful extracted to premiumCss.ts buildMiscIdenticalCss() (Fase 3a Commit 5). */
 
 .skin-game-mission {
   border: 2px solid var(--silse-color-primary, var(--color-marker-text));
@@ -3363,18 +3355,8 @@ textarea {
 }
 
 /* Text skins */
-.skin-text-clean {
-  text-shadow: none;
-}
-
-.skin-text-soft {
-  text-shadow: 0 1px 2px rgba(0,0,0,0.03);
-}
-
-.skin-text-bold {
-  text-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
-  font-weight: 500;
-}
+/* .skin-text-clean, .skin-text-soft, .skin-text-bold extracted to
+   premiumCss.ts buildMiscIdenticalCss() (Fase 3a Commit 5). */
 
 /* =========================================================================
    BACKGROUND-PATTERN-SYSTEM-V1 — background pattern classes (3 style packs)
@@ -3480,13 +3462,10 @@ textarea {
    ========================================================================= */
 
 /* Quiz choice states — themed via --silse-color-* (style pack) with editor theme fallback */
-.silse-choice-default {
-  border-left: 3px solid transparent;
-  transition: border-color 0.15s, background-color 0.15s;
-}
-.silse-choice-default:hover {
-  border-left-color: var(--silse-color-primary, var(--color-accent));
-}
+/* .silse-choice-default and .silse-choice-default:hover (base) extracted to
+   premiumCss.ts buildMiscIdenticalCss() (Fase 3a Commit 5). The VISUAL-PREMIUM-01
+   override (.silse-choice-default:hover with box-shadow + transform) stays
+   below — it is DRIFTED (deferred to 3b). */
 .silse-choice-selected {
   border-left: 3px solid var(--silse-color-primary, var(--color-accent));
   box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.2);
@@ -3523,12 +3502,7 @@ textarea {
 }
 
 /* Score display polish */
-.silse-score {
-  font-weight: 600;
-  padding: 4px 12px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.15);
-}
+/* .silse-score extracted to premiumCss.ts buildMiscIdenticalCss() (Fase 3a Commit 5). */
 
 /* Mission Dark quiz/game mood */
 .silse-quiz-mission .silse-question-choice,
@@ -3639,11 +3613,8 @@ textarea {
 /* --- Layer 3: Choice/badge polish --- */
 
 /* Choice card: gradient border accent on hover */
-.silse-choice-default:hover {
-  border-left-color: var(--silse-color-primary, var(--color-accent));
-  box-shadow: 0 2px 8px rgba(30,91,143,0.12);
-  transform: translateY(-1px);
-}
+/* .silse-choice-default:hover (premium override) extracted to premiumCss.ts
+   buildMiscIdenticalCss() (Fase 3a Commit 5). */
 .silse-choice-selected {
   border-left: 3px solid var(--silse-color-primary, var(--color-accent));
   box-shadow:

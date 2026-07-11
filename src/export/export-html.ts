@@ -26,7 +26,7 @@ import { getMicroAnimationForStylePack } from '../core/style-packs/micro-animati
 import { getCelebrationEffectForStylePack } from '../core/style-packs/celebration-effect';
 import { buildMotionPresetCss } from '../core/style-packs/motion-preset';
 import { getPremiumExportProfileWithProjectStyle, type PremiumExportProfile } from '../core/style-packs/premium-export-profile';
-import { buildAnimationsCss, buildCoverDecorationCss, buildBackgroundPatternCss, buildPremiumBlockCss, buildCelebrationCss } from '../core/style/premiumCss';
+import { buildAnimationsCss, buildCoverDecorationCss, buildBackgroundPatternCss, buildPremiumBlockCss, buildCelebrationCss, buildMiscIdenticalCss } from '../core/style/premiumCss';
 import { buildSceneRenderPlanForPage, type SceneRenderPlan } from '../core/scene-renderer';
 import { sanitizeCustomStyle, styleMapToCssString } from '../core/style/sanitize';
 import { getDesignContractWithProjectStyle } from '../core/mpi-design-contract';
@@ -683,19 +683,18 @@ body {
 .skin-button-rounded { border:none; border-radius:24px; background:linear-gradient(135deg,var(--silse-color-primary, var(--color-accent)) 0%,var(--silse-color-secondary, var(--color-warning)) 100%); color:var(--silse-color-surface, var(--color-panel)); font-weight:600; box-shadow:0 2px 6px rgba(185,116,14,0.3); }
 .skin-button-mission { border:2px solid var(--silse-color-primary); border-radius:4px; background:var(--silse-color-surface); color:var(--silse-color-primary); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; box-shadow:0 0 12px rgba(59,130,246,0.4); }
 .skin-quiz-calm { border:1px solid var(--silse-color-border); border-radius:10px; background:var(--silse-color-surface); }
-.skin-quiz-playful { border:2px solid rgba(245,158,11,0.3); border-radius:16px; background:linear-gradient(135deg,rgba(254,243,199,0.5) 0%,rgba(255,255,255,0.8) 100%); }
+/* .skin-quiz-playful extracted to premiumCss.ts buildMiscIdenticalCss() (Fase 3a Commit 5). */
 .skin-quiz-mission { border:2px solid var(--silse-color-primary); border-radius:8px; background:var(--silse-color-surface); box-shadow:0 0 16px rgba(59,130,246,0.2); }
 .skin-bridge-subtle { border-left:4px solid var(--silse-color-primary); background:rgba(37,99,235,0.04); }
 .skin-bridge-strong { border-left:6px solid var(--silse-color-primary); background:linear-gradient(90deg,rgba(59,130,246,0.15) 0%,transparent 100%); box-shadow:0 0 12px rgba(59,130,246,0.2); }
 .skin-game-calm { border:1px solid var(--silse-color-border); border-radius:10px; background:var(--silse-color-surface); }
-.skin-game-playful { border:2px solid rgba(34,197,94,0.3); border-radius:16px; background:linear-gradient(135deg,rgba(220,252,231,0.5) 0%,rgba(255,255,255,0.8) 100%); }
+/* .skin-game-playful extracted to premiumCss.ts buildMiscIdenticalCss() (Fase 3a Commit 5). */
 .skin-game-mission { border:2px solid var(--silse-color-primary); border-radius:8px; background:var(--silse-color-surface); box-shadow:0 0 20px rgba(59,130,246,0.3); }
 .skin-layered-clean { border:1px solid var(--silse-color-border); border-radius:10px; background:var(--silse-color-surface); }
 .skin-layered-soft { border:2px solid rgba(255,200,200,0.3); border-radius:16px; background:linear-gradient(135deg,var(--silse-color-surface) 0%,rgba(255,255,255,0.7) 100%); }
 .skin-layered-bold { border:2px solid var(--silse-color-primary); border-radius:8px; background:var(--silse-color-surface); box-shadow:0 0 16px rgba(59,130,246,0.15); }
-.skin-text-clean { text-shadow:none; }
-.skin-text-soft { text-shadow:0 1px 2px rgba(0,0,0,0.03); }
-.skin-text-bold { text-shadow:0 0 8px rgba(59,130,246,0.2); font-weight:500; }
+/* .skin-text-clean, .skin-text-soft, .skin-text-bold extracted to
+   premiumCss.ts buildMiscIdenticalCss() (Fase 3a Commit 5). */
 /* BACKGROUND-PATTERN-SYSTEM-V1: background pattern classes
    NOTE (Fase 3a Commit 3): .silse-bg-page-*::before and .silse-bg-pattern-*::after
    extracted to premiumCss.ts buildBackgroundPatternCss() — inlined below via
@@ -720,15 +719,19 @@ ${buildCoverDecorationCss()}
 .silse-cover-soft [data-variant="subtitle"] { letter-spacing:0.5px; opacity:0.75; font-weight:500; }
 .silse-cover-mission [data-variant="title"] { text-shadow:0 0 24px rgba(59,130,246,0.4),0 2px 8px rgba(0,0,0,0.3); letter-spacing:-0.8px; font-weight:700; }
 .silse-cover-mission [data-variant="subtitle"] { letter-spacing:2px; opacity:0.65; text-transform:uppercase; font-size:0.8em; font-weight:600; }
-/* QUIZ-GAME-VISUAL-POLISH-01: quiz/game visual polish */
-.silse-choice-default { border-left:3px solid transparent; transition:border-color 0.15s,background-color 0.15s; }
-.silse-choice-default:hover { border-left-color:var(--silse-color-primary,var(--color-accent)); }
+/* QUIZ-GAME-VISUAL-POLISH-01: quiz/game visual polish
+   NOTE (Fase 3a Commit 5): .silse-choice-default and .silse-choice-default:hover
+   (base) extracted to premiumCss.ts buildMiscIdenticalCss(). The premium override
+   (.silse-choice-default:hover with box-shadow + transform) stays inline in the
+   premium polish section below — it is DRIFTED (deferred to 3b). .silse-score
+   also extracted. */
+${buildMiscIdenticalCss()}
 .silse-choice-selected { border-left:3px solid var(--silse-color-primary,var(--color-accent)); box-shadow:inset 0 0 0 1px rgba(30,91,143,0.2); }
 .silse-choice-correct { border-left:4px solid var(--color-success-strong); box-shadow:inset 0 0 0 1px rgba(22,163,74,0.2); }
 .silse-choice-wrong { border-left:4px solid var(--color-danger-strong); box-shadow:inset 0 0 0 1px rgba(220,38,38,0.15); }
 .silse-feedback-correct { border-left:4px solid var(--color-success-strong); font-weight:500; }
 .silse-feedback-wrong { border-left:4px solid var(--color-danger-strong); font-weight:500; }
-.silse-score { font-weight:600; padding:4px 12px; border-radius:12px; background:rgba(255,255,255,0.15); }
+/* .silse-score extracted to premiumCss.ts buildMiscIdenticalCss() (Fase 3a Commit 5). */
 .silse-quiz-mission .silse-question-choice, .silse-game-mission .silse-game-choice { border-radius:4px; letter-spacing:0.3px; }
 .silse-quiz-mission .silse-choice-correct, .silse-game-mission .silse-choice-correct { box-shadow:0 0 8px rgba(34,197,94,0.3); }
 .silse-quiz-mission .silse-choice-wrong, .silse-game-mission .silse-choice-wrong { box-shadow:0 0 8px rgba(239,68,68,0.3); }
@@ -747,7 +750,8 @@ ${buildCoverDecorationCss()}
    inlined via that function. The drifted .silse-cover-* and .silse-choice-*
    overrides stay inline (deferred to 3b). */
 ${buildPremiumBlockCss()}
-.silse-choice-default:hover { border-left-color:var(--silse-color-primary,var(--color-accent)); box-shadow:0 2px 8px rgba(30,91,143,0.12); transform:translateY(-1px); }
+/* .silse-choice-default:hover (premium override) extracted to premiumCss.ts
+   buildMiscIdenticalCss() (Fase 3a Commit 5). */
 .silse-choice-selected { border-left:3px solid var(--silse-color-primary,var(--color-accent)); box-shadow:inset 0 0 0 1px rgba(30,91,143,0.2),0 2px 12px rgba(30,91,143,0.15); background:linear-gradient(135deg,rgba(30,91,143,0.06) 0%,rgba(30,91,143,0.02) 100%); }
 .silse-choice-correct { border-left:4px solid var(--color-success-strong); box-shadow:inset 0 0 0 1px rgba(22,163,74,0.25),0 2px 16px rgba(22,163,74,0.18); background:linear-gradient(135deg,rgba(22,163,74,0.08) 0%,rgba(22,163,74,0.02) 100%); }
 .silse-choice-wrong { border-left:4px solid var(--color-danger-strong); box-shadow:inset 0 0 0 1px rgba(220,38,38,0.2),0 2px 12px rgba(220,38,38,0.12); }
