@@ -280,7 +280,9 @@ export function getSceneContentRendererJs(): string {
           exampleCards.push(card);
         })(content.examples[ei]);
       }
-      wrapper.appendChild(exportGrid(plan, 'silse-learning-example-grid silse-premium-learning-example-grid', exampleCards, 'repeat(auto-fill, minmax(280px, 1fr))', 10));
+      // L2-3: columns default wired to plan.learning.exampleGridColumns (from contract).
+      var exGridCols = (plan.learning && plan.learning.exampleGridColumns) ? plan.learning.exampleGridColumns : 'repeat(auto-fill, minmax(280px, 1fr))';
+      wrapper.appendChild(exportGrid(plan, 'silse-learning-example-grid silse-premium-learning-example-grid', exampleCards, exGridCols, 10));
     }
 
     // FOUNDATION-HARDENING-01: Key point — visual dari plan.learning.keyPointPanel (contract token)

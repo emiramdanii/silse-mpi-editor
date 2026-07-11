@@ -53,11 +53,8 @@ describe('MPI-DESIGN-CONTRACT-01 — 16 design token categories', () => {
     expect(typeof t.uppercase).toBe('boolean');
   });
 
-  it('5. DesignLayoutPlacement punya x, y, width, height, zIndex, slot, anchor, align, gap, grid', () => {
-    const placement = { x: 0, y: 0, width: 100, height: 50, zIndex: 1 };
-    expect(placement.x).toBe(0);
-    expect(placement.zIndex).toBe(1);
-  });
+  // 5. DesignLayoutPlacement removed in L2-3 (YAGNI — type was defined but
+  // never populated in defaultDesignContract, never consumed by renderer).
 
   it('6. DesignCard punya background, radius, padding, border, shadow, titleStyle, bodyStyle, accentStrip, iconCorner, glassEffect', () => {
     const c = DEFAULT_DESIGN_CONTRACT.card;

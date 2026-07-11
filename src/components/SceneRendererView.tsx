@@ -837,9 +837,10 @@ function LearningMaterialContent({
         {content.explanation}
       </div>
 
-      {/* Example cards — LAYOUT-STYLE-01: SceneGrid for customStyle.grid support */}
+      {/* Example cards — LAYOUT-STYLE-01: SceneGrid for customStyle.grid support.
+          L2-3: columns default wired to contract.learning.exampleGridColumns. */}
       {content.examples && content.examples.length > 0 && (
-        <SceneGrid contract={contract} className="silse-learning-example-grid silse-premium-learning-example-grid" columns="repeat(auto-fill, minmax(280px, 1fr))" gap={10}>
+        <SceneGrid contract={contract} className="silse-learning-example-grid silse-premium-learning-example-grid" columns={contract.learning?.exampleGridColumns ?? 'repeat(auto-fill, minmax(280px, 1fr))'} gap={10}>
           {content.examples.map((ex) => (
             <div key={ex.id} className="silse-learning-example-card silse-premium-learning-example-card" style={{
               padding: surfPadding,

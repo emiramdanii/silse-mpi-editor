@@ -10,7 +10,6 @@ export type {
   DesignBackground,
   DesignBackgroundPattern,
   DesignTypography,
-  DesignLayoutPlacement,
   DesignCard,
   DesignButton,
   DesignButtonVariant,

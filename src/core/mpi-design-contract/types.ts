@@ -99,19 +99,10 @@ export type DesignTypography = {
 // ---------------------------------------------------------------------------
 // 5. Layout / Placement
 // ---------------------------------------------------------------------------
-
-export type DesignLayoutPlacement = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  zIndex: number;
-  slot?: string; // slot role identifier
-  anchor?: 'top-left' | 'top-center' | 'top-right' | 'center' | 'bottom-left' | 'bottom-center' | 'bottom-right';
-  align?: 'left' | 'center' | 'right';
-  gap?: number;
-  grid?: { templateColumns: string; templateRows: string };
-};
+// L2-3: DesignLayoutPlacement type removed (YAGNI — was defined but never
+// populated in defaultDesignContract, never consumed by any renderer).
+// Slot positioning is handled via absolute coordinates (x/y/width/height)
+// in SceneRenderPlan, not via this contract type.
 
 // ---------------------------------------------------------------------------
 // 6. Card
