@@ -72,6 +72,9 @@ describe('boundary — no V5 contamination in src/', () => {
   }
 
   it('no source file imports from a V5-style "legacy" path', () => {
+    // Fase 5.9 UNIFY: ai-mpi-json/legacy/ is an intentional architectural
+    // decision — legacy converters are isolated in a subfolder. The index.ts
+    // re-exports from there. This is allowed.
     const legacyPatterns = [
       /from\s+['"][^'"]*\/legacy\//,
       /from\s+['"][^'"]*\/v5\//,
@@ -79,8 +82,16 @@ describe('boundary — no V5 contamination in src/', () => {
       /from\s+['"][^'"]*silse-fresh/,
       /from\s+['"][^'"]*silse-studio/,
     ];
+    // Whitelist: files allowed to import from legacy/ (intentional architecture)
+    const legacyWhitelist = [
+      'src/core/ai-mpi-json/index.ts',
+      'src/core/ai-mpi-json/legacy/legacy-to-blueprint-adapter.ts',
+      'src/tests/mpi-json-scene-proof-01.test.tsx',
+    ];
     const offenders: string[] = [];
     for (const f of files) {
+      // Skip whitelisted files
+      if (legacyWhitelist.some(w => f.endsWith(w))) continue;
       const content = readFileSafe(f);
       for (const re of legacyPatterns) {
         if (re.test(content)) {

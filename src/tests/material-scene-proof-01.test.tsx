@@ -312,19 +312,20 @@ describe('MATERIAL-SCENE-PROOF-01 — editor/preview/export parity', () => {
 // ---------------------------------------------------------------------------
 
 describe('MATERIAL-SCENE-PROOF-01 — legacy fallback', () => {
-  it('23. legacy material (tanpa sceneMetadata) tetap render via CardComponentView', () => {
+  it('23. legacy material (tanpa sceneMetadata) tetap render via scene renderer', () => {
+    // Fase 2b: ALL projects render via SceneRendererView with scene classes.
     const project = createSamplePpknProject();
     const materialPage = project.pages.find((p) => p.role === 'material');
     setStoreProject(project as unknown as ReturnType<typeof createSceneProofProject>, materialPage?.id);
     const { container } = render(<CanvasStage />);
-    // Legacy material should NOT have silse-scene-learning-scene
-    expect(container.querySelector('.silse-scene-learning-scene')).not.toBeInTheDocument();
+    expect(container.querySelector('[class*="silse-scene"]')).toBeInTheDocument();
   });
 
   it('24. legacy material export tanpa scenePlan learning-scene', () => {
+    // Fase 2b: export also uses scene renderer for ALL projects.
     const project = createSamplePpknProject();
     const html = exportProjectToHtml(project);
-    expect(html).not.toContain('silse-scene-learning-scene');
+    expect(html).toContain('silse-scene');
   });
 
   it('25. no dependency added — all pure TypeScript', () => {

@@ -31,25 +31,40 @@ function getExportHtml(stylePackId: string): string {
   return exportProjectToHtml(applyStylePack(project, stylePackId));
 }
 
+/**
+ * Normalize random IDs in export HTML so byte-identical comparison is stable
+ * across runs. Replaces UUIDs and random IDs with a fixed placeholder.
+ */
+function normalizeIds(html: string): string {
+  return html
+    // Normalize UUIDs (e.g., "page_89e0e93d-d066-4d61-8f06-87692ddc64f9")
+    .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '<UUID>')
+    // Normalize IDs like "page_<UUID>" or "comp_<UUID>"
+    .replace(/(page_|comp_|scene_|obj_)<UUID>/g, '$1<UUID>')
+    // Normalize any remaining hex-like random IDs
+    .replace(/"[a-f0-9]{16,}"/gi, '"<ID>"');
+}
+
 const SAVE_BASELINE = process.env.SAVE_BASELINE === 'true';
 
 describe('Fase 3a Commit 6 — byte-identical verification', () => {
   for (const stylePackId of STYLE_PACKS) {
-    it(`${stylePackId}: export HTML is byte-identical to baseline`, () => {
+    it(`${stylePackId}: export HTML is byte-identical to baseline (IDs normalized)`, () => {
       const html = getExportHtml(stylePackId);
+      const normalizedHtml = normalizeIds(html);
       const baselinePath = `${BASELINE_DIR}/fase3a-baseline-${stylePackId}.html`;
 
       if (SAVE_BASELINE) {
-        writeFileSync(baselinePath, html);
-        console.log(`[baseline] Saved ${baselinePath} (${html.length} bytes)`);
+        writeFileSync(baselinePath, normalizedHtml);
+        console.log(`[baseline] Saved ${baselinePath} (${normalizedHtml.length} bytes)`);
         return;
       }
 
-      // Compare with baseline
+      // Compare with baseline (IDs normalized to handle random UUIDs)
       expect(existsSync(baselinePath), `Baseline file ${baselinePath} not found. Run with SAVE_BASELINE=true first.`).toBe(true);
       const baseline = readFileSync(baselinePath, 'utf8');
-      expect(html.length).toBe(baseline.length);
-      expect(html).toBe(baseline);
+      expect(normalizedHtml.length).toBe(baseline.length);
+      expect(normalizedHtml).toBe(baseline);
     });
   }
 });

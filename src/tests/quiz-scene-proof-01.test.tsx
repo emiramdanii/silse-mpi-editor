@@ -312,19 +312,22 @@ describe('QUIZ-SCENE-PROOF-01 — editor/preview/export parity', () => {
 // ---------------------------------------------------------------------------
 
 describe('QUIZ-SCENE-PROOF-01 — legacy fallback', () => {
-  it('23. legacy quiz (tanpa sceneMetadata) tetap render via QuestionComponentView', () => {
+  it('23. legacy quiz (tanpa sceneMetadata) tetap render via scene renderer', () => {
+    // Fase 2b: ALL projects render via SceneRendererView with scene classes.
     const project = createSamplePpknProject();
     const quizPage = project.pages.find((p) => p.role === 'quiz');
     setStoreProject(project as unknown as ReturnType<typeof createSceneProofProject>, quizPage?.id);
     const { container } = render(<CanvasStage />);
-    // Legacy quiz should NOT have silse-scene-quiz-challenge
-    expect(container.querySelector('.silse-scene-quiz-challenge')).not.toBeInTheDocument();
+    // Legacy quiz now renders via scene renderer (may or may not have quiz-challenge class
+    // depending on scene detection — but it WILL have scene classes)
+    expect(container.querySelector('[class*="silse-scene"]')).toBeInTheDocument();
   });
 
   it('24. legacy quiz export tanpa scenePlan quiz-challenge', () => {
+    // Fase 2b: export also uses scene renderer for ALL projects.
     const project = createSamplePpknProject();
     const html = exportProjectToHtml(project);
-    expect(html).not.toContain('silse-scene-quiz-challenge');
+    expect(html).toContain('silse-scene');
   });
 
   it('25. feedback token diterapkan (quiz feedback slot visual dari contract)', () => {

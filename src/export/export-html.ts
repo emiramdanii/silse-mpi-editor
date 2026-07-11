@@ -858,7 +858,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
   var _currentPageRole = undefined;
 
   // Fase 3b Commit 1: Inline JS equivalent of getContrastAwareTextColor()
-  // from src/core/design/contrast.ts. Pure function — no React/DOM deps.
+  // from src/core/design/contrast.ts. Pure function — no framework/DOM deps.
   // Used by renderCoverHeroSceneContent and renderClosingAwardSceneContent
   // to pick contrast-aware text color (white on dark cover/closing backgrounds).
   // MUST stay byte-identical with the TS version in contrast.ts.

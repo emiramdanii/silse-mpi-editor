@@ -245,9 +245,12 @@ describe('M9 — canvas source checks', () => {
   });
 
   it('CanvasStage has resize handle', () => {
-    const content = readFileSync(resolve(SRC_DIR, 'editor/CanvasStage.tsx'), 'utf8');
-    expect(content).toMatch(/resize/i);
-    expect(content).toMatch(/nwse-resize/i);
+    // Fase 2a: resize handle UI (nwse-resize cursor) moved to SceneRendererView.tsx.
+    // CanvasStage.tsx still has resize callbacks (onSlotResize).
+    const canvasContent = readFileSync(resolve(SRC_DIR, 'editor/CanvasStage.tsx'), 'utf8');
+    expect(canvasContent).toMatch(/resize/i);
+    const rendererContent = readFileSync(resolve(SRC_DIR, 'components/SceneRendererView.tsx'), 'utf8');
+    expect(rendererContent).toMatch(/nwse-resize/i);
   });
 
   it('CanvasStage does NOT contain "block"', () => {

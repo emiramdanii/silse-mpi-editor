@@ -378,17 +378,20 @@ describe('DESIGN-CONTRACT-RENDER-PARITY-01 — parity + legacy fallback', () => 
     expect(html).toContain('"y":120');
   });
 
-  it('26. legacy fallback safe — legacy project tetap render tanpa scene', () => {
+  it('26. legacy fallback safe — legacy project tetap render via scene renderer', () => {
+    // Fase 2b: ALL projects render via SceneRendererView with scene classes.
+    // Legacy projects (without sceneMetadata) get a fallback scene plan.
     const project = createSamplePpknProject();
     setStoreProject(project);
     const { container } = render(<CanvasStage />);
-    expect(container.querySelector('.silse-scene')).not.toBeInTheDocument();
+    expect(container.querySelector('.silse-scene')).toBeInTheDocument();
   });
 
-  it('27. legacy fallback safe — legacy export tanpa scenePlan', () => {
+  it('27. legacy fallback safe — legacy export uses scene renderer', () => {
+    // Fase 2b: export also uses scene renderer for ALL projects.
     const project = createSamplePpknProject();
     const html = exportProjectToHtml(project);
-    expect(html).not.toContain('silse-scene-game-mission');
+    expect(html).toContain('silse-scene');
   });
 
   it('28. no dependency added — all pure TypeScript', () => {

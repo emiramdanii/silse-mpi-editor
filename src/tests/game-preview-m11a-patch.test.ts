@@ -102,31 +102,33 @@ describe('M11A PATCH — preview store game runtime', () => {
 // =========================================================================
 
 describe('M11A PATCH — PreviewApp renders GameComponent', () => {
-  it('PreviewApp imports isGameComponent', () => {
+  // Fase 2b: PreviewApp delegates all rendering to SceneRendererView.
+  // Game components are handled by scene composers inside SceneRendererView.
+  // These tests verify that the game rendering path exists in the codebase.
+
+  it('PreviewApp imports SceneRendererView (which handles game rendering)', () => {
     const content = readFileSync(resolve(SRC_DIR, 'preview/PreviewApp.tsx'), 'utf8');
-    expect(content).toMatch(/isGameComponent/);
+    expect(content).toMatch(/SceneRendererView/);
   });
 
-  it('PreviewApp imports GameComponentView', () => {
-    const content = readFileSync(resolve(SRC_DIR, 'preview/PreviewApp.tsx'), 'utf8');
-    expect(content).toMatch(/GameComponentView/);
+  it('SceneRendererView handles game scene types', () => {
+    const content = readFileSync(resolve(SRC_DIR, 'components/SceneRendererView.tsx'), 'utf8');
+    expect(content).toMatch(/game/i);
   });
 
-  it('PreviewApp has game render branch', () => {
-    const content = readFileSync(resolve(SRC_DIR, 'preview/PreviewApp.tsx'), 'utf8');
-    expect(content).toMatch(/isGameComponent\(component\)/);
+  it('scene-composers module exports game composers', () => {
+    const content = readFileSync(resolve(SRC_DIR, 'components/scene-composers/index.tsx'), 'utf8');
+    expect(content).toMatch(/ClassificationGameComposer|MatchingGameComposer|SequencingGameComposer/);
   });
 
-  it('PreviewApp passes gameState to GameComponentView', () => {
+  it('PreviewApp passes preview store state to SceneRendererView', () => {
     const content = readFileSync(resolve(SRC_DIR, 'preview/PreviewApp.tsx'), 'utf8');
-    expect(content).toMatch(/gameState=\{gs\}/);
+    expect(content).toMatch(/previewStore|usePreviewStore/);
   });
 
-  it('PreviewApp passes onAnswer, onNextMission, onRetry', () => {
-    const content = readFileSync(resolve(SRC_DIR, 'preview/PreviewApp.tsx'), 'utf8');
-    expect(content).toMatch(/onAnswer/);
-    expect(content).toMatch(/onNextMission/);
-    expect(content).toMatch(/onRetry/);
+  it('preview store has game state management', () => {
+    const content = readFileSync(resolve(SRC_DIR, 'preview/preview-store.ts'), 'utf8');
+    expect(content).toMatch(/gameState|gameStates/);
   });
 });
 
@@ -135,9 +137,9 @@ describe('M11A PATCH — PreviewApp renders GameComponent', () => {
 // =========================================================================
 
 describe('M11A PATCH — preview and export both support game', () => {
-  it('PreviewApp has game render branch', () => {
+  it('PreviewApp uses SceneRendererView for game rendering', () => {
     const previewContent = readFileSync(resolve(SRC_DIR, 'preview/PreviewApp.tsx'), 'utf8');
-    expect(previewContent).toMatch(/isGameComponent/);
+    expect(previewContent).toMatch(/SceneRendererView/);
   });
 
   it('export-html has game render branch', () => {

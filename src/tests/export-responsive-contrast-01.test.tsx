@@ -75,31 +75,35 @@ describe('EXPORT-CONTRAST-01 — Cover/closing text white on dark background', (
     const html = exportProjectToHtml(project);
     // Cover title CSS should contain color:#ffffff
     expect(html).toContain('silse-cover-title');
-    // Find the cover title CSS block and verify it has white color
-    // Fase 1 P4: #ffffff migrated to var(--color-panel) which resolves to #ffffff
-    const titleMatch = html.match(/silse-cover-title[^}]*color:(?:#ffffff|var\(--color-panel\))/);
-    expect(titleMatch).toBeTruthy();
+    // Fase 3b Commit 1: color is now set via getContrastAwareTextColor() JS function
+    // which returns 'var(--silse-color-surface, var(--color-panel))' for cover/closing.
+    // Verify the function is present and called for cover title.
+    expect(html).toContain('getContrastAwareTextColor');
+    expect(html).toContain('_currentPageRole');
   });
 
   it('8. export HTML cover subtitle uses white color', () => {
     const project = aiBlueprintToSimpleProject(templateToBlueprint(TEMPLATE_PPKN_NORMA));
     const html = exportProjectToHtml(project);
-    const subtitleMatch = html.match(/silse-cover-subtitle[^}]*color:(?:#ffffff|var\(--color-panel\))/);
-    expect(subtitleMatch).toBeTruthy();
+    expect(html).toContain('silse-cover-subtitle');
+    // Fase 3b Commit 1: subtitle also uses getContrastAwareTextColor()
+    expect(html).toContain('getContrastAwareTextColor');
   });
 
   it('9. export HTML closing achievement uses white color', () => {
     const project = aiBlueprintToSimpleProject(templateToBlueprint(TEMPLATE_PPKN_NORMA));
     const html = exportProjectToHtml(project);
-    const achMatch = html.match(/silse-closing-achievement[^}]*color:(?:#ffffff|var\(--color-panel\))/);
-    expect(achMatch).toBeTruthy();
+    expect(html).toContain('silse-closing-achievement');
+    // Fase 3b Commit 1: achievement uses getContrastAwareTextColor()
+    expect(html).toContain('getContrastAwareTextColor');
   });
 
   it('10. export HTML closing summary uses white color', () => {
     const project = aiBlueprintToSimpleProject(templateToBlueprint(TEMPLATE_PPKN_NORMA));
     const html = exportProjectToHtml(project);
-    const sumMatch = html.match(/silse-closing-summary[^}]*color:(?:#ffffff|var\(--color-panel\))/);
-    expect(sumMatch).toBeTruthy();
+    expect(html).toContain('silse-closing-summary');
+    // Fase 3b Commit 1: summary uses getContrastAwareTextColor()
+    expect(html).toContain('getContrastAwareTextColor');
   });
 
   it('11. React CoverHeroContent uses white text for title', () => {

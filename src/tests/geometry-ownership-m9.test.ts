@@ -72,32 +72,27 @@ describe('M9 PATCH — fill mode does NOT apply component.x/y', () => {
 });
 
 describe('M9 PATCH — CanvasStage uses positionMode fill', () => {
-  it('CanvasStage passes positionMode="fill" to TextComponentView', () => {
+  it('CanvasStage delegates to SceneRendererView for component rendering', () => {
+    // Fase 2b: CanvasStage no longer directly renders component views.
+    // It delegates to SceneRendererView which handles slot positioning.
     const content = readSrcFile('editor/CanvasStage.tsx');
-    expect(content).toMatch(/positionMode="fill"/);
+    expect(content).toMatch(/SceneRendererView/);
   });
 
-  it('CanvasStage wrapper has absolute positioning with component.x/y', () => {
-    const content = readSrcFile('editor/CanvasStage.tsx');
-    // Wrapper should have position: 'absolute' and use component.x/y
+  it('SceneRendererView has absolute positioning with slot.placement.x/y', () => {
+    // Fase 2b: positioning moved from CanvasStage to SceneRendererView.
+    const content = readSrcFile('components/SceneRendererView.tsx');
     expect(content).toMatch(/position: 'absolute'/);
-    expect(content).toMatch(/component\.x/);
-    expect(content).toMatch(/component\.y/);
-    expect(content).toMatch(/component\.width/);
-    expect(content).toMatch(/component\.height/);
+    expect(content).toMatch(/slot\.placement\.x/);
+    expect(content).toMatch(/slot\.placement\.y/);
+    expect(content).toMatch(/slot\.placement\.width/);
+    expect(content).toMatch(/slot\.placement\.height/);
   });
 
-  it('CanvasStage does NOT pass component.x/y to component views directly', () => {
+  it('CanvasStage delegates to SceneRendererView (no direct component positioning)', () => {
+    // Fase 2b: CanvasStage no longer positions individual components.
     const content = readSrcFile('editor/CanvasStage.tsx');
-    // The component views receive positionMode="fill", not x/y
-    // Check that TextComponentView/ImageComponentView/etc are called with positionMode
-    // but NOT with left/top from component.x/y in the view props
-    const viewCalls = content.match(/<(Text|Image|Card|Navigation)ComponentView[\s\S]*?\/>/g);
-    if (viewCalls) {
-      for (const call of viewCalls) {
-        expect(call).toMatch(/positionMode="fill"/);
-      }
-    }
+    expect(content).toMatch(/SceneRendererView/);
   });
 });
 
@@ -116,13 +111,11 @@ describe('M9 PATCH — Preview still uses absolute (default)', () => {
 });
 
 describe('M9 PATCH — no double offset in editor', () => {
-  it('CanvasStage wrapper is the single owner of absolute position', () => {
-    const content = readSrcFile('editor/CanvasStage.tsx');
-    // The wrapStyle should have position absolute + left/top from component
+  it('SceneRendererView is the single owner of absolute position', () => {
+    // Fase 2b: SceneRendererView handles all slot positioning.
+    const content = readSrcFile('components/SceneRendererView.tsx');
     expect(content).toMatch(/position: 'absolute'/);
-    // Component views should use fill (relative, 0, 100%)
-    // Not absolute with component.x/y again
-    const fillCount = (content.match(/positionMode="fill"/g) || []).length;
-    expect(fillCount).toBe(8); // text, image, card, navigation, question, game, layered-info, learning-bridge
+    expect(content).toMatch(/slot\.placement\.x/);
+    expect(content).toMatch(/slot\.placement\.y/);
   });
 });
