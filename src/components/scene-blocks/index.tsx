@@ -317,7 +317,7 @@ export function SceneAccordion({ contract, items, openIndex: externalIdx, onTogg
             border: isOpen ? `1px solid ${contract.palette.gold}` : contract.card.border,
             background: contract.card.background,
           }}>
-            <div onClick={() => handleToggle(idx)} style={{
+            <div className="silse-accordion-header" onClick={() => handleToggle(idx)} style={{
               padding: '12px 16px', cursor: 'pointer',
               fontWeight: 800, fontSize: 14, color: contract.palette.text,
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -325,7 +325,7 @@ export function SceneAccordion({ contract, items, openIndex: externalIdx, onTogg
               <span>{isOpen ? '▾' : '▸'} {item.title}</span>
             </div>
             {isOpen && (
-              <div style={{ padding: '0 16px 14px', fontSize: 14, lineHeight: 1.6, color: contract.palette.mutedText }}>
+              <div className="silse-accordion-body" style={{ padding: '0 16px 14px', fontSize: 14, lineHeight: 1.6, color: contract.palette.mutedText }}>
                 {item.body}
               </div>
             )}

@@ -1498,14 +1498,20 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     return el;
   }
 
-  function exportTabs(plan, tabs, activeTab) {
+  // L3-1: exportTabs now supports panels — tabs + panels emitted as siblings
+  // inside a wrapper div. wireInteractions() finds [data-tab-panel] via
+  // closest('.silse-block-tabs-wrapper').
+  function exportTabs(plan, tabs, activeTab, panels) {
     var p = plan.palette || {};
-    var el = document.createElement('div');
-    el.className = 'silse-block-tabs';
-    el.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;';
+    var wrapper = document.createElement('div');
+    wrapper.className = 'silse-block-tabs-wrapper';
+
+    var tabBar = document.createElement('div');
+    tabBar.className = 'silse-block-tabs';
+    tabBar.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;';
     // COMPONENT-STYLE-01: apply customStyle.tabs (pre-computed CSS string)
     if (_sceneCustomStyleCss && _sceneCustomStyleCss.tabs) {
-      el.style.cssText += _sceneCustomStyleCss.tabs;
+      tabBar.style.cssText += _sceneCustomStyleCss.tabs;
     }
     for (var i = 0; i < tabs.length; i++) {
       var tab = document.createElement('button');
@@ -1513,9 +1519,24 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       var isActive = tabs[i].id === activeTab;
       tab.style.cssText = 'padding:8px 16px;min-height:40px;border-radius:999px;font-size:13px;font-weight:800;cursor:pointer;border:none;background:' + (isActive ? (p.gold || 'var(--silse-color-gold, var(--silse-gold))') : 'rgba(255,255,255,0.04)') + ';color:' + (isActive ? (p.primary || 'var(--silse-color-background)') : p.mutedText) + ';';
       tab.textContent = tabs[i].label;
-      el.appendChild(tab);
+      tabBar.appendChild(tab);
     }
-    return el;
+    wrapper.appendChild(tabBar);
+
+    // L3-1: emit panel elements with data-tab-panel attribute
+    if (panels && panels.length > 0) {
+      for (var pi = 0; pi < panels.length; pi++) {
+        var panel = document.createElement('div');
+        panel.setAttribute('data-tab-panel', panels[pi].id);
+        panel.style.display = panels[pi].id === activeTab ? 'block' : 'none';
+        if (panels[pi].content) {
+          panel.appendChild(panels[pi].content);
+        }
+        wrapper.appendChild(panel);
+      }
+    }
+
+    return wrapper;
   }
 
   // LAYOUT-STYLE-01: exportGrid — grid container with customStyle.grid overlay.
@@ -1538,10 +1559,17 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
   // ===========================================================================
 
   function renderCurriculumGuideExport(slot, content, plan) {
+    // L3-1: pass panels to exportTabs for tab panel switching in export
+    var cpPanel = exportPanel(plan, 'Capaian Pembelajaran', content.competency || '');
+    var tpPanel = exportPanel(plan, 'Tujuan Pembelajaran', content.learningFlow || 'Alur pembelajaran');
+    var atpPanel = exportPanel(plan, 'Alur Tujuan Pembelajaran', 'ATP — Alur Tujuan Pembelajaran');
     return exportShell(plan, 'silse-scene-curriculum-guide', [
       exportHeader(plan, '📋 Kurikulum Merdeka', plan.palette ? plan.palette.secondary : null, content.curriculumTitle || 'Kurikulum'),
-      exportTabs(plan, [{id:'cp',label:'CP'},{id:'tp',label:'TP'},{id:'atp',label:'ATP'}], 'cp'),
-      exportPanel(plan, 'Capaian Pembelajaran', content.competency || ''),
+      exportTabs(plan, [{id:'cp',label:'CP'},{id:'tp',label:'TP'},{id:'atp',label:'ATP'}], 'cp', [
+        { id: 'cp', content: cpPanel },
+        { id: 'tp', content: tpPanel },
+        { id: 'atp', content: atpPanel },
+      ]),
     ]);
   }
 
@@ -2951,6 +2979,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
           var accItem = document.createElement('div');
           accItem.style.cssText = 'border:1px solid ' + (isOpen ? 'var(--color-accent)' : 'var(--color-border)') + ';border-radius:6px;overflow:hidden;';
           var accHead = document.createElement('div');
+          accHead.className = 'silse-accordion-header';
           accHead.style.cssText = 'padding:8px 12px;background:' + (isOpen ? 'var(--color-accent-soft)' : 'var(--color-panel-soft)') + ';cursor:pointer;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:' + (isOpen ? 'var(--color-accent)' : 'var(--color-text)') + ';white-space:normal;overflow-wrap:anywhere;';
           accHead.textContent = (isOpen ? '▾ ' : '▸ ') + layer.title;
           (function(itemIdx) {
@@ -2962,6 +2991,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
           accItem.appendChild(accHead);
           if (isOpen) {
             var accBody = document.createElement('div');
+            accBody.className = 'silse-accordion-body';
             accBody.style.cssText = 'padding:10px 12px;font-size:13px;line-height:1.5;color:var(--color-text);white-space:pre-wrap;overflow-wrap:anywhere;';
             accBody.textContent = layer.body;
             accItem.appendChild(accBody);
@@ -3203,37 +3233,56 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
   function wireInteractions() {
     if (!canvas) return;
 
-    // Tab click handler
+    // L3-1 FIX: Tab click handler — find panels via .silse-block-tabs-wrapper
     canvas.addEventListener('click', function(e) {
       var tab = e.target.closest('[data-tab-id]');
       if (tab) {
         var tabId = tab.getAttribute('data-tab-id');
-        var tabsContainer = tab.parentElement;
-        var panels = tabsContainer.parentElement.querySelectorAll('[data-tab-panel]');
-        // Update active states
-        var allTabs = tabsContainer.querySelectorAll('[data-tab-id]');
+        // L3-1: find wrapper that contains both tab bar and panels
+        var wrapper = tab.closest('.silse-block-tabs-wrapper');
+        if (!wrapper) return;
+        var tabBar = wrapper.querySelector('.silse-block-tabs');
+        if (!tabBar) return;
+        // Update active states on tab buttons
+        var allTabs = tabBar.querySelectorAll('[data-tab-id]');
+        var p = { gold: 'var(--silse-color-gold, var(--silse-gold))', primary: 'var(--silse-color-background)', mutedText: 'var(--silse-muted-premium, var(--silse-muted-premium))' };
         for (var i = 0; i < allTabs.length; i++) {
           var isActive = allTabs[i].getAttribute('data-tab-id') === tabId;
-          allTabs[i].style.background = isActive ? 'var(--silse-gold, var(--silse-gold))' : 'rgba(255,255,255,0.04)';
-          allTabs[i].style.color = isActive ? 'var(--silse-navy)' : 'var(--silse-muted-premium, var(--silse-muted-premium))';
+          allTabs[i].style.background = isActive ? p.gold : 'rgba(255,255,255,0.04)';
+          allTabs[i].style.color = isActive ? p.primary : p.mutedText;
         }
         // Show/hide panels
+        var panels = wrapper.querySelectorAll('[data-tab-panel]');
         for (var j = 0; j < panels.length; j++) {
           panels[j].style.display = panels[j].getAttribute('data-tab-panel') === tabId ? 'block' : 'none';
         }
       }
     });
 
-    // Accordion click handler
+    // L3-1 FIX: Accordion click handler — works with .silse-accordion-header/body
+    // emitted by SceneAccordion (React) and layered-info accordion (export).
+    // SceneAccordion uses data-accordion-idx; layered-info uses its own click handler.
+    // This handler handles SceneAccordion-style items (DOM toggle, no re-render).
     canvas.addEventListener('click', function(e) {
       var accItem = e.target.closest('[data-accordion-idx]');
       if (accItem) {
+        // Check if this is a SceneAccordion item (has .silse-accordion-header)
+        var header = accItem.querySelector('.silse-accordion-header');
+        if (!header) return; // Not a SceneAccordion item — skip (layered-info handles its own)
         var body = accItem.querySelector('.silse-accordion-body');
         if (body) {
+          // Toggle body visibility
           var isOpen = body.style.display !== 'none';
           body.style.display = isOpen ? 'none' : 'block';
-          var header = accItem.querySelector('.silse-accordion-header');
-          if (header) header.textContent = (isOpen ? '▸' : '▾') + header.textContent.replace(/^[▾▸]\s*/, '');
+          // Update header icon
+          var headerText = header.textContent || '';
+          header.textContent = (isOpen ? '▸ ' : '▾ ') + headerText.replace(/^[▾▸]\s*/, '');
+        } else {
+          // Body doesn't exist (was closed) — create it from data attribute
+          // This handles the case where body was not rendered (closed state)
+          // For SceneAccordion, the body is always rendered (React conditional).
+          // For export, body is only rendered when open. This handler only
+          // toggles existing body — creation requires re-render (layered-info pattern).
         }
       }
     });
