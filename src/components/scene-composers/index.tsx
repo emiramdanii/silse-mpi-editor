@@ -13,7 +13,7 @@ import { useState } from 'react';
 import type { MpiDesignContract } from '../../core/mpi-design-contract';
 
 import {
-  SceneShell, SceneHeader, SceneChip, ScenePanel, SceneGrid, SceneTabs,
+  SceneShell, SceneHeader, SceneChip, ScenePanel, SceneGrid, SceneTabs, SceneAccordion,
   DiscussionBanner, TimerBlock, ResponseInputBlock,
   RevealBlock, ScoreSummaryBlock, PortfolioBlock, ReflectionPromptBlock,
   ActionButtonBlock, MediaDisplayBlock,
@@ -1499,23 +1499,17 @@ export function AccessibilityHelpComposer({
     contrastOption?: string;
   };
 }) {
+  // L3-2: Use SceneAccordion for collapsible accessibility sections
+  const accordionItems: { title: string; body: string }[] = [];
+  if (content.readingGuide) accordionItems.push({ title: '📖 Panduan Membaca', body: content.readingGuide });
+  if (content.keyboardGuide) accordionItems.push({ title: '⌨️ Panduan Keyboard/Touch', body: content.keyboardGuide });
+  if (content.contrastOption) accordionItems.push({ title: '🎨 Opsi Kontras', body: content.contrastOption });
+
   return (
     <SceneShell contract={contract} className="silse-scene-accessibility-help">
       <SceneHeader contract={contract} chipIcon="♿" chipLabel="Aksesibilitas" chipColor={contract.palette.success} title={content.title || 'Bantuan Aksesibilitas'} />
-      {content.readingGuide && (
-        <ScenePanel contract={contract} title="📖 Panduan Membaca">
-          <div style={{ fontSize: 14, lineHeight: 1.8, color: contract.palette.text }}>{content.readingGuide}</div>
-        </ScenePanel>
-      )}
-      {content.keyboardGuide && (
-        <ScenePanel contract={contract} title="⌨️ Panduan Keyboard/Touch">
-          <div style={{ fontSize: 14, lineHeight: 1.8, color: contract.palette.text }}>{content.keyboardGuide}</div>
-        </ScenePanel>
-      )}
-      {content.contrastOption && (
-        <ScenePanel contract={contract} title="🎨 Opsi Kontras">
-          <div style={{ fontSize: 14, lineHeight: 1.8, color: contract.palette.text }}>{content.contrastOption}</div>
-        </ScenePanel>
+      {accordionItems.length > 0 && (
+        <SceneAccordion contract={contract} items={accordionItems} openIndex={0} />
       )}
     </SceneShell>
   );

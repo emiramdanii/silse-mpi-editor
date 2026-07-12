@@ -1539,6 +1539,41 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     return wrapper;
   }
 
+  // L3-2: exportAccordion — standalone accordion container with customStyle.accordion overlay.
+  // Mirrors in-app SceneAccordion. Emits data-accordion-idx + .silse-accordion-header/body
+  // classes so wireInteractions() can toggle open/close.
+  function exportAccordion(plan, items, openIdx, className) {
+    var p = plan.palette || {};
+    var card = plan.card || {};
+    var el = document.createElement('div');
+    el.className = 'silse-block-accordion ' + (className || '');
+    el.style.cssText = 'display:flex;flex-direction:column;gap:6px;';
+    // COMPONENT-STYLE-01: apply customStyle.accordion (pre-computed CSS string)
+    if (_sceneCustomStyleCss && _sceneCustomStyleCss.accordion) {
+      el.style.cssText += _sceneCustomStyleCss.accordion;
+    }
+    for (var i = 0; i < items.length; i++) {
+      var isOpen = i === openIdx;
+      var item = document.createElement('div');
+      item.setAttribute('data-accordion-idx', String(i));
+      item.style.cssText = 'border-radius:' + (card.radius || 12) + 'px;overflow:hidden;border:' + (isOpen ? '1px solid ' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') : (card.border || '1px solid var(--color-border)')) + ';background:' + (card.background || 'var(--silse-color-surface, var(--color-panel))') + ';';
+      var head = document.createElement('div');
+      head.className = 'silse-accordion-header';
+      head.style.cssText = 'padding:12px 16px;cursor:pointer;font-weight:800;font-size:14px;color:' + (p.text || 'var(--silse-color-text, var(--color-text))') + ';display:flex;justify-content:space-between;align-items:center;';
+      head.textContent = (isOpen ? '▾ ' : '▸ ') + items[i].title;
+      item.appendChild(head);
+      if (isOpen) {
+        var body = document.createElement('div');
+        body.className = 'silse-accordion-body';
+        body.style.cssText = 'padding:0 16px 14px;font-size:14px;line-height:1.6;color:' + (p.mutedText || 'var(--silse-muted-premium)') + ';';
+        body.textContent = items[i].body;
+        item.appendChild(body);
+      }
+      el.appendChild(item);
+    }
+    return el;
+  }
+
   // LAYOUT-STYLE-01: exportGrid — grid container with customStyle.grid overlay.
   // Mirrors in-app SceneGrid. AI can override gridTemplateColumns/gap/display
   // via customStyle.grid (pre-sanitized at build time, applied via closure).
@@ -2403,9 +2438,14 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
   function renderAccessibilityHelpExport(slot, content, plan) {
     var p = plan.palette || {};
     var children = [exportHeader(plan, '♿ Aksesibilitas', p.success, content.title || 'Bantuan Aksesibilitas')];
-    if (content.readingGuide) children.push(exportPanel(plan, '📖 Panduan Membaca', content.readingGuide));
-    if (content.keyboardGuide) children.push(exportPanel(plan, '⌨️ Panduan Keyboard/Touch', content.keyboardGuide));
-    if (content.contrastOption) children.push(exportPanel(plan, '🎨 Opsi Kontras', content.contrastOption));
+    // L3-2: use exportAccordion for collapsible accessibility sections
+    var accItems = [];
+    if (content.readingGuide) accItems.push({ title: '📖 Panduan Membaca', body: content.readingGuide });
+    if (content.keyboardGuide) accItems.push({ title: '⌨️ Panduan Keyboard/Touch', body: content.keyboardGuide });
+    if (content.contrastOption) accItems.push({ title: '🎨 Opsi Kontras', body: content.contrastOption });
+    if (accItems.length > 0) {
+      children.push(exportAccordion(plan, accItems, 0, 'silse-accessibility-accordion'));
+    }
     return exportShell(plan, 'silse-scene-accessibility-help', children);
   }
 
