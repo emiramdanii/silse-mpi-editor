@@ -65,7 +65,7 @@ import {
   SCORING_STYLES,
   TEXT_COMPONENT_VARIANTS,
 } from '../core/types';
-import { createEmptyPage, createProject } from '../core/project-factory';
+import { createEmptyPage, createProject, derivePageTitleFromFileName } from '../core/project-factory';
 import { stylePackToProjectStyle } from '../core/style-presets';
 import { resolveStylePackV1, getProjectStylePackIdV1 } from '../core/style-packs/style-pack-registry';
 import { applyLayoutPresetToPage } from '../core/layout-presets/apply-layout-preset';
@@ -154,6 +154,18 @@ export type EditorState = {
   // Respects capability matrix — disallowed component types are skipped.
   // Returns the number of components actually added.
   addComponentsToPage: (pageId: string, components: PageComponent[]) => number;
+
+  // V2-PILAR-1: Bulk import slide images as new pages.
+  // Each file becomes a new SimplePage with background.type='image'.
+  // Behavior:
+  //   - mode='replace': clear all existing pages, create new project from slides.
+  //   - mode='append': add slides to end of existing pages.
+  // Returns the number of pages created. Caller responsible for mode decision
+  // (use isProjectEmpty() helper to decide).
+  importSlidesAsPages: (
+    files: Array<{ name: string; dataUrl: string }>,
+    mode: 'replace' | 'append',
+  ) => number;
 
   // Save / Load (M7)
   saveCurrent: () => boolean;
@@ -1019,6 +1031,55 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       };
     });
     return addedCount;
+  },
+
+  // ----- V2-PILAR-1: Bulk import slide images as new pages -----
+
+  importSlidesAsPages: (files, mode) => {
+    if (files.length === 0) return 0;
+
+    // Build new pages from slide files. Each page:
+    //   - role='free' (paling permisif, izinkan overlay interaksi di Pilar 2)
+    //   - layoutId='blank' (slide punya background sendiri, tidak butuh layout)
+    //   - background={ type:'image', imageSrc:dataUrl }
+    //   - components=[] (kosong; overlay ditambah manual setelah impor)
+    //   - title=derivePageTitleFromFileName(fileName)
+    const newPages: SimplePage[] = files.map((file) => {
+      const page = createEmptyPage({ role: 'free', title: derivePageTitleFromFileName(file.name) });
+      page.background = { type: 'image', imageSrc: file.dataUrl };
+      return page;
+    });
+
+    set((state) => {
+      if (mode === 'replace') {
+        // Replace entire project pages with slides. Preserve project id, title,
+        // style, curriculum. Reset currentPageId to first slide.
+        return {
+          project: {
+            ...state.project,
+            pages: newPages,
+            currentPageId: newPages[0].id,
+          },
+          selectedComponentId: null,
+          // Reset runtime state (scores, completed scenes) since pages changed.
+          completedSceneIds: [],
+          perSceneScore: {},
+          aggregateScore: 0,
+        };
+      }
+      // mode === 'append': add slides to end of existing pages.
+      const pages = [...state.project.pages, ...newPages];
+      return {
+        project: {
+          ...state.project,
+          pages,
+          // Jump to first newly-imported slide for immediate feedback.
+          currentPageId: newPages[0].id,
+        },
+        selectedComponentId: null,
+      };
+    });
+    return newPages.length;
   },
 
   // ----- Save / Load (M7) -----

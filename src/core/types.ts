@@ -62,6 +62,12 @@ export type SimpleProject = {
    * Cleared saat user manually changes style pack.
    */
   hasAiStyleOverrides?: boolean;
+  /**
+   * V2-PILAR-1: Global Slide Settings.
+   * Opsional. Jika tidak di-set, renderer pakai DEFAULT_GLOBAL_SLIDE_SETTINGS.
+   * MURNI USER-SIDE — TIDAK boleh di-set oleh AI import.
+   */
+  globalSlideSettings?: GlobalSlideSettings;
 };
 
 // ---------------------------------------------------------------------------
@@ -558,4 +564,59 @@ export type QuestionComponent = BaseComponent & {
    * Jika ada, renderer akan tampilkan sebagai challenge scene, bukan form pilihan biasa.
    */
   sceneMetadata?: QuizSceneMetadata;
+};
+
+// ---------------------------------------------------------------------------
+// V2-PILAR-1: Global Slide Settings
+//
+// Pengaturan global untuk proyek berbasis slide (impor PNG massal).
+// Mempengaruhi toolbar navigasi global yang di-render di canvas (editor),
+// preview, dan export HTML.
+//
+// Field opsional di SimpleProject. Jika tidak di-set, renderer fallback
+// ke DEFAULT_GLOBAL_SLIDE_SETTINGS (bottom-center, glass, semua show=true,
+// transition=none).
+//
+// **MURNI USER-SIDE SETTING.** TIDAK boleh di-set oleh AI import.
+// Validator AI import akan reject field ini jika ada di input AI.
+// ---------------------------------------------------------------------------
+
+export const NAV_TOOLBAR_POSITIONS = [
+  'bottom-center',
+  'top-center',
+  'bottom-left',
+  'bottom-right',
+] as const;
+
+export type NavToolbarPosition = (typeof NAV_TOOLBAR_POSITIONS)[number];
+
+export const NAV_TOOLBAR_STYLES = ['glass', 'solid', 'minimal'] as const;
+export type NavToolbarStyle = (typeof NAV_TOOLBAR_STYLES)[number];
+
+export const SLIDE_TRANSITIONS = ['none', 'fade', 'slide'] as const;
+export type SlideTransition = (typeof SLIDE_TRANSITIONS)[number];
+
+export type GlobalSlideSettings = {
+  /**
+   * Konfigurasi toolbar navigasi global (prev/next/progress).
+   * Toolbar ini di-render sebagai overlay di canvas — bukan komponen per-page.
+   */
+  navigationToolbar: {
+    /** Posisi toolbar di canvas. Default: 'bottom-center'. */
+    position: NavToolbarPosition;
+    /** Gaya visual toolbar. Default: 'glass'. */
+    style: NavToolbarStyle;
+    /** Tampilkan judul scene di toolbar. Default: true. */
+    showSceneTitle: boolean;
+    /** Tampilkan teks progress "3 / 12". Default: true. */
+    showProgressText: boolean;
+    /** Tampilkan progress bar visual di bawah teks. Default: true. */
+    showProgressBar: boolean;
+  };
+  /**
+   * Animasi transisi antar slide saat user klik next/prev.
+   * Default: 'none' (instant, seperti V1).
+   * 'fade' dan 'slide' ditambahkan via CSS class di renderPage().
+   */
+  slideTransition: SlideTransition;
 };

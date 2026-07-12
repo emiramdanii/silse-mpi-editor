@@ -29,6 +29,13 @@ import {
 import { scoreProject, getScoreLabel, getScoreColor } from '../core/scoring/scoring-engine';
 import { undo, redo, canUndo, canRedo } from '../store/undo-redo';
 import { GuidedFlowDialog } from './GuidedFlowDialog';
+import { isProjectEmpty } from '../core/project-factory';
+import {
+  ACCEPTED_SLIDE_MIME,
+  SLIDE_FILE_LABEL,
+  validateSlideFileCount,
+  readImageFiles,
+} from '../core/slide-import';
 
 // OPTIMASI-01: lazy-load heavy modules that are only needed on user action.
 // TemplatePickerDialog is a modal — only loaded when user clicks "Template Pedagogis".
@@ -57,6 +64,8 @@ export function Topbar() {
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [showAiImport, setShowAiImport] = useState(false);
   const [showProjectLibrary, setShowProjectLibrary] = useState(false);
+  // V2-PILAR-1: state for slide PNG import
+  const [slideImportInProgress, setSlideImportInProgress] = useState(false);
 
   // EXPORT-READY-SUMMARY-01: compute export ready summary (memoized).
   const exportReadySummary = useMemo(
@@ -95,6 +104,82 @@ export function Topbar() {
     const { exportProjectToHtml } = await import('../export/export-html');
     const html = exportProjectToHtml(current);
     downloadHtmlFile(current.title, html);
+  };
+
+  // V2-PILAR-1: Import slide PNG/JPEG/WebP as new pages.
+  // Alur:
+  //   1. Buka file picker (multi-select, image/*)
+  //   2. Validasi jumlah file (max 50)
+  //   3. Tentukan mode: 'replace' jika proyek kosong, 'append' jika tidak
+  //      (jika tidak kosong, tanya user: tambah / buat baru)
+  //   4. Baca semua file sebagai data URL (paralel)
+  //   5. Panggil store.importSlidesAsPages(files, mode)
+  const handleImportSlides = () => {
+    if (slideImportInProgress) return;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.accept = ACCEPTED_SLIDE_MIME;
+    input.onchange = async (e) => {
+      const fileList = (e.target as HTMLInputElement).files;
+      if (!fileList || fileList.length === 0) return;
+      const files = Array.from(fileList);
+
+      // Validasi jumlah file
+      const countCheck = validateSlideFileCount(files.length);
+      if (!countCheck.ok) {
+        window.alert(countCheck.error);
+        return;
+      }
+
+      // Tentukan mode berdasarkan kondisi proyek
+      const current = useEditorStore.getState().project;
+      const empty = isProjectEmpty(current);
+      let mode: 'replace' | 'append';
+      if (empty) {
+        mode = 'replace';
+      } else {
+        // Proyek tidak kosong — tanya user
+        const choice = window.confirm(
+          `Anda akan mengimpor ${files.length} slide ke proyek yang sudah berisi ${current.pages.length} halaman.\n\n` +
+          `Klik OK untuk MENAMBAH slide ke akhir proyek ini.\n` +
+          `Klik Batal untuk MEMBUAT proyek baru dari slide (proyek saat ini tidak terhapus, simpan manual dulu jika perlu).`,
+        );
+        // confirm() returns true for OK, false for Cancel.
+        // true  → append (tambah ke existing)
+        // false → replace (buat baru — HANYA berlaku jika user sudah simpan existing)
+        // Untuk safety: jika user pilih "Batal" (replace), pastikan dia sadar proyek lama hilang.
+        if (choice) {
+          mode = 'append';
+        } else {
+          const confirmReplace = window.confirm(
+            `PERINGATAN: Membuat proyek baru akan MENGHAPUS ${current.pages.length} halaman yang ada sekarang.\n\n` +
+            `Pastikan Anda sudah menyimpan proyek saat ini (Export JSON / Simpan ke Library) jika ingin mempertahankannya.\n\n` +
+            `Klik OK untuk konfirmasi hapus dan buat proyek baru dari slide.`,
+          );
+          if (!confirmReplace) return;
+          mode = 'replace';
+        }
+      }
+
+      setSlideImportInProgress(true);
+      try {
+        const slideFiles = await readImageFiles(files);
+        if (slideFiles.length === 0) {
+          window.alert('Tidak ada file gambar valid yang bisa diimpor.');
+          return;
+        }
+        const importSlidesAsPages = useEditorStore.getState().importSlidesAsPages;
+        const count = importSlidesAsPages(slideFiles, mode);
+        window.alert(`Berhasil mengimpor ${count} slide sebagai halaman baru.`);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        window.alert(`Gagal mengimpor slide: ${message}`);
+      } finally {
+        setSlideImportInProgress(false);
+      }
+    };
+    input.click();
   };
 
   const curriculum = project.curriculum;
@@ -350,6 +435,18 @@ export function Topbar() {
           data-testid="topbar-ai-import"
         >
           🤖 Import dari AI
+        </button>
+        {/* V2-PILAR-1: Import slide PNG/JPEG/WebP as new pages */}
+        <button
+          onClick={handleImportSlides}
+          disabled={slideImportInProgress}
+          className="editor-topbar__action editor-topbar__action--slide-import"
+          title={`Impor ${SLIDE_FILE_LABEL} sekaligus sebagai halaman baru. Maks 50 file.`}
+          data-action="import-slides"
+          data-testid="topbar-import-slides"
+          style={{ opacity: slideImportInProgress ? 0.6 : 1, cursor: slideImportInProgress ? 'wait' : 'pointer' }}
+        >
+          {slideImportInProgress ? '⏳ Mengimpor…' : `🖼️ Impor Slide`}
         </button>
         <button
           onClick={() => {

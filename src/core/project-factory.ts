@@ -15,11 +15,100 @@
  *   - cover → 'coverCentered', material → 'singleColumn', lainnya → 'blank'.
  */
 
-import type { PageRole, SimplePage, SimpleProject } from './types';
+import type { GlobalSlideSettings, PageRole, SimplePage, SimpleProject } from './types';
 import { createTextComponent } from './component-factory';
 import { createPageId, createProjectId } from './ids';
 import { DEFAULT_STYLE_PACK, stylePackToProjectStyle } from './style-presets';
 import { getDefaultLayoutIdForRole } from './layout-defaults';
+
+// ---------------------------------------------------------------------------
+// V2-PILAR-1: Global Slide Settings — default + helper
+// ---------------------------------------------------------------------------
+
+/**
+ * Default GlobalSlideSettings. Dipakai saat project.globalSlideSettings undefined.
+ * Konsisten dengan perilaku V1 (bottom-center floating pill, glass, semua show=true).
+ */
+export const DEFAULT_GLOBAL_SLIDE_SETTINGS: GlobalSlideSettings = {
+  navigationToolbar: {
+    position: 'bottom-center',
+    style: 'glass',
+    showSceneTitle: true,
+    showProgressText: true,
+    showProgressBar: true,
+  },
+  slideTransition: 'none',
+};
+
+/**
+ * Get effective GlobalSlideSettings for a project.
+ * Returns project's settings if set, otherwise default.
+ *
+ * Pure function — safe for use in editor, preview, dan export (build time).
+ */
+export function getEffectiveGlobalSlideSettings(
+  project: SimpleProject,
+): GlobalSlideSettings {
+  return project.globalSlideSettings ?? DEFAULT_GLOBAL_SLIDE_SETTINGS;
+}
+
+// ---------------------------------------------------------------------------
+// V2-PILAR-1: Slide import helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Derive page title dari nama file PNG.
+ *
+ * Algoritma:
+ *   1. Hilangkan ekstensi file (.png, .jpg, .jpeg, .webp)
+ *   2. Ganti '-' dan '_' dengan spasi
+ *   3. Kapitalisasi huruf pertama
+ *   4. Batasi 50 karakter (dengan elipsis jika lebih)
+ *
+ * Contoh:
+ *   "slide-01-pengantar.png" → "Slide 01 pengantar"
+ *   "materi_01.jpg"          → "Materi 01"
+ *   "very-long-name-..."     → dipotong 50 char + "…"
+ */
+export function derivePageTitleFromFileName(fileName: string): string {
+  // Strip extension
+  const noExt = fileName.replace(/\.(png|jpe?g|webp)$/i, '');
+  // Replace - and _ with space
+  const withSpaces = noExt.replace(/[-_]+/g, ' ').trim();
+  // Capitalize first letter
+  const capitalized = withSpaces.length > 0
+    ? withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1)
+    : 'Slide';
+  // Truncate to 50 chars
+  return capitalized.length > 50
+    ? capitalized.slice(0, 49) + '…'
+    : capitalized;
+}
+
+/**
+ * Cek apakah project adalah proyek "kosong" (default).
+ * Dipakai untuk menentukan behavior impor slide:
+ *   - Kosong → ganti dengan proyek baru dari slide
+ *   - Tidak kosong → tanya user (tambah / buat baru)
+ *
+ * Kriteria "kosong":
+ *   1. Judul = "MPI Baru" (default dari createProject)
+ *   2. Tepat 1 page
+ *   3. Page role = 'cover'
+ *   4. Page punya tepat 1 komponen (text title default)
+ *   5. Text komponen berisi "Judul MPI" (default)
+ */
+export function isProjectEmpty(project: SimpleProject): boolean {
+  if (project.title !== 'MPI Baru') return false;
+  if (project.pages.length !== 1) return false;
+  const page = project.pages[0];
+  if (page.role !== 'cover') return false;
+  if (page.components.length !== 1) return false;
+  const comp = page.components[0];
+  if (comp.type !== 'text') return false;
+  if (comp.text !== 'Judul MPI') return false;
+  return true;
+}
 
 /**
  * Create a fresh empty page with a default white background.
