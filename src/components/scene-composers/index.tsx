@@ -1469,13 +1469,15 @@ export function TeacherGuideComposer({
       {tabs.length > 0 && (
         <>
           <SceneTabs contract={contract} className="silse-teacher-tabs" tabs={tabs} activeTab={activeTab} onTabClick={setActiveTab} />
-          {activeTab === 'instruksi' && content.teacherInstruction && (
-            <ScenePanel contract={contract} title="Instruksi Guru">
-              <div style={{ fontSize: 14, lineHeight: 1.6, color: contract.palette.text }}>{content.teacherInstruction}</div>
-            </ScenePanel>
+          {content.teacherInstruction && (
+            <div style={{ display: activeTab === 'instruksi' ? 'block' : 'none' }}>
+              <ScenePanel contract={contract} title="Instruksi Guru">
+                <div style={{ fontSize: 14, lineHeight: 1.6, color: contract.palette.text }}>{content.teacherInstruction}</div>
+              </ScenePanel>
+            </div>
           )}
-          {activeTab === 'tips' && content.facilitationTips && content.facilitationTips.length > 0 && (
-            <div className="silse-teacher-tips" style={{ padding: 14, borderRadius: contract.card.radius, background: `${contract.palette.gold}0A`, border: `1px solid ${contract.palette.gold}33` }}>
+          {content.facilitationTips && content.facilitationTips.length > 0 && (
+            <div className="silse-teacher-tips" style={{ display: activeTab === 'tips' ? 'block' : 'none', padding: 14, borderRadius: contract.card.radius, background: `${contract.palette.gold}0A`, border: `1px solid ${contract.palette.gold}33` }}>
               <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: contract.palette.gold, marginBottom: 8 }}>💡 Tips Fasilitasi</div>
               {content.facilitationTips.map((tip, i) => (
                 <div key={i} data-testid={`teacher-tip-${i}`} style={{ display: 'flex', gap: 8, padding: '4px 0', fontSize: 13, lineHeight: 1.5, color: contract.palette.text }}>
@@ -1485,10 +1487,12 @@ export function TeacherGuideComposer({
               ))}
             </div>
           )}
-          {activeTab === 'asesmen' && content.assessmentNotes && (
-            <ScenePanel contract={contract} title="Catatan Asesmen">
-              <div style={{ fontSize: 14, lineHeight: 1.6, color: contract.palette.text }}>{content.assessmentNotes}</div>
-            </ScenePanel>
+          {content.assessmentNotes && (
+            <div style={{ display: activeTab === 'asesmen' ? 'block' : 'none' }}>
+              <ScenePanel contract={contract} title="Catatan Asesmen">
+                <div style={{ fontSize: 14, lineHeight: 1.6, color: contract.palette.text }}>{content.assessmentNotes}</div>
+              </ScenePanel>
+            </div>
           )}
         </>
       )}

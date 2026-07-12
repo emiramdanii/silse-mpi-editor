@@ -3341,7 +3341,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     });
 
     // L3-1 FIX: Accordion click handler — works with .silse-accordion-header/body
-    // emitted by SceneAccordion (React) and layered-info accordion (export).
+    // emitted by SceneAccordion (in-app editor) and layered-info accordion (export).
     // SceneAccordion uses data-accordion-idx; layered-info uses its own click handler.
     // This handler handles SceneAccordion-style items (DOM toggle, no re-render).
     canvas.addEventListener('click', function(e) {
@@ -3361,7 +3361,7 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         } else {
           // Body doesn't exist (was closed) — create it from data attribute
           // This handles the case where body was not rendered (closed state)
-          // For SceneAccordion, the body is always rendered (React conditional).
+          // For SceneAccordion, the body is always rendered (in-app editor conditional).
           // For export, body is only rendered when open. This handler only
           // toggles existing body — creation requires re-render (layered-info pattern).
         }
@@ -3430,6 +3430,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     // to elements that have data-behavior-hover attribute.
     // L4-4: Skipped if prefers-reduced-motion is active.
     var _prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // prefers-reduced-motion: also disables silse-celebrate (display:none) and all
+    // CSS animations via @media block in <style> above.
     canvas.querySelectorAll('[data-behavior-hover]').forEach(function(el) {
       if (el._behaviorWired) return;
       el._behaviorWired = true;
