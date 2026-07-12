@@ -28,6 +28,7 @@ import { getDesignContractWithProjectStyle } from '../core/mpi-design-contract';
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../core/geometry';
 import { Toolbar } from './Toolbar';
 import { getRoleInfo } from './mpi-standard-roles';
+import { getEffectiveGlobalSlideSettings } from '../core/project-factory';
 
 export function CanvasStage() {
   const project = useEditorStore((s) => s.project);
@@ -154,19 +155,25 @@ export function CanvasStage() {
   return (
     <main className="canvas-stage" data-testid="canvas-stage">
       <Toolbar />
-      {/* CORE-MPI-UX-FOUNDATION-01: Navigation toolbar — always shown when page exists */}
-      {currentPage && (
-        <NavigationToolbarBlock
-          contract={getDesignContractWithProjectStyle(project.stylePackId, project.style)}
-          currentSceneIndex={project.pages.findIndex((p) => p.id === currentPage.id)}
-          totalScenes={project.pages.length}
-          sceneTitle={currentPage.title}
-          onPrev={() => navigatePrev()}
-          onNext={() => navigateNext()}
-          canPrev={project.pages.findIndex((p) => p.id === currentPage.id) > 0}
-          canNext={project.pages.findIndex((p) => p.id === currentPage.id) < project.pages.length - 1}
-        />
-      )}
+      {/* CORE-MPI-UX-FOUNDATION-01: Navigation toolbar — always shown when page exists
+          V2-PILAR-1: Respect showSceneTitle + showProgressText from GlobalSlideSettings. */}
+      {currentPage && (() => {
+        const settings = getEffectiveGlobalSlideSettings(project);
+        return (
+          <div data-testid="canvas-stage-nav-wrapper" data-slide-settings-applied={project.globalSlideSettings ? 'true' : 'false'}>
+            <NavigationToolbarBlock
+              contract={getDesignContractWithProjectStyle(project.stylePackId, project.style)}
+              currentSceneIndex={project.pages.findIndex((p) => p.id === currentPage.id)}
+              totalScenes={project.pages.length}
+              sceneTitle={settings.navigationToolbar.showSceneTitle ? currentPage.title : ''}
+              onPrev={() => navigatePrev()}
+              onNext={() => navigateNext()}
+              canPrev={project.pages.findIndex((p) => p.id === currentPage.id) > 0}
+              canNext={project.pages.findIndex((p) => p.id === currentPage.id) < project.pages.length - 1}
+            />
+          </div>
+        );
+      })()}
       {/* UX-06: Zoom controls */}
       <div
         data-testid="zoom-controls"

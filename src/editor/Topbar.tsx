@@ -36,6 +36,7 @@ import {
   validateSlideFileCount,
   readImageFiles,
 } from '../core/slide-import';
+import { SlideSettingsDialog } from './SlideSettingsDialog';
 
 // OPTIMASI-01: lazy-load heavy modules that are only needed on user action.
 // TemplatePickerDialog is a modal — only loaded when user clicks "Template Pedagogis".
@@ -66,6 +67,8 @@ export function Topbar() {
   const [showProjectLibrary, setShowProjectLibrary] = useState(false);
   // V2-PILAR-1: state for slide PNG import
   const [slideImportInProgress, setSlideImportInProgress] = useState(false);
+  // V2-PILAR-1: state for slide settings dialog
+  const [showSlideSettings, setShowSlideSettings] = useState(false);
 
   // EXPORT-READY-SUMMARY-01: compute export ready summary (memoized).
   const exportReadySummary = useMemo(
@@ -448,6 +451,16 @@ export function Topbar() {
         >
           {slideImportInProgress ? '⏳ Mengimpor…' : `🖼️ Impor Slide`}
         </button>
+        {/* V2-PILAR-1: Pengaturan Slide (global nav settings) */}
+        <button
+          onClick={() => setShowSlideSettings(true)}
+          className="editor-topbar__action editor-topbar__action--ghost"
+          title="Atur posisi, gaya, dan tampilan toolbar navigasi global"
+          data-action="slide-settings"
+          data-testid="topbar-slide-settings"
+        >
+          ⚙️ Pengaturan Slide
+        </button>
         <button
           onClick={() => {
             if (window.confirm('Buat MPI baru? Perubahan saat ini akan hilang jika belum disimpan.')) {
@@ -530,6 +543,10 @@ export function Topbar() {
         <Suspense fallback={<div style={{ padding: 20, textAlign: 'center', color: 'var(--color-muted)' }}>Memuat library…</div>}>
           <ProjectLibraryDialog onClose={() => setShowProjectLibrary(false)} />
         </Suspense>
+      )}
+      {/* V2-PILAR-1: Slide Settings Dialog */}
+      {showSlideSettings && (
+        <SlideSettingsDialog onClose={() => setShowSlideSettings(false)} />
       )}
     </header>
   );

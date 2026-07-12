@@ -35,6 +35,7 @@ import type {
   CardComponent,
   CardComponentVariant,
   GameComponent,
+  GlobalSlideSettings,
   ImageComponent,
   ImageComponentVariant,
   LayeredInfoComponent,
@@ -65,7 +66,7 @@ import {
   SCORING_STYLES,
   TEXT_COMPONENT_VARIANTS,
 } from '../core/types';
-import { createEmptyPage, createProject, derivePageTitleFromFileName } from '../core/project-factory';
+import { createEmptyPage, createProject, derivePageTitleFromFileName, DEFAULT_GLOBAL_SLIDE_SETTINGS, getEffectiveGlobalSlideSettings } from '../core/project-factory';
 import { stylePackToProjectStyle } from '../core/style-presets';
 import { resolveStylePackV1, getProjectStylePackIdV1 } from '../core/style-packs/style-pack-registry';
 import { applyLayoutPresetToPage } from '../core/layout-presets/apply-layout-preset';
@@ -166,6 +167,17 @@ export type EditorState = {
     files: Array<{ name: string; dataUrl: string }>,
     mode: 'replace' | 'append',
   ) => number;
+
+  // V2-PILAR-1: Update GlobalSlideSettings (user-side only, never from AI).
+  // Merges patch into existing globalSlideSettings (or default if not set).
+  // navigationToolbar is also partial — caller can update only specific fields.
+  // Passing null resets to default (removes the field from project).
+  setGlobalSlideSettings: (
+    patch: {
+      navigationToolbar?: Partial<GlobalSlideSettings['navigationToolbar']>;
+      slideTransition?: GlobalSlideSettings['slideTransition'];
+    } | null,
+  ) => void;
 
   // Save / Load (M7)
   saveCurrent: () => boolean;
@@ -1080,6 +1092,39 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       };
     });
     return newPages.length;
+  },
+
+  // ----- V2-PILAR-1: Update GlobalSlideSettings -----
+
+  setGlobalSlideSettings: (patch) => {
+    set((state) => {
+      // null = reset to default (remove field from project)
+      if (patch === null) {
+        const { globalSlideSettings: _omit, ...rest } = state.project;
+        void _omit;
+        return { project: rest };
+      }
+      // Merge patch into effective settings (existing or default)
+      const current = getEffectiveGlobalSlideSettings(state.project);
+      const merged: GlobalSlideSettings = {
+        navigationToolbar: {
+          ...current.navigationToolbar,
+          ...(patch.navigationToolbar ?? {}),
+        },
+        slideTransition: patch.slideTransition ?? current.slideTransition,
+      };
+      // If merged equals default, remove the field (clean state)
+      const isDefault =
+        JSON.stringify(merged) === JSON.stringify(DEFAULT_GLOBAL_SLIDE_SETTINGS);
+      if (isDefault) {
+        const { globalSlideSettings: _omit, ...rest } = state.project;
+        void _omit;
+        return { project: rest };
+      }
+      return {
+        project: { ...state.project, globalSlideSettings: merged },
+      };
+    });
   },
 
   // ----- Save / Load (M7) -----

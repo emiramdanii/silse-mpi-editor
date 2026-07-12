@@ -19,6 +19,7 @@ import { SceneRendererView } from '../components/SceneRendererView';
 import { NavigationToolbarBlock, ProgressBarBlock } from '../components/scene-blocks';
 import { getDesignContractWithProjectStyle } from '../core/mpi-design-contract';
 import type { GameComponent, QuestionComponent } from '../core/types';
+import { getEffectiveGlobalSlideSettings } from '../core/project-factory';
 
 const CANVAS_WIDTH = 1280;
 const CANVAS_HEIGHT = 720;
@@ -183,24 +184,77 @@ export function PreviewApp() {
 
           {/* BUG-NAV-02 (Option C): Navigation toolbar + progress bar rendered
               INSIDE canvas-frame as floating pill overlay, matching export HTML.
-              Fase 2b Step 5: Always shown (no more useSceneRenderer gate). */}
-          <>
-            <NavigationToolbarBlock
-              contract={getDesignContractWithProjectStyle(project.stylePackId, project.style)}
-              currentSceneIndex={currentIdx}
-              totalScenes={project.pages.length}
-              sceneTitle={currentPage.title}
-              onPrev={navigatePrev}
-              onNext={navigateNext}
-              canPrev={!isFirst}
-              canNext={!isLast}
-            />
-            <ProgressBarBlock
-              contract={getDesignContractWithProjectStyle(project.stylePackId, project.style)}
-              currentSceneIndex={currentIdx}
-              totalScenes={project.pages.length}
-            />
-          </>
+              Fase 2b Step 5: Always shown (no more useSceneRenderer gate).
+              V2-PILAR-1: Apply GlobalSlideSettings (position, style, visibility). */}
+          {(() => {
+            const settings = getEffectiveGlobalSlideSettings(project);
+            const nav = settings.navigationToolbar;
+            // Build position style override
+            const positionStyle: React.CSSProperties = (() => {
+              switch (nav.position) {
+                case 'top-center': return { bottom: 'auto', top: 20 };
+                case 'bottom-left': return { left: 20, transform: 'none' };
+                case 'bottom-right': return { left: 'auto', right: 20, transform: 'none' };
+                default: return {}; // bottom-center = default
+              }
+            })();
+            // Build style override (glass/solid/minimal)
+            const styleOverride: React.CSSProperties = (() => {
+              if (nav.style === 'solid') {
+                return { backdropFilter: 'none', background: 'rgba(15, 23, 42, 0.95)' };
+              }
+              if (nav.style === 'minimal') {
+                return { backdropFilter: 'none', background: 'transparent', border: 'none', boxShadow: 'none' };
+              }
+              return {}; // glass = default
+            })();
+            const transitionClass = settings.slideTransition !== 'none'
+              ? `silse-slide-transition-${settings.slideTransition}`
+              : '';
+            return (
+              <div
+                data-testid="preview-global-slide-settings-wrapper"
+                className={transitionClass}
+                style={{
+                  position: 'absolute',
+                  zIndex: 50,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 6,
+                  alignItems: 'center',
+                  // Position
+                  bottom: nav.position.startsWith('bottom') ? 20 : 'auto',
+                  left: nav.position === 'bottom-center' ? '50%' : (nav.position === 'bottom-left' ? 20 : 'auto'),
+                  right: nav.position === 'bottom-right' ? 20 : 'auto',
+                  top: nav.position === 'top-center' ? 20 : 'auto',
+                  transform: nav.position === 'bottom-center' || nav.position === 'top-center' ? 'translateX(-50%)' : 'none',
+                  ...positionStyle,
+                  ...styleOverride,
+                  padding: 8,
+                  borderRadius: 999,
+                  pointerEvents: 'auto',
+                }}
+              >
+                <NavigationToolbarBlock
+                  contract={getDesignContractWithProjectStyle(project.stylePackId, project.style)}
+                  currentSceneIndex={currentIdx}
+                  totalScenes={project.pages.length}
+                  sceneTitle={nav.showSceneTitle ? currentPage.title : ''}
+                  onPrev={navigatePrev}
+                  onNext={navigateNext}
+                  canPrev={!isFirst}
+                  canNext={!isLast}
+                />
+                {nav.showProgressBar && (
+                  <ProgressBarBlock
+                    contract={getDesignContractWithProjectStyle(project.stylePackId, project.style)}
+                    currentSceneIndex={currentIdx}
+                    totalScenes={project.pages.length}
+                  />
+                )}
+              </div>
+            );
+          })()}
         </div>
       </div>
     </div>

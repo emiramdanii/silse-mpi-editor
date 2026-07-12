@@ -16,7 +16,7 @@
  *   - Security: escape `</script>` in project data.
  */
 
-import type { SimpleProject, SimplePage, PageComponent } from '../core/types';
+import type { SimpleProject, SimplePage, PageComponent, GlobalSlideSettings } from '../core/types';
 import type { ProjectStyle } from '../core/style-types';
 import { getResolvedComponentStyle } from '../core/style/resolveComponentStyle';
 import { getSkinClassForComponent } from '../core/style-packs/component-skin';
@@ -30,6 +30,7 @@ import { buildAnimationsCss, buildCoverDecorationCss, buildBackgroundPatternCss,
 import { getSceneContentRendererJs } from './scene-content-renderers';
 import { buildSceneRenderPlanForPage, type SceneRenderPlan } from '../core/scene-renderer';
 import { sanitizeCustomStyle, styleMapToCssString, extractBehaviorCss } from '../core/style/sanitize';
+import { getEffectiveGlobalSlideSettings } from '../core/project-factory';
 import { getDesignContractWithProjectStyle } from '../core/mpi-design-contract';
 // FASE 3: Used in renderSceneFromPlan for sanitizing AI customStyle
 void sanitizeCustomStyle;
@@ -57,6 +58,8 @@ type ExportRenderModel = {
   curriculumGrade?: string;
   pages: ExportRenderPage[];
   cssVariables: Record<string, string>;
+  /** V2-PILAR-1: Effective global slide settings (default if project doesn't set). */
+  globalSlideSettings: GlobalSlideSettings;
 };
 
 type ExportRenderPage = {
@@ -220,6 +223,8 @@ function buildExportRenderModel(project: SimpleProject): ExportRenderModel {
     curriculumGrade: project.curriculum?.grade,
     pages,
     cssVariables,
+    // V2-PILAR-1: include effective global slide settings for renderer
+    globalSlideSettings: getEffectiveGlobalSlideSettings(project),
   };
 }
 
@@ -349,10 +354,80 @@ function generateCssVariablesString(vars: Record<string, string>): string {
 }
 
 // ---------------------------------------------------------------------------
+// V2-PILAR-1: Global Slide Settings — dynamic CSS for nav toolbar
+// ---------------------------------------------------------------------------
+
+/**
+ * Build dynamic CSS override for #silse-toolbar based on GlobalSlideSettings.
+ *
+ * Override base CSS (line ~464) at runtime via ID-specific rules.
+ * Settings applied:
+ *   - position: bottom-center (default) | top-center | bottom-left | bottom-right
+ *   - style: glass (default) | solid | minimal
+ *   - showSceneTitle: false → hide #silse-toolbar-scene-title
+ *   - showProgressText: false → hide #silse-page-info text
+ *   - showProgressBar: false → hide .silse-progress-bar (if rendered)
+ *
+ * slideTransition (none/fade/slide) is handled in JS renderPage() via class toggle.
+ */
+function buildGlobalSlideSettingsCss(settings: GlobalSlideSettings): string {
+  const lines: string[] = ['/* V2-PILAR-1: Global Slide Settings overrides */'];
+
+  // --- Position overrides ---
+  const posLines: string[] = [];
+  if (settings.navigationToolbar.position === 'top-center') {
+    posLines.push('bottom: auto !important;', 'top: 20px !important;');
+  } else if (settings.navigationToolbar.position === 'bottom-left') {
+    posLines.push('left: 20px !important;', 'transform: none !important;');
+  } else if (settings.navigationToolbar.position === 'bottom-right') {
+    posLines.push('left: auto !important;', 'right: 20px !important;', 'transform: none !important;');
+  }
+  // bottom-center = default, no override needed
+  if (posLines.length > 0) {
+    lines.push(`#silse-toolbar { ${posLines.join(' ')} }`);
+  }
+
+  // --- Style overrides ---
+  if (settings.navigationToolbar.style === 'solid') {
+    lines.push('#silse-toolbar { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: rgba(15, 23, 42, 0.95) !important; }');
+  } else if (settings.navigationToolbar.style === 'minimal') {
+    lines.push('#silse-toolbar { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: transparent !important; border: none !important; box-shadow: none !important; }');
+    lines.push('#silse-toolbar button { background: rgba(15, 23, 42, 0.5) !important; }');
+  }
+  // glass = default, no override needed
+
+  // --- Visibility toggles ---
+  if (!settings.navigationToolbar.showProgressText) {
+    lines.push('#silse-toolbar #silse-page-info { display: none !important; }');
+  }
+  // Note: scene title and progress bar may not have dedicated IDs in current toolbar
+  // markup. We add data attributes in generateJS for these elements so we can target them.
+  if (!settings.navigationToolbar.showSceneTitle) {
+    lines.push('#silse-toolbar [data-slide-scene-title] { display: none !important; }');
+  }
+  if (!settings.navigationToolbar.showProgressBar) {
+    lines.push('#silse-toolbar [data-slide-progress-bar] { display: none !important; }');
+  }
+
+  // --- Slide transition animations (between pages) ---
+  if (settings.slideTransition === 'fade') {
+    lines.push(`
+@keyframes silse-slide-fade-in { from { opacity: 0; } to { opacity: 1; } }
+.silse-slide-transition-fade { animation: silse-slide-fade-in 280ms ease-out; }`);
+  } else if (settings.slideTransition === 'slide') {
+    lines.push(`
+@keyframes silse-slide-slide-in { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+.silse-slide-transition-slide { animation: silse-slide-slide-in 280ms ease-out; }`);
+  }
+
+  return lines.join('\n');
+}
+
+// ---------------------------------------------------------------------------
 // CSS generation
 // ---------------------------------------------------------------------------
 
-function generateCSS(cssVars: Record<string, string>, profile: PremiumExportProfile): string {
+function generateCSS(cssVars: Record<string, string>, profile: PremiumExportProfile, globalSlideSettings: GlobalSlideSettings): string {
   const varsStr = generateCssVariablesString(cssVars);
   // Fase 3a Commit 6: derived variables now come from premiumCss.ts derivePremiumVars()
   // — single source of truth shared with buildPremiumHeroCss/buildPremiumSkinCss.
@@ -838,24 +913,29 @@ ${buildPremiumSkinCss(profile)}
   // Do NOT duplicate keyframes/class definitions inline — always go through
   // buildMotionPresetCss() so editor and export stay 1:1 in sync.
   const motionCss = buildMotionPresetCss();
-  return motionCss ? `${baseCss}\n\n${motionCss}` : baseCss;
+  const withMotion = motionCss ? `${baseCss}\n\n${motionCss}` : baseCss;
+  // V2-PILAR-1: append global slide settings overrides
+  const slideSettingsCss = buildGlobalSlideSettingsCss(globalSlideSettings);
+  return `${withMotion}\n\n${slideSettingsCss}`;
 }
 
 // ---------------------------------------------------------------------------
 // JS generation — reads from render model, NO style switch
 // ---------------------------------------------------------------------------
 
-function generateJS(renderModelJson: string, coverClassForProject: string, allCoverClasses: string[], pageEnterClass: string, celebrateSuccessClass: string, celebrateBurstClass: string, celebrateParticleClass: string): string {
+function generateJS(renderModelJson: string, coverClassForProject: string, allCoverClasses: string[], pageEnterClass: string, celebrateSuccessClass: string, celebrateBurstClass: string, celebrateParticleClass: string, slideTransition: 'none' | 'fade' | 'slide'): string {
   const coverClassJson = JSON.stringify(coverClassForProject);
   const allCoverClassesJson = JSON.stringify(allCoverClasses);
   const pageEnterClassJson = JSON.stringify(pageEnterClass);
   const celebrateSuccessJson = JSON.stringify(celebrateSuccessClass);
   const celebrateBurstJson = JSON.stringify(celebrateBurstClass);
   const celebrateParticleJson = JSON.stringify(celebrateParticleClass);
+  const slideTransitionJson = JSON.stringify(slideTransition);
   return `
 (function() {
   var MODEL = ${renderModelJson};
   var pages = MODEL.pages;
+  var SLIDE_TRANSITION = ${slideTransitionJson};
   var currentPageIdx = 0;
   var questionAnswers = {};
   var totalScore = 0;
@@ -912,6 +992,13 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var toolbar = canvas.querySelector('#silse-toolbar');
     canvas.innerHTML = '';
     if (toolbar) canvas.appendChild(toolbar);
+
+    // V2-PILAR-1: Apply slide transition class (fade/slide) on page change.
+    if (SLIDE_TRANSITION !== 'none') {
+      canvas.classList.remove('silse-slide-transition-fade', 'silse-slide-transition-slide');
+      void canvas.offsetWidth; // force reflow to restart animation
+      canvas.classList.add('silse-slide-transition-' + SLIDE_TRANSITION);
+    }
 
     // COVER-PREMIUM-POLISH-01: Add/remove cover decoration class.
     var coverClasses = ${allCoverClassesJson};
@@ -4133,10 +4220,10 @@ export function exportProjectToHtml(project: SimpleProject): string {
   const baseProfile = getPremiumExportProfileWithProjectStyle(project.stylePackId, project.style);
   // EXPORT-CONTRAST-02: override gradients if contract has dark background
   const profile = resolveProfileForContract(baseProfile, project.stylePackId, project.style);
-  const css = generateCSS(renderModel.cssVariables, profile);
+  const css = generateCSS(renderModel.cssVariables, profile, renderModel.globalSlideSettings);
   const animProfile = getMicroAnimationForStylePack(project.stylePackId);
   const celebrationProfile = getCelebrationEffectForStylePack(project.stylePackId);
-  const js = generateJS(renderModelJson, getCoverClassForStylePack(project.stylePackId), getAllCoverClassNames(), animProfile.pageEnterClass, celebrationProfile.successClass, celebrationProfile.burstClass, celebrationProfile.particleClass);
+  const js = generateJS(renderModelJson, getCoverClassForStylePack(project.stylePackId), getAllCoverClassNames(), animProfile.pageEnterClass, celebrationProfile.successClass, celebrationProfile.burstClass, celebrationProfile.particleClass, renderModel.globalSlideSettings.slideTransition);
   const bgPattern = getBackgroundPatternForStylePack(project.stylePackId);
 
   return `<!doctype html>
@@ -4154,9 +4241,9 @@ ${css}
     <div id="silse-canvas" class="silse-premium-stage ${bgPattern.pageClass} ${bgPattern.patternClass}">
       <div id="silse-toolbar">
         <span class="silse-toolbar-side">
-          <button id="silse-nav-prev">← Sebelumnya</button>
-          <span id="silse-page-info">1 / 1</span>
-          <button id="silse-nav-next">Berikutnya →</button>
+          <button id="silse-nav-prev" aria-label="Halaman sebelumnya">← Sebelumnya</button>
+          <span id="silse-page-info" data-slide-progress-text>1 / 1</span>
+          <button id="silse-nav-next" aria-label="Halaman berikutnya">Berikutnya →</button>
         </span>
         <span id="silse-score" class="silse-score">Skor: 0</span>
       </div>

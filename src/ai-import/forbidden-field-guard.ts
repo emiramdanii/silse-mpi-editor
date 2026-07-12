@@ -21,6 +21,9 @@ const FORBIDDEN_KEYS = [
   'externalUrl',
   'import', // ES import string
   'iframe',
+  // V2-PILAR-1: globalSlideSettings is murni user-side setting.
+  // AI TIDAK boleh set field ini. Hanya user via "Pengaturan Slide" dialog.
+  'globalSlideSettings',
 ] as const;
 
 export type GuardResult = { ok: true } | { ok: false; errors: string[] };
