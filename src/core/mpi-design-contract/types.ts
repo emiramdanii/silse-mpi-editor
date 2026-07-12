@@ -282,6 +282,31 @@ export type DesignMotionPreset =
   | 'correct-burst';
 
 // ---------------------------------------------------------------------------
+// 17. Tabs (L3-4)
+// ---------------------------------------------------------------------------
+
+export type DesignTabs = {
+  activeBackground: string;
+  activeColor: string;
+  inactiveBackground: string;
+  inactiveColor: string;
+  tabRadius: number;
+  tabGap: number;
+};
+
+// ---------------------------------------------------------------------------
+// 18. Accordion (L3-4)
+// ---------------------------------------------------------------------------
+
+export type DesignAccordion = {
+  headerColor: string;
+  bodyColor: string;
+  expandIcon: string;
+  collapseIcon: string;
+  itemGap: number;
+};
+
+// ---------------------------------------------------------------------------
 // Design Contract (root)
 // ---------------------------------------------------------------------------
 
@@ -306,4 +331,6 @@ export type MpiDesignContract = {
   reward: DesignReward;
   mapHotspot?: DesignMapHotspot;
   motion: Record<DesignMotionPreset, { animation?: string; duration?: number; easing?: string }>;
+  tabs?: DesignTabs;
+  accordion?: DesignAccordion;
 };

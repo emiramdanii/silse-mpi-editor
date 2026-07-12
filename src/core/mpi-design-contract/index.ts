@@ -23,6 +23,8 @@ export type {
   DesignReward,
   DesignMapHotspot,
   DesignMotionPreset,
+  DesignTabs,
+  DesignAccordion,
 } from './types';
 
 export {

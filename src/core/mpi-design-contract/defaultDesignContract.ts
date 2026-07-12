@@ -210,6 +210,23 @@ export const DEFAULT_DESIGN_CONTRACT: MpiDesignContract = {
     'reward-pop': { animation: 'silse-reward-pop', duration: 400, easing: 'ease-out' },
     'correct-burst': { animation: 'silse-correct-burst', duration: 600, easing: 'ease-out' },
   },
+
+  // L3-4: Tabs + Accordion contract tokens
+  tabs: {
+    activeBackground: '#ffd166',
+    activeColor: '#0d243d',
+    inactiveBackground: 'rgba(255,255,255,0.04)',
+    inactiveColor: '#60788d',
+    tabRadius: 999,
+    tabGap: 6,
+  },
+  accordion: {
+    headerColor: '#1f2533',
+    bodyColor: '#4a5160',
+    expandIcon: '▸',
+    collapseIcon: '▾',
+    itemGap: 6,
+  },
 };
 
 // ---------------------------------------------------------------------------
