@@ -1451,6 +1451,13 @@ export function TeacherGuideComposer({
     assessmentNotes?: string;
   };
 }) {
+  // L3-3: Use SceneTabs for Instruksi / Tips / Asesmen sections
+  const [activeTab, setActiveTab] = useState('instruksi');
+  const tabs: { id: string; label: string }[] = [];
+  if (content.teacherInstruction) tabs.push({ id: 'instruksi', label: 'Instruksi' });
+  if (content.facilitationTips && content.facilitationTips.length > 0) tabs.push({ id: 'tips', label: '💡 Tips' });
+  if (content.assessmentNotes) tabs.push({ id: 'asesmen', label: '📝 Asesmen' });
+
   return (
     <SceneShell contract={contract} className="silse-scene-teacher-guide">
       <SceneHeader contract={contract} chipIcon="👨‍🏫" chipLabel="Panduan Guru" chipColor={contract.palette.accent} title={content.title || 'Panduan Guru'} />
@@ -1459,26 +1466,31 @@ export function TeacherGuideComposer({
           ⏱️ {content.timeAllocation}
         </div>
       )}
-      {content.teacherInstruction && (
-        <ScenePanel contract={contract} title="Instruksi Guru">
-          <div style={{ fontSize: 14, lineHeight: 1.6, color: contract.palette.text }}>{content.teacherInstruction}</div>
-        </ScenePanel>
-      )}
-      {content.facilitationTips && content.facilitationTips.length > 0 && (
-        <div className="silse-teacher-tips" style={{ padding: 14, borderRadius: contract.card.radius, background: `${contract.palette.gold}0A`, border: `1px solid ${contract.palette.gold}33` }}>
-          <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: contract.palette.gold, marginBottom: 8 }}>💡 Tips Fasilitasi</div>
-          {content.facilitationTips.map((tip, i) => (
-            <div key={i} data-testid={`teacher-tip-${i}`} style={{ display: 'flex', gap: 8, padding: '4px 0', fontSize: 13, lineHeight: 1.5, color: contract.palette.text }}>
-              <span style={{ color: contract.palette.gold, fontWeight: 800 }}>{i + 1}.</span>
-              <span>{tip}</span>
+      {tabs.length > 0 && (
+        <>
+          <SceneTabs contract={contract} className="silse-teacher-tabs" tabs={tabs} activeTab={activeTab} onTabClick={setActiveTab} />
+          {activeTab === 'instruksi' && content.teacherInstruction && (
+            <ScenePanel contract={contract} title="Instruksi Guru">
+              <div style={{ fontSize: 14, lineHeight: 1.6, color: contract.palette.text }}>{content.teacherInstruction}</div>
+            </ScenePanel>
+          )}
+          {activeTab === 'tips' && content.facilitationTips && content.facilitationTips.length > 0 && (
+            <div className="silse-teacher-tips" style={{ padding: 14, borderRadius: contract.card.radius, background: `${contract.palette.gold}0A`, border: `1px solid ${contract.palette.gold}33` }}>
+              <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: contract.palette.gold, marginBottom: 8 }}>💡 Tips Fasilitasi</div>
+              {content.facilitationTips.map((tip, i) => (
+                <div key={i} data-testid={`teacher-tip-${i}`} style={{ display: 'flex', gap: 8, padding: '4px 0', fontSize: 13, lineHeight: 1.5, color: contract.palette.text }}>
+                  <span style={{ color: contract.palette.gold, fontWeight: 800 }}>{i + 1}.</span>
+                  <span>{tip}</span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      )}
-      {content.assessmentNotes && (
-        <ScenePanel contract={contract} title="Catatan Asesmen">
-          <div style={{ fontSize: 14, lineHeight: 1.6, color: contract.palette.text }}>{content.assessmentNotes}</div>
-        </ScenePanel>
+          )}
+          {activeTab === 'asesmen' && content.assessmentNotes && (
+            <ScenePanel contract={contract} title="Catatan Asesmen">
+              <div style={{ fontSize: 14, lineHeight: 1.6, color: contract.palette.text }}>{content.assessmentNotes}</div>
+            </ScenePanel>
+          )}
+        </>
       )}
     </SceneShell>
   );

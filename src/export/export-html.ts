@@ -2407,8 +2407,15 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       timing.textContent = '⏱️ ' + content.timeAllocation;
       children.push(timing);
     }
-    if (content.teacherInstruction) children.push(exportPanel(plan, 'Instruksi Guru', content.teacherInstruction));
+    // L3-3: use exportTabs with panels for Instruksi / Tips / Asesmen
+    var tgTabs = [];
+    var tgPanels = [];
+    if (content.teacherInstruction) {
+      tgTabs.push({ id: 'instruksi', label: 'Instruksi' });
+      tgPanels.push({ id: 'instruksi', content: exportPanel(plan, 'Instruksi Guru', content.teacherInstruction) });
+    }
     if (content.facilitationTips && content.facilitationTips.length) {
+      tgTabs.push({ id: 'tips', label: '💡 Tips' });
       var tipsEl = document.createElement('div');
       tipsEl.className = 'silse-teacher-tips';
       tipsEl.style.cssText = 'padding:14px;border-radius:12px;background:' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + '0A;border:1px solid ' + (p.gold || 'var(--silse-color-gold, var(--silse-gold))') + '33;';
@@ -2429,9 +2436,15 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         tipRow.appendChild(tipText);
         tipsEl.appendChild(tipRow);
       }
-      children.push(tipsEl);
+      tgPanels.push({ id: 'tips', content: tipsEl });
     }
-    if (content.assessmentNotes) children.push(exportPanel(plan, 'Catatan Asesmen', content.assessmentNotes));
+    if (content.assessmentNotes) {
+      tgTabs.push({ id: 'asesmen', label: '📝 Asesmen' });
+      tgPanels.push({ id: 'asesmen', content: exportPanel(plan, 'Catatan Asesmen', content.assessmentNotes) });
+    }
+    if (tgTabs.length > 0) {
+      children.push(exportTabs(plan, tgTabs, 'instruksi', tgPanels));
+    }
     return exportShell(plan, 'silse-scene-teacher-guide', children);
   }
 
