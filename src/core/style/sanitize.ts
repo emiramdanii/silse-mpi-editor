@@ -550,11 +550,35 @@ function normalizeValue(prop: string, value: string | number): string | undefine
 /**
  * Sanitize a single element's CSS properties.
  * Returns a new object with only allowed properties, normalized values.
+ *
+ * L4-2: Also handles `behavior` key — a nested object with hover/press/focus
+ * sub-keys, each containing a StyleMap. The behavior object is sanitized
+ * recursively (each sub-key's styles go through sanitizeElementStyle).
  */
 export function sanitizeElementStyle(style: StyleMap): StyleMap {
   const sanitized: StyleMap = {};
 
   for (const [prop, value] of Object.entries(style)) {
+    // L4-2: Handle behavior as nested object (hover/press/focus)
+    if (prop === 'behavior' && typeof value === 'object' && value !== null) {
+      const behaviorSanitized: Record<string, string> = {};
+      for (const [state, stateStyle] of Object.entries(value as Record<string, unknown>)) {
+        if (state === 'hover' || state === 'press' || state === 'focus') {
+          if (stateStyle && typeof stateStyle === 'object') {
+            const cleanState = sanitizeElementStyle(stateStyle as StyleMap);
+            if (Object.keys(cleanState).length > 0) {
+              // Serialize the state's CSS to a string for easy application
+              behaviorSanitized[state] = styleMapToCssString(cleanState);
+            }
+          }
+        }
+      }
+      if (Object.keys(behaviorSanitized).length > 0) {
+        sanitized.behavior = JSON.stringify(behaviorSanitized);
+      }
+      continue;
+    }
+
     // Skip forbidden properties (layout-critical)
     if (FORBIDDEN_PROPERTIES.has(prop)) continue;
 
@@ -592,13 +616,30 @@ export function sanitizeCustomStyle(customStyle: CustomStyleMap | undefined | nu
 
 /**
  * Convert sanitized style map to CSS string (for export HTML inline style).
+ * L4-2: Skips `behavior` key (it's a JSON string, not a CSS property).
  */
 export function styleMapToCssString(style: StyleMap): string {
   const parts: string[] = [];
   for (const [prop, value] of Object.entries(style)) {
+    // L4-2: Skip behavior — it's serialized separately, not as inline CSS
+    if (prop === 'behavior') continue;
     // Convert camelCase to kebab-case
     const cssProp = prop.replace(/([A-Z])/g, '-$1').toLowerCase();
     parts.push(`${cssProp}:${value}`);
   }
   return parts.join(';');
+}
+
+/**
+ * L4-2: Extract behavior CSS from a sanitized style map.
+ * Returns a Record<string, string> where keys are state names (hover/press/focus)
+ * and values are pre-computed CSS strings. Returns undefined if no behavior.
+ */
+export function extractBehaviorCss(style: StyleMap | undefined): Record<string, string> | undefined {
+  if (!style || !style.behavior) return undefined;
+  try {
+    return JSON.parse(style.behavior as string);
+  } catch {
+    return undefined;
+  }
 }
