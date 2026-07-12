@@ -1,9 +1,15 @@
 /**
- * UX-02: Drag/Resize visual feedback — alignment guides + dimension label.
+ * UX-02: Drag/Resize visual feedback — basic render sanity.
+ *
+ * Note: The visual guide overlay (center lines + dimension label) was a
+ * planned feature for V1 but has been deferred to a future iteration.
+ * The drag/resize interaction itself works (Fase 2a); only the visual
+ * guide overlay was never implemented. The 4 skipped tests for that
+ * feature were removed when V1 was locked.
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, fireEvent } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import React from 'react';
 
@@ -44,51 +50,5 @@ describe('UX-02: Drag/Resize visual feedback', () => {
   it('3. Dimension label NOT visible when not dragging', () => {
     const { container } = render(React.createElement(CanvasStage));
     expect(container.querySelector('[data-testid="drag-dimension-label"]')).toBeNull();
-  });
-
-  it.skip('4. Guide overlay appears during drag (pointer down on component)', () => {
-    // UX-02: Drag guide overlay feature not yet implemented.
-    // The drag/resize interaction works (Fase 2a) but the visual guide
-    // overlay (center lines + dimension label) is a planned feature.
-    const { container } = render(React.createElement(CanvasStage));
-    const component = container.querySelector('[style*="left: 100px"]') as HTMLElement;
-    if (component) {
-      fireEvent.pointerDown(component, { clientX: 150, clientY: 125 });
-    }
-    const overlay = container.querySelector('[data-testid="drag-guides-overlay"]');
-    expect(overlay).not.toBeNull();
-  });
-
-  it.skip('5. Dimension label shows width × height during drag', () => {
-    // UX-02: Dimension label feature not yet implemented.
-    const { container } = render(React.createElement(CanvasStage));
-    const component = container.querySelector('[style*="left: 100px"]') as HTMLElement;
-    if (component) {
-      fireEvent.pointerDown(component, { clientX: 150, clientY: 125 });
-    }
-    const label = container.querySelector('[data-testid="drag-dimension-label"]');
-    expect(label).not.toBeNull();
-    expect(label?.textContent).toContain('200');
-    expect(label?.textContent).toContain('50');
-  });
-
-  it.skip('6. Guide overlay contains center vertical guide', () => {
-    // UX-02: Guide overlay feature not yet implemented.
-    const { container } = render(React.createElement(CanvasStage));
-    const component = container.querySelector('[style*="left: 100px"]') as HTMLElement;
-    if (component) {
-      fireEvent.pointerDown(component, { clientX: 150, clientY: 125 });
-    }
-    expect(container.querySelector('[data-testid="drag-guide-center-v"]')).not.toBeNull();
-  });
-
-  it.skip('7. Guide overlay contains center horizontal guide', () => {
-    // UX-02: Guide overlay feature not yet implemented.
-    const { container } = render(React.createElement(CanvasStage));
-    const component = container.querySelector('[style*="left: 100px"]') as HTMLElement;
-    if (component) {
-      fireEvent.pointerDown(component, { clientX: 150, clientY: 125 });
-    }
-    expect(container.querySelector('[data-testid="drag-guide-center-h"]')).not.toBeNull();
   });
 });
