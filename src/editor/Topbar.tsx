@@ -41,6 +41,9 @@ const TemplatePickerDialog = React.lazy(() =>
 const AiImportDialog = React.lazy(() =>
   import('./AiImportDialog').then((m) => ({ default: m.AiImportDialog })),
 );
+const ProjectLibraryDialog = React.lazy(() =>
+  import('./ProjectLibraryDialog').then((m) => ({ default: m.ProjectLibraryDialog })),
+);
 
 export function Topbar() {
   const project = useEditorStore((s) => s.project);
@@ -53,6 +56,7 @@ export function Topbar() {
   const [showGuidedFlow, setShowGuidedFlow] = useState(false);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [showAiImport, setShowAiImport] = useState(false);
+  const [showProjectLibrary, setShowProjectLibrary] = useState(false);
 
   // EXPORT-READY-SUMMARY-01: compute export ready summary (memoized).
   const exportReadySummary = useMemo(
@@ -360,6 +364,35 @@ export function Topbar() {
         >
           + MPI Baru
         </button>
+        {/* L5-1: Save to Library */}
+        <button
+          onClick={() => {
+            import('../storage/project-storage').then(({ saveProjectToLibrary }) => {
+              const result = saveProjectToLibrary(project);
+              if (result.ok) {
+                alert('Proyek berhasil disimpan ke library!');
+              } else {
+                alert(`Gagal menyimpan: ${result.error}`);
+              }
+            });
+          }}
+          className="editor-topbar__action editor-topbar__action--ghost"
+          title="Simpan proyek ini ke library untuk dibuka nanti"
+          data-action="save-to-library"
+          data-testid="topbar-save-to-library"
+        >
+          💾 Simpan
+        </button>
+        {/* L5-1: Project Library */}
+        <button
+          onClick={() => setShowProjectLibrary(true)}
+          className="editor-topbar__action editor-topbar__action--ghost"
+          title="Lihat dan buka proyek tersimpan"
+          data-action="project-library"
+          data-testid="topbar-project-library"
+        >
+          📂 Proyek Saya
+        </button>
       </div>
       {showGuidedFlow && (
         <GuidedFlowDialog onClose={() => setShowGuidedFlow(false)} />
@@ -372,6 +405,11 @@ export function Topbar() {
       {showAiImport && (
         <Suspense fallback={<div style={{ padding: 20, textAlign: 'center', color: 'var(--color-muted)' }}>Memuat import AI…</div>}>
           <AiImportDialog onClose={() => setShowAiImport(false)} />
+        </Suspense>
+      )}
+      {showProjectLibrary && (
+        <Suspense fallback={<div style={{ padding: 20, textAlign: 'center', color: 'var(--color-muted)' }}>Memuat library…</div>}>
+          <ProjectLibraryDialog onClose={() => setShowProjectLibrary(false)} />
         </Suspense>
       )}
     </header>
