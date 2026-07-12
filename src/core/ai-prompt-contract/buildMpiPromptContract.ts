@@ -251,6 +251,14 @@ export function buildMpiPromptText(): string {
   lines.push('  Sub-key yang diizinkan: "hover", "press", "focus". Setiap sub-key berisi CSS properti (sama validasi).');
   lines.push('Contoh lengkap: "button": { "transition": "transform 0.2s ease-out", "behavior": { "hover": { "transform": "scale(1.05)" } } }');
   lines.push('');
+  lines.push('AKSESIBILITAS ANIMASI (WAJIB DIIKUTI):');
+  lines.push('Sistem otomatis mematikan semua animasi dan behavior saat pengguna mengaktifkan "prefers-reduced-motion".');
+  lines.push('Namun, AI tetap harus mengikuti aturan berikut:');
+  lines.push('  - JANGAN gunakan animasi yang berkedip cepat (< 3Hz) — dapat memicu kejang.');
+  lines.push('  - Gunakan animasi untuk memberi feedback (hover, entrance), bukan untuk dekorasi yang terus-menerus.');
+  lines.push('  - Durasi transisi ideal: 150-300ms. Terlalu cepat = tidak terlihat, terlalu lambat = mengganggu.');
+  lines.push('  - Pastikan konten tetap dapat diakses tanpa animasi (animasi adalah enhancement, bukan keharusan).');
+  lines.push('');
   lines.push('PANDUAN KONTRAS (WAJIB DIIKUTI):');
   lines.push('Teks harus terbaca di atas background. Aturan kontras:');
   lines.push('  - Jika background GELAP (gradient gelap, #0e1c2f, #1a0a2e, dll): gunakan teks PUTIH (#ffffff) atau terang (#f8fafc).');
