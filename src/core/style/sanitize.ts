@@ -222,6 +222,201 @@ function containsForbiddenFont(fontFamily: string): boolean {
   return FORBIDDEN_FONTS.some((f) => lower.includes(f));
 }
 
+// ---------------------------------------------------------------------------
+// L4-1: Animation/transition/transform/filter validators
+// ---------------------------------------------------------------------------
+
+const MAX_TRANSITION_MS = 1000;
+const MAX_TRANSFORM_PX = 100;
+const MAX_SCALE = 1.2;
+const MIN_SCALE = 0.8;
+const MAX_ROTATE_DEG = 360;
+const MAX_BLUR_PX = 20;
+const MAX_ANIMATION_ITERATIONS = 60;
+
+/** Whitelist of animation names that AI may reference. */
+const ANIMATION_NAME_WHITELIST = new Set([
+  'silse-fade-in-soft', 'silse-fade-in-warm', 'silse-fade-in-mission',
+  'silse-feedback-pop', 'silse-mission-pulse',
+  'silse-celebrate-burst-ring', 'silse-celebrate-sparkle', 'silse-award-shine',
+  'silse-motion-entrance-fade', 'silse-motion-entrance-slide-up',
+  'silse-motion-soft-fade', 'silse-motion-slide-up',
+  'silse-motion-pulse', 'silse-motion-reward-pop',
+  'silse-motion-correct-burst', 'silse-motion-feedback-pop',
+  'none',
+]);
+
+/** Whitelist of CSS easing functions. */
+const EASING_WHITELIST = new Set([
+  'ease', 'ease-out', 'ease-in', 'ease-in-out', 'linear', 'step-start', 'step-end',
+]);
+
+/**
+ * L4-1: Validate transition value.
+ * Rules:
+ *   - Block `all` keyword (causes jank — browser monitors every property)
+ *   - Max duration 1000ms per transition
+ *   - Easing must be from whitelist or cubic-bezier with 4 values 0-1
+ *   - Max 3 comma-separated transition declarations
+ */
+function sanitizeTransitionValue(str: string): string | undefined {
+  // Block "all" keyword
+  if (/\ball\b/i.test(str)) return undefined;
+
+  // Split by comma — but NOT inside parentheses (e.g., cubic-bezier(0.4, 0, 0.2, 1))
+  const parts: string[] = [];
+  let depth = 0;
+  let current = '';
+  for (let i = 0; i < str.length; i++) {
+    const ch = str[i];
+    if (ch === '(') depth++;
+    if (ch === ')') depth--;
+    if (ch === ',' && depth === 0) {
+      parts.push(current.trim());
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  if (current.trim()) parts.push(current.trim());
+  if (parts.length > 3) return undefined;
+
+  for (const part of parts) {
+    // Extract durations (e.g., "0.3s", "300ms")
+    const durationMatches = [...part.matchAll(/(\d+(?:\.\d+)?)\s*(m?s)/gi)];
+    for (const dm of durationMatches) {
+      const num = parseFloat(dm[1]);
+      const isMs = dm[2].toLowerCase() === 'ms';
+      const ms = isMs ? num : num * 1000;
+      if (ms > MAX_TRANSITION_MS) return undefined;
+    }
+
+    // Validate easing — must be in whitelist or cubic-bezier(4 values 0-1)
+    const easingMatch = part.match(/(ease|ease-out|ease-in|ease-in-out|linear|step-start|step-end|cubic-bezier\([^)]+\))/i);
+    if (easingMatch) {
+      const easing = easingMatch[1].toLowerCase();
+      if (easing.startsWith('cubic-bezier')) {
+        // Validate 4 numeric values in range 0-1
+        const bezierNums = easing.match(/[\d.]+/g);
+        if (!bezierNums || bezierNums.length !== 4) return undefined;
+        for (const n of bezierNums) {
+          const val = parseFloat(n);
+          if (isNaN(val) || val < 0 || val > 1) return undefined;
+        }
+      } else if (!EASING_WHITELIST.has(easing)) {
+        return undefined;
+      }
+    }
+    // If no easing found, that's OK — browser defaults to ease
+  }
+
+  return str;
+}
+
+/**
+ * L4-1: Validate animation value.
+ * Rules:
+ *   - Only animation names from ANIMATION_NAME_WHITELIST are allowed
+ *   - Block "infinite" keyword
+ *   - Max iteration count 60
+ *   - Duration max 1000ms
+ */
+function sanitizeAnimationValue(str: string): string | undefined {
+  const lower = str.toLowerCase().trim();
+
+  // Block "infinite"
+  if (/infinite/i.test(str)) return undefined;
+
+  // Check iteration count — clamp to 60
+  let result = str;
+  const iterMatch = lower.match(/(?:repeat\s*\(\s*)?(\d+)\s*(?:\s*\))?(?=\s|$)/);
+  if (iterMatch) {
+    const count = parseInt(iterMatch[1], 10);
+    if (count > MAX_ANIMATION_ITERATIONS) {
+      result = result.replace(/\d+/, String(MAX_ANIMATION_ITERATIONS));
+    }
+  }
+
+  // Extract animation name — must be in whitelist
+  const nameMatch = lower.match(/(silse-[a-z-]+)/);
+  if (nameMatch) {
+    if (!ANIMATION_NAME_WHITELIST.has(nameMatch[1])) return undefined;
+  } else if (lower !== 'none') {
+    // No recognized animation name and not "none" — reject
+    return undefined;
+  }
+
+  // Validate duration if present
+  const durationMatch = lower.match(/(\d+(?:\.\d+)?)\s*(m?s)/);
+  if (durationMatch) {
+    const num = parseFloat(durationMatch[1]);
+    const isMs = durationMatch[2].toLowerCase() === 'ms';
+    const ms = isMs ? num : num * 1000;
+    if (ms > MAX_TRANSITION_MS) return undefined;
+  }
+
+  return result;
+}
+
+/**
+ * L4-1: Validate transform value.
+ * Rules:
+ *   - translateX/Y: max ±100px
+ *   - scale: 0.8–1.2
+ *   - rotate: max ±360deg
+ *   - Block matrix() (too complex to validate safely)
+ */
+function sanitizeTransformValue(str: string): string | undefined {
+  // Block matrix()
+  if (/matrix\s*\(/i.test(str)) return undefined;
+
+  // Clamp translateX/Y values
+  const translateMatches = [...str.matchAll(/translate(?:X|Y)?\s*\(\s*(-?\d+(?:\.\d+)?)\s*px\s*\)/gi)];
+  for (const tm of translateMatches) {
+    const val = parseFloat(tm[1]);
+    if (Math.abs(val) > MAX_TRANSFORM_PX) return undefined;
+  }
+
+  // Clamp scale values
+  const scaleMatches = [...str.matchAll(/scale(?:X|Y|Z|3d)?\s*\(\s*(-?\d+(?:\.\d+)?)\s*\)/gi)];
+  for (const sm of scaleMatches) {
+    const val = parseFloat(sm[1]);
+    if (val < MIN_SCALE || val > MAX_SCALE) return undefined;
+  }
+
+  // Clamp rotate values
+  const rotateMatches = [...str.matchAll(/rotate(?:Z|3d)?\s*\(\s*(-?\d+(?:\.\d+)?)\s*deg\s*\)/gi)];
+  for (const rm of rotateMatches) {
+    const val = parseFloat(rm[1]);
+    if (Math.abs(val) > MAX_ROTATE_DEG) return undefined;
+  }
+
+  return str;
+}
+
+/**
+ * L4-1: Validate filter/backdropFilter value.
+ * Rules:
+ *   - Block url() (already caught by XSS guard, but double-check)
+ *   - blur() max 20px
+ */
+function sanitizeFilterValue(str: string): string | undefined {
+  // Double-check url() (XSS guard should have caught it, but be safe)
+  if (/url\s*\(/i.test(str)) return undefined;
+
+  // Clamp blur values
+  const blurMatches = [...str.matchAll(/blur\s*\(\s*(\d+(?:\.\d+)?)\s*px\s*\)/gi)];
+  for (const bm of blurMatches) {
+    const val = parseFloat(bm[1]);
+    if (val > MAX_BLUR_PX) {
+      // Clamp instead of reject — blur is safe, just needs limit
+      return str.replace(/blur\s*\(\s*\d+(?:\.\d+)?\s*px\s*\)/gi, `blur(${MAX_BLUR_PX}px)`);
+    }
+  }
+
+  return str;
+}
+
 /**
  * Normalize a CSS value:
  * - Numbers → add 'px' (except for opacity, zIndex, lineHeight)
@@ -249,6 +444,31 @@ function normalizeValue(prop: string, value: string | number): string | undefine
   // String values
   const str = String(value).trim();
   if (!str) return undefined;
+
+  // L4-1: Global XSS guard — reject values containing url(), expression(),
+  // javascript:, or script tags. Applies to ALL properties.
+  const XSS_PATTERNS = /url\s*\(|expression\s*\(|javascript:|vbscript:|<\/?script/i;
+  if (XSS_PATTERNS.test(str)) return undefined;
+
+  // L4-1: transition validation
+  if (prop === 'transition') {
+    return sanitizeTransitionValue(str);
+  }
+
+  // L4-1: animation validation — only preset names allowed
+  if (prop === 'animation') {
+    return sanitizeAnimationValue(str);
+  }
+
+  // L4-1: transform validation — clamp values
+  if (prop === 'transform') {
+    return sanitizeTransformValue(str);
+  }
+
+  // L4-1: filter / backdropFilter — clamp blur, block url()
+  if (prop === 'filter' || prop === 'backdropFilter') {
+    return sanitizeFilterValue(str);
+  }
 
   // Font guard
   if (prop === 'fontFamily' && containsForbiddenFont(str)) {
@@ -330,11 +550,35 @@ function normalizeValue(prop: string, value: string | number): string | undefine
 /**
  * Sanitize a single element's CSS properties.
  * Returns a new object with only allowed properties, normalized values.
+ *
+ * L4-2: Also handles `behavior` key — a nested object with hover/press/focus
+ * sub-keys, each containing a StyleMap. The behavior object is sanitized
+ * recursively (each sub-key's styles go through sanitizeElementStyle).
  */
 export function sanitizeElementStyle(style: StyleMap): StyleMap {
   const sanitized: StyleMap = {};
 
   for (const [prop, value] of Object.entries(style)) {
+    // L4-2: Handle behavior as nested object (hover/press/focus)
+    if (prop === 'behavior' && typeof value === 'object' && value !== null) {
+      const behaviorSanitized: Record<string, string> = {};
+      for (const [state, stateStyle] of Object.entries(value as Record<string, unknown>)) {
+        if (state === 'hover' || state === 'press' || state === 'focus') {
+          if (stateStyle && typeof stateStyle === 'object') {
+            const cleanState = sanitizeElementStyle(stateStyle as StyleMap);
+            if (Object.keys(cleanState).length > 0) {
+              // Serialize the state's CSS to a string for easy application
+              behaviorSanitized[state] = styleMapToCssString(cleanState);
+            }
+          }
+        }
+      }
+      if (Object.keys(behaviorSanitized).length > 0) {
+        sanitized.behavior = JSON.stringify(behaviorSanitized);
+      }
+      continue;
+    }
+
     // Skip forbidden properties (layout-critical)
     if (FORBIDDEN_PROPERTIES.has(prop)) continue;
 
@@ -372,13 +616,30 @@ export function sanitizeCustomStyle(customStyle: CustomStyleMap | undefined | nu
 
 /**
  * Convert sanitized style map to CSS string (for export HTML inline style).
+ * L4-2: Skips `behavior` key (it's a JSON string, not a CSS property).
  */
 export function styleMapToCssString(style: StyleMap): string {
   const parts: string[] = [];
   for (const [prop, value] of Object.entries(style)) {
+    // L4-2: Skip behavior — it's serialized separately, not as inline CSS
+    if (prop === 'behavior') continue;
     // Convert camelCase to kebab-case
     const cssProp = prop.replace(/([A-Z])/g, '-$1').toLowerCase();
     parts.push(`${cssProp}:${value}`);
   }
   return parts.join(';');
+}
+
+/**
+ * L4-2: Extract behavior CSS from a sanitized style map.
+ * Returns a Record<string, string> where keys are state names (hover/press/focus)
+ * and values are pre-computed CSS strings. Returns undefined if no behavior.
+ */
+export function extractBehaviorCss(style: StyleMap | undefined): Record<string, string> | undefined {
+  if (!style || !style.behavior) return undefined;
+  try {
+    return JSON.parse(style.behavior as string);
+  } catch {
+    return undefined;
+  }
 }

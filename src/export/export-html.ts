@@ -29,7 +29,7 @@ import { getPremiumExportProfileWithProjectStyle, type PremiumExportProfile } fr
 import { buildAnimationsCss, buildCoverDecorationCss, buildBackgroundPatternCss, buildPremiumBlockCss, buildCelebrationCss, buildMiscIdenticalCss, buildSkinBaseCss, buildQuizFeedbackCss, buildMicroAnimationReducedMotionCss, buildPremiumHeroCss, buildPremiumSkinCss, derivePremiumVars } from '../core/style/premiumCss';
 import { getSceneContentRendererJs } from './scene-content-renderers';
 import { buildSceneRenderPlanForPage, type SceneRenderPlan } from '../core/scene-renderer';
-import { sanitizeCustomStyle, styleMapToCssString } from '../core/style/sanitize';
+import { sanitizeCustomStyle, styleMapToCssString, extractBehaviorCss } from '../core/style/sanitize';
 import { getDesignContractWithProjectStyle } from '../core/mpi-design-contract';
 // FASE 3: Used in renderSceneFromPlan for sanitizing AI customStyle
 void sanitizeCustomStyle;
@@ -73,7 +73,8 @@ type ExportRenderPage = {
    *  Browser JS appends these directly to el.style.cssText — no runtime
    *  conversion needed. Pre-computed at build time via styleMapToCssString.
    *  LAYOUT-STYLE-01: added 'grid' key for SceneGrid layout overrides.
-   *  COMPONENT-STYLE-01: added 'tabs' + 'accordion' keys for interactive components. */
+   *  COMPONENT-STYLE-01: added 'tabs' + 'accordion' keys for interactive components.
+   *  L4-2: added 'behavior' key for hover/press/focus CSS strings. */
   customStyleCss?: {
     shell?: string;
     header?: string;
@@ -84,6 +85,9 @@ type ExportRenderPage = {
     tabs?: string;
     accordion?: string;
   };
+  /** L4-2: Pre-computed behavior CSS per element key.
+   *  Each value is a Record<state, cssString> where state is hover/press/focus. */
+  customStyleBehavior?: Record<string, Record<string, string>>;
 };
 
 type ExportRenderComponent = {
@@ -182,6 +186,19 @@ function buildExportRenderModel(project: SimpleProject): ExportRenderModel {
       if (sanitized.grid) result.grid = styleMapToCssString(sanitized.grid);
       if (sanitized.tabs) result.tabs = styleMapToCssString(sanitized.tabs);
       if (sanitized.accordion) result.accordion = styleMapToCssString(sanitized.accordion);
+      return Object.keys(result).length > 0 ? result : undefined;
+    })(),
+    // L4-2: Pre-compute behavior CSS (hover/press/focus) per element key
+    customStyleBehavior: (() => {
+      const sanitized = sanitizeCustomStyle(page.sceneCustomStyle);
+      if (!sanitized) return undefined;
+      const result: Record<string, Record<string, string>> = {};
+      for (const [elementKey, style] of Object.entries(sanitized)) {
+        const behavior = extractBehaviorCss(style);
+        if (behavior) {
+          result[elementKey] = behavior;
+        }
+      }
       return Object.keys(result).length > 0 ? result : undefined;
     })(),
   }));
@@ -852,6 +869,11 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
   // CSS strings are pre-computed at build time — browser just appends them.
   var _sceneCustomStyleCss = undefined;
 
+  // L4-2: Behavior CSS (hover/press/focus) per element key.
+  // Set in renderSceneFromPlan — read by exportShell/exportPanel/exportActionButton
+  // to set data-behavior-hover attribute on elements.
+  var _sceneCustomStyleBehavior = undefined;
+
   // Fase 3b Commit 1: Track current page role for getContrastAwareTextColor().
   // Set in renderSceneFromPlan() — read by renderCoverHeroSceneContent and
   // renderClosingAwardSceneContent to pick contrast-aware text color.
@@ -992,6 +1014,8 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     // exportHeader, exportPanel, exportActionButton can read and apply
     // per-element CSS strings (shell/header/panel/chip/button).
     _sceneCustomStyleCss = page ? page.customStyleCss : undefined;
+    // L4-2: set behavior closure for hover/press/focus support
+    _sceneCustomStyleBehavior = page ? page.customStyleBehavior : undefined;
     // Fase 3b Commit 1: track page role for getContrastAwareTextColor().
     _currentPageRole = page ? page.role : undefined;
 
@@ -1493,6 +1517,10 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     // DEEP-STYLE-INJECTION-01: apply customStyle.button (pre-computed CSS string)
     if (_sceneCustomStyleCss && _sceneCustomStyleCss.button) {
       el.style.cssText += _sceneCustomStyleCss.button;
+    }
+    // L4-2: apply behavior hover CSS as data attribute for wireInteractions
+    if (_sceneCustomStyleBehavior && _sceneCustomStyleBehavior.button && _sceneCustomStyleBehavior.button.hover) {
+      el.setAttribute('data-behavior-hover', _sceneCustomStyleBehavior.button.hover);
     }
     el.textContent = label;
     return el;
@@ -3395,6 +3423,26 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
             timerEl.setAttribute('data-interval-id', String(interval));
           }
         }
+      }
+    });
+
+    // L4-2: Behavior handlers (hover/press/focus) — apply pre-computed behavior CSS
+    // to elements that have data-behavior-hover attribute.
+    // L4-4: Skipped if prefers-reduced-motion is active.
+    var _prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    canvas.querySelectorAll('[data-behavior-hover]').forEach(function(el) {
+      if (el._behaviorWired) return;
+      el._behaviorWired = true;
+      if (_prefersReducedMotion) return; // Skip behavior if reduced motion
+      var hoverCss = el.getAttribute('data-behavior-hover');
+      if (hoverCss) {
+        var origCss = el.style.cssText;
+        el.addEventListener('mouseenter', function() {
+          this.style.cssText = origCss + ';' + hoverCss;
+        });
+        el.addEventListener('mouseleave', function() {
+          this.style.cssText = origCss;
+        });
       }
     });
 
