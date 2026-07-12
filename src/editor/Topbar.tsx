@@ -383,6 +383,28 @@ export function Topbar() {
         >
           💾 Simpan
         </button>
+        {/* L5-2: Save as Template */}
+        <button
+          onClick={() => {
+            const name = window.prompt('Nama template:', project.title);
+            if (name && name.trim()) {
+              import('../storage/template-storage').then(({ saveProjectAsTemplate }) => {
+                const result = saveProjectAsTemplate(project, name);
+                if (result.ok) {
+                  alert('Template berhasil disimpan! Temukan di "Template Pedagogis".');
+                } else {
+                  alert(`Gagal menyimpan template: ${result.error}`);
+                }
+              });
+            }
+          }}
+          className="editor-topbar__action editor-topbar__action--ghost"
+          title="Simpan proyek ini sebagai template yang bisa digunakan kembali"
+          data-action="save-as-template"
+          data-testid="topbar-save-as-template"
+        >
+          📝 Template
+        </button>
         {/* L5-1: Project Library */}
         <button
           onClick={() => setShowProjectLibrary(true)}

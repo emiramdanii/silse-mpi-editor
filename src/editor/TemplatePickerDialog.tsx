@@ -8,7 +8,7 @@
  * PATCH A: overwrite guard + premium UI polish + 16:9 fit.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useEditorStore } from '../store/editor-store';
 import {
   PEDAGOGICAL_TEMPLATES,
@@ -19,6 +19,7 @@ import {
 } from '../core/guided-flow/pedagogical-templates';
 import { aiBlueprintToSimpleProject, validateAiMpiJson } from '../core/ai-mpi-json';
 import { checkBlueprintContentQuality } from '../core/content-quality-guard';
+import { listCustomTemplates, loadCustomTemplate, deleteCustomTemplate, type CustomTemplateEntry } from '../storage/template-storage';
 
 export function TemplatePickerDialog({ onClose }: { onClose: () => void }) {
   const setProject = useEditorStore((s) => s.setProject);
@@ -26,6 +27,18 @@ export function TemplatePickerDialog({ onClose }: { onClose: () => void }) {
   const [selectedMapel, setSelectedMapel] = useState<string>('all');
   const [applied, setApplied] = useState(false);
   const [confirmOverwrite, setConfirmOverwrite] = useState<PedagogicalTemplate | null>(null);
+  // L5-2: Custom templates
+  const [customTemplates, setCustomTemplates] = useState<CustomTemplateEntry[]>([]);
+  const [confirmCustomOverwrite, setConfirmCustomOverwrite] = useState<string | null>(null);
+  const [confirmDeleteTemplate, setConfirmDeleteTemplate] = useState<string | null>(null);
+
+  const refreshCustomTemplates = useCallback(() => {
+    setCustomTemplates(listCustomTemplates());
+  }, []);
+
+  useEffect(() => {
+    refreshCustomTemplates();
+  }, [refreshCustomTemplates]);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -55,6 +68,32 @@ export function TemplatePickerDialog({ onClose }: { onClose: () => void }) {
     } else {
       doApply(template);
     }
+  };
+
+  // L5-2: Custom template handlers
+  const doApplyCustom = (templateId: string) => {
+    const result = loadCustomTemplate(templateId);
+    if (result.ok && result.data) {
+      result.data.currentPageId = result.data.pages[0]?.id ?? '';
+      setProject(result.data);
+      setApplied(true);
+      setConfirmCustomOverwrite(null);
+      setTimeout(() => onClose(), 400);
+    }
+  };
+
+  const handleApplyCustom = (templateId: string) => {
+    if (hasExistingContent) {
+      setConfirmCustomOverwrite(templateId);
+    } else {
+      doApplyCustom(templateId);
+    }
+  };
+
+  const handleDeleteCustom = (templateId: string) => {
+    deleteCustomTemplate(templateId);
+    setConfirmDeleteTemplate(null);
+    refreshCustomTemplates();
   };
 
   const getQualityStatus = (template: PedagogicalTemplate) => {
@@ -232,6 +271,64 @@ export function TemplatePickerDialog({ onClose }: { onClose: () => void }) {
             Belum ada template untuk mapel ini.
           </div>
         )}
+
+        {/* L5-2: Custom Templates Section */}
+        {customTemplates.length > 0 && (
+          <div style={{ marginTop: 24 }}>
+            <div style={{
+              fontSize: 15, fontWeight: 800, color: 'var(--color-text-strong)',
+              marginBottom: 12, paddingBottom: 8, borderBottom: '2px solid var(--color-border-neutral)',
+            }}>
+              📝 Template Saya
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-muted)', marginLeft: 8 }}>
+                {customTemplates.length} template tersimpan
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {customTemplates.map((tpl) => (
+                <div
+                  key={tpl.id}
+                  data-testid={`custom-template-${tpl.id}`}
+                  style={{
+                    border: '1px solid var(--color-border-neutral)', borderRadius: 12, padding: 14,
+                    background: 'var(--color-panel)',
+                    display: 'flex', alignItems: 'center', gap: 12,
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      fontSize: 14, fontWeight: 700, color: 'var(--color-text-strong)',
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>{tpl.name}</div>
+                    <div style={{ fontSize: 12, color: 'var(--color-muted)', marginTop: 2, display: 'flex', gap: 10 }}>
+                      <span>📄 {tpl.pageCount} halaman</span>
+                      <span>🏷️ {tpl.mapel}</span>
+                    </div>
+                  </div>
+                  <button
+                    data-testid={`custom-template-apply-${tpl.id}`}
+                    onClick={() => handleApplyCustom(tpl.id)}
+                    disabled={applied}
+                    style={{
+                      padding: '7px 14px', borderRadius: 8, border: 'none',
+                      background: applied ? 'var(--color-muted)' : 'var(--color-accent)',
+                      color: 'var(--color-panel)', fontWeight: 700, fontSize: 12, cursor: applied ? 'default' : 'pointer',
+                    }}
+                  >{applied ? '✓' : 'Gunakan'}</button>
+                  <button
+                    data-testid={`custom-template-delete-${tpl.id}`}
+                    onClick={() => setConfirmDeleteTemplate(tpl.id)}
+                    style={{
+                      padding: '7px 10px', borderRadius: 8, border: '1px solid var(--color-border)',
+                      background: 'var(--color-panel)', color: 'var(--color-danger-strong)',
+                      fontSize: 12, cursor: 'pointer',
+                    }}
+                  >🗑️</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Overwrite confirmation */}
@@ -276,6 +373,77 @@ export function TemplatePickerDialog({ onClose }: { onClose: () => void }) {
           </div>
         </div>
       )}
+
+      {/* L5-2: Custom template overwrite confirmation */}
+      {confirmCustomOverwrite && (
+        <div
+          data-testid="custom-overwrite-confirm"
+          style={{
+            position: 'fixed', inset: 0, zIndex: 1100, background: 'var(--color-overlay-scrim)',
+            display: 'grid', placeItems: 'center',
+          }}
+          onClick={() => setConfirmCustomOverwrite(null)}
+        >
+          <div
+            style={{
+              background: 'var(--color-panel)', borderRadius: 16, padding: 28, maxWidth: 420, width: '88%',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ margin: '0 0 8px 0', fontSize: 16, fontWeight: 800 }}>Ganti Proyek?</h3>
+            <p style={{ fontSize: 14, color: 'var(--color-text-soft)', margin: '0 0 16px', lineHeight: 1.5 }}>
+              Proyek saat ini akan diganti dengan template ini. Simpan proyek saat ini terlebih dahulu jika perlu.
+            </p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button onClick={() => setConfirmCustomOverwrite(null)} style={{
+                padding: '8px 18px', borderRadius: 8, border: '2px solid var(--color-border-neutral)',
+                background: 'var(--color-panel)', color: 'var(--color-text-soft)', fontWeight: 700, fontSize: 14, cursor: 'pointer',
+              }}>Batal</button>
+              <button onClick={() => doApplyCustom(confirmCustomOverwrite)} style={{
+                padding: '8px 18px', borderRadius: 8, border: 'none',
+                background: 'var(--color-accent)', color: 'var(--color-panel)', fontWeight: 700, fontSize: 14, cursor: 'pointer',
+              }}>Ya, Ganti</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* L5-2: Custom template delete confirmation */}
+      {confirmDeleteTemplate && (
+        <div
+          data-testid="custom-delete-confirm"
+          style={{
+            position: 'fixed', inset: 0, zIndex: 1100, background: 'var(--color-overlay-scrim)',
+            display: 'grid', placeItems: 'center',
+          }}
+          onClick={() => setConfirmDeleteTemplate(null)}
+        >
+          <div
+            style={{
+              background: 'var(--color-panel)', borderRadius: 16, padding: 28, maxWidth: 380, width: '88%',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ margin: '0 0 8px 0', fontSize: 16, fontWeight: 800 }}>Hapus Template?</h3>
+            <p style={{ fontSize: 14, color: 'var(--color-text-soft)', margin: '0 0 16px' }}>
+              Template yang dihapus tidak dapat dikembalikan.
+            </p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button onClick={() => setConfirmDeleteTemplate(null)} style={{
+                padding: '8px 18px', borderRadius: 8, border: '2px solid var(--color-border-neutral)',
+                background: 'var(--color-panel)', color: 'var(--color-text-soft)', fontWeight: 700, fontSize: 14, cursor: 'pointer',
+              }}>Batal</button>
+              <button onClick={() => handleDeleteCustom(confirmDeleteTemplate)} style={{
+                padding: '8px 18px', borderRadius: 8, border: 'none',
+                background: 'var(--color-danger-strong)', color: 'var(--color-panel)', fontWeight: 700, fontSize: 14, cursor: 'pointer',
+              }}>Hapus</button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
