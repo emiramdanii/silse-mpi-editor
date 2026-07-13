@@ -43,7 +43,7 @@ type SceneComposerProps = {
   contract: MpiDesignContract;
   slot: SceneRenderSlot;
   interactive?: boolean;
-  onSlotClick?: (slotId: string) => void;
+  onSlotClick?: (slotId: string, modifiers?: { ctrlKey: boolean; shiftKey: boolean; metaKey: boolean }) => void;
   onGameAction?: (slotId: string, actionIndex: number) => void;
   onQuizAnswer?: (slotId: string, choiceId: string) => void;
   selectedSlotId?: string;
@@ -92,7 +92,7 @@ export type SceneRendererViewProps = {
   /** Interactive mode: editor (false) vs preview/export (true). */
   interactive?: boolean;
   /** Called when a slot is clicked (editor select). */
-  onSlotClick?: (slotId: string) => void;
+  onSlotClick?: (slotId: string, modifiers?: { ctrlKey: boolean; shiftKey: boolean; metaKey: boolean }) => void;
   /** Called when a game action is chosen. */
   onGameAction?: (slotId: string, actionIndex: number) => void;
   /** Called when a quiz choice is selected. */
@@ -101,6 +101,8 @@ export type SceneRendererViewProps = {
   onInputFieldSubmit?: (slotId: string, isCorrect: boolean, studentAnswer: string) => void;
   /** Selected slot ID (editor highlight). */
   selectedSlotId?: string;
+  /** V2-PILAR-2.5: Multi-select slot IDs (editor highlight, array). */
+  selectedSlotIds?: string[];
   /** PATCH A: Idempotent score set (replaces, doesn't add) */
   onScoreSet?: (sceneId: string, score: number) => void;
   /** PERFECT-MPI-RUNTIME-SYNC: callback when scene is completed */
@@ -150,6 +152,7 @@ export function SceneRendererView({
   onQuizAnswer,
   onInputFieldSubmit,
   selectedSlotId,
+  selectedSlotIds,
   onScoreSet,
   onSceneComplete,
   onSceneReset,
@@ -213,7 +216,7 @@ export function SceneRendererView({
           onGameAction={onGameAction}
           onQuizAnswer={onQuizAnswer}
           onInputFieldSubmit={onInputFieldSubmit}
-          selected={selectedSlotId === slot.id}
+          selected={selectedSlotId === slot.id || (selectedSlotIds != null && selectedSlotIds.includes(slot.id))}
           editorInteractive={isEditorInteractive}
           onSlotDrag={onSlotDrag}
           onSlotResize={onSlotResize}
@@ -233,7 +236,7 @@ type SlotViewProps = {
   slot: SceneRenderSlot;
   contract: MpiDesignContract;
   interactive: boolean;
-  onSlotClick?: (slotId: string) => void;
+  onSlotClick?: (slotId: string, modifiers?: { ctrlKey: boolean; shiftKey: boolean; metaKey: boolean }) => void;
   onGameAction?: (slotId: string, actionIndex: number) => void;
   onQuizAnswer?: (slotId: string, choiceId: string) => void;
   onInputFieldSubmit?: (slotId: string, isCorrect: boolean, studentAnswer: string) => void;
@@ -320,7 +323,7 @@ function SlotView({
       onPointerDown={editorInteractive ? handlePointerDown : undefined}
       onClick={(e) => {
         e.stopPropagation();
-        if (!editorInteractive) onSlotClick?.(slot.id);
+        if (!editorInteractive) onSlotClick?.(slot.id, { ctrlKey: e.ctrlKey, shiftKey: e.shiftKey, metaKey: e.metaKey });
       }}
     >
       <ContentRenderer

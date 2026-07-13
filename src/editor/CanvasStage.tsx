@@ -14,7 +14,7 @@
  *   - Empty state memakai label role ramah guru + saran elemen pertama.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useEditorStore } from '../store/editor-store';
 import { NavigationToolbarBlock } from '../components/scene-blocks';
 import { getCapability } from '../core/capability';
@@ -65,6 +65,12 @@ export function CanvasStage() {
   const selectComponent = useEditorStore((s) => s.selectComponent);
   const updateComponentGeometry = useEditorStore((s) => s.updateComponentGeometry);
   const removeComponent = useEditorStore((s) => s.removeComponent);
+  // V2-PILAR-2.5: multi-select
+  const selectedComponentIds = useEditorStore((s) => s.selectedComponentIds);
+  const toggleComponentInSelection = useEditorStore((s) => s.toggleComponentInSelection);
+  const selectComponentRange = useEditorStore((s) => s.selectComponentRange);
+  const clearSelection = useEditorStore((s) => s.clearSelection);
+  const lastClickedId = React.useRef<string | null>(null);
   // CORE-MPI-UX-FOUNDATION-01: navigation
   const navigateNext = useEditorStore((s) => s.navigateNext);
   const navigatePrev = useEditorStore((s) => s.navigatePrev);
@@ -233,7 +239,7 @@ export function CanvasStage() {
             background: bg,
             ...premiumCssVars,
           } as React.CSSProperties}
-          onClick={() => selectComponent(null)}
+          onClick={() => clearSelection()}
         >
           <div className="canvas-frame__label" data-testid="canvas-frame-label">
             {CANVAS_WIDTH} × {CANVAS_HEIGHT} · {currentPage?.title ?? '—'} ·{' '}
@@ -297,8 +303,23 @@ export function CanvasStage() {
                 plan={sceneRenderPlan}
                 contract={getDesignContractWithProjectStyle(project.stylePackId, project.style)}
                 interactive={false}
-                onSlotClick={(slotId) => selectComponent(slotId)}
+                onSlotClick={(slotId, modifiers) => {
+                  // V2-PILAR-2.5: Multi-select dengan Ctrl/Shift+Click
+                  if (modifiers && (modifiers.ctrlKey || modifiers.metaKey)) {
+                    // Ctrl+Click: toggle individual
+                    toggleComponentInSelection(slotId);
+                    lastClickedId.current = slotId;
+                  } else if (modifiers && modifiers.shiftKey && lastClickedId.current) {
+                    // Shift+Click: select range
+                    selectComponentRange(lastClickedId.current, slotId);
+                  } else {
+                    // Single click: replace selection
+                    selectComponent(slotId);
+                    lastClickedId.current = slotId;
+                  }
+                }}
                 selectedSlotId={selectedComponentId ?? undefined}
+                selectedSlotIds={selectedComponentIds}
                 customStyle={currentPage?.sceneCustomStyle}
                 // PATCH A: Editor mode does NOT wire score/completion — prevents accidental score changes during editing.
                 // Fase 2a Step 2: Editor interaction (drag/resize) for cover-hero scene type.
@@ -321,6 +342,33 @@ export function CanvasStage() {
               />
             </div>
           )}
+
+          {/* V2-PILAR-2.5: Group bounding box — dashed box around multi-selected components */}
+          {selectedComponentIds.length > 1 && currentPage && (() => {
+            const selectedComps = currentPage.components.filter((c) => selectedComponentIds.includes(c.id));
+            if (selectedComps.length < 2) return null;
+            const minX = Math.min(...selectedComps.map((c) => c.x));
+            const minY = Math.min(...selectedComps.map((c) => c.y));
+            const maxX = Math.max(...selectedComps.map((c) => c.x + c.width));
+            const maxY = Math.max(...selectedComps.map((c) => c.y + c.height));
+            const padding = 6;
+            return (
+              <div
+                data-testid="group-bounding-box"
+                style={{
+                  position: 'absolute',
+                  left: minX - padding,
+                  top: minY - padding,
+                  width: (maxX - minX) + padding * 2,
+                  height: (maxY - minY) + padding * 2,
+                  border: '2px dashed rgba(59, 130, 246, 0.5)',
+                  borderRadius: 4,
+                  pointerEvents: 'none',
+                  zIndex: 50,
+                }}
+              />
+            );
+          })()}
 
         </div>
       </div>

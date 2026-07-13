@@ -111,6 +111,10 @@ import type { Rect } from '../core/geometry';
 export type EditorState = {
   project: SimpleProject;
   selectedComponentId: string | null;
+  // V2-PILAR-2.5: Multi-select array (superset of selectedComponentId).
+  // selectedComponentId always = selectedComponentIds[0] if length === 1, else null.
+  // Backward compat: old code reads selectedComponentId, new code reads selectedComponentIds.
+  selectedComponentIds: string[];
   // CORE-MPI-UX-FOUNDATION-01: runtime progress + aggregate score
   completedSceneIds: string[];
   perSceneScore: Record<string, number>;
@@ -151,6 +155,11 @@ export type EditorState = {
   addHotspotOverlayComponent: (overrides?: Partial<HotspotOverlayComponentEditable>) => string | null;
   addInputFieldComponent: (overrides?: Partial<InputFieldComponentEditable>) => string | null;
   selectComponent: (componentId: string | null) => void;
+  // V2-PILAR-2.5: Multi-select methods
+  toggleComponentInSelection: (componentId: string) => void;
+  selectComponentRange: (fromComponentId: string, toComponentId: string) => void;
+  clearSelection: () => void;
+  bulkDeleteComponents: (componentIds: string[]) => void;
   updateTextComponent: (componentId: string, patch: Partial<TextComponentEditable>) => void;
   updateImageComponent: (componentId: string, patch: Partial<ImageComponentEditable>) => void;
   updateCardComponent: (componentId: string, patch: Partial<CardComponentEditable>) => void;
@@ -610,6 +619,7 @@ function addComponentToCurrentPage(
   return {
     project: { ...state.project, pages },
     selectedComponentId: component.id,
+    selectedComponentIds: [component.id],
   };
 }
 
@@ -618,13 +628,14 @@ function addComponentToCurrentPage(
 export const useEditorStore = create<EditorState>((set, get) => ({
   project: createProject(),
   selectedComponentId: null,
+  selectedComponentIds: [], // V2-PILAR-2.5: multi-select array
   // CORE-MPI-UX-FOUNDATION-01: runtime state
   completedSceneIds: [],
   perSceneScore: {},
   aggregateScore: 0,
 
   newProject: () => {
-    set({ project: createProject(), selectedComponentId: null, completedSceneIds: [], perSceneScore: {}, aggregateScore: 0 });
+    set({ project: createProject(), selectedComponentId: null, selectedComponentIds: [], completedSceneIds: [], perSceneScore: {}, aggregateScore: 0 });
   },
 
   setProject: (project) => {
@@ -685,7 +696,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         pages: [...state.project.pages, page],
         currentPageId: page.id,
       },
-      selectedComponentId: null,
+      selectedComponentId: null, selectedComponentIds: [],
     }));
     return page.id;
   },
@@ -695,7 +706,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       if (!state.project.pages.some((p) => p.id === pageId)) return state;
       return {
         project: { ...state.project, currentPageId: pageId },
-        selectedComponentId: null,
+        selectedComponentId: null, selectedComponentIds: [],
       };
     });
   },
@@ -727,7 +738,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       }
       return {
         project: { ...state.project, pages, currentPageId },
-        selectedComponentId: null,
+        selectedComponentId: null, selectedComponentIds: [],
       };
     });
   },
@@ -745,7 +756,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       pages.splice(idx + 1, 0, copy);
       return {
         project: { ...s.project, pages, currentPageId: copy.id },
-        selectedComponentId: null,
+        selectedComponentId: null, selectedComponentIds: [],
       };
     });
     return copy.id;
@@ -904,9 +915,74 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   selectComponent: (componentId) => {
     set((state) => {
-      if (componentId === null) return { selectedComponentId: null };
+      if (componentId === null) return { selectedComponentId: null, selectedComponentIds: [] };
       if (!componentExistsInCurrentPage(state.project, componentId)) return state;
-      return { selectedComponentId: componentId };
+      return { selectedComponentId: componentId, selectedComponentIds: [componentId] };
+    });
+  },
+
+  // V2-PILAR-2.5: Toggle component in multi-selection (Ctrl+Click)
+  toggleComponentInSelection: (componentId) => {
+    set((state) => {
+      const current = state.selectedComponentIds;
+      if (current.includes(componentId)) {
+        // Remove from selection
+        const next = current.filter((id) => id !== componentId);
+        return {
+          selectedComponentIds: next,
+          selectedComponentId: next.length === 1 ? next[0] : null,
+        };
+      }
+      // Add to selection
+      const next = [...current, componentId];
+      return {
+        selectedComponentIds: next,
+        selectedComponentId: next.length === 1 ? next[0] : null,
+      };
+    });
+  },
+
+  // V2-PILAR-2.5: Select range by page+component order (Shift+Click)
+  selectComponentRange: (fromComponentId, toComponentId) => {
+    set((state) => {
+      // Collect all component IDs in page order from current page
+      const page = state.project.pages.find((p) => p.id === state.project.currentPageId);
+      if (!page) return state;
+      const allIds = page.components.map((c) => c.id);
+      const fromIdx = allIds.indexOf(fromComponentId);
+      const toIdx = allIds.indexOf(toComponentId);
+      if (fromIdx === -1 || toIdx === -1) return state;
+      const start = Math.min(fromIdx, toIdx);
+      const end = Math.max(fromIdx, toIdx);
+      const rangeIds = allIds.slice(start, end + 1);
+      return {
+        selectedComponentIds: rangeIds,
+        selectedComponentId: rangeIds.length === 1 ? rangeIds[0] : null,
+      };
+    });
+  },
+
+  // V2-PILAR-2.5: Clear all selection
+  clearSelection: () => {
+    set({ selectedComponentId: null, selectedComponentIds: [] });
+  },
+
+  // V2-PILAR-2.5: Bulk delete multiple components
+  bulkDeleteComponents: (componentIds) => {
+    if (componentIds.length === 0) return;
+    set((state) => {
+      const pages = state.project.pages.map((page) => {
+        if (!page.components.some((c) => componentIds.includes(c.id))) return page;
+        return {
+          ...page,
+          components: page.components.filter((c) => !componentIds.includes(c.id)),
+        };
+      });
+      return {
+        project: { ...state.project, pages },
+        selectedComponentId: null,
+        selectedComponentIds: [],
+      };
     });
   },
 
@@ -1171,7 +1247,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       });
       return {
         project: { ...state.project, pages },
-        selectedComponentId: null,
+        selectedComponentId: null, selectedComponentIds: [],
       };
     });
   },
@@ -1209,7 +1285,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       return {
         project: { ...state.project, pages },
         // Don't auto-select — let guru choose what to edit.
-        selectedComponentId: null,
+        selectedComponentId: null, selectedComponentIds: [],
       };
     });
     return addedCount;
@@ -1242,7 +1318,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
             pages: newPages,
             currentPageId: newPages[0].id,
           },
-          selectedComponentId: null,
+          selectedComponentId: null, selectedComponentIds: [],
           // Reset runtime state (scores, completed scenes) since pages changed.
           completedSceneIds: [],
           perSceneScore: {},
@@ -1258,7 +1334,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           // Jump to first newly-imported slide for immediate feedback.
           currentPageId: newPages[0].id,
         },
-        selectedComponentId: null,
+        selectedComponentId: null, selectedComponentIds: [],
       };
     });
     return newPages.length;
@@ -1384,7 +1460,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   resetProject: () => {
-    set({ project: createProject(), selectedComponentId: null, completedSceneIds: [], perSceneScore: {}, aggregateScore: 0 });
+    set({ project: createProject(), selectedComponentId: null, selectedComponentIds: [], completedSceneIds: [], perSceneScore: {}, aggregateScore: 0 });
     clearCurrentProject();
   },
 

@@ -230,6 +230,13 @@ export function Inspector() {
   const updateHotspotOverlayComponent = useEditorStore((s) => s.updateHotspotOverlayComponent);
   const updateInputFieldComponent = useEditorStore((s) => s.updateInputFieldComponent);
   const project = useEditorStore((s) => s.project);
+  // V2-PILAR-2.5: multi-select
+  const selectedComponentIds = useEditorStore((s) => s.selectedComponentIds);
+  const bulkDeleteComponents = useEditorStore((s) => s.bulkDeleteComponents);
+  const clearSelection = useEditorStore((s) => s.clearSelection);
+
+  // V2-PILAR-2.5: Multi-select bulk panel
+  const isMultiSelect = selectedComponentIds.length > 1;
 
   return (
     <aside className="inspector" data-testid="inspector">
@@ -247,6 +254,45 @@ export function Inspector() {
                 💡 Tips: Gunakan <strong>Template Pedagogis</strong> atau <strong>Import dari AI</strong> untuk mulai cepat.
               </div>
             </div>
+          </div>
+        ) : isMultiSelect ? (
+          <div data-testid="inspector-bulk-edit" style={{ padding: '16px' }}>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12, color: 'var(--color-text, #1f2533)' }}>
+              🔲 {selectedComponentIds.length} Komponen Terpilih
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--color-muted, #8a8775)', marginBottom: 16, lineHeight: 1.5 }}>
+              Gunakan Ctrl+Klik untuk menambah/hapus komponen dari seleksi. Shift+Klik untuk pilih rentang.
+            </div>
+            <button
+              type="button"
+              data-testid="inspector-bulk-delete"
+              onClick={() => {
+                if (window.confirm(`Hapus ${selectedComponentIds.length} komponen terpilih?`)) {
+                  bulkDeleteComponents(selectedComponentIds);
+                }
+              }}
+              style={{
+                width: '100%', padding: '10px 16px', borderRadius: 8,
+                border: '1px solid var(--color-danger, #c0392b)',
+                background: 'transparent', color: 'var(--color-danger, #c0392b)',
+                fontWeight: 700, fontSize: 13, cursor: 'pointer', marginBottom: 8,
+              }}
+            >
+              🗑️ Hapus Semua yang Terpilih
+            </button>
+            <button
+              type="button"
+              data-testid="inspector-bulk-clear"
+              onClick={() => clearSelection()}
+              style={{
+                width: '100%', padding: '10px 16px', borderRadius: 8,
+                border: '1px solid var(--color-border, #e3ddcd)',
+                background: 'transparent', color: 'var(--color-text, #1f2533)',
+                fontWeight: 600, fontSize: 13, cursor: 'pointer',
+              }}
+            >
+              ✓ Selesai — Batalkan Seleksi
+            </button>
           </div>
         ) : !selectedComponent ? (
           <>
