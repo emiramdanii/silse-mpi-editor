@@ -602,6 +602,86 @@ export type InputFieldComponent = BaseComponent & {
 };
 
 // ---------------------------------------------------------------------------
+// V2-PILAR-3: Student Session State — Scoring Engine
+//
+// Layer terpisah untuk tracking jawaban siswa secara real-time.
+// Berbeda dari editor-store (yang track project structure) dan preview-store
+// (yang track navigation state), StudentSessionState track:
+//   - responses: Record<componentId, QuizResponse> — jawaban per soal
+//   - totalScoreEarned: jumlah scoreEarned dari semua responses
+//   - totalMaxScore: jumlah maxScore dari semua responses
+//   - currentStreak: combo streak berturut-turut (reset saat salah)
+//   - maxStreak: streak tertinggi yang pernah dicapai
+//   - finalGrade: kalkulasi nilai akhir (0-100) berdasarkan totalScoreEarned/totalMaxScore
+//
+// Komponen yang masuk scoring: QuestionComponent, GameComponent,
+// InputFieldComponent (jika correctAnswer di-set).
+// ---------------------------------------------------------------------------
+
+/**
+ * Response siswa untuk satu komponen skor (Question/Game/InputField).
+ * Key di StudentSessionState.responses adalah componentId — agar O(1) lookup
+ * dan overwrite aman saat siswa kembali ke soal sebelumnya dan mengubah jawaban.
+ */
+export type QuizResponse = {
+  /** componentId dari Question/Game/InputField yang dijawab. */
+  componentId: string;
+  /** Page/slide tempat komponen berada. */
+  slideId: string;
+  /** Apakah jawaban siswa benar. */
+  isCorrect: boolean;
+  /** Skor yang diperoleh (0 jika salah, = points jika benar). */
+  scoreEarned: number;
+  /** Skor maksimum untuk komponen ini (= points). */
+  maxScore: number;
+  /** Jawaban siswa (text untuk InputField, choiceId untuk Question/Game). */
+  studentAnswer: string;
+  /** Timestamp jawaban (ms since epoch). Untuk audit trail. */
+  answeredAt: number;
+};
+
+/**
+ * Tier lencana apresiasi berdasarkan nilai akhir.
+ * Sesuai keputusan Bapak (pedagogical adjustment):
+ *   - Gold (Excellent): 90-100
+ *   - Silver (Good Job): 70-89
+ *   - Bronze (Keep Trying): <70
+ */
+export const BADGE_TIERS = ['gold', 'silver', 'bronze'] as const;
+export type BadgeTier = (typeof BADGE_TIERS)[number];
+
+/**
+ * Threshold nilai untuk setiap tier.
+ * Gold: >= 90, Silver: >= 70, Bronze: < 70.
+ */
+export const BADGE_THRESHOLDS: Record<BadgeTier, number> = {
+  gold: 90,
+  silver: 70,
+  bronze: 0,
+};
+
+/**
+ * Threshold combo streak untuk trigger celebration tier.
+ * streak-3: 3x berturut-turut → local burst + teks.
+ * streak-5: 5x berturut-turut → local burst eskalasi + teks khusus.
+ */
+export const COMBO_STREAK_THRESHOLDS = {
+  STREAK_3: 3,
+  STREAK_5: 5,
+} as const;
+
+/**
+ * Tier celebration untuk trigger efek visual berbeda.
+ * Lihat Pilar 3 Commit 2 untuk implementasi visual.
+ */
+export type CelebrationTier =
+  | 'answer'           // Jawaban benar per soal — local burst di tombol
+  | 'streak-3'         // 3x berturut-turut — local burst + teks
+  | 'streak-5'         // 5x berturut-turut — local burst eskalasi
+  | 'module-complete'  // Modul selesai — full-screen burst
+  | 'perfect-score';   // Skor 100% — full-screen + lencana emas
+
+// ---------------------------------------------------------------------------
 // Question Component (M10)
 // ---------------------------------------------------------------------------
 

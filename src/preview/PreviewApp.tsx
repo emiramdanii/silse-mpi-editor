@@ -10,6 +10,7 @@
 
 import { useEditorStore } from '../store/editor-store';
 import { usePreviewStore } from './preview-store';
+import { useStudentSessionStore } from '../store/student-session-store';
 import { getBackgroundPatternForStylePack } from '../core/style-packs/background-pattern';
 import { getCoverClassForStylePack } from '../core/style-packs/cover-decoration';
 import { getMicroAnimationForStylePack } from '../core/style-packs/micro-animation';
@@ -164,14 +165,39 @@ export function PreviewApp() {
                   // Find the game component for this slot and trigger answer
                   const gameComp = currentPage.components.find((c) => c.type === 'game') as GameComponent | undefined;
                   if (gameComp) {
-                    answerGameMission(gameComp.id, 0, actionIndex, gameComp.missions[0]?.correctChoiceIndex ?? 0, gameComp.missions[0]?.points ?? 0);
+                    const mission = gameComp.missions[0];
+                    const correctIdx = mission?.correctChoiceIndex ?? 0;
+                    const points = mission?.points ?? 0;
+                    answerGameMission(gameComp.id, 0, actionIndex, correctIdx, points);
+                    // V2-PILAR-3: Record ke student-session-store untuk scoring
+                    const isCorrect = actionIndex === correctIdx;
+                    useStudentSessionStore.getState().recordResponse({
+                      componentId: gameComp.id,
+                      slideId: currentPage.id,
+                      isCorrect,
+                      scoreEarned: isCorrect ? points : 0,
+                      maxScore: points,
+                      studentAnswer: mission?.choices[actionIndex]?.id ?? String(actionIndex),
+                    });
                   }
                 }}
                 onQuizAnswer={(_slotId, choiceId) => {
                   const quizComp = currentPage.components.find((c) => c.type === 'question') as QuestionComponent | undefined;
                   if (quizComp) {
                     const choiceIdx = quizComp.choices.findIndex((c) => c.id === choiceId);
-                    if (choiceIdx >= 0) answerQuestion(quizComp.id, choiceIdx, quizComp.correctChoiceIndex, quizComp.points);
+                    if (choiceIdx >= 0) {
+                      answerQuestion(quizComp.id, choiceIdx, quizComp.correctChoiceIndex, quizComp.points);
+                      // V2-PILAR-3: Record ke student-session-store untuk scoring
+                      const isCorrect = choiceIdx === quizComp.correctChoiceIndex;
+                      useStudentSessionStore.getState().recordResponse({
+                        componentId: quizComp.id,
+                        slideId: currentPage.id,
+                        isCorrect,
+                        scoreEarned: isCorrect ? quizComp.points : 0,
+                        maxScore: quizComp.points,
+                        studentAnswer: choiceId,
+                      });
+                    }
                   }
                 }}
                 onScoreSet={(sceneId, score) => useEditorStore.getState().setSceneScore(sceneId, score)}
