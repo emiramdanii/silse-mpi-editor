@@ -37,6 +37,7 @@ import {
   readImageFiles,
 } from '../core/slide-import';
 import { SlideSettingsDialog } from './SlideSettingsDialog';
+import { QuizSheetDialog } from './QuizSheetDialog';
 
 // OPTIMASI-01: lazy-load heavy modules that are only needed on user action.
 // TemplatePickerDialog is a modal — only loaded when user clicks "Template Pedagogis".
@@ -69,6 +70,8 @@ export function Topbar() {
   const [slideImportInProgress, setSlideImportInProgress] = useState(false);
   // V2-PILAR-1: state for slide settings dialog
   const [showSlideSettings, setShowSlideSettings] = useState(false);
+  // V2-PILAR-2.5: state for quiz sheet dialog
+  const [showQuizSheet, setShowQuizSheet] = useState(false);
 
   // EXPORT-READY-SUMMARY-01: compute export ready summary (memoized).
   const exportReadySummary = useMemo(
@@ -461,6 +464,16 @@ export function Topbar() {
         >
           ⚙️ Pengaturan Slide
         </button>
+        {/* V2-PILAR-2.5: Centralized Quiz Sheet */}
+        <button
+          onClick={() => setShowQuizSheet(true)}
+          className="editor-topbar__action editor-topbar__action--ghost"
+          title="Kelola semua kunci jawaban dan skor dari seluruh slide dalam satu tabel"
+          data-action="quiz-sheet"
+          data-testid="topbar-quiz-sheet"
+        >
+          📊 Kelola Kuis
+        </button>
         <button
           onClick={() => {
             if (window.confirm('Buat MPI baru? Perubahan saat ini akan hilang jika belum disimpan.')) {
@@ -547,6 +560,10 @@ export function Topbar() {
       {/* V2-PILAR-1: Slide Settings Dialog */}
       {showSlideSettings && (
         <SlideSettingsDialog onClose={() => setShowSlideSettings(false)} />
+      )}
+      {/* V2-PILAR-2.5: Quiz Sheet Dialog */}
+      {showQuizSheet && (
+        <QuizSheetDialog onClose={() => setShowQuizSheet(false)} />
       )}
     </header>
   );

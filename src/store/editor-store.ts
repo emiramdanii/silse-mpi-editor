@@ -195,6 +195,16 @@ export type EditorState = {
     } | null,
   ) => void;
 
+  // V2-PILAR-2.5: Bulk update scoring components (from Quiz Sheet).
+  // Updates points + correctAnswer untuk multiple components across pages.
+  // Each update: { componentId, componentType, points?, correctAnswer? }
+  bulkUpdateScoringComponents: (updates: Array<{
+    componentId: string;
+    componentType: 'question' | 'game' | 'input-field';
+    points?: number;
+    correctAnswer?: string;
+  }>) => void;
+
   // Save / Load (M7)
   saveCurrent: () => boolean;
   loadCurrent: () => boolean;
@@ -1284,6 +1294,76 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       return {
         project: { ...state.project, globalSlideSettings: merged },
       };
+    });
+  },
+
+  // V2-PILAR-2.5: Bulk update scoring components (from Quiz Sheet)
+  bulkUpdateScoringComponents: (updates) => {
+    if (updates.length === 0) return;
+    set((state) => {
+      const pages = state.project.pages.map((page) => {
+        let pageChanged = false;
+        const newComponents = page.components.map((component) => {
+          const update = updates.find((u) => u.componentId === component.id);
+          if (!update) return component;
+
+          if (component.type === 'question' && update.componentType === 'question') {
+            pageChanged = true;
+            const qc = component as QuestionComponent;
+            // Update points if provided
+            if (update.points !== undefined) {
+              qc.points = update.points;
+            }
+            // Update correctAnswer: find choice yang text-nya match, set correctChoiceIndex
+            if (update.correctAnswer !== undefined) {
+              const matchIdx = qc.choices.findIndex(
+                (c) => c.text.trim().toLowerCase() === update.correctAnswer!.trim().toLowerCase()
+              );
+              if (matchIdx >= 0) {
+                qc.correctChoiceIndex = matchIdx;
+              }
+            }
+            return { ...qc };
+          }
+
+          if (component.type === 'game' && update.componentType === 'game') {
+            pageChanged = true;
+            const gc = component as GameComponent;
+            // Update points di mission pertama
+            if (update.points !== undefined && gc.missions[0]) {
+              gc.missions[0].points = update.points;
+            }
+            // Update correctAnswer: find choice di mission pertama
+            if (update.correctAnswer !== undefined && gc.missions[0]) {
+              const matchIdx = gc.missions[0].choices.findIndex(
+                (c) => c.text.trim().toLowerCase() === update.correctAnswer!.trim().toLowerCase()
+              );
+              if (matchIdx >= 0) {
+                gc.missions[0].correctChoiceIndex = matchIdx;
+              }
+            }
+            return { ...gc };
+          }
+
+          if (component.type === 'input-field' && update.componentType === 'input-field') {
+            pageChanged = true;
+            const ic = component as InputFieldComponent;
+            if (update.points !== undefined) {
+              ic.points = update.points;
+            }
+            if (update.correctAnswer !== undefined) {
+              ic.correctAnswer = update.correctAnswer;
+            }
+            return { ...ic };
+          }
+
+          return component;
+        });
+
+        return pageChanged ? { ...page, components: newComponents } : page;
+      });
+
+      return { project: { ...state.project, pages } };
     });
   },
 

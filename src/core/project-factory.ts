@@ -15,7 +15,7 @@
  *   - cover → 'coverCentered', material → 'singleColumn', lainnya → 'blank'.
  */
 
-import type { GlobalSlideSettings, PageRole, SimplePage, SimpleProject } from './types';
+import type { GlobalSlideSettings, PageRole, SimplePage, SimpleProject, QuestionComponent, GameComponent, InputFieldComponent } from './types';
 import { createTextComponent } from './component-factory';
 import { createPageId, createProjectId } from './ids';
 import { DEFAULT_STYLE_PACK, stylePackToProjectStyle } from './style-presets';
@@ -208,4 +208,110 @@ export function createProjectWithPages(
     project.pages.push(page);
   }
   return project;
+}
+
+// ---------------------------------------------------------------------------
+// V2-PILAR-2.5: Centralized Quiz Sheet — collect scoring components
+// ---------------------------------------------------------------------------
+
+/**
+ * Satu baris di tabel Quiz Sheet — merepresentasikan satu komponen scoring.
+ */
+export type ScoringComponentEntry = {
+  pageId: string;
+  pageTitle: string;
+  componentId: string;
+  componentType: 'question' | 'game' | 'input-field';
+  /** Prompt/pertanyaan/label — read-only di tabel. */
+  prompt: string;
+  /** Jawaban benar — editable di tabel. */
+  correctAnswer: string;
+  /** Poin — editable di tabel (0-100). */
+  points: number;
+};
+
+/**
+ * Kumpulkan semua komponen scoring dari seluruh project.pages.
+ *
+ * Komponen yang masuk:
+ *   - QuestionComponent (selalu, punya correctChoiceIndex)
+ *   - GameComponent (selalu, punya missions[].correctChoiceIndex)
+ *   - InputFieldComponent (hanya jika correctAnswer di-set)
+ *
+ * Urutan: by page order (page index), lalu by component order dalam page.
+ *
+ * Pure function — tidak mutasi project. Returns array baru.
+ */
+export function collectScoringComponents(project: SimpleProject): ScoringComponentEntry[] {
+  const entries: ScoringComponentEntry[] = [];
+
+  for (const page of project.pages) {
+    for (const component of page.components) {
+      if (component.type === 'question') {
+        const qc = component as QuestionComponent;
+        const correctChoice = qc.choices[qc.correctChoiceIndex];
+        entries.push({
+          pageId: page.id,
+          pageTitle: page.title,
+          componentId: qc.id,
+          componentType: 'question',
+          prompt: qc.prompt,
+          correctAnswer: correctChoice?.text ?? '',
+          points: qc.points,
+        });
+      } else if (component.type === 'game') {
+        const gc = component as GameComponent;
+        // Game punya multiple missions; ambil mission pertama untuk Quiz Sheet
+        // (Quiz Sheet fokus pada overview, detail edit via Inspector)
+        const mission = gc.missions[0];
+        const correctChoice = mission?.choices[mission.correctChoiceIndex];
+        entries.push({
+          pageId: page.id,
+          pageTitle: page.title,
+          componentId: gc.id,
+          componentType: 'game',
+          prompt: gc.title + ': ' + (mission?.prompt ?? ''),
+          correctAnswer: correctChoice?.text ?? '',
+          points: mission?.points ?? 0,
+        });
+      } else if (component.type === 'input-field') {
+        const ic = component as InputFieldComponent;
+        // Hanya masuk jika correctAnswer di-set (auto-check aktif)
+        if (ic.correctAnswer !== undefined && ic.correctAnswer !== '') {
+          entries.push({
+            pageId: page.id,
+            pageTitle: page.title,
+            componentId: ic.id,
+            componentType: 'input-field',
+            prompt: ic.label,
+            correctAnswer: ic.correctAnswer,
+            points: ic.points,
+          });
+        }
+      }
+    }
+  }
+
+  return entries;
+}
+
+/**
+ * Sanitasi input angka untuk kolom Poin di Quiz Sheet.
+ *
+ * 3 lapis pertahanan:
+ *   1. Regex filter: hapus semua karakter non-digit dari input string
+ *   2. Clamp: batasi ke range 1-100
+ *   3. Store validator: sanitizeInputFieldPatch reject points < 0 (sudah ada)
+ *
+ * Returns number 1-100.
+ */
+export function sanitizePointsInput(input: string): number {
+  // Lapis 1: filter non-digit
+  const digitsOnly = input.replace(/[^0-9]/g, '');
+  if (digitsOnly === '') return 1; // empty → minimum
+  const num = parseInt(digitsOnly, 10);
+  // Lapis 2: clamp 1-100
+  if (num < 1) return 1;
+  if (num > 100) return 100;
+  return num;
 }
