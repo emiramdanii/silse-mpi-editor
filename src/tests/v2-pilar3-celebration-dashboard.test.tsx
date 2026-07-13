@@ -81,14 +81,18 @@ describe('V2-PILAR-3 Commit 2 — Celebration utility', () => {
     });
   });
 
-  it('3. triggerFullScreenBurst creates fullscreen overlay', async () => {
+  it('3. triggerFullScreenBurst creates fullscreen burst in centralized container', async () => {
     const { triggerFullScreenBurst } = await import('../core/scoring/celebration');
     const container = document.createElement('div');
+    container.style.position = 'relative';
+    container.style.width = '1280px';
+    container.style.height = '720px';
     document.body.appendChild(container);
     triggerFullScreenBurst(container, undefined, 10);
-    const overlay = container.querySelector('.silse-burst-fullscreen');
-    expect(overlay).not.toBeNull();
-    const particles = overlay!.querySelectorAll('.silse-particle-fullscreen');
+    // PATCH: particles now go in centralized container, not .silse-burst-fullscreen overlay
+    const celebContainer = container.querySelector('#silse-celebration-container');
+    expect(celebContainer).not.toBeNull();
+    const particles = celebContainer!.querySelectorAll('.silse-particle-fullscreen');
     expect(particles.length).toBe(10);
   });
 
@@ -134,19 +138,31 @@ describe('V2-PILAR-3 Commit 2 — Celebration utility', () => {
   it('8. triggerCelebration with module-complete creates fullscreen burst', async () => {
     const { triggerCelebration } = await import('../core/scoring/celebration');
     const container = document.createElement('div');
+    container.style.position = 'relative';
+    container.style.width = '1280px';
+    container.style.height = '720px';
     document.body.appendChild(container);
     triggerCelebration('module-complete', null, container, undefined, 0);
-    const overlay = container.querySelector('.silse-burst-fullscreen');
-    expect(overlay).not.toBeNull();
+    // PATCH: particles now in centralized container
+    const celebContainer = container.querySelector('#silse-celebration-container');
+    expect(celebContainer).not.toBeNull();
+    const particles = celebContainer!.querySelectorAll('.silse-particle-fullscreen');
+    expect(particles.length).toBeGreaterThan(0);
   });
 
   it('9. triggerCelebration with perfect-score creates fullscreen burst', async () => {
     const { triggerCelebration } = await import('../core/scoring/celebration');
     const container = document.createElement('div');
+    container.style.position = 'relative';
+    container.style.width = '1280px';
+    container.style.height = '720px';
     document.body.appendChild(container);
     triggerCelebration('perfect-score', null, container, undefined, 0);
-    const overlay = container.querySelector('.silse-burst-fullscreen');
-    expect(overlay).not.toBeNull();
+    // PATCH: particles now in centralized container
+    const celebContainer = container.querySelector('#silse-celebration-container');
+    expect(celebContainer).not.toBeNull();
+    const particles = celebContainer!.querySelectorAll('.silse-particle-fullscreen');
+    expect(particles.length).toBeGreaterThan(0);
   });
 
   it('10. triggerCelebration with streak-3 creates local burst + indicator', async () => {

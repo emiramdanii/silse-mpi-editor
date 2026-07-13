@@ -4439,23 +4439,59 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
   }
 
   // V2-PILAR-3: Celebration burst — pure DOM, no library
+  // PATCH: Centralized container + dual cleanup (animationend + setTimeout)
   function pickRandomColor() {
     var colors = ['#16a34a', '#1e5b8f', '#2563eb', '#f59e0b', '#f9c12e'];
     return colors[Math.floor(Math.random() * colors.length)];
   }
 
+  // PATCH: Get or create centralized celebration container (reused, not recreated)
+  function getCelebrationContainer(parent) {
+    var container = parent.querySelector('#silse-celebration-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'silse-celebration-container';
+      container.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:200;overflow:visible;';
+      parent.appendChild(container);
+    }
+    return container;
+  }
+
+  // PATCH: Dual cleanup — animationend (primary) + setTimeout (fallback)
+  function attachDualCleanup(particle, fallbackDelay) {
+    var cleaned = false;
+    var cleanup = function() {
+      if (cleaned) return;
+      cleaned = true;
+      if (particle.parentNode) particle.parentNode.removeChild(particle);
+    };
+    // Lapisan 1: animationend (partikel pakai CSS animation)
+    particle.addEventListener('animationend', cleanup);
+    // Lapisan 1b: transitionend (defense-in-depth)
+    particle.addEventListener('transitionend', cleanup);
+    // Lapisan 2: setTimeout (fallback safety net)
+    setTimeout(cleanup, fallbackDelay);
+  }
+
   function triggerLocalBurst(originElement, particleCount) {
     if (!originElement) return;
     if (!particleCount) particleCount = 18;
-    var burstContainer = originElement.querySelector('.silse-burst-local');
-    if (!burstContainer) {
-      burstContainer = document.createElement('div');
-      burstContainer.className = 'silse-burst-local';
-      originElement.appendChild(burstContainer);
-    }
+    // PATCH: Use centralized container at canvas level
+    var parent = originElement.closest('#silse-canvas') || originElement.parentElement;
+    if (!parent) return;
+    var burstContainer = getCelebrationContainer(parent);
+    // Calculate origin position relative to parent
+    var parentRect = parent.getBoundingClientRect();
+    var originRect = originElement.getBoundingClientRect();
+    var centerX = originRect.left - parentRect.left + originRect.width / 2;
+    var centerY = originRect.top - parentRect.top + originRect.height / 2;
+
     for (var i = 0; i < particleCount; i++) {
       var particle = document.createElement('div');
       particle.className = 'silse-particle';
+      particle.style.position = 'absolute';
+      particle.style.left = centerX + 'px';
+      particle.style.top = centerY + 'px';
       var angle = (Math.PI * 2 * i) / particleCount + (Math.random() - 0.5) * 0.5;
       var distance = 50 + Math.random() * 100;
       var tx = Math.cos(angle) * distance;
@@ -4464,30 +4500,26 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       particle.style.setProperty('--ty', ty + 'px');
       particle.style.setProperty('--color', pickRandomColor());
       burstContainer.appendChild(particle);
-      // Cleanup after animation (0.8s + buffer)
-      (function(p) {
-        setTimeout(function() {
-          if (p.parentNode) p.parentNode.removeChild(p);
-        }, 900);
-      })(particle);
+      // PATCH: Dual cleanup
+      attachDualCleanup(particle, 900);
     }
-    // Cleanup container
-    setTimeout(function() {
-      if (burstContainer && burstContainer.parentNode && burstContainer.children.length === 0) {
-        burstContainer.parentNode.removeChild(burstContainer);
-      }
-    }, 1000);
   }
 
   function triggerFullScreenBurst(container, particleCount) {
     if (!container) return;
     if (!particleCount) particleCount = 40;
-    var overlay = document.createElement('div');
-    overlay.className = 'silse-burst-fullscreen';
-    container.appendChild(overlay);
+    // PATCH: Use centralized container
+    var celebContainer = getCelebrationContainer(container);
+    var containerRect = container.getBoundingClientRect();
+    var centerX = containerRect.width / 2;
+    var centerY = containerRect.height / 2;
+
     for (var i = 0; i < particleCount; i++) {
       var particle = document.createElement('div');
       particle.className = 'silse-particle silse-particle-fullscreen';
+      particle.style.position = 'absolute';
+      particle.style.left = centerX + 'px';
+      particle.style.top = centerY + 'px';
       var angle = Math.random() * Math.PI * 2;
       var distance = 200 + Math.random() * 300;
       var tx = Math.cos(angle) * distance;
@@ -4495,23 +4527,37 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       particle.style.setProperty('--tx', tx + 'px');
       particle.style.setProperty('--ty', ty + 'px');
       particle.style.setProperty('--color', pickRandomColor());
-      overlay.appendChild(particle);
+      celebContainer.appendChild(particle);
+      // PATCH: Dual cleanup
+      attachDualCleanup(particle, 1400);
     }
-    // Cleanup overlay after animation (1.2s + buffer)
+    // PATCH: Fallback safety — remove remaining fullscreen particles after 1.5s
     setTimeout(function() {
-      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-    }, 1400);
+      var remaining = celebContainer.querySelectorAll('.silse-particle-fullscreen');
+      for (var r = 0; r < remaining.length; r++) {
+        if (remaining[r].parentNode) remaining[r].parentNode.removeChild(remaining[r]);
+      }
+    }, 1500);
   }
 
   function triggerStreakIndicator(container, message, isStreak5) {
     if (!container) return;
+    // PATCH: Use centralized container
+    var celebContainer = getCelebrationContainer(container);
     var indicator = document.createElement('div');
     indicator.className = 'silse-streak-indicator' + (isStreak5 ? ' is-streak-5' : '');
     indicator.textContent = message;
-    container.appendChild(indicator);
-    setTimeout(function() {
+    celebContainer.appendChild(indicator);
+    // PATCH: Dual cleanup
+    var cleaned = false;
+    var cleanup = function() {
+      if (cleaned) return;
+      cleaned = true;
       if (indicator.parentNode) indicator.parentNode.removeChild(indicator);
-    }, isStreak5 ? 2000 : 1700);
+    };
+    indicator.addEventListener('animationend', cleanup);
+    indicator.addEventListener('transitionend', cleanup);
+    setTimeout(cleanup, isStreak5 ? 2000 : 1700);
   }
 
   function triggerCelebration(tier, originElement, container, streakCount) {

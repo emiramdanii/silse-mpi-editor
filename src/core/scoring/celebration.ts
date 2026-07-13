@@ -11,13 +11,19 @@
  *   - triggerStreakIndicator(container, tier, streakCount): teks mengambang
  *   - triggerCelebration(tier, originElement, container, palette): dispatcher
  *
- * Pure DOM manipulation. No React. Cleanup via setTimeout(particle.remove()).
+ * Pure DOM manipulation. No React.
+ *
+ * Patch Enhancement (V2-PILAR-3 PATCH):
+ *   - Centralized celebration container (didaur ulang, bukan create/destroy per burst)
+ *   - Dual cleanup: animationend (primary) + setTimeout (fallback safety net)
+ *   - pointer-events: none pada container → partikel tidak pernah blokir interaksi
  *
  * Catatan performa (sesuai arahan Bapak):
- *   - Partikel di-remove setelah animasi selesai (0.8s / 1.2s) → no memory leak
+ *   - Partikel di-remove via animationend + setTimeout (dual mechanism)
  *   - Parent container tidak re-render selama animasi (pointer-events: none)
  *   - Gunakan will-change: transform, opacity untuk GPU acceleration
  *   - Batch create partikel (loop, bukan recursive setTimeout)
+ *   - Satu kontainer terpusat → reduce DOM operations, prevent element accumulation
  */
 
 import type { CelebrationTier } from '../types';
@@ -48,9 +54,86 @@ function pickRandomColor(palette: CelebrationPalette): string {
   return colors[Math.floor(Math.random() * colors.length)];
 }
 
+// ---------------------------------------------------------------------------
+// V2-PILAR-3 PATCH: Centralized celebration container (reused, not recreated)
+// ---------------------------------------------------------------------------
+
+/**
+ * ID untuk kontainer terpusat yang didaur ulang.
+ */
+const CELEBRATION_CONTAINER_ID = 'silse-celebration-container';
+
+/**
+ * Get atau buat satu kontainer celebration terpusat di dalam parent element.
+ *
+ * Kontainer ini bersifat:
+ *   - position: absolute, inset: 0 (menutupi seluruh parent)
+ *   - pointer-events: none (tidak pernah blokir interaksi)
+ *   - z-index: 200 (di atas komponen, di bawah modals)
+ *   - Dibuat sekali, didaur ulang untuk semua burst
+ *
+ * @param parent Element canvas yang jadi host container
+ * @returns HTMLElement kontainer celebration terpusat
+ */
+export function getCelebrationContainer(parent: HTMLElement): HTMLElement {
+  let container = parent.querySelector(`#${CELEBRATION_CONTAINER_ID}`) as HTMLElement | null;
+  if (!container) {
+    container = document.createElement('div');
+    container.id = CELEBRATION_CONTAINER_ID;
+    container.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:200;overflow:visible;';
+    parent.appendChild(container);
+  }
+  return container;
+}
+
+// ---------------------------------------------------------------------------
+// V2-PILAR-3 PATCH: Dual cleanup — animationend (primary) + setTimeout (fallback)
+// ---------------------------------------------------------------------------
+
+/**
+ * Pasang dual cleanup pada sebuah particle element.
+ *
+ * Lapisan 1 — animationend: hapus partikel saat CSS animation selesai.
+ *   (Partikel pakai animation, bukan transition — event yang benar adalah
+ *   animationend. transitionend juga di-listen sebagai defense-in-depth
+ *   jika di masa depan ada transition.)
+ *
+ * Lapisan 2 — setTimeout: fallback safety net jika animationend tidak fire
+ *   (misalnya karena browser throttling di background tab).
+ *
+ * @param particle Element partikel yang akan di-cleanup
+ * @param fallbackDelay Ms delay untuk fallback setTimeout
+ */
+function attachDualCleanup(particle: HTMLElement, fallbackDelay: number): void {
+  let cleaned = false;
+
+  const cleanup = () => {
+    if (cleaned) return;
+    cleaned = true;
+    if (particle.parentNode) {
+      particle.parentNode.removeChild(particle);
+    }
+  };
+
+  // Lapisan 1: animationend (primary — partikel pakai CSS animation)
+  particle.addEventListener('animationend', cleanup, { once: true });
+  // Lapisan 1b: transitionend (defense-in-depth untuk future transitions)
+  particle.addEventListener('transitionend', cleanup, { once: true });
+
+  // Lapisan 2: setTimeout (fallback safety net)
+  setTimeout(cleanup, fallbackDelay);
+}
+
+// ---------------------------------------------------------------------------
+// Trigger functions
+// ---------------------------------------------------------------------------
+
 /**
  * Trigger local burst — 15-20 partikel memancar dari origin element.
- * Partikel di-append ke origin element (harus position: relative atau absolute).
+ *
+ * PATCH: Partikel sekarang ditempatkan di kontainer terpusat, bukan di
+ * dalam origin element. Posisi dihitung dari bounding rect origin relatif
+ * terhadap parent container.
  *
  * @param originElement Element tempat burst berasal (button yang diklik)
  * @param palette Warna partikel
@@ -61,18 +144,55 @@ export function triggerLocalBurst(
   palette: CelebrationPalette = DEFAULT_CELEBRATION_PALETTE,
   particleCount: number = 18,
 ): void {
-  // Buat container burst di dalam origin element
-  let burstContainer = originElement.querySelector('.silse-burst-local') as HTMLElement | null;
-  if (!burstContainer) {
-    burstContainer = document.createElement('div');
-    burstContainer.className = 'silse-burst-local';
-    originElement.appendChild(burstContainer);
+  // PATCH: Gunakan kontainer terpusat di parent canvas
+  const parent = originElement.closest('[data-testid="canvas-frame"], [data-testid="preview-canvas-frame"], .canvas-frame') as HTMLElement | null;
+  if (!parent) {
+    // Fallback: jika tidak ada canvas parent, gunakan origin element (backward compat)
+    let burstContainer = originElement.querySelector('.silse-burst-local') as HTMLElement | null;
+    if (!burstContainer) {
+      burstContainer = document.createElement('div');
+      burstContainer.className = 'silse-burst-local';
+      originElement.appendChild(burstContainer);
+    }
+    createLocalBurstParticles(burstContainer, originElement, originElement, palette, particleCount);
+    return;
   }
 
-  // Buat partikel
+  const celebContainer = getCelebrationContainer(parent);
+
+  // Hitung posisi origin relatif terhadap parent container
+  const parentRect = parent.getBoundingClientRect();
+  const originRect = originElement.getBoundingClientRect();
+  const centerX = originRect.left - parentRect.left + originRect.width / 2;
+  const centerY = originRect.top - parentRect.top + originRect.height / 2;
+
+  createLocalBurstParticles(celebContainer, originElement, parent, palette, particleCount, centerX, centerY);
+}
+
+/**
+ * Helper: buat partikel local burst di dalam container.
+ */
+function createLocalBurstParticles(
+  container: HTMLElement,
+  _originElement: HTMLElement,
+  _parent: HTMLElement,
+  palette: CelebrationPalette,
+  particleCount: number,
+  centerX?: number,
+  centerY?: number,
+): void {
+  // Jika centerX/Y tidak di-pass, partikel dimulai dari tengah container
+  const startX = centerX ?? 0;
+  const startY = centerY ?? 0;
+
   for (let i = 0; i < particleCount; i++) {
     const particle = document.createElement('div');
     particle.className = 'silse-particle';
+
+    // Posisikan partikel di titik asal burst
+    particle.style.position = 'absolute';
+    particle.style.left = `${startX}px`;
+    particle.style.top = `${startY}px`;
 
     // Random direction + distance
     const angle = (Math.PI * 2 * i) / particleCount + (Math.random() - 0.5) * 0.5;
@@ -84,27 +204,17 @@ export function triggerLocalBurst(
     particle.style.setProperty('--ty', `${ty}px`);
     particle.style.setProperty('--color', pickRandomColor(palette));
 
-    burstContainer.appendChild(particle);
+    container.appendChild(particle);
 
-    // Cleanup setelah animasi selesai (0.8s + buffer)
-    setTimeout(() => {
-      if (particle.parentNode) {
-        particle.parentNode.removeChild(particle);
-      }
-    }, 900);
+    // PATCH: Dual cleanup — animationend + setTimeout
+    attachDualCleanup(particle, 900);
   }
-
-  // Cleanup container setelah semua partikel selesai
-  setTimeout(() => {
-    if (burstContainer && burstContainer.parentNode && burstContainer.children.length === 0) {
-      burstContainer.parentNode.removeChild(burstContainer);
-    }
-  }, 1000);
 }
 
 /**
  * Trigger full-screen burst — 30-50 partikel memenuhi layar.
- * Partikel di-append ke container (biasanya canvas).
+ *
+ * PATCH: Gunakan kontainer terpusat, bukan create/destroy overlay per burst.
  *
  * @param container Element canvas yang jadi overlay
  * @param palette Warna partikel
@@ -115,13 +225,22 @@ export function triggerFullScreenBurst(
   palette: CelebrationPalette = DEFAULT_CELEBRATION_PALETTE,
   particleCount: number = 40,
 ): void {
-  const burstOverlay = document.createElement('div');
-  burstOverlay.className = 'silse-burst-fullscreen';
-  container.appendChild(burstOverlay);
+  // PATCH: Gunakan kontainer terpusat
+  const celebContainer = getCelebrationContainer(container);
+
+  // Hitung center container
+  const containerRect = container.getBoundingClientRect();
+  const centerX = containerRect.width / 2;
+  const centerY = containerRect.height / 2;
 
   for (let i = 0; i < particleCount; i++) {
     const particle = document.createElement('div');
     particle.className = 'silse-particle silse-particle-fullscreen';
+
+    // Posisikan partikel di center container
+    particle.style.position = 'absolute';
+    particle.style.left = `${centerX}px`;
+    particle.style.top = `${centerY}px`;
 
     // Random direction + distance (lebih besar untuk full-screen)
     const angle = Math.random() * Math.PI * 2;
@@ -133,19 +252,25 @@ export function triggerFullScreenBurst(
     particle.style.setProperty('--ty', `${ty}px`);
     particle.style.setProperty('--color', pickRandomColor(palette));
 
-    burstOverlay.appendChild(particle);
+    celebContainer.appendChild(particle);
+
+    // PATCH: Dual cleanup — animationend + setTimeout
+    attachDualCleanup(particle, 1400);
   }
 
-  // Cleanup overlay + partikel setelah animasi (1.2s + buffer)
+  // PATCH: Fallback safety — hapus sisa partikel setelah 1.5s
   setTimeout(() => {
-    if (burstOverlay.parentNode) {
-      burstOverlay.parentNode.removeChild(burstOverlay);
-    }
-  }, 1400);
+    const remaining = celebContainer.querySelectorAll('.silse-particle-fullscreen');
+    remaining.forEach((p) => {
+      if (p.parentNode) p.parentNode.removeChild(p);
+    });
+  }, 1500);
 }
 
 /**
  * Trigger streak indicator — teks mengambang "3x Berturut-turut!"
+ *
+ * PATCH: Gunakan kontainer terpusat + dual cleanup.
  *
  * @param container Element tempat streak indicator di-append
  * @param message Teks yang ditampilkan
@@ -156,17 +281,24 @@ export function triggerStreakIndicator(
   message: string,
   isStreak5: boolean = false,
 ): void {
+  // PATCH: Gunakan kontainer terpusat
+  const celebContainer = getCelebrationContainer(container);
+
   const indicator = document.createElement('div');
   indicator.className = `silse-streak-indicator${isStreak5 ? ' is-streak-5' : ''}`;
   indicator.textContent = message;
-  container.appendChild(indicator);
+  celebContainer.appendChild(indicator);
 
-  // Cleanup setelah animasi (1.5s atau 1.8s + buffer)
-  setTimeout(() => {
-    if (indicator.parentNode) {
-      indicator.parentNode.removeChild(indicator);
-    }
-  }, isStreak5 ? 2000 : 1700);
+  // PATCH: Dual cleanup
+  let cleaned = false;
+  const cleanup = () => {
+    if (cleaned) return;
+    cleaned = true;
+    if (indicator.parentNode) indicator.parentNode.removeChild(indicator);
+  };
+  indicator.addEventListener('animationend', cleanup, { once: true });
+  indicator.addEventListener('transitionend', cleanup, { once: true });
+  setTimeout(cleanup, isStreak5 ? 2000 : 1700);
 }
 
 /**
@@ -194,14 +326,12 @@ export function triggerCelebration(
 
   switch (tier) {
     case 'answer':
-      // Local burst di tombol
       if (originElement) {
         triggerLocalBurst(originElement, palette, 18);
       }
       break;
 
     case 'streak-3':
-      // Local burst + streak indicator
       if (originElement) {
         triggerLocalBurst(originElement, palette, 20);
       }
@@ -209,7 +339,6 @@ export function triggerCelebration(
       break;
 
     case 'streak-5':
-      // Local burst eskalasi + streak indicator khusus
       if (originElement) {
         triggerLocalBurst(originElement, palette, 25);
       }
@@ -217,12 +346,10 @@ export function triggerCelebration(
       break;
 
     case 'module-complete':
-      // Full-screen burst (bukan perfect)
       triggerFullScreenBurst(container, palette, 35);
       break;
 
     case 'perfect-score':
-      // Full-screen burst + lencana emas visual (di-handle oleh dashboard)
       triggerFullScreenBurst(container, palette, 50);
       break;
   }
