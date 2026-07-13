@@ -35,6 +35,7 @@ import {
   SLIDE_FILE_LABEL,
   validateSlideFileCount,
   readImageFiles,
+  batchExtractDominantColors,
 } from '../core/slide-import';
 import { SlideSettingsDialog } from './SlideSettingsDialog';
 import { QuizSheetDialog } from './QuizSheetDialog';
@@ -177,6 +178,23 @@ export function Topbar() {
         }
         const importSlidesAsPages = useEditorStore.getState().importSlidesAsPages;
         const count = importSlidesAsPages(slideFiles, mode);
+
+        // V2-PILAR-2.5: Extract dominant colors from imported slides (async, non-blocking)
+        // Colors are stored as page.dominantColor. Guru can apply via Inspector.
+        batchExtractDominantColors(slideFiles.map((f) => f.dataUrl), 5).then((colors) => {
+          const project = useEditorStore.getState().project;
+          const setPageDominantColor = useEditorStore.getState().setPageDominantColor;
+          // Match colors to newly imported pages (last N pages where N = count)
+          const startIdx = mode === 'replace' ? 0 : project.pages.length - count;
+          for (let i = 0; i < colors.length && (startIdx + i) < project.pages.length; i++) {
+            if (colors[i]) {
+              setPageDominantColor(project.pages[startIdx + i].id, colors[i]);
+            }
+          }
+        }).catch(() => {
+          // Color extraction is best-effort — silently ignore failures
+        });
+
         window.alert(`Berhasil mengimpor ${count} slide sebagai halaman baru.`);
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);

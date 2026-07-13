@@ -214,6 +214,9 @@ export type EditorState = {
     correctAnswer?: string;
   }>) => void;
 
+  // V2-PILAR-2.5: Set dominant color for a page (from Color Thief)
+  setPageDominantColor: (pageId: string, color: string | null) => void;
+
   // Save / Load (M7)
   saveCurrent: () => boolean;
   loadCurrent: () => boolean;
@@ -1439,6 +1442,23 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         return pageChanged ? { ...page, components: newComponents } : page;
       });
 
+      return { project: { ...state.project, pages } };
+    });
+  },
+
+  // V2-PILAR-2.5: Set dominant color for a page (from Color Thief)
+  setPageDominantColor: (pageId, color) => {
+    set((state) => {
+      const pages = state.project.pages.map((page) => {
+        if (page.id !== pageId) return page;
+        if (color === null) {
+          // Remove dominantColor field
+          const { dominantColor: _omit, ...rest } = page;
+          void _omit;
+          return rest as SimplePage;
+        }
+        return { ...page, dominantColor: color };
+      });
       return { project: { ...state.project, pages } };
     });
   },

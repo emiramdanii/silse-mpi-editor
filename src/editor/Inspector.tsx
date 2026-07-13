@@ -69,6 +69,7 @@ import {
   type LearningBridgeVariant,
   type TextComponentVariant,
 } from '../core/types';
+import { hexLuminance, contrastTextColor } from '../core/slide-import';
 import { getCapability } from '../core/capability';
 import { getRoleInfo } from './mpi-standard-roles';
 import { createComponentId } from '../core/ids';
@@ -405,6 +406,69 @@ function PageInfo({ currentPage }: { currentPage: SimplePage }) {
           </>
         )}
       </div>
+
+      {/* V2-PILAR-2.5: Palet Slide Ini — dominant color from Color Thief */}
+      {currentPage.dominantColor && (() => {
+        const bgColor = currentPage.dominantColor;
+        const textColor = contrastTextColor(bgColor);
+        const lum = hexLuminance(bgColor);
+        const isLight = lum > 0.5;
+        return (
+          <div
+            data-testid="inspector-palette-widget"
+            style={{
+              marginTop: 12, padding: 12, borderRadius: 8,
+              background: 'var(--color-panel-soft, #fbfaf7)',
+              border: '1px solid var(--color-border, #e3ddcd)',
+            }}
+          >
+            <div style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--color-muted, #8a8775)', marginBottom: 8 }}>
+              🎨 Palet Slide Ini
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+              <div
+                data-testid="palette-dominant-swatch"
+                style={{
+                  width: 48, height: 48, borderRadius: 8,
+                  background: bgColor, border: '2px solid var(--color-border, #e3ddcd)',
+                }}
+              />
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text, #1f2533)' }}>{bgColor}</div>
+                <div style={{ fontSize: 11, color: 'var(--color-muted, #8a8775)' }}>
+                  {isLight ? 'Warna terang' : 'Warna gelap'} → sarankan teks {isLight ? 'gelap' : 'terang'}
+                </div>
+                <div
+                  data-testid="palette-contrast-preview"
+                  style={{
+                    display: 'inline-block', padding: '4px 12px', borderRadius: 6,
+                    background: bgColor, color: textColor, fontSize: 12, fontWeight: 700, marginTop: 4,
+                  }}
+                >
+                  Contoh Teks
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              data-testid="palette-apply-btn"
+              onClick={() => {
+                // Apply ke CSS variables (visual only, tidak persist ke project.style)
+                document.documentElement.style.setProperty('--color-accent', bgColor);
+                document.documentElement.style.setProperty('--color-on-accent', textColor);
+              }}
+              style={{
+                width: '100%', padding: '6px 12px', borderRadius: 6,
+                border: '1px solid var(--color-border-strong, #c8be9f)',
+                background: 'transparent', color: 'var(--color-text, #1f2533)',
+                fontWeight: 600, fontSize: 12, cursor: 'pointer',
+              }}
+            >
+              ✓ Terapkan Warna ke Tema
+            </button>
+          </div>
+        );
+      })()}
     </div>
   );
 }
