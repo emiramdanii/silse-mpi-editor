@@ -29,6 +29,7 @@ import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../core/geometry';
 import { Toolbar } from './Toolbar';
 import { getRoleInfo } from './mpi-standard-roles';
 import { getEffectiveGlobalSlideSettings } from '../core/project-factory';
+import { snapRectToGridWithTolerance } from '../core/geometry';
 
 export function CanvasStage() {
   const project = useEditorStore((s) => s.project);
@@ -158,6 +159,12 @@ export function CanvasStage() {
   // ALL pages now go through SceneRendererView — single render path.
   const sceneRenderPlan = currentPage ? buildSceneRenderPlanForPage(project, currentPage) : null;
 
+  // V2-PILAR-2.5: Editor grid settings
+  const effectiveSettings = getEffectiveGlobalSlideSettings(project);
+  const gridConfig = effectiveSettings.editorGrid;
+  const gridEnabled = gridConfig.enabled;
+  const gridSnapActive = gridConfig.enabled && gridConfig.snapToGrid;
+
   return (
     <main className="canvas-stage" data-testid="canvas-stage">
       <Toolbar />
@@ -238,6 +245,11 @@ export function CanvasStage() {
             height: CANVAS_HEIGHT,
             background: bg,
             ...premiumCssVars,
+            // V2-PILAR-2.5: CSS dotted grid overlay (GPU-rendered, no DOM elements)
+            ...(gridEnabled ? {
+              backgroundImage: `radial-gradient(var(--color-border-neutral, #e2e8f0) 1px, transparent 1px)`,
+              backgroundSize: `${gridConfig.gridSize}px ${gridConfig.gridSize}px`,
+            } : {}),
           } as React.CSSProperties}
           onClick={() => clearSelection()}
         >
@@ -329,14 +341,38 @@ export function CanvasStage() {
                   // Find the component to preserve width/height during drag
                   const comp = currentPage?.components.find((c) => c.id === slotId);
                   if (comp) {
-                    updateComponentGeometry(slotId, { x, y, width: comp.width, height: comp.height });
+                    let finalX = x;
+                    let finalY = y;
+                    // V2-PILAR-2.5: Snap to grid with tolerance if enabled
+                    if (gridSnapActive) {
+                      const snapped = snapRectToGridWithTolerance(
+                        { x, y, width: comp.width, height: comp.height },
+                        gridConfig.gridSize,
+                        gridConfig.snapTolerance,
+                      );
+                      finalX = snapped.x;
+                      finalY = snapped.y;
+                    }
+                    updateComponentGeometry(slotId, { x: finalX, y: finalY, width: comp.width, height: comp.height });
                   }
                 }}
                 onSlotResize={(slotId, width, height) => {
                   // Find the component to preserve x/y during resize
                   const comp = currentPage?.components.find((c) => c.id === slotId);
                   if (comp) {
-                    updateComponentGeometry(slotId, { x: comp.x, y: comp.y, width, height });
+                    let finalW = width;
+                    let finalH = height;
+                    // V2-PILAR-2.5: Snap to grid with tolerance if enabled
+                    if (gridSnapActive) {
+                      const snapped = snapRectToGridWithTolerance(
+                        { x: comp.x, y: comp.y, width, height },
+                        gridConfig.gridSize,
+                        gridConfig.snapTolerance,
+                      );
+                      finalW = snapped.width;
+                      finalH = snapped.height;
+                    }
+                    updateComponentGeometry(slotId, { x: comp.x, y: comp.y, width: finalW, height: finalH });
                   }
                 }}
               />

@@ -201,6 +201,7 @@ export type EditorState = {
     patch: {
       navigationToolbar?: Partial<GlobalSlideSettings['navigationToolbar']>;
       slideTransition?: GlobalSlideSettings['slideTransition'];
+      editorGrid?: Partial<GlobalSlideSettings['editorGrid']>;
     } | null,
   ) => void;
 
@@ -1361,6 +1362,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           ...(patch.navigationToolbar ?? {}),
         },
         slideTransition: patch.slideTransition ?? current.slideTransition,
+        editorGrid: {
+          ...current.editorGrid,
+          ...(patch.editorGrid ?? {}),
+        },
       };
       // If merged equals default, remove the field (clean state)
       const isDefault =

@@ -466,6 +466,7 @@ describe('V2-PILAR-1 — GlobalSlideSettings default + helper', () => {
         showProgressBar: false,
       },
       slideTransition: 'fade',
+      editorGrid: DEFAULT_GLOBAL_SLIDE_SETTINGS.editorGrid,
     };
     const project: SimpleProject = {
       ...createProject(),

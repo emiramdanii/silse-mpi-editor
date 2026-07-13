@@ -65,15 +65,21 @@ export function SlideSettingsDialog({ onClose }: { onClose: () => void }) {
   const [showProgressText, setShowProgressText] = useState(effective.navigationToolbar.showProgressText);
   const [showProgressBar, setShowProgressBar] = useState(effective.navigationToolbar.showProgressBar);
   const [slideTransition, setSlideTransition] = useState<SlideTransition>(effective.slideTransition);
+  // V2-PILAR-2.5: editor grid state
+  const [gridEnabled, setGridEnabled] = useState(effective.editorGrid.enabled);
+  const [gridSize, setGridSize] = useState(effective.editorGrid.gridSize);
+  const [snapToGrid, setSnapToGrid] = useState(effective.editorGrid.snapToGrid);
 
   // Apply perubahan ke store (real-time)
   const apply = (patch: {
     navigationToolbar?: Partial<typeof effective.navigationToolbar>;
     slideTransition?: typeof effective.slideTransition;
+    editorGrid?: Partial<typeof effective.editorGrid>;
   }) => {
     setGlobalSlideSettings({
       navigationToolbar: patch.navigationToolbar,
       slideTransition: patch.slideTransition,
+      editorGrid: patch.editorGrid,
     });
   };
 
@@ -140,6 +146,21 @@ export function SlideSettingsDialog({ onClose }: { onClose: () => void }) {
     apply({ slideTransition: newTransition });
   };
 
+  // V2-PILAR-2.5: Editor grid handlers
+  const handleGridEnabledChange = (value: boolean) => {
+    setGridEnabled(value);
+    apply({ editorGrid: { enabled: value } });
+  };
+  const handleGridSizeChange = (value: number) => {
+    const clamped = Math.max(10, Math.min(200, value));
+    setGridSize(clamped);
+    apply({ editorGrid: { gridSize: clamped } });
+  };
+  const handleSnapToGridChange = (value: boolean) => {
+    setSnapToGrid(value);
+    apply({ editorGrid: { snapToGrid: value } });
+  };
+
   const handleReset = () => {
     setPosition(DEFAULT_GLOBAL_SLIDE_SETTINGS.navigationToolbar.position);
     setStyle(DEFAULT_GLOBAL_SLIDE_SETTINGS.navigationToolbar.style);
@@ -147,6 +168,9 @@ export function SlideSettingsDialog({ onClose }: { onClose: () => void }) {
     setShowProgressText(DEFAULT_GLOBAL_SLIDE_SETTINGS.navigationToolbar.showProgressText);
     setShowProgressBar(DEFAULT_GLOBAL_SLIDE_SETTINGS.navigationToolbar.showProgressBar);
     setSlideTransition(DEFAULT_GLOBAL_SLIDE_SETTINGS.slideTransition);
+    setGridEnabled(DEFAULT_GLOBAL_SLIDE_SETTINGS.editorGrid.enabled);
+    setGridSize(DEFAULT_GLOBAL_SLIDE_SETTINGS.editorGrid.gridSize);
+    setSnapToGrid(DEFAULT_GLOBAL_SLIDE_SETTINGS.editorGrid.snapToGrid);
     setGlobalSlideSettings(null); // null = reset to default
   };
 
@@ -269,6 +293,46 @@ export function SlideSettingsDialog({ onClose }: { onClose: () => void }) {
                 <span>{TRANSITION_LABELS[t]}</span>
               </label>
             ))}
+          </div>
+        </fieldset>
+
+        {/* V2-PILAR-2.5: Editor Grid */}
+        <fieldset style={fieldsetStyle}>
+          <legend style={legendStyle}>Grid Editor (Presisi Tata Letak)</legend>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <label style={checkboxLabelStyle}>
+              <input
+                type="checkbox"
+                checked={gridEnabled}
+                onChange={(e) => handleGridEnabledChange(e.target.checked)}
+                data-testid="slide-settings-grid-enabled"
+              />
+              <span>Tampilkan grid di kanvas editor</span>
+            </label>
+            <label style={checkboxLabelStyle}>
+              <input
+                type="checkbox"
+                checked={snapToGrid}
+                onChange={(e) => handleSnapToGridChange(e.target.checked)}
+                data-testid="slide-settings-snap-to-grid"
+                disabled={!gridEnabled}
+              />
+              <span>Magnet ke grid saat geser/ubah ukuran (toleransi 6px)</span>
+            </label>
+            <label style={radioLabelStyle}>
+              <span>Ukuran grid (piksel):</span>
+              <input
+                type="number"
+                value={gridSize}
+                onChange={(e) => handleGridSizeChange(Number(e.target.value))}
+                min={10}
+                max={200}
+                step={10}
+                data-testid="slide-settings-grid-size"
+                style={{ width: 80, padding: '4px 8px', borderRadius: 4, border: '1px solid var(--color-border, #e3ddcd)', fontSize: 14 }}
+                disabled={!gridEnabled}
+              />
+            </label>
           </div>
         </fieldset>
 

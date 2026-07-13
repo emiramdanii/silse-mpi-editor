@@ -140,6 +140,7 @@ describe('V2-PILAR-1 Commit 2 — Export HTML global slide settings CSS', () => 
       globalSlideSettings: {
         navigationToolbar: { ...DEFAULT_GLOBAL_SLIDE_SETTINGS.navigationToolbar, position: 'top-center' },
         slideTransition: 'none',
+        editorGrid: DEFAULT_GLOBAL_SLIDE_SETTINGS.editorGrid,
       },
     };
     const html = exportProjectToHtml(project);
@@ -153,6 +154,7 @@ describe('V2-PILAR-1 Commit 2 — Export HTML global slide settings CSS', () => 
       globalSlideSettings: {
         navigationToolbar: { ...DEFAULT_GLOBAL_SLIDE_SETTINGS.navigationToolbar, position: 'bottom-left' },
         slideTransition: 'none',
+        editorGrid: DEFAULT_GLOBAL_SLIDE_SETTINGS.editorGrid,
       },
     };
     const html = exportProjectToHtml(project);
@@ -166,6 +168,7 @@ describe('V2-PILAR-1 Commit 2 — Export HTML global slide settings CSS', () => 
       globalSlideSettings: {
         navigationToolbar: { ...DEFAULT_GLOBAL_SLIDE_SETTINGS.navigationToolbar, position: 'bottom-right' },
         slideTransition: 'none',
+        editorGrid: DEFAULT_GLOBAL_SLIDE_SETTINGS.editorGrid,
       },
     };
     const html = exportProjectToHtml(project);
@@ -179,6 +182,7 @@ describe('V2-PILAR-1 Commit 2 — Export HTML global slide settings CSS', () => 
       globalSlideSettings: {
         navigationToolbar: { ...DEFAULT_GLOBAL_SLIDE_SETTINGS.navigationToolbar, style: 'solid' },
         slideTransition: 'none',
+        editorGrid: DEFAULT_GLOBAL_SLIDE_SETTINGS.editorGrid,
       },
     };
     const html = exportProjectToHtml(project);
@@ -192,6 +196,7 @@ describe('V2-PILAR-1 Commit 2 — Export HTML global slide settings CSS', () => 
       globalSlideSettings: {
         navigationToolbar: { ...DEFAULT_GLOBAL_SLIDE_SETTINGS.navigationToolbar, style: 'minimal' },
         slideTransition: 'none',
+        editorGrid: DEFAULT_GLOBAL_SLIDE_SETTINGS.editorGrid,
       },
     };
     const html = exportProjectToHtml(project);
@@ -205,6 +210,7 @@ describe('V2-PILAR-1 Commit 2 — Export HTML global slide settings CSS', () => 
       globalSlideSettings: {
         navigationToolbar: { ...DEFAULT_GLOBAL_SLIDE_SETTINGS.navigationToolbar, showProgressText: false },
         slideTransition: 'none',
+        editorGrid: DEFAULT_GLOBAL_SLIDE_SETTINGS.editorGrid,
       },
     };
     const html = exportProjectToHtml(project);
@@ -217,6 +223,7 @@ describe('V2-PILAR-1 Commit 2 — Export HTML global slide settings CSS', () => 
       globalSlideSettings: {
         navigationToolbar: DEFAULT_GLOBAL_SLIDE_SETTINGS.navigationToolbar,
         slideTransition: 'fade',
+        editorGrid: DEFAULT_GLOBAL_SLIDE_SETTINGS.editorGrid,
       },
     };
     const html = exportProjectToHtml(project);
@@ -230,6 +237,7 @@ describe('V2-PILAR-1 Commit 2 — Export HTML global slide settings CSS', () => 
       globalSlideSettings: {
         navigationToolbar: DEFAULT_GLOBAL_SLIDE_SETTINGS.navigationToolbar,
         slideTransition: 'slide',
+        editorGrid: DEFAULT_GLOBAL_SLIDE_SETTINGS.editorGrid,
       },
     };
     const html = exportProjectToHtml(project);
@@ -243,6 +251,7 @@ describe('V2-PILAR-1 Commit 2 — Export HTML global slide settings CSS', () => 
       globalSlideSettings: {
         navigationToolbar: DEFAULT_GLOBAL_SLIDE_SETTINGS.navigationToolbar,
         slideTransition: 'fade',
+        editorGrid: DEFAULT_GLOBAL_SLIDE_SETTINGS.editorGrid,
       },
     };
     const html = exportProjectToHtml(project);
@@ -264,6 +273,7 @@ describe('V2-PILAR-1 Commit 2 — Export HTML global slide settings CSS', () => 
       globalSlideSettings: {
         navigationToolbar: { ...DEFAULT_GLOBAL_SLIDE_SETTINGS.navigationToolbar, position: 'top-center' },
         slideTransition: 'fade',
+        editorGrid: DEFAULT_GLOBAL_SLIDE_SETTINGS.editorGrid,
       },
     };
     const model = buildExportRenderModel(project);
@@ -305,6 +315,7 @@ describe('V2-PILAR-1 Commit 2 — AI import rejects globalSlideSettings', () => 
         globalSlideSettings: {
           navigationToolbar: { position: 'top-center' },
           slideTransition: 'fade',
+        editorGrid: DEFAULT_GLOBAL_SLIDE_SETTINGS.editorGrid,
         },
       },
     };
@@ -366,8 +377,8 @@ describe('V2-PILAR-1 Commit 2 — SlideSettingsDialog rendering', () => {
   it('28. dialog renders with all 4 sections', () => {
     const { container } = render(React.createElement(SlideSettingsDialog, { onClose: () => {} }));
     expect(container.querySelector('[data-testid="slide-settings-dialog"]')).not.toBeNull();
-    // 4 fieldsets: position, style, tampilan, transition
-    expect(container.querySelectorAll('fieldset')).toHaveLength(4);
+    // 5 fieldsets: position, style, tampilan, transition, grid
+    expect(container.querySelectorAll('fieldset')).toHaveLength(5);
   });
 
   it('29. dialog renders 4 position radio options', () => {
@@ -440,6 +451,7 @@ describe('V2-PILAR-1 Commit 2 — SlideSettingsDialog rendering', () => {
     store.setGlobalSlideSettings({
       navigationToolbar: { position: 'top-center' },
       slideTransition: 'fade',
+        editorGrid: DEFAULT_GLOBAL_SLIDE_SETTINGS.editorGrid,
     });
 
     const { container } = render(React.createElement(SlideSettingsDialog, { onClose: () => {} }));

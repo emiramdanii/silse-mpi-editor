@@ -38,6 +38,12 @@ export const DEFAULT_GLOBAL_SLIDE_SETTINGS: GlobalSlideSettings = {
     showProgressBar: true,
   },
   slideTransition: 'none',
+  editorGrid: {
+    enabled: false,
+    gridSize: 50,
+    snapToGrid: false,
+    snapTolerance: 6,
+  },
 };
 
 /**

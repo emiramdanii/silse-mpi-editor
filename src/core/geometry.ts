@@ -78,3 +78,54 @@ export function resizeRectWithHandle(
   }
   return rect;
 }
+
+// ---------------------------------------------------------------------------
+// V2-PILAR-2.5: Snap-to-grid with tolerance
+// ---------------------------------------------------------------------------
+
+/**
+ * Snap a value to the nearest grid multiple, but only if within tolerance.
+ *
+ * If the value is within `tolerance` pixels of a grid line, snap to it.
+ * Otherwise, return the original value (free placement).
+ *
+ * @param value The coordinate value to potentially snap
+ * @param gridSize Grid spacing in pixels (e.g. 50)
+ * @param tolerance Maximum distance from grid line to trigger snap (e.g. 6)
+ * @returns Snapped value if within tolerance, otherwise original value
+ */
+export function snapToGridWithTolerance(
+  value: number,
+  gridSize: number,
+  tolerance: number,
+): number {
+  if (gridSize <= 0 || tolerance <= 0) return value;
+  const nearest = Math.round(value / gridSize) * gridSize;
+  const distance = Math.abs(value - nearest);
+  if (distance <= tolerance) {
+    return nearest;
+  }
+  return value;
+}
+
+/**
+ * Snap a full rect to grid with tolerance.
+ * Applies snapToGridWithTolerance to x, y, width, height independently.
+ *
+ * @param rect The rect to snap
+ * @param gridSize Grid spacing in pixels
+ * @param tolerance Maximum distance from grid line to trigger snap
+ * @returns New rect with snapped values (or original if outside tolerance)
+ */
+export function snapRectToGridWithTolerance(
+  rect: Rect,
+  gridSize: number,
+  tolerance: number,
+): Rect {
+  return {
+    x: snapToGridWithTolerance(rect.x, gridSize, tolerance),
+    y: snapToGridWithTolerance(rect.y, gridSize, tolerance),
+    width: snapToGridWithTolerance(rect.width, gridSize, tolerance),
+    height: snapToGridWithTolerance(rect.height, gridSize, tolerance),
+  };
+}

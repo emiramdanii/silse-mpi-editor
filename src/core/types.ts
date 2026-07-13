@@ -799,4 +799,19 @@ export type GlobalSlideSettings = {
    * 'fade' dan 'slide' ditambahkan via CSS class di renderPage().
    */
   slideTransition: SlideTransition;
+  /**
+   * V2-PILAR-2.5: Editor grid overlay untuk presisi placement.
+   * Grid bersifat pasif — hanya visible di editor, tidak di export/preview.
+   * Snap hanya aktif saat drag/resize, tidak auto-adjust existing components.
+   */
+  editorGrid: {
+    /** Aktifkan grid overlay di canvas editor. Default: false. */
+    enabled: boolean;
+    /** Ukuran grid dalam piksel. Default: 50. */
+    gridSize: number;
+    /** Snap komponen ke grid saat drag/resize. Default: false. */
+    snapToGrid: boolean;
+    /** Tolerance snap dalam piksel (5-8px). Default: 6. */
+    snapTolerance: number;
+  };
 };
