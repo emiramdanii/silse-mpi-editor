@@ -362,6 +362,7 @@ export type NavigationComponent = BaseComponent & {
 /**
  * Union of all component types.
  * M2: TextComponent. M4: ImageComponent + CardComponent. M5: NavigationComponent. M11: Question.
+ * V2-PILAR-2: HotspotOverlayComponent + InputFieldComponent.
  */
 export type PageComponent =
   | TextComponent
@@ -371,13 +372,19 @@ export type PageComponent =
   | QuestionComponent
   | GameComponent
   | LayeredInfoComponent
-  | LearningBridgeComponent;
+  | LearningBridgeComponent
+  | HotspotOverlayComponent
+  | InputFieldComponent;
 
 // ---------------------------------------------------------------------------
 // Component type literals — exported as constants for runtime guards
 // ---------------------------------------------------------------------------
 
-export const COMPONENT_TYPES = ['text', 'image', 'card', 'navigation', 'question', 'game', 'layered-info', 'learning-bridge'] as const;
+export const COMPONENT_TYPES = [
+  'text', 'image', 'card', 'navigation', 'question', 'game',
+  'layered-info', 'learning-bridge',
+  'hotspot-overlay', 'input-field',
+] as const;
 export type ComponentType = (typeof COMPONENT_TYPES)[number];
 
 // ---------------------------------------------------------------------------
@@ -507,6 +514,91 @@ export type LearningBridgeComponent = BaseComponent & {
   title: string;
   message: string;
   nextButtonLabel: string;
+};
+
+// ---------------------------------------------------------------------------
+// V2-PILAR-2: Hotspot Overlay Component
+//
+// Komponen overlay yang berisi titik-titik clickable (hotspot) di atas slide.
+// Berbeda dari scene type 'hotspot-map' (HotspotMapComposer) yang adalah scene
+// penuh dengan background sendiri. HotspotOverlayComponent menempel di page
+// manapun (termasuk slide PNG hasil impor Pilar 1), dengan background berasal
+// dari page, bukan dari komponen.
+//
+// Use case utama: guru impor slide PNG, lalu tambah hotspot overlay untuk
+// menandai bagian penting slide yang bisa diklik siswa untuk info tambahan.
+//
+// Koordinat hotspot: persen (0-100) relatif terhadap width/height komponen.
+// Ini agar hotspot tetap di posisi yang benar saat komponen di-resize.
+// ---------------------------------------------------------------------------
+
+/**
+ * Hotspot point di dalam HotspotOverlayComponent.
+ * Koordinat x/y adalah persen (0-100) relatif terhadap komponen.
+ */
+export type HotspotPoint = {
+  id: string;
+  /** Posisi horizontal dalam persen (0-100). 0 = kiri, 100 = kanan. */
+  x: number;
+  /** Posisi vertikal dalam persen (0-100). 0 = atas, 100 = bawah. */
+  y: number;
+  /** Label singkat yang muncul di atas titik (tooltip-like). */
+  label: string;
+  /** Info lengkap yang muncul di panel saat hotspot diklik. */
+  info: string;
+};
+
+export const HOTSPOT_OVERLAY_VARIANTS = ['default'] as const;
+export type HotspotOverlayVariant = (typeof HOTSPOT_OVERLAY_VARIANTS)[number];
+
+export type HotspotOverlayComponent = BaseComponent & {
+  type: 'hotspot-overlay';
+  variant: HotspotOverlayVariant;
+  /** Array titik hotspot. Bisa kosong (komponen tidak menampilkan apa-apa). */
+  hotspots: HotspotPoint[];
+  /**
+   * Index hotspot yang terbuka by default. null = semua tertutup.
+   * Untuk V1 Pilar 2, hanya satu hotspot bisa terbuka pada satu waktu.
+   */
+  defaultOpenIndex: number | null;
+};
+
+// ---------------------------------------------------------------------------
+// V2-PILAR-2: Input Field Component
+//
+// Komponen input teks untuk jawaban siswa di atas slide. Berbeda dari
+// QuestionComponent (pilihan ganda) — InputField menerima teks bebas.
+//
+// Jika `correctAnswer` diisi, sistem auto-check jawaban saat siswa submit.
+// Jika kosong, input adalah teks bebas tanpa grading (mis. untuk refleksi).
+//
+// Variants:
+//   - shortAnswer: single-line input (text)
+//   - longAnswer: multi-line textarea
+//   - numericInput: input angka saja (validation: 0-9, decimal, minus)
+// ---------------------------------------------------------------------------
+
+export const INPUT_FIELD_VARIANTS = ['shortAnswer', 'longAnswer', 'numericInput'] as const;
+export type InputFieldVariant = (typeof INPUT_FIELD_VARIANTS)[number];
+
+export type InputFieldComponent = BaseComponent & {
+  type: 'input-field';
+  variant: InputFieldVariant;
+  /** Label pertanyaan/instruksi yang muncul di atas input. */
+  label: string;
+  /** Placeholder teks di dalam input (hint). */
+  placeholder: string;
+  /**
+   * Jawaban benar untuk auto-check. Jika kosong (undefined), input adalah
+   * teks bebas tanpa grading. Comparison case-insensitive + trim whitespace.
+   */
+  correctAnswer?: string;
+  /** Feedback saat jawaban benar (jika correctAnswer di-set). */
+  feedbackCorrect?: string;
+  /** Feedback saat jawaban salah (jika correctAnswer di-set). */
+  feedbackWrong?: string;
+  /** Poin yang diberikan jika jawaban benar. Default 0 (tidak scoring). */
+  points: number;
 };
 
 // ---------------------------------------------------------------------------

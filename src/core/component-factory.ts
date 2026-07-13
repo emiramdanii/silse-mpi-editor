@@ -20,8 +20,13 @@ import type {
   GameComponent,
   GameMission,
   GameType,
+  HotspotOverlayComponent,
+  HotspotOverlayVariant,
+  HotspotPoint,
   ImageComponent,
   ImageComponentVariant,
+  InputFieldComponent,
+  InputFieldVariant,
   LayeredInfoComponent,
   LayeredInfoLayer,
   LayeredInfoVariant,
@@ -365,6 +370,99 @@ export function createLearningBridgeComponent(
     message: overrides.message ?? 'Kamu sudah selesai bagian ini. Sekarang kita lanjut ke bagian berikutnya.',
     nextButtonLabel: overrides.nextButtonLabel ?? 'Lanjut →',
     ...DEFAULT_LEARNING_BRIDGE_COMPONENT,
+    ...overrides,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// V2-PILAR-2: Hotspot Overlay Component
+//
+// Overlay berisi titik-titik clickable di atas slide. Default: 3 contoh
+// hotspot dengan label kosong, agar guru langsung paham cara pakai.
+// Geometry default: full slide (1280x720) — guru biasanya ingin hotspot
+// menutupi seluruh slide.
+// ---------------------------------------------------------------------------
+
+export type HotspotOverlayComponentEditable = Omit<HotspotOverlayComponent, 'id' | 'type'>;
+
+export const DEFAULT_HOTSPOT_OVERLAY_VARIANT: HotspotOverlayVariant = 'default';
+
+export const DEFAULT_HOTSPOT_OVERLAY_COMPONENT: Omit<
+  HotspotOverlayComponentEditable,
+  'variant' | 'hotspots'
+> = {
+  defaultOpenIndex: null,
+  // Full slide dimensions — hotspot overlay biasanya menutupi seluruh slide
+  x: 0,
+  y: 0,
+  width: 1280,
+  height: 720,
+};
+
+/** Buat satu hotspot point baru dengan fresh ID. */
+export function createHotspotPoint(
+  overrides: Partial<Omit<HotspotPoint, 'id'>> = {},
+): HotspotPoint {
+  return {
+    id: createComponentId(),
+    x: overrides.x ?? 50,
+    y: overrides.y ?? 50,
+    label: overrides.label ?? 'Titik Baru',
+    info: overrides.info ?? 'Tulis info yang muncul saat titik ini diklik.',
+  };
+}
+
+export function createHotspotOverlayComponent(
+  overrides: Partial<HotspotOverlayComponentEditable> = {},
+): HotspotOverlayComponent {
+  // Default: 2 contoh hotspot agar guru langsung paham cara pakai
+  const defaultHotspots: HotspotPoint[] = [
+    createHotspotPoint({ x: 30, y: 40, label: 'Titik 1', info: 'Info titik 1.' }),
+    createHotspotPoint({ x: 70, y: 60, label: 'Titik 2', info: 'Info titik 2.' }),
+  ];
+  return {
+    id: createComponentId(),
+    type: 'hotspot-overlay',
+    variant: overrides.variant ?? DEFAULT_HOTSPOT_OVERLAY_VARIANT,
+    hotspots: overrides.hotspots ?? defaultHotspots,
+    ...DEFAULT_HOTSPOT_OVERLAY_COMPONENT,
+    ...overrides,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// V2-PILAR-2: Input Field Component
+//
+// Input teks untuk jawaban siswa di atas slide. Default: shortAnswer tanpa
+// correctAnswer (input bebas). Guru bisa set correctAnswer untuk auto-check.
+// ---------------------------------------------------------------------------
+
+export type InputFieldComponentEditable = Omit<InputFieldComponent, 'id' | 'type'>;
+
+export const DEFAULT_INPUT_FIELD_VARIANT: InputFieldVariant = 'shortAnswer';
+
+export const DEFAULT_INPUT_FIELD_COMPONENT: Omit<
+  InputFieldComponentEditable,
+  'variant' | 'label' | 'placeholder'
+> = {
+  // correctAnswer, feedbackCorrect, feedbackWrong are optional — default undefined (no auto-check)
+  points: 0,
+  x: 340,
+  y: 280,
+  width: 600,
+  height: 120,
+};
+
+export function createInputFieldComponent(
+  overrides: Partial<InputFieldComponentEditable> = {},
+): InputFieldComponent {
+  return {
+    id: createComponentId(),
+    type: 'input-field',
+    variant: overrides.variant ?? DEFAULT_INPUT_FIELD_VARIANT,
+    label: overrides.label ?? 'Jawaban Anda',
+    placeholder: overrides.placeholder ?? 'Tulis jawaban di sini…',
+    ...DEFAULT_INPUT_FIELD_COMPONENT,
     ...overrides,
   };
 }

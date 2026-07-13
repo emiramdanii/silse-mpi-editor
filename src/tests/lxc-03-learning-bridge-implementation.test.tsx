@@ -51,7 +51,8 @@ describe('LXC-03 — learning-bridge is official component type', () => {
   });
 
   it('COMPONENT_TYPES has 8 types (was 7, +learning-bridge)', () => {
-    expect(COMPONENT_TYPES).toHaveLength(8);
+    // V2-PILAR-2: +hotspot-overlay +input-field = 10 total.
+    expect(COMPONENT_TYPES).toHaveLength(10);
   });
 
   it('LEARNING_BRIDGE_VARIANTS has 3 variants', () => {

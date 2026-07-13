@@ -136,7 +136,9 @@ export const PAGE_ROLE_CAPABILITIES: Record<PageRole, PageRoleCapability> = {
   },
   free: {
     role: 'free',
-    allowedComponents: ['text', 'image', 'card', 'navigation', 'question', 'game'],
+    // V2-PILAR-2: tambah 'hotspot-overlay' dan 'input-field' untuk overlay
+    // di atas slide PNG hasil impor Pilar 1.
+    allowedComponents: ['text', 'image', 'card', 'navigation', 'question', 'game', 'hotspot-overlay', 'input-field'],
     allowAddComponent: true,
     description: 'Halaman bebas',
   },

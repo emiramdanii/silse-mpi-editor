@@ -36,8 +36,12 @@ import type {
   CardComponentVariant,
   GameComponent,
   GlobalSlideSettings,
+  HotspotOverlayComponent,
+  HotspotOverlayVariant,
   ImageComponent,
   ImageComponentVariant,
+  InputFieldComponent,
+  InputFieldVariant,
   LayeredInfoComponent,
   LayeredInfoVariant,
   LearningBridgeComponent,
@@ -57,7 +61,9 @@ import type {
 import {
   CARD_COMPONENT_VARIANTS,
   GAME_TYPES,
+  HOTSPOT_OVERLAY_VARIANTS,
   IMAGE_COMPONENT_VARIANTS,
+  INPUT_FIELD_VARIANTS,
   LAYERED_INFO_VARIANTS,
   LEARNING_BRIDGE_VARIANTS,
   NAVIGATION_ACTIONS,
@@ -73,7 +79,9 @@ import { applyLayoutPresetToPage } from '../core/layout-presets/apply-layout-pre
 import {
   createCardComponent,
   createGameComponent,
+  createHotspotOverlayComponent,
   createImageComponent,
+  createInputFieldComponent,
   createLayeredInfoComponent,
   createLearningBridgeComponent,
   createNavigationComponent,
@@ -81,7 +89,9 @@ import {
   createTextComponent,
   type CardComponentEditable,
   type GameComponentEditable,
+  type HotspotOverlayComponentEditable,
   type ImageComponentEditable,
+  type InputFieldComponentEditable,
   type LayeredInfoComponentEditable,
   type LearningBridgeComponentEditable,
   type NavigationComponentEditable,
@@ -137,6 +147,9 @@ export type EditorState = {
   addGameComponent: (overrides?: Partial<GameComponentEditable>) => string | null;
   addLayeredInfoComponent: (overrides?: Partial<LayeredInfoComponentEditable>) => string | null;
   addLearningBridgeComponent: (overrides?: Partial<LearningBridgeComponentEditable>) => string | null;
+  // V2-PILAR-2: overlay components for slide PNG pages
+  addHotspotOverlayComponent: (overrides?: Partial<HotspotOverlayComponentEditable>) => string | null;
+  addInputFieldComponent: (overrides?: Partial<InputFieldComponentEditable>) => string | null;
   selectComponent: (componentId: string | null) => void;
   updateTextComponent: (componentId: string, patch: Partial<TextComponentEditable>) => void;
   updateImageComponent: (componentId: string, patch: Partial<ImageComponentEditable>) => void;
@@ -146,6 +159,9 @@ export type EditorState = {
   updateGameComponent: (componentId: string, patch: Partial<GameComponentEditable>) => void;
   updateLayeredInfoComponent: (componentId: string, patch: Partial<LayeredInfoComponentEditable>) => void;
   updateLearningBridgeComponent: (componentId: string, patch: Partial<LearningBridgeComponentEditable>) => void;
+  // V2-PILAR-2: overlay component updates
+  updateHotspotOverlayComponent: (componentId: string, patch: Partial<HotspotOverlayComponentEditable>) => void;
+  updateInputFieldComponent: (componentId: string, patch: Partial<InputFieldComponentEditable>) => void;
   updateComponentGeometry: (componentId: string, rect: Rect) => void;
   removeComponent: (componentId: string) => void;
   getSelectedComponent: () => PageComponent | null;
@@ -339,6 +355,42 @@ function sanitizeLearningBridgePatch(
   return clean;
 }
 
+// V2-PILAR-2: Sanitize helpers for overlay components
+function sanitizeHotspotOverlayPatch(
+  patch: Partial<HotspotOverlayComponentEditable>,
+): Partial<HotspotOverlayComponentEditable> {
+  const clean: Partial<HotspotOverlayComponentEditable> = { ...patch };
+  if (clean.variant !== undefined) {
+    if (!HOTSPOT_OVERLAY_VARIANTS.includes(clean.variant as HotspotOverlayVariant)) {
+      delete clean.variant;
+    }
+  }
+  // Clamp defaultOpenIndex: null atau index valid (0..hotspots.length-1)
+  // Note: kita tidak bisa cek hotspots.length di sini tanpa reference; klamp minimal: -1 di-reject
+  if (clean.defaultOpenIndex !== undefined && clean.defaultOpenIndex !== null) {
+    if (typeof clean.defaultOpenIndex !== 'number' || clean.defaultOpenIndex < 0) {
+      delete clean.defaultOpenIndex;
+    }
+  }
+  return clean;
+}
+
+function sanitizeInputFieldPatch(
+  patch: Partial<InputFieldComponentEditable>,
+): Partial<InputFieldComponentEditable> {
+  const clean: Partial<InputFieldComponentEditable> = { ...patch };
+  if (clean.variant !== undefined) {
+    if (!INPUT_FIELD_VARIANTS.includes(clean.variant as InputFieldVariant)) {
+      delete clean.variant;
+    }
+  }
+  // points harus >= 0
+  if (clean.points !== undefined && (typeof clean.points !== 'number' || clean.points < 0)) {
+    delete clean.points;
+  }
+  return clean;
+}
+
 /**
  * Deep-copy a component with a fresh id.
  * Pertahankan semua field kecuali id (yang baru).
@@ -477,6 +529,40 @@ function deepCopyComponentWithNewId(c: PageComponent): PageComponent {
       width: bc.width,
       height: bc.height,
     } as LearningBridgeComponent;
+  }
+  // V2-PILAR-2: deep-copy hotspot-overlay (regenerate hotspot IDs too).
+  if (c.type === 'hotspot-overlay') {
+    const hc = c as HotspotOverlayComponent;
+    return {
+      id: newId,
+      type: 'hotspot-overlay',
+      variant: hc.variant,
+      hotspots: hc.hotspots.map((h) => ({ ...h, id: createComponentId() })),
+      defaultOpenIndex: hc.defaultOpenIndex,
+      x: hc.x,
+      y: hc.y,
+      width: hc.width,
+      height: hc.height,
+    } as HotspotOverlayComponent;
+  }
+  // V2-PILAR-2: deep-copy input-field (no nested IDs).
+  if (c.type === 'input-field') {
+    const ic = c as InputFieldComponent;
+    return {
+      id: newId,
+      type: 'input-field',
+      variant: ic.variant,
+      label: ic.label,
+      placeholder: ic.placeholder,
+      correctAnswer: ic.correctAnswer,
+      feedbackCorrect: ic.feedbackCorrect,
+      feedbackWrong: ic.feedbackWrong,
+      points: ic.points,
+      x: ic.x,
+      y: ic.y,
+      width: ic.width,
+      height: ic.height,
+    } as InputFieldComponent;
   }
   // Unknown type — copy with new id (shouldn't occur).
   return { ...(c as Record<string, unknown>), id: newId } as PageComponent;
@@ -776,6 +862,34 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     return component.id;
   },
 
+  // V2-PILAR-2: Hotspot Overlay Component
+  addHotspotOverlayComponent: (overrides) => {
+    const state = get();
+    const currentPage = state.project.pages.find(
+      (p) => p.id === state.project.currentPageId,
+    );
+    if (!currentPage) return null;
+    if (!canAddComponent(currentPage.role, 'hotspot-overlay')) return null;
+
+    const component = createHotspotOverlayComponent(overrides);
+    set((s) => addComponentToCurrentPage(s, component));
+    return component.id;
+  },
+
+  // V2-PILAR-2: Input Field Component
+  addInputFieldComponent: (overrides) => {
+    const state = get();
+    const currentPage = state.project.pages.find(
+      (p) => p.id === state.project.currentPageId,
+    );
+    if (!currentPage) return null;
+    if (!canAddComponent(currentPage.role, 'input-field')) return null;
+
+    const component = createInputFieldComponent(overrides);
+    set((s) => addComponentToCurrentPage(s, component));
+    return component.id;
+  },
+
   // ----- Selection + update -----
 
   selectComponent: (componentId) => {
@@ -955,6 +1069,52 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           components: p.components.map((c) => {
             if (c.id !== componentId || c.type !== 'learning-bridge') return c;
             return { ...c, ...cleanPatch, type: 'learning-bridge' } as LearningBridgeComponent;
+          }),
+        };
+      });
+      return { project: { ...state.project, pages } };
+    });
+  },
+
+  // V2-PILAR-2: updateHotspotOverlayComponent
+  updateHotspotOverlayComponent: (componentId, patch) => {
+    const cleanPatch = sanitizeHotspotOverlayPatch(patch);
+    set((state) => {
+      const page = state.project.pages.find((p) => p.id === state.project.currentPageId);
+      if (!page) return state;
+      const exists = page.components.some((c) => c.id === componentId && c.type === 'hotspot-overlay');
+      if (!exists) return state;
+
+      const pages = state.project.pages.map((p) => {
+        if (p.id !== state.project.currentPageId) return p;
+        return {
+          ...p,
+          components: p.components.map((c) => {
+            if (c.id !== componentId || c.type !== 'hotspot-overlay') return c;
+            return { ...c, ...cleanPatch, type: 'hotspot-overlay' } as HotspotOverlayComponent;
+          }),
+        };
+      });
+      return { project: { ...state.project, pages } };
+    });
+  },
+
+  // V2-PILAR-2: updateInputFieldComponent
+  updateInputFieldComponent: (componentId, patch) => {
+    const cleanPatch = sanitizeInputFieldPatch(patch);
+    set((state) => {
+      const page = state.project.pages.find((p) => p.id === state.project.currentPageId);
+      if (!page) return state;
+      const exists = page.components.some((c) => c.id === componentId && c.type === 'input-field');
+      if (!exists) return state;
+
+      const pages = state.project.pages.map((p) => {
+        if (p.id !== state.project.currentPageId) return p;
+        return {
+          ...p,
+          components: p.components.map((c) => {
+            if (c.id !== componentId || c.type !== 'input-field') return c;
+            return { ...c, ...cleanPatch, type: 'input-field' } as InputFieldComponent;
           }),
         };
       });

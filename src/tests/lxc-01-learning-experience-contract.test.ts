@@ -413,10 +413,11 @@ describe('LXC-01 — Contract file is pure spec (no runtime leak)', () => {
     const content = readFileSync(path, 'utf8');
     // LXC-02: layered-info is now an official component type.
     // Original 6 + layered-info = 7.
+    // V2-PILAR-2: +hotspot-overlay +input-field = 10 total.
     const match = content.match(/export const COMPONENT_TYPES = \[([^\]]+)\]/);
     expect(match).not.toBeNull();
-    const types = match![1].split(',').map((t) => t.trim().replace(/['"]/g, ''));
-    expect(types).toEqual(['text', 'image', 'card', 'navigation', 'question', 'game', 'layered-info', 'learning-bridge']);
+    const types = match![1].split(',').map((t) => t.trim().replace(/['"]/g, '')).filter(Boolean);
+    expect(types).toEqual(['text', 'image', 'card', 'navigation', 'question', 'game', 'layered-info', 'learning-bridge', 'hotspot-overlay', 'input-field']);
   });
 });
 
@@ -570,12 +571,13 @@ describe('LXC-01 Patch-1 — Contract Alignment (layered-info, interactive-start
   describe('Patch-1 cross-cutting guards', () => {
     it('LXC-02 added layered-info to COMPONENT_TYPES (now 7 types)', () => {
       // LXC-02 implemented layered-info as official component type.
+      // V2-PILAR-2: +hotspot-overlay +input-field = 10 total.
       const path = resolve(__dirname, '../core/types.ts');
       const content = readFileSync(path, 'utf8');
       const match = content.match(/export const COMPONENT_TYPES = \[([^\]]+)\]/);
       expect(match).not.toBeNull();
-      const types = match![1].split(',').map((t) => t.trim().replace(/['"]/g, ''));
-      expect(types).toEqual(['text', 'image', 'card', 'navigation', 'question', 'game', 'layered-info', 'learning-bridge']);
+      const types = match![1].split(',').map((t) => t.trim().replace(/['"]/g, '')).filter(Boolean);
+      expect(types).toEqual(['text', 'image', 'card', 'navigation', 'question', 'game', 'layered-info', 'learning-bridge', 'hotspot-overlay', 'input-field']);
     });
 
     it('no runtime implementation added (contract file still pure spec)', () => {

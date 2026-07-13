@@ -49,7 +49,7 @@ type AddButtonSpec = {
   milestone: string;
   icon: string;
   /** Which capability slot to check; if undefined, always allowed when role allows add. */
-  capability: 'text' | 'image' | 'card' | 'navigation' | 'question' | 'game' | 'layered-info' | 'learning-bridge';
+  capability: 'text' | 'image' | 'card' | 'navigation' | 'question' | 'game' | 'layered-info' | 'learning-bridge' | 'hotspot-overlay' | 'input-field';
   /** Section in the dropdown menu. */
   section: 'konten' | 'interaksi';
 };
@@ -65,6 +65,9 @@ const ADD_BUTTONS: AddButtonSpec[] = [
   { action: 'add-question',   label: 'Pertanyaan',  hint: 'Pilihan ganda + feedback', milestone: 'M10', icon: '❓', capability: 'question',   section: 'interaksi' },
   { action: 'add-game',       label: 'Game',        hint: 'Misi interaktif',         milestone: 'M11A', icon: '🎮', capability: 'game',       section: 'interaksi' },
   { action: 'add-learning-bridge', label: 'Jembatan Belajar', hint: 'Penghubung antar scene', milestone: 'LXC-03', icon: '🌉', capability: 'learning-bridge', section: 'interaksi' },
+  // V2-PILAR-2: Overlay components for slide PNG pages
+  { action: 'add-hotspot-overlay', label: 'Hotspot Overlay', hint: 'Titik interaktif di atas slide', milestone: 'V2-P2', icon: '📍', capability: 'hotspot-overlay', section: 'interaksi' },
+  { action: 'add-input-field',     label: 'Input Jawaban',   hint: 'Field teks jawaban siswa', milestone: 'V2-P2', icon: '✏️', capability: 'input-field', section: 'interaksi' },
 ];
 
 const SECTION_LABELS: Record<AddButtonSpec['section'], string> = {
@@ -81,6 +84,8 @@ export function Toolbar() {
   const addGameComponent = useEditorStore((s) => s.addGameComponent);
   const addLayeredInfoComponent = useEditorStore((s) => s.addLayeredInfoComponent);
   const addLearningBridgeComponent = useEditorStore((s) => s.addLearningBridgeComponent);
+  const addHotspotOverlayComponent = useEditorStore((s) => s.addHotspotOverlayComponent);
+  const addInputFieldComponent = useEditorStore((s) => s.addInputFieldComponent);
   const saveCurrent = useEditorStore((s) => s.saveCurrent);
   const loadCurrent = useEditorStore((s) => s.loadCurrent);
   const resetProject = useEditorStore((s) => s.resetProject);
@@ -138,6 +143,8 @@ export function Toolbar() {
       case 'add-game': return () => addGameComponent();
       case 'add-layered-info': return () => addLayeredInfoComponent();
       case 'add-learning-bridge': return () => addLearningBridgeComponent();
+      case 'add-hotspot-overlay': return () => addHotspotOverlayComponent();
+      case 'add-input-field': return () => addInputFieldComponent();
       default: return null;
     }
   };
