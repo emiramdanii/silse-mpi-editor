@@ -20,7 +20,7 @@
  *     - Tambah CSS classes structural, bukan premium polish.
  */
 
-import type { CSSProperties, ReactNode } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 import type { SceneRenderPlan, SceneRenderSlot } from '../core/scene-renderer';
 import type { MpiDesignContract } from '../core/mpi-design-contract';
 import { sanitizeCustomStyle } from '../core/style/sanitize';
@@ -548,9 +548,238 @@ function ContentRenderer({
     );
   }
 
+  // V2-PILAR-2: HotspotOverlayComponentView
+  if (c.kind === 'hotspot-overlay') {
+    return <HotspotOverlaySlotView slot={slot} contract={contract} interactive={interactive} />;
+  }
+
+  // V2-PILAR-2: InputFieldComponentView
+  if (c.kind === 'input-field') {
+    return <InputFieldSlotView slot={slot} contract={contract} />;
+  }
+
   // Fallback for any remaining kind
   const fallbackContent = c as { kind: string };
   return <div className={slot.contentClass}>[{fallbackContent.kind}]</div>;
+}
+
+// ---------------------------------------------------------------------------
+// V2-PILAR-2: HotspotOverlaySlotView — render titik-titik clickable di atas slide
+// ---------------------------------------------------------------------------
+
+function HotspotOverlaySlotView({
+  slot, contract, interactive,
+}: {
+  slot: SceneRenderSlot;
+  contract: MpiDesignContract;
+  interactive: boolean;
+}) {
+  const c = slot.content as {
+    kind: 'hotspot-overlay';
+    hotspots: { id: string; x: number; y: number; label: string; info: string }[];
+    defaultOpenIndex: number | null;
+  };
+  const [activeIdx, setActiveIdx] = useState<number | null>(c.defaultOpenIndex);
+  const activeHotspot = activeIdx !== null ? c.hotspots[activeIdx] : null;
+
+  return (
+    <div
+      className={slot.contentClass}
+      data-testid="hotspot-overlay-view"
+      style={{
+        position: 'relative', width: '100%', height: '100%',
+        background: 'transparent', // overlay transparan — background dari slide PNG
+        pointerEvents: interactive ? 'auto' : 'none',
+      }}
+    >
+      {c.hotspots.map((h, idx) => (
+        <button
+          key={h.id}
+          className="silse-hotspot-overlay-point"
+          data-testid={`hotspot-overlay-point-${h.id}`}
+          data-hotspot-id={h.id}
+          data-hotspot-idx={idx}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (interactive) setActiveIdx(activeIdx === idx ? null : idx);
+          }}
+          style={{
+            position: 'absolute',
+            left: `${h.x}%`,
+            top: `${h.y}%`,
+            width: 28,
+            height: 28,
+            borderRadius: '50%',
+            border: `3px solid ${activeIdx === idx ? contract.palette.gold : contract.palette.primary}`,
+            background: activeIdx === idx ? contract.palette.gold : contract.palette.primary,
+            cursor: interactive ? 'pointer' : 'default',
+            transform: 'translate(-50%, -50%)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+            transition: 'all 0.2s',
+            padding: 0,
+          }}
+        >
+          <span
+            data-testid={`hotspot-overlay-label-${h.id}`}
+            style={{
+              position: 'absolute', top: -24, left: '50%', transform: 'translateX(-50%)',
+              fontSize: 11, fontWeight: 800, color: contract.palette.text,
+              whiteSpace: 'nowrap', pointerEvents: 'none',
+            }}
+          >
+            {h.label}
+          </span>
+        </button>
+      ))}
+      {activeHotspot && (
+        <div
+          className="silse-hotspot-overlay-panel"
+          data-testid="hotspot-overlay-panel"
+          style={{
+            position: 'absolute',
+            bottom: 10, left: '50%', transform: 'translateX(-50%)',
+            maxWidth: '80%',
+            padding: '12px 16px',
+            borderRadius: contract.card.radius,
+            background: contract.palette.surface,
+            border: `1px solid ${contract.palette.gold}66`,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            fontSize: 14,
+            lineHeight: 1.5,
+            color: contract.palette.text,
+          }}
+        >
+          <div style={{ fontSize: 13, fontWeight: 800, color: contract.palette.gold, marginBottom: 4 }}>
+            {activeHotspot.label}
+          </div>
+          <div>{activeHotspot.info}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// V2-PILAR-2: InputFieldSlotView — render input field dengan auto-check opsional
+// ---------------------------------------------------------------------------
+
+function InputFieldSlotView({
+  slot, contract,
+}: {
+  slot: SceneRenderSlot;
+  contract: MpiDesignContract;
+}) {
+  const c = slot.content as {
+    kind: 'input-field';
+    variant: string;
+    label: string;
+    placeholder: string;
+    correctAnswer?: string;
+    feedbackCorrect?: string;
+    feedbackWrong?: string;
+    points: number;
+  };
+  const [userAnswer, setUserAnswer] = useState('');
+  const [feedback, setFeedback] = useState<{ correct: boolean; message: string } | null>(null);
+
+  const hasAutoCheck = c.correctAnswer !== undefined && c.correctAnswer !== '';
+
+  const handleCheck = () => {
+    if (!hasAutoCheck || !c.correctAnswer) return;
+    const isCorrect = userAnswer.trim().toLowerCase() === c.correctAnswer.trim().toLowerCase();
+    setFeedback({
+      correct: isCorrect,
+      message: isCorrect
+        ? (c.feedbackCorrect ?? 'Benar!')
+        : (c.feedbackWrong ?? 'Belum tepat. Coba lagi.'),
+    });
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '10px 12px',
+    borderRadius: 8,
+    border: `1px solid ${contract.palette.border ?? '#e3ddcd'}`,
+    background: contract.palette.surface ?? '#fff',
+    color: contract.palette.text ?? '#1f2533',
+    fontSize: 14,
+    fontFamily: 'inherit',
+    boxSizing: 'border-box',
+  };
+
+  return (
+    <div
+      className={slot.contentClass}
+      data-testid="input-field-view"
+      style={{
+        width: '100%', height: '100%',
+        display: 'flex', flexDirection: 'column', gap: 8,
+        padding: 12, boxSizing: 'border-box',
+      }}
+    >
+      <label
+        data-testid="input-field-label"
+        style={{ fontSize: 14, fontWeight: 700, color: contract.palette.text ?? '#1f2533' }}
+      >
+        {c.label}
+      </label>
+      {c.variant === 'longAnswer' ? (
+        <textarea
+          data-testid="input-field-textarea"
+          placeholder={c.placeholder}
+          value={userAnswer}
+          onChange={(e) => { setUserAnswer(e.target.value); setFeedback(null); }}
+          style={{ ...inputStyle, minHeight: 60, resize: 'vertical', fontFamily: 'inherit' }}
+        />
+      ) : (
+        <input
+          data-testid="input-field-input"
+          type={c.variant === 'numericInput' ? 'number' : 'text'}
+          placeholder={c.placeholder}
+          value={userAnswer}
+          onChange={(e) => { setUserAnswer(e.target.value); setFeedback(null); }}
+          style={inputStyle}
+        />
+      )}
+      {hasAutoCheck && (
+        <button
+          data-testid="input-field-check-btn"
+          onClick={handleCheck}
+          style={{
+            alignSelf: 'flex-start',
+            padding: '8px 16px',
+            borderRadius: 8,
+            border: 'none',
+            background: contract.palette.primary ?? '#1e5b8f',
+            color: '#fff',
+            fontSize: 13,
+            fontWeight: 700,
+            cursor: 'pointer',
+          }}
+        >
+          Periksa Jawaban
+        </button>
+      )}
+      {feedback && (
+        <div
+          data-testid="input-field-feedback"
+          data-feedback-correct={feedback.correct ? 'true' : 'false'}
+          style={{
+            padding: '8px 12px',
+            borderRadius: 8,
+            background: feedback.correct ? '#e1f3e8' : '#fbe6e3',
+            color: feedback.correct
+              ? (contract.palette.success ?? '#2f7d4f')
+              : (contract.palette.danger ?? '#c0392b'),
+            fontSize: 13,
+            fontWeight: 600,
+          }}
+        >
+          {feedback.message}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ---------------------------------------------------------------------------

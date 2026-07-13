@@ -140,6 +140,11 @@ type ExportRenderComponent = {
   bridgeVariant?: string;
   bridgeMessage?: string;
   bridgeNextButtonLabel?: string;
+  // V2-PILAR-2: Hotspot-overlay-specific
+  hotspots?: { id: string; x: number; y: number; label: string; info: string }[];
+  // V2-PILAR-2: Input-field-specific
+  placeholder?: string;
+  correctAnswer?: string;
   // Pre-computed resolved style from resolver
   resolvedStyle: {
     inlineStyle: Record<string, string | number>;
@@ -296,6 +301,18 @@ function buildExportRenderComponent(
     base.bridgeVariant = component.variant;
     base.bridgeMessage = component.message;
     base.bridgeNextButtonLabel = component.nextButtonLabel;
+  } else if (component.type === 'hotspot-overlay') {
+    // V2-PILAR-2: Hotspot overlay data for export renderer
+    base.hotspots = component.hotspots;
+    base.defaultOpenIndex = component.defaultOpenIndex;
+  } else if (component.type === 'input-field') {
+    // V2-PILAR-2: Input field data for export renderer
+    base.label = component.label;
+    base.placeholder = component.placeholder;
+    base.correctAnswer = component.correctAnswer;
+    base.feedbackCorrect = component.feedbackCorrect;
+    base.feedbackWrong = component.feedbackWrong;
+    base.points = component.points;
   }
 
   return base;
@@ -3363,6 +3380,97 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       return el;
     }
 
+    // V2-PILAR-2: Hotspot overlay — render titik-titik clickable di atas slide
+    if (comp.type === 'hotspot-overlay') {
+      el = document.createElement('div');
+      el.className = 'silse-hotspot-overlay';
+      el.setAttribute('data-testid', 'export-hotspot-overlay');
+      el.setAttribute('data-overlay-id', comp.id);
+      el.style.cssText = style + 'position:relative;background:transparent;pointer-events:auto;';
+
+      var hsList = comp.hotspots || [];
+      for (var hi = 0; hi < hsList.length; hi++) {
+        var hs = hsList[hi];
+        var hsBtn = document.createElement('button');
+        hsBtn.className = 'silse-hotspot-overlay-point';
+        hsBtn.setAttribute('data-testid', 'export-hotspot-overlay-point-' + hs.id);
+        hsBtn.setAttribute('data-hotspot-id', hs.id);
+        hsBtn.setAttribute('data-hotspot-idx', String(hi));
+        hsBtn.setAttribute('data-overlay-id', comp.id);
+        hsBtn.style.cssText = 'position:absolute;left:' + hs.x + '%;top:' + hs.y + '%;width:28px;height:28px;border-radius:50%;border:3px solid var(--silse-color-primary, #1e5b8f);background:var(--silse-color-primary, #1e5b8f);cursor:pointer;transform:translate(-50%,-50%);box-shadow:0 2px 8px rgba(0,0,0,0.3);transition:all 0.2s;padding:0;';
+        var hsLabel = document.createElement('span');
+        hsLabel.style.cssText = 'position:absolute;top:-24px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:800;color:var(--color-text, #1f2533);white-space:nowrap;pointer-events:none;';
+        hsLabel.textContent = hs.label;
+        hsBtn.appendChild(hsLabel);
+        el.appendChild(hsBtn);
+      }
+
+      // Panel info (initially hidden, populated by wireInteractions on click)
+      var hsPanel = document.createElement('div');
+      hsPanel.className = 'silse-hotspot-overlay-panel';
+      hsPanel.setAttribute('data-testid', 'export-hotspot-overlay-panel');
+      hsPanel.setAttribute('data-overlay-id', comp.id);
+      hsPanel.style.cssText = 'position:absolute;bottom:10px;left:50%;transform:translateX(-50%);max-width:80%;padding:12px 16px;border-radius:8px;background:var(--color-panel, #fff);border:1px solid var(--silse-color-gold, #f9c12e);box-shadow:0 4px 12px rgba(0,0,0,0.15);font-size:14px;line-height:1.5;color:var(--color-text, #1f2533);display:none;';
+      el.appendChild(hsPanel);
+
+      return el;
+    }
+
+    // V2-PILAR-2: Input field — render input/textarea/number dengan auto-check opsional
+    if (comp.type === 'input-field') {
+      el = document.createElement('div');
+      el.className = 'silse-input-field';
+      el.setAttribute('data-testid', 'export-input-field');
+      el.setAttribute('data-input-id', comp.id);
+      el.style.cssText = style + 'box-sizing:border-box;display:flex;flex-direction:column;gap:8px;padding:12px;background:transparent;';
+
+      var ifLabel = document.createElement('label');
+      ifLabel.style.cssText = 'font-size:14px;font-weight:700;color:var(--color-text, #1f2533);';
+      ifLabel.textContent = comp.label || '';
+      ifLabel.setAttribute('data-testid', 'export-input-field-label');
+      el.appendChild(ifLabel);
+
+      var ifInput;
+      if (comp.variant === 'longAnswer') {
+        ifInput = document.createElement('textarea');
+        ifInput.style.cssText = 'width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--color-border, #e3ddcd);background:var(--color-panel, #fff);color:var(--color-text, #1f2533);font-size:14px;font-family:inherit;box-sizing:border-box;min-height:60px;resize:vertical;';
+      } else {
+        ifInput = document.createElement('input');
+        ifInput.type = comp.variant === 'numericInput' ? 'number' : 'text';
+        ifInput.style.cssText = 'width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--color-border, #e3ddcd);background:var(--color-panel, #fff);color:var(--color-text, #1f2533);font-size:14px;font-family:inherit;box-sizing:border-box;';
+      }
+      ifInput.placeholder = comp.placeholder || '';
+      ifInput.setAttribute('data-testid', 'export-input-field-input');
+      ifInput.setAttribute('data-input-id', comp.id);
+      ifInput.className = 'silse-input-field-input';
+      el.appendChild(ifInput);
+
+      // Auto-check button (only if correctAnswer is set)
+      var hasAutoCheck = comp.correctAnswer !== undefined && comp.correctAnswer !== '';
+      if (hasAutoCheck) {
+        var checkBtn = document.createElement('button');
+        checkBtn.textContent = 'Periksa Jawaban';
+        checkBtn.setAttribute('data-testid', 'export-input-field-check-btn');
+        checkBtn.setAttribute('data-input-id', comp.id);
+        checkBtn.className = 'silse-input-field-check-btn';
+        checkBtn.setAttribute('data-correct-answer', comp.correctAnswer || '');
+        checkBtn.setAttribute('data-feedback-correct', comp.feedbackCorrect || 'Benar!');
+        checkBtn.setAttribute('data-feedback-wrong', comp.feedbackWrong || 'Belum tepat. Coba lagi.');
+        checkBtn.style.cssText = 'align-self:flex-start;padding:8px 16px;border-radius:8px;border:none;background:var(--silse-color-primary, #1e5b8f);color:#fff;font-size:13px;font-weight:700;cursor:pointer;';
+        el.appendChild(checkBtn);
+
+        // Feedback container (initially hidden)
+        var fbDiv = document.createElement('div');
+        fbDiv.setAttribute('data-testid', 'export-input-field-feedback');
+        fbDiv.setAttribute('data-input-id', comp.id);
+        fbDiv.className = 'silse-input-field-feedback';
+        fbDiv.style.cssText = 'padding:8px 12px;border-radius:8px;font-size:13px;font-weight:600;display:none;';
+        el.appendChild(fbDiv);
+      }
+
+      return el;
+    }
+
     return null;
   }
 
@@ -4116,6 +4224,76 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
         glCard.style.borderColor = isShown ? 'var(--silse-border, rgba(255,255,255,0.09))' : 'var(--silse-gold, var(--silse-gold))';
         return;
       }
+    });
+
+    // V2-PILAR-2: Hotspot overlay click handler — toggle panel info
+    canvas.addEventListener('click', function(e) {
+      var hsBtn = e.target.closest('.silse-hotspot-overlay-point');
+      if (!hsBtn) return;
+      var overlayId = hsBtn.getAttribute('data-overlay-id');
+      var hotspotIdx = hsBtn.getAttribute('data-hotspot-idx');
+      if (!overlayId || hotspotIdx === null) return;
+      var overlay = canvas.querySelector('[data-overlay-id="' + overlayId + '"].silse-hotspot-overlay');
+      if (!overlay) return;
+      var panel = overlay.querySelector('.silse-hotspot-overlay-panel');
+      if (!panel) return;
+      // Find hotspot data from render model
+      var page = pages[currentPageIdx];
+      if (!page) return;
+      var comp = null;
+      for (var ci = 0; ci < page.components.length; ci++) {
+        if (page.components[ci].id === overlayId) { comp = page.components[ci]; break; }
+      }
+      if (!comp || !comp.hotspots) return;
+      var idx = parseInt(hotspotIdx, 10);
+      var hotspot = comp.hotspots[idx];
+      if (!hotspot) return;
+      // Toggle: if panel already shows this hotspot, hide it
+      var isCurrentlyShown = panel.style.display !== 'none' && panel.getAttribute('data-current-hotspot') === hotspot.id;
+      if (isCurrentlyShown) {
+        panel.style.display = 'none';
+        panel.removeAttribute('data-current-hotspot');
+        hsBtn.style.background = 'var(--silse-color-primary, #1e5b8f)';
+        hsBtn.style.borderColor = 'var(--silse-color-primary, #1e5b8f)';
+      } else {
+        panel.innerHTML = '<div style="font-size:13px;font-weight:800;color:var(--silse-color-gold, #f9c12e);margin-bottom:4px;">' + hotspot.label + '</div><div>' + hotspot.info + '</div>';
+        panel.style.display = 'block';
+        panel.setAttribute('data-current-hotspot', hotspot.id);
+        hsBtn.style.background = 'var(--silse-color-gold, #f9c12e)';
+        hsBtn.style.borderColor = 'var(--silse-color-gold, #f9c12e)';
+        // Reset other hotspot buttons in same overlay
+        var allPoints = overlay.querySelectorAll('.silse-hotspot-overlay-point');
+        for (var pi = 0; pi < allPoints.length; pi++) {
+          if (allPoints[pi] !== hsBtn) {
+            allPoints[pi].style.background = 'var(--silse-color-primary, #1e5b8f)';
+            allPoints[pi].style.borderColor = 'var(--silse-color-primary, #1e5b8f)';
+          }
+        }
+      }
+    });
+
+    // V2-PILAR-2: Input field auto-check handler
+    canvas.addEventListener('click', function(e) {
+      var checkBtn = e.target.closest('.silse-input-field-check-btn');
+      if (!checkBtn) return;
+      var inputId = checkBtn.getAttribute('data-input-id');
+      if (!inputId) return;
+      var inputField = canvas.querySelector('[data-input-id="' + inputId + '"].silse-input-field');
+      if (!inputField) return;
+      var input = inputField.querySelector('.silse-input-field-input');
+      var fbDiv = inputField.querySelector('.silse-input-field-feedback');
+      if (!input || !fbDiv) return;
+      var userAnswer = (input.value || '').trim().toLowerCase();
+      var correctAnswer = (checkBtn.getAttribute('data-correct-answer') || '').trim().toLowerCase();
+      var isCorrect = userAnswer === correctAnswer;
+      var message = isCorrect
+        ? (checkBtn.getAttribute('data-feedback-correct') || 'Benar!')
+        : (checkBtn.getAttribute('data-feedback-wrong') || 'Belum tepat. Coba lagi.');
+      fbDiv.textContent = message;
+      fbDiv.style.background = isCorrect ? '#e1f3e8' : '#fbe6e3';
+      fbDiv.style.color = isCorrect ? 'var(--silse-color-success, #2f7d4f)' : 'var(--silse-color-danger, #c0392b)';
+      fbDiv.style.display = 'block';
+      fbDiv.setAttribute('data-feedback-correct', isCorrect ? 'true' : 'false');
     });
   }
 

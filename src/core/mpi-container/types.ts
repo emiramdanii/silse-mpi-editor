@@ -242,7 +242,24 @@ export type MpiSceneSlotContent =
   | { kind: 'branching-scenario'; scenarioPrompt?: string; choices?: { id: string; label: string; consequence: string; isCorrect?: boolean }[]; resetLabel?: string }
   | { kind: 'glossary-cards'; title?: string; terms?: { id: string; term: string; definition: string; example?: string }[] }
   | { kind: 'teacher-guide'; title?: string; teacherInstruction?: string; facilitationTips?: string[]; timeAllocation?: string; assessmentNotes?: string }
-  | { kind: 'accessibility-help'; title?: string; readingGuide?: string; keyboardGuide?: string; contrastOption?: string };
+  | { kind: 'accessibility-help'; title?: string; readingGuide?: string; keyboardGuide?: string; contrastOption?: string }
+  // V2-PILAR-2: Overlay components for slide PNG pages
+  | {
+      kind: 'hotspot-overlay';
+      variant: string;
+      hotspots: { id: string; x: number; y: number; label: string; info: string }[];
+      defaultOpenIndex: number | null;
+    }
+  | {
+      kind: 'input-field';
+      variant: string;
+      label: string;
+      placeholder: string;
+      correctAnswer?: string;
+      feedbackCorrect?: string;
+      feedbackWrong?: string;
+      points: number;
+    };
 
 export type MpiSceneSlot = {
   id: string;

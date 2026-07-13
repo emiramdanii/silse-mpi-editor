@@ -19,7 +19,7 @@
  *     - SimpleProject TIDAK dihapus. Container berdampingan.
  */
 
-import type { SimpleProject, SimplePage, PageComponent, GameComponent, QuestionComponent, TextComponent, CardComponent, NavigationComponent, MaterialSceneMetadata } from '../types';
+import type { SimpleProject, SimplePage, PageComponent, GameComponent, QuestionComponent, TextComponent, CardComponent, NavigationComponent, HotspotOverlayComponent, InputFieldComponent, MaterialSceneMetadata } from '../types';
 import type {
   MpiContainer,
   MpiScene,
@@ -196,6 +196,44 @@ function mapComponentToSlotContent(
       slotRole: 'game',
     };
   }
+  // V2-PILAR-2: HotspotOverlayComponent → hotspot-overlay slot
+  if (component.type === 'hotspot-overlay') {
+    const hc = component as HotspotOverlayComponent;
+    return {
+      content: {
+        kind: 'hotspot-overlay',
+        variant: hc.variant,
+        hotspots: hc.hotspots.map((h) => ({
+          id: h.id,
+          x: h.x,
+          y: h.y,
+          label: h.label,
+          info: h.info,
+        })),
+        defaultOpenIndex: hc.defaultOpenIndex,
+      },
+      slotRole: 'overlay',
+    };
+  }
+
+  // V2-PILAR-2: InputFieldComponent → input-field slot
+  if (component.type === 'input-field') {
+    const ic = component as InputFieldComponent;
+    return {
+      content: {
+        kind: 'input-field',
+        variant: ic.variant,
+        label: ic.label,
+        placeholder: ic.placeholder,
+        correctAnswer: ic.correctAnswer,
+        feedbackCorrect: ic.feedbackCorrect,
+        feedbackWrong: ic.feedbackWrong,
+        points: ic.points,
+      },
+      slotRole: 'response',
+    };
+  }
+
   // Fallback: image, layered-info, learning-bridge → text slot
   return {
     content: { kind: 'text', variant: 'body', text: `[${component.type}]` },

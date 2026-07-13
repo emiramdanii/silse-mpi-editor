@@ -212,6 +212,9 @@ function contentKindToClass(kind: MpiSceneSlotContent['kind']): string {
     'case-analysis': 'silse-scene-case',
     'result-summary': 'silse-scene-result',
     'reflection-journal': 'silse-scene-reflection-block',
+    // V2-PILAR-2: overlay content kinds
+    'hotspot-overlay': 'silse-scene-hotspot-overlay',
+    'input-field': 'silse-scene-input-field',
   };
   return mapping[kind] ?? 'silse-scene-unknown';
 }

@@ -29,6 +29,8 @@ import type {
   LayeredInfoComponent,
   LayeredInfoLayer,
   LearningBridgeComponent,
+  HotspotOverlayComponent,
+  InputFieldComponent,
   NavigationAction,
   NavigationComponent,
   NavigationComponentVariant,
@@ -41,7 +43,9 @@ import type {
 import type {
   CardComponentEditable,
   GameComponentEditable,
+  HotspotOverlayComponentEditable,
   ImageComponentEditable,
+  InputFieldComponentEditable,
   LayeredInfoComponentEditable,
   LearningBridgeComponentEditable,
   NavigationComponentEditable,
@@ -194,6 +198,14 @@ function friendlyElementName(component: PageComponent): string {
   if (component.type === 'learning-bridge') {
     return 'Jembatan Belajar';
   }
+  if (component.type === 'hotspot-overlay') {
+    return 'Hotspot Overlay';
+  }
+  if (component.type === 'input-field') {
+    if (component.variant === 'longAnswer') return 'Input Jawaban Panjang';
+    if (component.variant === 'numericInput') return 'Input Angka';
+    return 'Input Jawaban';
+  }
   return 'Elemen';
 }
 
@@ -215,6 +227,8 @@ export function Inspector() {
   const updateGameComponent = useEditorStore((s) => s.updateGameComponent);
   const updateLayeredInfoComponent = useEditorStore((s) => s.updateLayeredInfoComponent);
   const updateLearningBridgeComponent = useEditorStore((s) => s.updateLearningBridgeComponent);
+  const updateHotspotOverlayComponent = useEditorStore((s) => s.updateHotspotOverlayComponent);
+  const updateInputFieldComponent = useEditorStore((s) => s.updateInputFieldComponent);
   const project = useEditorStore((s) => s.project);
 
   return (
@@ -253,6 +267,8 @@ export function Inspector() {
             onUpdateGame={updateGameComponent}
             onUpdateLayeredInfo={updateLayeredInfoComponent}
             onUpdateBridge={updateLearningBridgeComponent}
+            onUpdateHotspotOverlay={updateHotspotOverlayComponent}
+            onUpdateInputField={updateInputFieldComponent}
             pages={project.pages}
           />
         )}
@@ -357,6 +373,8 @@ function ComponentEditor({
   onUpdateGame,
   onUpdateLayeredInfo,
   onUpdateBridge,
+  onUpdateHotspotOverlay,
+  onUpdateInputField,
   pages,
 }: {
   component: PageComponent;
@@ -368,6 +386,8 @@ function ComponentEditor({
   onUpdateGame: (id: string, patch: Partial<GameComponentEditable>) => void;
   onUpdateLayeredInfo: (id: string, patch: Partial<LayeredInfoComponentEditable>) => void;
   onUpdateBridge: (id: string, patch: Partial<LearningBridgeComponentEditable>) => void;
+  onUpdateHotspotOverlay: (id: string, patch: Partial<HotspotOverlayComponentEditable>) => void;
+  onUpdateInputField: (id: string, patch: Partial<InputFieldComponentEditable>) => void;
   pages: SimplePage[];
 }) {
   if (component.type === 'text') {
@@ -399,6 +419,12 @@ function ComponentEditor({
   }
   if (component.type === 'learning-bridge') {
     return <LearningBridgeComponentEditor component={component} onChange={(p) => onUpdateBridge(component.id, p)} />;
+  }
+  if (component.type === 'hotspot-overlay') {
+    return <HotspotOverlayComponentEditor component={component} onChange={(p) => onUpdateHotspotOverlay(component.id, p)} />;
+  }
+  if (component.type === 'input-field') {
+    return <InputFieldComponentEditor component={component} onChange={(p) => onUpdateInputField(component.id, p)} />;
   }
   return (
     <div className="inspector-placeholder">
@@ -1542,5 +1568,215 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="field__label">{label}</span>
       {children}
     </label>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// V2-PILAR-2: HotspotOverlayComponentEditor
+// ---------------------------------------------------------------------------
+
+function HotspotOverlayComponentEditor({
+  component,
+  onChange,
+}: {
+  component: HotspotOverlayComponent;
+  onChange: (patch: Partial<HotspotOverlayComponentEditable>) => void;
+}) {
+  const addHotspot = () => {
+    const newHotspot = {
+      id: `hs-${Date.now()}`,
+      x: 50,
+      y: 50,
+      label: `Titik ${component.hotspots.length + 1}`,
+      info: 'Tulis info yang muncul saat titik ini diklik.',
+    };
+    onChange({ hotspots: [...component.hotspots, newHotspot] });
+  };
+  const removeHotspot = (idx: number) => {
+    onChange({ hotspots: component.hotspots.filter((_, i) => i !== idx) });
+  };
+  const updateHotspot = (idx: number, patch: Partial<typeof component.hotspots[0]>) => {
+    const newHotspots = component.hotspots.map((h, i) => i === idx ? { ...h, ...patch } : h);
+    onChange({ hotspots: newHotspots });
+  };
+
+  return (
+    <div className="component-editor" data-testid="component-editor-hotspot-overlay">
+      <div className="component-editor__head">
+        <span className="component-editor__type">{friendlyElementName(component)}</span>
+      </div>
+
+      <Section title="Titik Hotspot">
+        <div className="component-editor__hint" style={{ marginBottom: 8 }}>
+          Koordinat X/Y dalam persen (0-100). 0 = kiri/atas, 100 = kanan/bawah.
+        </div>
+        {component.hotspots.map((hs, idx) => (
+          <div key={hs.id} style={{ border: '1px solid var(--color-border)', borderRadius: 8, padding: 8, marginBottom: 8 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <strong style={{ fontSize: 12 }}>Titik {idx + 1}</strong>
+              <button
+                type="button"
+                onClick={() => removeHotspot(idx)}
+                data-testid={`hotspot-remove-${idx}`}
+                style={{ padding: '2px 8px', fontSize: 11, cursor: 'pointer', background: 'transparent', border: '1px solid var(--color-danger)', color: 'var(--color-danger)', borderRadius: 4 }}
+              >
+                Hapus
+              </button>
+            </div>
+            <Field label="Label">
+              <input
+                type="text"
+                data-field={`hotspot-${idx}-label`}
+                value={hs.label}
+                onChange={(e) => updateHotspot(idx, { label: e.target.value })}
+                placeholder="Label singkat"
+              />
+            </Field>
+            <Field label="Info">
+              <textarea
+                data-field={`hotspot-${idx}-info`}
+                value={hs.info}
+                onChange={(e) => updateHotspot(idx, { info: e.target.value })}
+                rows={2}
+                style={{ width: '100%', resize: 'vertical' }}
+                placeholder="Info yang muncul saat titik diklik"
+              />
+            </Field>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Field label="X (%)">
+                <input
+                  type="number"
+                  data-field={`hotspot-${idx}-x`}
+                  value={hs.x}
+                  onChange={(e) => updateHotspot(idx, { x: Math.max(0, Math.min(100, Number(e.target.value))) })}
+                  min={0}
+                  max={100}
+                  style={{ width: 80 }}
+                />
+              </Field>
+              <Field label="Y (%)">
+                <input
+                  type="number"
+                  data-field={`hotspot-${idx}-y`}
+                  value={hs.y}
+                  onChange={(e) => updateHotspot(idx, { y: Math.max(0, Math.min(100, Number(e.target.value))) })}
+                  min={0}
+                  max={100}
+                  style={{ width: 80 }}
+                />
+              </Field>
+            </div>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={addHotspot}
+          data-testid="hotspot-add-btn"
+          style={{ padding: '6px 12px', fontSize: 12, cursor: 'pointer', background: 'var(--color-accent)', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 600 }}
+        >
+          + Tambah Titik
+        </button>
+      </Section>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// V2-PILAR-2: InputFieldComponentEditor
+// ---------------------------------------------------------------------------
+
+function InputFieldComponentEditor({
+  component,
+  onChange,
+}: {
+  component: InputFieldComponent;
+  onChange: (patch: Partial<InputFieldComponentEditable>) => void;
+}) {
+  const hasAutoCheck = component.correctAnswer !== undefined && component.correctAnswer !== '';
+  return (
+    <div className="component-editor" data-testid="component-editor-input-field">
+      <div className="component-editor__head">
+        <span className="component-editor__type">{friendlyElementName(component)}</span>
+      </div>
+
+      <Section title="Pertanyaan">
+        <Field label="Label pertanyaan">
+          <input
+            type="text"
+            data-field="label"
+            value={component.label}
+            onChange={(e) => onChange({ label: e.target.value })}
+            placeholder="Contoh: Apa ibu kota Indonesia?"
+          />
+        </Field>
+        <Field label="Placeholder">
+          <input
+            type="text"
+            data-field="placeholder"
+            value={component.placeholder}
+            onChange={(e) => onChange({ placeholder: e.target.value })}
+            placeholder="Contoh: Ketik jawaban di sini..."
+          />
+        </Field>
+        <Field label="Tipe input">
+          <select
+            data-field="variant"
+            value={component.variant}
+            onChange={(e) => onChange({ variant: e.target.value as InputFieldComponent['variant'] })}
+          >
+            <option value="shortAnswer">Jawaban Singkat (1 baris)</option>
+            <option value="longAnswer">Jawaban Panjang (multi-baris)</option>
+            <option value="numericInput">Input Angka</option>
+          </select>
+        </Field>
+      </Section>
+
+      <Section title="Auto-Check (Opsional)">
+        <div className="component-editor__hint" style={{ marginBottom: 8 }}>
+          Isi jawaban benar untuk mengaktifkan auto-check. Kosongkan untuk input bebas tanpa grading.
+        </div>
+        <Field label="Jawaban benar">
+          <input
+            type="text"
+            data-field="correctAnswer"
+            value={component.correctAnswer ?? ''}
+            onChange={(e) => onChange({ correctAnswer: e.target.value || undefined })}
+            placeholder="Kosongkan untuk input bebas"
+          />
+        </Field>
+        {hasAutoCheck && (
+          <>
+            <Field label="Feedback benar">
+              <input
+                type="text"
+                data-field="feedbackCorrect"
+                value={component.feedbackCorrect ?? ''}
+                onChange={(e) => onChange({ feedbackCorrect: e.target.value })}
+                placeholder="Contoh: Benar! Jakarta ibu kota Indonesia."
+              />
+            </Field>
+            <Field label="Feedback salah">
+              <input
+                type="text"
+                data-field="feedbackWrong"
+                value={component.feedbackWrong ?? ''}
+                onChange={(e) => onChange({ feedbackWrong: e.target.value })}
+                placeholder="Contoh: Belum tepat. Coba lihat peta lagi."
+              />
+            </Field>
+            <Field label="Poin">
+              <input
+                type="number"
+                data-field="points"
+                value={component.points}
+                onChange={(e) => onChange({ points: Math.max(0, Number(e.target.value)) })}
+                min={0}
+                style={{ width: 80 }}
+              />
+            </Field>
+          </>
+        )}
+      </Section>
+    </div>
   );
 }
