@@ -879,3 +879,304 @@ export function buildPremiumSkinCss(profile: PremiumExportProfile): string {
   -webkit-backdrop-filter: blur(6px);
 }`;
 }
+
+// ===========================================================================
+// V2-PILAR-3: Celebration Burst CSS — Pure CSS particle burst (no library)
+// ===========================================================================
+
+/**
+ * CSS untuk efek burst celebration (local + full-screen).
+ *
+ * Pure CSS, no JavaScript library. Partikel adalah div kecil yang
+ * dianimasikan via @keyframes. Warna dari token: --color-success-strong,
+ * --color-accent, --color-primary-strong.
+ *
+ * Local burst: 15-20 partikel, radius 50-150px, durasi 0.8s.
+ * Full-screen burst: 30-50 partikel, radius 200-500px, durasi 1.2s.
+ *
+ * Koordinat tujuan partikel di-set via CSS custom properties --tx, --ty
+ * (di-set inline oleh JS saat create partikel).
+ *
+ * prefers-reduced-motion: disable all burst animations.
+ */
+export function buildCelebrationBurstCss(): string {
+  return `/* V2-PILAR-3: Celebration Burst — Pure CSS particle burst */
+
+/* Local burst container (relative to button) */
+.silse-burst-local {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 100;
+}
+
+/* Full-screen burst overlay (covers entire canvas) */
+.silse-burst-fullscreen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Individual particle — base style */
+.silse-particle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  top: 0;
+  left: 0;
+  /* --tx and --ty set inline by JS (target offset) */
+  /* --color set inline by JS (random from palette) */
+  background: var(--color, var(--color-success-strong));
+  animation: silse-burst-particle 0.8s ease-out forwards;
+  will-change: transform, opacity;
+}
+
+.silse-particle-fullscreen {
+  width: 14px;
+  height: 14px;
+  animation: silse-burst-particle-fullscreen 1.2s ease-out forwards;
+}
+
+@keyframes silse-burst-particle {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--tx, 0px)), calc(-50% + var(--ty, 0px))) scale(0.3);
+    opacity: 0;
+  }
+}
+
+@keyframes silse-burst-particle-fullscreen {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 1;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--tx, 0px)), calc(-50% + var(--ty, 0px))) scale(0.2);
+    opacity: 0;
+  }
+}
+
+/* Combo streak indicator — floating text */
+.silse-streak-indicator {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 20px;
+  border-radius: 999px;
+  background: var(--color-success-strong);
+  color: var(--color-panel);
+  font-size: 16px;
+  font-weight: 800;
+  white-space: nowrap;
+  z-index: 150;
+  pointer-events: none;
+  animation: silse-streak-pop 1.5s ease-out forwards;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.silse-streak-indicator.is-streak-5 {
+  background: var(--color-warning-strong);
+  font-size: 18px;
+  animation: silse-streak-pop-5 1.8s ease-out forwards;
+}
+
+@keyframes silse-streak-pop {
+  0% {
+    transform: translateX(-50%) translateY(20px) scale(0.5);
+    opacity: 0;
+  }
+  20% {
+    transform: translateX(-50%) translateY(0) scale(1.1);
+    opacity: 1;
+  }
+  30% {
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  80% {
+    transform: translateX(-50%) translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(-30px) scale(0.8);
+    opacity: 0;
+  }
+}
+
+@keyframes silse-streak-pop-5 {
+  0% {
+    transform: translateX(-50%) translateY(20px) scale(0.3);
+    opacity: 0;
+  }
+  15% {
+    transform: translateX(-50%) translateY(0) scale(1.3);
+    opacity: 1;
+  }
+  25% {
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  85% {
+    transform: translateX(-50%) translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(-40px) scale(0.7);
+    opacity: 0;
+  }
+}
+
+/* Dashboard ringkasan akhir — circular SVG progress + badge */
+.silse-dashboard {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  z-index: 10;
+  padding: 40px;
+  box-sizing: border-box;
+}
+
+.silse-dashboard__circle {
+  position: relative;
+  width: 200px;
+  height: 200px;
+}
+
+.silse-dashboard__svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.silse-dashboard__track {
+  fill: none;
+  stroke: var(--color-border);
+  stroke-width: 12;
+}
+
+.silse-dashboard__progress {
+  fill: none;
+  stroke: var(--color-success-strong);
+  stroke-width: 12;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1.5s ease-out;
+}
+
+.silse-dashboard__grade {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.silse-dashboard__grade-number {
+  font-size: 48px;
+  font-weight: 800;
+  color: var(--color-text);
+  line-height: 1;
+}
+
+.silse-dashboard__grade-label {
+  font-size: 14px;
+  color: var(--color-muted);
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.silse-dashboard__badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 32px;
+  border-radius: 16px;
+  background: var(--color-panel);
+  border: 2px solid var(--color-border);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.silse-dashboard__badge-icon {
+  font-size: 48px;
+  line-height: 1;
+}
+
+.silse-dashboard__badge-label {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.silse-dashboard__badge-tier-gold {
+  border-color: var(--color-warning-strong);
+  background: linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(245,158,11,0.15) 100%);
+}
+.silse-dashboard__badge-tier-gold .silse-dashboard__badge-label { color: var(--color-warning-deep); }
+
+.silse-dashboard__badge-tier-silver {
+  border-color: var(--color-border-strong);
+  background: linear-gradient(135deg, rgba(200,190,159,0.08) 0%, rgba(200,190,159,0.15) 100%);
+}
+.silse-dashboard__badge-tier-silver .silse-dashboard__badge-label { color: var(--color-text-soft); }
+
+.silse-dashboard__badge-tier-bronze {
+  border-color: var(--color-warning);
+  background: linear-gradient(135deg, rgba(185,116,14,0.08) 0%, rgba(185,116,14,0.15) 100%);
+}
+.silse-dashboard__badge-tier-bronze .silse-dashboard__badge-label { color: var(--color-warning-deep); }
+
+.silse-dashboard__stats {
+  display: flex;
+  gap: 24px;
+  font-size: 14px;
+  color: var(--color-text-soft);
+}
+
+.silse-dashboard__stat {
+  text-align: center;
+}
+
+.silse-dashboard__stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.silse-dashboard__stat-label {
+  font-size: 11px;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+/* prefers-reduced-motion: disable burst + streak animations */
+@media (prefers-reduced-motion: reduce) {
+  .silse-particle,
+  .silse-particle-fullscreen,
+  .silse-streak-indicator {
+    animation: none !important;
+    display: none !important;
+  }
+  .silse-dashboard__progress {
+    transition: none !important;
+  }
+}`;
+}

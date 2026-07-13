@@ -8,9 +8,12 @@
  * Editor dan Preview memakai resolver yang sama.
  */
 
+import React from 'react';
 import { useEditorStore } from '../store/editor-store';
 import { usePreviewStore } from './preview-store';
 import { useStudentSessionStore } from '../store/student-session-store';
+import { triggerCelebration } from '../core/scoring/celebration';
+import { SessionDashboard } from '../components/SessionDashboard';
 import { getBackgroundPatternForStylePack } from '../core/style-packs/background-pattern';
 import { getCoverClassForStylePack } from '../core/style-packs/cover-decoration';
 import { getMicroAnimationForStylePack } from '../core/style-packs/micro-animation';
@@ -19,7 +22,7 @@ import { buildSceneRenderPlanForPage } from '../core/scene-renderer';
 import { SceneRendererView } from '../components/SceneRendererView';
 import { NavigationToolbarBlock, ProgressBarBlock } from '../components/scene-blocks';
 import { getDesignContractWithProjectStyle } from '../core/mpi-design-contract';
-import type { GameComponent, QuestionComponent } from '../core/types';
+import type { GameComponent, QuestionComponent, InputFieldComponent } from '../core/types';
 import { getEffectiveGlobalSlideSettings } from '../core/project-factory';
 
 const CANVAS_WIDTH = 1280;
@@ -34,6 +37,8 @@ export function PreviewApp() {
   const navigateNext = usePreviewStore((s) => s.navigateNext);
   const navigatePrev = usePreviewStore((s) => s.navigatePrev);
   const answerQuestion = usePreviewStore((s) => s.answerQuestion);
+  // V2-PILAR-3: canvas ref for celebration burst container
+  const canvasRef = React.useRef<HTMLDivElement>(null);
   const answerGameMission = usePreviewStore((s) => s.answerGameMission);
 
   if (!isOpen) return null;
@@ -81,6 +86,22 @@ export function PreviewApp() {
   const isFirst = currentIdx === 0;
   const isLast = currentIdx === project.pages.length - 1;
 
+  // V2-PILAR-3: Count total scoring components in project for dashboard progress
+  const totalScoringComponents = project.pages.reduce((count, page) => {
+    return count + page.components.filter((c) => {
+      if (c.type === 'question' || c.type === 'game') return true;
+      if (c.type === 'input-field') {
+        const ic = c as InputFieldComponent;
+        return ic.correctAnswer !== undefined && ic.correctAnswer !== '';
+      }
+      return false;
+    }).length;
+  }, 0);
+
+  // V2-PILAR-3: Show dashboard on closing page if there are scoring responses
+  const sessionResponses = useStudentSessionStore((s) => s.responses);
+  const showDashboard = isClosing && Object.keys(sessionResponses).length > 0;
+
   return (
     <div className="preview-overlay" data-testid="preview-overlay">
       <div className="preview-toolbar">
@@ -102,6 +123,7 @@ export function PreviewApp() {
       </div>
       <div className="preview-canvas-wrap">
         <div
+          ref={canvasRef}
           className={`canvas-frame preview-canvas silse-premium-stage ${bgPattern.pageClass} ${bgPattern.patternClass} ${coverClass} ${animProfile.pageEnterClass}`.trim()}
           data-testid="preview-canvas-frame"
           data-page-role={currentPage.role}
@@ -171,7 +193,7 @@ export function PreviewApp() {
                     answerGameMission(gameComp.id, 0, actionIndex, correctIdx, points);
                     // V2-PILAR-3: Record ke student-session-store untuk scoring
                     const isCorrect = actionIndex === correctIdx;
-                    useStudentSessionStore.getState().recordResponse({
+                    const tier = useStudentSessionStore.getState().recordResponse({
                       componentId: gameComp.id,
                       slideId: currentPage.id,
                       isCorrect,
@@ -179,6 +201,9 @@ export function PreviewApp() {
                       maxScore: points,
                       studentAnswer: mission?.choices[actionIndex]?.id ?? String(actionIndex),
                     });
+                    // V2-PILAR-3: Trigger celebration burst
+                    const newStreak = useStudentSessionStore.getState().currentStreak;
+                    triggerCelebration(tier, canvasRef.current, canvasRef.current || document.body, undefined, newStreak);
                   }
                 }}
                 onQuizAnswer={(_slotId, choiceId) => {
@@ -189,7 +214,7 @@ export function PreviewApp() {
                       answerQuestion(quizComp.id, choiceIdx, quizComp.correctChoiceIndex, quizComp.points);
                       // V2-PILAR-3: Record ke student-session-store untuk scoring
                       const isCorrect = choiceIdx === quizComp.correctChoiceIndex;
-                      useStudentSessionStore.getState().recordResponse({
+                      const tier = useStudentSessionStore.getState().recordResponse({
                         componentId: quizComp.id,
                         slideId: currentPage.id,
                         isCorrect,
@@ -197,7 +222,28 @@ export function PreviewApp() {
                         maxScore: quizComp.points,
                         studentAnswer: choiceId,
                       });
+                      // V2-PILAR-3: Trigger celebration burst
+                      const newStreak = useStudentSessionStore.getState().currentStreak;
+                      triggerCelebration(tier, canvasRef.current, canvasRef.current || document.body, undefined, newStreak);
                     }
+                  }
+                }}
+                onInputFieldSubmit={(slotId, isCorrect, studentAnswer) => {
+                  // V2-PILAR-3: Record InputField answer ke student-session-store
+                  // Cari InputFieldComponent di currentPage untuk dapatkan points + correctAnswer
+                  const inputComp = currentPage.components.find((c) => c.id === slotId && c.type === 'input-field') as InputFieldComponent | undefined;
+                  if (inputComp && inputComp.correctAnswer) {
+                    const tier = useStudentSessionStore.getState().recordResponse({
+                      componentId: inputComp.id,
+                      slideId: currentPage.id,
+                      isCorrect,
+                      scoreEarned: isCorrect ? inputComp.points : 0,
+                      maxScore: inputComp.points,
+                      studentAnswer,
+                    });
+                    // V2-PILAR-3: Trigger celebration burst
+                    const newStreak = useStudentSessionStore.getState().currentStreak;
+                    triggerCelebration(tier, canvasRef.current, canvasRef.current || document.body, undefined, newStreak);
                   }
                 }}
                 onScoreSet={(sceneId, score) => useEditorStore.getState().setSceneScore(sceneId, score)}
@@ -206,6 +252,11 @@ export function PreviewApp() {
                 customStyle={currentPage?.sceneCustomStyle}
               />
             </div>
+          )}
+
+          {/* V2-PILAR-3: Session Dashboard — render di closing page jika ada responses */}
+          {showDashboard && (
+            <SessionDashboard totalScoringComponents={totalScoringComponents} />
           )}
 
           {/* BUG-NAV-02 (Option C): Navigation toolbar + progress bar rendered

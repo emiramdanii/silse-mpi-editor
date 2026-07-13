@@ -26,7 +26,7 @@ import { getMicroAnimationForStylePack } from '../core/style-packs/micro-animati
 import { getCelebrationEffectForStylePack } from '../core/style-packs/celebration-effect';
 import { buildMotionPresetCss } from '../core/style-packs/motion-preset';
 import { getPremiumExportProfileWithProjectStyle, type PremiumExportProfile } from '../core/style-packs/premium-export-profile';
-import { buildAnimationsCss, buildCoverDecorationCss, buildBackgroundPatternCss, buildPremiumBlockCss, buildCelebrationCss, buildMiscIdenticalCss, buildSkinBaseCss, buildQuizFeedbackCss, buildMicroAnimationReducedMotionCss, buildPremiumHeroCss, buildPremiumSkinCss, derivePremiumVars } from '../core/style/premiumCss';
+import { buildAnimationsCss, buildCoverDecorationCss, buildBackgroundPatternCss, buildPremiumBlockCss, buildCelebrationCss, buildCelebrationBurstCss, buildMiscIdenticalCss, buildSkinBaseCss, buildQuizFeedbackCss, buildMicroAnimationReducedMotionCss, buildPremiumHeroCss, buildPremiumSkinCss, derivePremiumVars } from '../core/style/premiumCss';
 import { getSceneContentRendererJs } from './scene-content-renderers';
 import { buildSceneRenderPlanForPage, type SceneRenderPlan } from '../core/scene-renderer';
 import { sanitizeCustomStyle, styleMapToCssString, extractBehaviorCss } from '../core/style/sanitize';
@@ -931,9 +931,12 @@ ${buildPremiumSkinCss(profile)}
   // buildMotionPresetCss() so editor and export stay 1:1 in sync.
   const motionCss = buildMotionPresetCss();
   const withMotion = motionCss ? `${baseCss}\n\n${motionCss}` : baseCss;
+  // V2-PILAR-3: append celebration burst CSS (local + full-screen + dashboard)
+  const burstCss = buildCelebrationBurstCss();
+  const withBurst = `${withMotion}\n\n${burstCss}`;
   // V2-PILAR-1: append global slide settings overrides
   const slideSettingsCss = buildGlobalSlideSettingsCss(globalSlideSettings);
-  return `${withMotion}\n\n${slideSettingsCss}`;
+  return `${withBurst}\n\n${slideSettingsCss}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -2954,6 +2957,17 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
               updateScoreDisplay();
             }
 
+            // V2-PILAR-3: Dispatch event untuk record ke StudentSession + trigger celebration
+            canvas.dispatchEvent(new CustomEvent('silse:quiz-answer', {
+              detail: {
+                componentId: compId,
+                isCorrect: isCorrect,
+                points: pts,
+                studentAnswer: choice.id,
+                slideId: page.id
+              }
+            }));
+
             // Re-render this question to show feedback
             renderPage(currentPageIdx);
           });
@@ -4294,6 +4308,25 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       fbDiv.style.color = isCorrect ? 'var(--silse-color-success, #2f7d4f)' : 'var(--silse-color-danger, #c0392b)';
       fbDiv.style.display = 'block';
       fbDiv.setAttribute('data-feedback-correct', isCorrect ? 'true' : 'false');
+
+      // V2-PILAR-3: Dispatch event untuk record ke StudentSession + trigger celebration
+      // Cari points dari render model
+      var pts = 0;
+      var pg = pages[currentPageIdx];
+      if (pg) {
+        for (var pi = 0; pi < pg.components.length; pi++) {
+          if (pg.components[pi].id === inputId) { pts = pg.components[pi].points || 0; break; }
+        }
+      }
+      canvas.dispatchEvent(new CustomEvent('silse:input-field-answer', {
+        detail: {
+          componentId: inputId,
+          isCorrect: isCorrect,
+          points: pts,
+          studentAnswer: input.value || '',
+          slideId: pg ? pg.id : ''
+        }
+      }));
     });
   }
 
@@ -4325,6 +4358,215 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
   fitCanvasToViewport();
   window.addEventListener('resize', fitCanvasToViewport);
   window.addEventListener('orientationchange', fitCanvasToViewport);
+
+  // V2-PILAR-3: Student Session State — global object (ES5-compatible, no optional chaining)
+  var StudentSession = {
+    responses: {},
+    totalScoreEarned: 0,
+    totalMaxScore: 0,
+    currentStreak: 0,
+    maxStreak: 0
+  };
+
+  // V2-PILAR-3: Sanitize answer — trim + toLowerCase + collapse whitespace
+  function sanitizeAnswer(input) {
+    if (typeof input !== 'string') return '';
+    return input.replace(/^\\s+|\\s+$/g, '').toLowerCase().replace(/\\s+/g, ' ');
+  }
+
+  // V2-PILAR-3: Check answer correctness
+  function isAnswerCorrect(studentAnswer, correctAnswer) {
+    return sanitizeAnswer(studentAnswer) === sanitizeAnswer(correctAnswer);
+  }
+
+  // V2-PILAR-3: Calculate final grade (0-100)
+  function calculateFinalGrade(earned, max) {
+    if (max <= 0) return 0;
+    var ratio = earned / max;
+    if (ratio > 1) ratio = 1;
+    if (ratio < 0) ratio = 0;
+    return Math.round(ratio * 100);
+  }
+
+  // V2-PILAR-3: Get badge tier
+  function getBadgeTier(grade) {
+    if (grade >= 90) return 'gold';
+    if (grade >= 70) return 'silver';
+    return 'bronze';
+  }
+
+  // V2-PILAR-3: Get celebration tier based on answer + streak
+  function getCelebrationTier(isCorrect, newStreak, isModuleComplete, finalGrade) {
+    if (!isCorrect) return null;
+    if (isModuleComplete && finalGrade === 100) return 'perfect-score';
+    if (isModuleComplete) return 'module-complete';
+    if (newStreak >= 5 && newStreak % 5 === 0) return 'streak-5';
+    if (newStreak >= 3 && newStreak % 3 === 0) return 'streak-3';
+    return 'answer';
+  }
+
+  // V2-PILAR-3: Record response — returns celebration tier
+  function recordResponse(componentId, slideId, isCorrect, scoreEarned, maxScore, studentAnswer) {
+    var existing = StudentSession.responses[componentId];
+    var oldEarned = existing ? existing.scoreEarned : 0;
+    var oldMax = existing ? existing.maxScore : 0;
+
+    StudentSession.totalScoreEarned = StudentSession.totalScoreEarned - oldEarned + scoreEarned;
+    StudentSession.totalMaxScore = StudentSession.totalMaxScore - oldMax + maxScore;
+
+    // Update streak
+    if (isCorrect) {
+      StudentSession.currentStreak = StudentSession.currentStreak + 1;
+    } else {
+      StudentSession.currentStreak = 0;
+    }
+    if (StudentSession.currentStreak > StudentSession.maxStreak) {
+      StudentSession.maxStreak = StudentSession.currentStreak;
+    }
+
+    StudentSession.responses[componentId] = {
+      componentId: componentId,
+      slideId: slideId,
+      isCorrect: isCorrect,
+      scoreEarned: scoreEarned,
+      maxScore: maxScore,
+      studentAnswer: studentAnswer,
+      answeredAt: Date.now()
+    };
+
+    var finalGrade = calculateFinalGrade(StudentSession.totalScoreEarned, StudentSession.totalMaxScore);
+    return getCelebrationTier(isCorrect, StudentSession.currentStreak, false, finalGrade);
+  }
+
+  // V2-PILAR-3: Celebration burst — pure DOM, no library
+  function pickRandomColor() {
+    var colors = ['#16a34a', '#1e5b8f', '#2563eb', '#f59e0b', '#f9c12e'];
+    return colors[Math.floor(Math.random() * colors.length)];
+  }
+
+  function triggerLocalBurst(originElement, particleCount) {
+    if (!originElement) return;
+    if (!particleCount) particleCount = 18;
+    var burstContainer = originElement.querySelector('.silse-burst-local');
+    if (!burstContainer) {
+      burstContainer = document.createElement('div');
+      burstContainer.className = 'silse-burst-local';
+      originElement.appendChild(burstContainer);
+    }
+    for (var i = 0; i < particleCount; i++) {
+      var particle = document.createElement('div');
+      particle.className = 'silse-particle';
+      var angle = (Math.PI * 2 * i) / particleCount + (Math.random() - 0.5) * 0.5;
+      var distance = 50 + Math.random() * 100;
+      var tx = Math.cos(angle) * distance;
+      var ty = Math.sin(angle) * distance;
+      particle.style.setProperty('--tx', tx + 'px');
+      particle.style.setProperty('--ty', ty + 'px');
+      particle.style.setProperty('--color', pickRandomColor());
+      burstContainer.appendChild(particle);
+      // Cleanup after animation (0.8s + buffer)
+      (function(p) {
+        setTimeout(function() {
+          if (p.parentNode) p.parentNode.removeChild(p);
+        }, 900);
+      })(particle);
+    }
+    // Cleanup container
+    setTimeout(function() {
+      if (burstContainer && burstContainer.parentNode && burstContainer.children.length === 0) {
+        burstContainer.parentNode.removeChild(burstContainer);
+      }
+    }, 1000);
+  }
+
+  function triggerFullScreenBurst(container, particleCount) {
+    if (!container) return;
+    if (!particleCount) particleCount = 40;
+    var overlay = document.createElement('div');
+    overlay.className = 'silse-burst-fullscreen';
+    container.appendChild(overlay);
+    for (var i = 0; i < particleCount; i++) {
+      var particle = document.createElement('div');
+      particle.className = 'silse-particle silse-particle-fullscreen';
+      var angle = Math.random() * Math.PI * 2;
+      var distance = 200 + Math.random() * 300;
+      var tx = Math.cos(angle) * distance;
+      var ty = Math.sin(angle) * distance;
+      particle.style.setProperty('--tx', tx + 'px');
+      particle.style.setProperty('--ty', ty + 'px');
+      particle.style.setProperty('--color', pickRandomColor());
+      overlay.appendChild(particle);
+    }
+    // Cleanup overlay after animation (1.2s + buffer)
+    setTimeout(function() {
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    }, 1400);
+  }
+
+  function triggerStreakIndicator(container, message, isStreak5) {
+    if (!container) return;
+    var indicator = document.createElement('div');
+    indicator.className = 'silse-streak-indicator' + (isStreak5 ? ' is-streak-5' : '');
+    indicator.textContent = message;
+    container.appendChild(indicator);
+    setTimeout(function() {
+      if (indicator.parentNode) indicator.parentNode.removeChild(indicator);
+    }, isStreak5 ? 2000 : 1700);
+  }
+
+  function triggerCelebration(tier, originElement, container, streakCount) {
+    if (!tier) return;
+    if (!streakCount) streakCount = 0;
+    // Check prefers-reduced-motion
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    // prefers-reduced-motion: also disables silse-celebrate (display:none) and all
+    // CSS burst animations via @media block in <style> above.
+
+    if (tier === 'answer') {
+      triggerLocalBurst(originElement, 18);
+    } else if (tier === 'streak-3') {
+      triggerLocalBurst(originElement, 20);
+      triggerStreakIndicator(container, streakCount + 'x Berturut-turut! Hebat!', false);
+    } else if (tier === 'streak-5') {
+      triggerLocalBurst(originElement, 25);
+      triggerStreakIndicator(container, '\\uD83D\\uDD25 ' + streakCount + 'x STREAK! Luar Biasa! \\uD83D\\uDD25', true);
+    } else if (tier === 'module-complete') {
+      triggerFullScreenBurst(container, 35);
+    } else if (tier === 'perfect-score') {
+      triggerFullScreenBurst(container, 50);
+    }
+  }
+
+  // V2-PILAR-3: Wire quiz/game answer → recordResponse → triggerCelebration
+  // Override existing answerQuestion/answerGameMission to also record to session
+  var origNavigate = navigate;
+  // Note: quiz/game answer handlers sudah wired via canvas click delegation
+  // di wireInteractions(). Kita tambah hook di sini via custom events.
+  canvas.addEventListener('silse:quiz-answer', function(e) {
+    var detail = e.detail || {};
+    var componentId = detail.componentId;
+    var isCorrect = detail.isCorrect;
+    var points = detail.points || 0;
+    var studentAnswer = detail.studentAnswer || '';
+    var slideId = detail.slideId || (pages[currentPageIdx] && pages[currentPageIdx].id) || '';
+    if (componentId) {
+      var tier = recordResponse(componentId, slideId, isCorrect, isCorrect ? points : 0, points, studentAnswer);
+      triggerCelebration(tier, e.target, canvas, StudentSession.currentStreak);
+    }
+  });
+
+  canvas.addEventListener('silse:input-field-answer', function(e) {
+    var detail = e.detail || {};
+    var componentId = detail.componentId;
+    var isCorrect = detail.isCorrect;
+    var points = detail.points || 0;
+    var studentAnswer = detail.studentAnswer || '';
+    var slideId = detail.slideId || (pages[currentPageIdx] && pages[currentPageIdx].id) || '';
+    if (componentId) {
+      var tier = recordResponse(componentId, slideId, isCorrect, isCorrect ? points : 0, points, studentAnswer);
+      triggerCelebration(tier, e.target, canvas, StudentSession.currentStreak);
+    }
+  });
 
   wireInteractions();
 })();

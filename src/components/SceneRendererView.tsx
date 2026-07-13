@@ -97,6 +97,8 @@ export type SceneRendererViewProps = {
   onGameAction?: (slotId: string, actionIndex: number) => void;
   /** Called when a quiz choice is selected. */
   onQuizAnswer?: (slotId: string, choiceId: string) => void;
+  /** V2-PILAR-3: Called when input field answer is submitted (with auto-check). */
+  onInputFieldSubmit?: (slotId: string, isCorrect: boolean, studentAnswer: string) => void;
   /** Selected slot ID (editor highlight). */
   selectedSlotId?: string;
   /** PATCH A: Idempotent score set (replaces, doesn't add) */
@@ -146,6 +148,7 @@ export function SceneRendererView({
   onSlotClick,
   onGameAction,
   onQuizAnswer,
+  onInputFieldSubmit,
   selectedSlotId,
   onScoreSet,
   onSceneComplete,
@@ -209,6 +212,7 @@ export function SceneRendererView({
           onSlotClick={onSlotClick}
           onGameAction={onGameAction}
           onQuizAnswer={onQuizAnswer}
+          onInputFieldSubmit={onInputFieldSubmit}
           selected={selectedSlotId === slot.id}
           editorInteractive={isEditorInteractive}
           onSlotDrag={onSlotDrag}
@@ -232,6 +236,7 @@ type SlotViewProps = {
   onSlotClick?: (slotId: string) => void;
   onGameAction?: (slotId: string, actionIndex: number) => void;
   onQuizAnswer?: (slotId: string, choiceId: string) => void;
+  onInputFieldSubmit?: (slotId: string, isCorrect: boolean, studentAnswer: string) => void;
   selected: boolean;
   // Fase 2a Step 2: Editor interaction props
   editorInteractive?: boolean;
@@ -242,7 +247,7 @@ type SlotViewProps = {
 };
 
 function SlotView({
-  slot, contract, interactive, onSlotClick, onGameAction, onQuizAnswer, selected,
+  slot, contract, interactive, onSlotClick, onGameAction, onQuizAnswer, onInputFieldSubmit, selected,
   editorInteractive = false, onSlotDrag, onSlotResize, onSlotInteractionStart, onSlotInteractionEnd,
 }: SlotViewProps) {
   const slotStyle: CSSProperties = {
@@ -324,6 +329,7 @@ function SlotView({
         interactive={interactive}
         onGameAction={onGameAction}
         onQuizAnswer={onQuizAnswer}
+        onInputFieldSubmit={onInputFieldSubmit}
       />
       {/* Fase 2a Step 2: Resize handle (SE corner) — editor only */}
       {editorInteractive && selected && (
@@ -357,12 +363,14 @@ function ContentRenderer({
   interactive,
   onGameAction,
   onQuizAnswer,
+  onInputFieldSubmit,
 }: {
   slot: SceneRenderSlot;
   contract: MpiDesignContract;
   interactive: boolean;
   onGameAction?: (slotId: string, actionIndex: number) => void;
   onQuizAnswer?: (slotId: string, choiceId: string) => void;
+  onInputFieldSubmit?: (slotId: string, isCorrect: boolean, studentAnswer: string) => void;
 }) {
   const c = slot.content;
   const rs = slot.resolvedStyle; // DESIGN-CONTRACT-RENDER-PARITY-01: resolved visual instruction
@@ -555,7 +563,7 @@ function ContentRenderer({
 
   // V2-PILAR-2: InputFieldComponentView
   if (c.kind === 'input-field') {
-    return <InputFieldSlotView slot={slot} contract={contract} />;
+    return <InputFieldSlotView slot={slot} contract={contract} onAnswerSubmit={onInputFieldSubmit} />;
   }
 
   // Fallback for any remaining kind
@@ -664,10 +672,11 @@ function HotspotOverlaySlotView({
 // ---------------------------------------------------------------------------
 
 function InputFieldSlotView({
-  slot, contract,
+  slot, contract, onAnswerSubmit,
 }: {
   slot: SceneRenderSlot;
   contract: MpiDesignContract;
+  onAnswerSubmit?: (slotId: string, isCorrect: boolean, studentAnswer: string) => void;
 }) {
   const c = slot.content as {
     kind: 'input-field';
@@ -693,6 +702,10 @@ function InputFieldSlotView({
         ? (c.feedbackCorrect ?? 'Benar!')
         : (c.feedbackWrong ?? 'Belum tepat. Coba lagi.'),
     });
+    // V2-PILAR-3: Notify parent (PreviewApp) untuk record ke student-session-store
+    if (onAnswerSubmit) {
+      onAnswerSubmit(slot.id, isCorrect, userAnswer);
+    }
   };
 
   const inputStyle: React.CSSProperties = {
