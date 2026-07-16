@@ -73,6 +73,8 @@ export function Topbar() {
   const [showSlideSettings, setShowSlideSettings] = useState(false);
   // V2-PILAR-2.5: state for quiz sheet dialog
   const [showQuizSheet, setShowQuizSheet] = useState(false);
+  // MEGA FIX: state for Berkas dropdown
+  const [showBerkasMenu, setShowBerkasMenu] = useState(false);
 
   // EXPORT-READY-SUMMARY-01: compute export ready summary (memoized).
   const exportReadySummary = useMemo(
@@ -492,70 +494,62 @@ export function Topbar() {
         >
           📊 Kelola Kuis
         </button>
-        <button
-          onClick={() => {
-            if (window.confirm('Buat MPI baru? Perubahan saat ini akan hilang jika belum disimpan.')) {
-              newProject();
-            }
-          }}
-          className="editor-topbar__action editor-topbar__action--ghost"
-          title="Mulai MPI baru dari kosong"
-          data-action="new-project"
-          data-testid="topbar-new-project"
-        >
-          + MPI Baru
-        </button>
-        {/* L5-1: Save to Library */}
-        <button
-          onClick={() => {
-            import('../storage/project-storage').then(({ saveProjectToLibrary }) => {
-              const result = saveProjectToLibrary(project);
-              if (result.ok) {
-                alert('Proyek berhasil disimpan ke library!');
-              } else {
-                alert(`Gagal menyimpan: ${result.error}`);
-              }
-            });
-          }}
-          className="editor-topbar__action editor-topbar__action--ghost"
-          title="Simpan proyek ini ke library untuk dibuka nanti"
-          data-action="save-to-library"
-          data-testid="topbar-save-to-library"
-        >
-          💾 Simpan
-        </button>
-        {/* L5-2: Save as Template */}
-        <button
-          onClick={() => {
-            const name = window.prompt('Nama template:', project.title);
-            if (name && name.trim()) {
-              import('../storage/template-storage').then(({ saveProjectAsTemplate }) => {
-                const result = saveProjectAsTemplate(project, name);
-                if (result.ok) {
-                  alert('Template berhasil disimpan! Temukan di "Template Pedagogis".');
-                } else {
-                  alert(`Gagal menyimpan template: ${result.error}`);
-                }
-              });
-            }
-          }}
-          className="editor-topbar__action editor-topbar__action--ghost"
-          title="Simpan proyek ini sebagai template yang bisa digunakan kembali"
-          data-action="save-as-template"
-          data-testid="topbar-save-as-template"
-        >
-          📝 Template
-        </button>
-        {/* L5-1: Project Library */}
-        <button
-          onClick={() => setShowProjectLibrary(true)}
-          className="editor-topbar__action editor-topbar__action--ghost"
-          title="Lihat dan buka proyek tersimpan"
-          data-action="project-library"
-          data-testid="topbar-project-library"
-        >
-          📂 Proyek Saya
-        </button>
+        {/* MEGA FIX: Berkas dropdown — konsolidasi 4 tombol yang overflow */}
+        <div style={{ position: 'relative' }}>
+          <button
+            onClick={() => setShowBerkasMenu(!showBerkasMenu)}
+            className="editor-topbar__action editor-topbar__action--ghost"
+            title="Menu Berkas: MPI Baru, Simpan, Template, Proyek Saya"
+            data-action="berkas-menu"
+            data-testid="topbar-berkas-menu"
+          >
+            📁 Berkas ▾
+          </button>
+          {showBerkasMenu && (
+            <div
+              data-testid="berkas-dropdown"
+              style={{
+                position: 'absolute', right: 0, top: '100%', marginTop: 4,
+                minWidth: 200, background: 'var(--color-panel, #fff)',
+                border: '1px solid var(--color-border, #e3ddcd)', borderRadius: 8,
+                boxShadow: '0 8px 24px rgba(0,0,0,0.15)', zIndex: 1000, padding: 4,
+              }}
+            >
+              <button
+                onClick={() => { setShowBerkasMenu(false); if (window.confirm('Buat MPI baru? Perubahan saat ini akan hilang jika belum disimpan.')) { newProject(); } }}
+                data-testid="topbar-new-project"
+                data-action="new-project"
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, borderRadius: 4, color: 'var(--color-text, #1f2533)' }}
+              >
+                ✨ + MPI Baru
+              </button>
+              <button
+                onClick={() => { setShowBerkasMenu(false); import('../storage/project-storage').then(({ saveProjectToLibrary }) => { const result = saveProjectToLibrary(project); alert(result.ok ? 'Proyek berhasil disimpan!' : `Gagal: ${result.error}`); }); }}
+                data-testid="topbar-save-to-library"
+                data-action="save-to-library"
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, borderRadius: 4, color: 'var(--color-text, #1f2533)' }}
+              >
+                💾 Simpan Proyek
+              </button>
+              <button
+                onClick={() => { setShowBerkasMenu(false); const name = window.prompt('Nama template:', project.title); if (name && name.trim()) { import('../storage/template-storage').then(({ saveProjectAsTemplate }) => { const result = saveProjectAsTemplate(project, name); alert(result.ok ? 'Template tersimpan!' : `Gagal: ${result.error}`); }); } }}
+                data-testid="topbar-save-as-template"
+                data-action="save-as-template"
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, borderRadius: 4, color: 'var(--color-text, #1f2533)' }}
+              >
+                📝 Simpan Template
+              </button>
+              <button
+                onClick={() => { setShowBerkasMenu(false); setShowProjectLibrary(true); }}
+                data-testid="topbar-project-library"
+                data-action="project-library"
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, borderRadius: 4, color: 'var(--color-text, #1f2533)' }}
+              >
+                📂 Proyek Saya
+              </button>
+            </div>
+          )}
+        </div>
       </div>
       {showGuidedFlow && (
         <GuidedFlowDialog onClose={() => setShowGuidedFlow(false)} />

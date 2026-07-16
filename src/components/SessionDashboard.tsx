@@ -12,15 +12,19 @@
  */
 
 import { useStudentSessionStore } from '../store/student-session-store';
-import { getBadgeTier, getBadgeLabel, getBadgeIcon } from '../core/scoring/scoring-session';
+import { getBadgeTier, getBadgeLabel, getBadgeIcon, calculateFinalGrade, calculateProgressPercentage } from '../core/scoring/scoring-session';
 
 export function SessionDashboard({ totalScoringComponents }: { totalScoringComponents: number }) {
-  const session = useStudentSessionStore();
-  const finalGrade = session.getFinalGrade();
+  const totalScoreEarned = useStudentSessionStore((s) => s.totalScoreEarned);
+  const totalMaxScore = useStudentSessionStore((s) => s.totalMaxScore);
+  const maxStreak = useStudentSessionStore((s) => s.maxStreak);
+  const responsesCount = useStudentSessionStore((s) => Object.keys(s.responses).length);
+
+  const finalGrade = calculateFinalGrade(totalScoreEarned, totalMaxScore);
   const badgeTier = getBadgeTier(finalGrade);
   const badgeLabel = getBadgeLabel(badgeTier);
   const badgeIcon = getBadgeIcon(badgeTier);
-  const progressPercent = session.getProgressPercentage(totalScoringComponents);
+  const progressPercent = calculateProgressPercentage(responsesCount, totalScoringComponents);
 
   // SVG circular progress calculation
   const radius = 80;
@@ -75,7 +79,7 @@ export function SessionDashboard({ totalScoringComponents }: { totalScoringCompo
       <div className="silse-dashboard__stats">
         <div className="silse-dashboard__stat">
           <div className="silse-dashboard__stat-value" data-testid="dashboard-stat-score">
-            {session.totalScoreEarned}/{session.totalMaxScore}
+            {totalScoreEarned}/{totalMaxScore}
           </div>
           <div className="silse-dashboard__stat-label">Skor</div>
         </div>
@@ -87,7 +91,7 @@ export function SessionDashboard({ totalScoringComponents }: { totalScoringCompo
         </div>
         <div className="silse-dashboard__stat">
           <div className="silse-dashboard__stat-value" data-testid="dashboard-stat-streak">
-            {session.maxStreak}x
+            {maxStreak}x
           </div>
           <div className="silse-dashboard__stat-label">Streak Tertinggi</div>
         </div>

@@ -13,7 +13,7 @@
  * Perubahan langsung apply ke store via bulkUpdateScoringComponents.
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useEditorStore } from '../store/editor-store';
 import {
   collectScoringComponents,
@@ -38,6 +38,13 @@ export function QuizSheetDialog({ onClose }: { onClose: () => void }) {
   const bulkUpdateScoringComponents = useEditorStore((s) => s.bulkUpdateScoringComponents);
   const selectPage = useEditorStore((s) => s.selectPage);
   const selectComponent = useEditorStore((s) => s.selectComponent);
+
+  // MEGA FIX #4: Escape key handler
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [onClose]);
 
   // Collect entries dari project (memoized — recompute saat project berubah)
   const entries = useMemo(() => collectScoringComponents(project), [project]);

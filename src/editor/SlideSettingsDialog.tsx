@@ -19,7 +19,7 @@
  *   4. Transisi Slide (radio: none, fade, slide)
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useEditorStore } from '../store/editor-store';
 import {
   DEFAULT_GLOBAL_SLIDE_SETTINGS,
@@ -57,6 +57,13 @@ export function SlideSettingsDialog({ onClose }: { onClose: () => void }) {
   const project = useEditorStore((s) => s.project);
   const setGlobalSlideSettings = useEditorStore((s) => s.setGlobalSlideSettings);
   const effective = getEffectiveGlobalSlideSettings(project);
+
+  // MEGA FIX #4: Escape key handler
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [onClose]);
 
   // Local state untuk controlled form — sinkron dengan store
   const [position, setPosition] = useState<NavToolbarPosition>(effective.navigationToolbar.position);

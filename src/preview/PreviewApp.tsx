@@ -98,9 +98,8 @@ export function PreviewApp() {
     }).length;
   }, 0);
 
-  // V2-PILAR-3: Show dashboard on closing page if there are scoring responses
-  const sessionResponses = useStudentSessionStore((s) => s.responses);
-  const showDashboard = isClosing && Object.keys(sessionResponses).length > 0;
+  // V2-PILAR-3: Show dashboard on closing page (SessionDashboard handles its own store subscription)
+  const showDashboard = isClosing;
 
   return (
     <div className="preview-overlay" data-testid="preview-overlay">

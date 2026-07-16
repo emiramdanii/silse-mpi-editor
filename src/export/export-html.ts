@@ -4663,19 +4663,36 @@ function resolveProfileForContract(
   const bg = contract.palette.background;
   if (!isColorDark(bg)) return profile;
 
-  // Contract has dark background → override gradients to dark variants
-  // so light text (contract.palette.text) remains readable.
+  // CANVAS-GRADIENT-FIX: Contract has dark background → override gradients to dark variants.
+  // Jika surface juga dark (compatible) → gradient pakai surface as-is.
+  // Jika surface LIGHT (AI mistake, tapi sudah di-fix oleh contrast-guard di source) →
+  // derive dark shade dari bg (lighten 12) supaya gradient tetap dark, tidak belang.
+  const surface = contract.palette.surface;
+  const isSurfaceDark = isColorDark(surface);
+  const gradientEnd = isSurfaceDark ? surface : lightenDarkColor(bg, 12);
+
   return {
     ...profile,
     darkStage: true,
     gradients: {
       ...profile.gradients,
-      // Dark gradients matching mission-dark profile (which is designed for dark bg)
-      defaultBg: `linear-gradient(180deg, ${contract.palette.background} 0%, ${contract.palette.surface} 100%)`,
-      materialBg: `linear-gradient(180deg, ${contract.palette.background} 0%, ${contract.palette.surface} 100%)`,
-      quizBg: `linear-gradient(135deg, ${contract.palette.surface} 0%, ${contract.palette.background} 100%)`,
+      defaultBg: `linear-gradient(180deg, ${bg} 0%, ${gradientEnd} 100%)`,
+      materialBg: `linear-gradient(180deg, ${bg} 0%, ${gradientEnd} 100%)`,
+      quizBg: `linear-gradient(135deg, ${gradientEnd} 0%, ${bg} 100%)`,
     },
   };
+}
+
+/**
+ * Lighten a dark hex color by N units. Used for gradient endpoints.
+ */
+function lightenDarkColor(hex: string, amount: number): string {
+  const m = hex.match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  if (!m) return hex;
+  const r = Math.min(255, parseInt(m[1], 16) + amount);
+  const g = Math.min(255, parseInt(m[2], 16) + amount);
+  const b = Math.min(255, parseInt(m[3], 16) + amount);
+  return '#' + [r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('');
 }
 
 // ---------------------------------------------------------------------------

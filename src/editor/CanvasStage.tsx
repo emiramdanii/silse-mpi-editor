@@ -165,6 +165,28 @@ export function CanvasStage() {
   const gridEnabled = gridConfig.enabled;
   const gridSnapActive = gridConfig.enabled && gridConfig.snapToGrid;
 
+  // MEGA FIX #3: Auto-fit scale calculation
+  const [fitScale, setFitScale] = useState(1);
+  const canvasAreaRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handleResize = () => {
+      if (!canvasAreaRef.current) return;
+      const availW = canvasAreaRef.current.clientWidth - 48;
+      const availH = canvasAreaRef.current.clientHeight - 48;
+      if (availW <= 0 || availH <= 0) return;
+      const sX = availW / CANVAS_WIDTH;
+      const sY = availH / CANVAS_HEIGHT;
+      setFitScale(Math.min(sX, sY, 1));
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Combined scale: user zoom * fit scale
+  const effectiveScale = zoom * fitScale;
+  const zoomPercent = Math.round(effectiveScale * 100);
+
   return (
     <main className="canvas-stage" data-testid="canvas-stage">
       <Toolbar />
@@ -223,16 +245,23 @@ export function CanvasStage() {
         >↺</button>
       </div>
       <div
+        ref={canvasAreaRef}
         className="canvas-stage__canvas-area"
         onPointerDown={handlePanStart}
         onPointerMove={handlePanMove}
         onPointerUp={handlePanEnd}
         onPointerLeave={handlePanEnd}
         style={{
-          transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+          transform: `translate(${pan.x}px, ${pan.y}px) scale(${effectiveScale})`,
           transformOrigin: 'center center',
           cursor: isPanning ? 'grabbing' : 'default',
           transition: isPanning ? 'none' : 'transform 0.15s ease-out',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '100%',
+          height: '100%',
+          overflow: 'hidden',
         }}
       >
         <div
@@ -407,6 +436,19 @@ export function CanvasStage() {
           })()}
 
         </div>
+      </div>
+      {/* MEGA FIX #3: Zoom percentage indicator */}
+      <div
+        data-testid="fit-scale-indicator"
+        style={{
+          position: 'absolute', bottom: 8, right: 12,
+          padding: '2px 8px', borderRadius: 4,
+          background: 'rgba(0,0,0,0.5)', color: '#fff',
+          fontSize: 10, fontWeight: 600, pointerEvents: 'none',
+          zIndex: 100,
+        }}
+      >
+        {zoomPercent}%
       </div>
     </main>
   );

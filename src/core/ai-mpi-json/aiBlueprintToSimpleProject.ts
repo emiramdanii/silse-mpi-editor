@@ -26,6 +26,12 @@ import { createProjectId } from '../ids';
 import { resolveStylePackV1 } from '../style-packs/style-pack-registry';
 import { stylePackToProjectStyle } from '../style-presets';
 import type { AiMpiBlueprint, AiBlueprintScene } from './schema';
+import {
+  verifyAndFixTextContrast,
+  isDarkColor,
+  darkenLightColor,
+  getLuminance,
+} from '../style/contrast-guard';
 
 function mapBlueprintRoleToPageRole(role: string): PageRole {
   const mapping: Record<string, PageRole> = {
@@ -51,7 +57,28 @@ function getDefaultLayoutForRole(role: PageRole): LayoutId {
   }
 }
 
-function getDefaultBackgroundForRole(role: PageRole): PageBackground {
+function getDefaultBackgroundForRole(
+  role: PageRole,
+  palette?: { background?: string; surface?: string; primary?: string },
+): PageBackground {
+  const bg = palette?.background;
+  const surface = palette?.surface;
+  const primary = palette?.primary;
+
+  // PALETTE-AWARE-BG: jika palette tersedia, gunakan untuk konsistensi tema.
+  // Dark theme → semua role pakai palette.background (dark).
+  // Light theme → cover/closing pakai primary, lainnya pakai surface.
+  if (bg && surface && primary) {
+    if (isDarkColor(bg)) {
+      return { type: 'color', color: bg };
+    }
+    if (role === 'cover' || role === 'closing') {
+      return { type: 'color', color: primary };
+    }
+    return { type: 'color', color: surface };
+  }
+
+  // Fallback: hardcoded defaults (untuk projects tanpa palette info)
   switch (role) {
     case 'cover': return { type: 'color', color: '#1e3a5f' };
     case 'closing': return { type: 'color', color: '#1e3a5f' };
@@ -62,7 +89,10 @@ function getDefaultBackgroundForRole(role: PageRole): PageBackground {
   }
 }
 
-function mapSceneToPage(scene: AiBlueprintScene): SimplePage {
+function mapSceneToPage(
+  scene: AiBlueprintScene,
+  palette?: { background?: string; surface?: string; primary?: string },
+): SimplePage {
   const role = mapBlueprintRoleToPageRole(scene.role);
   const primarySlot = scene.slots[0];
   return {
@@ -70,7 +100,7 @@ function mapSceneToPage(scene: AiBlueprintScene): SimplePage {
     title: scene.title,
     role,
     layoutId: getDefaultLayoutForRole(role),
-    background: getDefaultBackgroundForRole(role),
+    background: getDefaultBackgroundForRole(role, palette),
     components: [],
     sceneType: scene.sceneType,
     sceneContent: primarySlot?.content,
@@ -224,6 +254,82 @@ function applyDesignSystemOverrides(
   };
 }
 
+/**
+ * CONTRAST-GUARD: Structural fix untuk AI palette yang gagal WCAG 2.1.
+ *
+ * Dua masalah sekaligus, fix di SOURCE (tokens.colors), bukan tambal sulam di renderer:
+ *
+ * 1. DARK BG + DARK TEXT → auto-fix text ke putih
+ *    AI sering kirim text:'#17324d' (dark navy) di background:'#0b1728' (dark).
+ *    Contrast < 4.5:1 → verifyAndFixTextContrast auto-replace ke '#ffffff'.
+ *
+ * 2. DARK BG + LIGHT SURFACE → derive dark surface dari bg
+ *    AI sering kirim surface:'#fffdf7' (light cream) di background:'#0b1728' (dark).
+ *    Ini bikin panel terang di atas page gelap = "belang".
+ *    Fix: jika bg dark tapi surface light → darken surface sampai dark.
+ *
+ * Pure function — return new style object, tidak mutate input.
+ */
+function applyContrastGuard(style: ProjectStyle): ProjectStyle {
+  const colors = style?.tokens?.colors;
+  if (!colors) return style;
+
+  const bg = colors.background;
+  const surface = colors.surface;
+  if (!bg || !surface) return style;
+
+  const fixedColors = { ...colors };
+  const isDarkTheme = isDarkColor(bg);
+
+  // FIX 1: Dark bg + light surface → derive dark surface
+  if (isDarkTheme && !isDarkColor(surface)) {
+    let darkSurface = surface;
+    for (let i = 0; i < 10; i++) {
+      darkSurface = darkenLightColor(darkSurface, 30);
+      if (isDarkColor(darkSurface)) break;
+    }
+    if (!isDarkColor(darkSurface)) {
+      darkSurface = bg;
+    }
+    fixedColors.surface = darkSurface;
+  }
+
+  // FIX 2: Dark bg + dark text → auto-fix text ke putih
+  if (colors.text) {
+    const result = verifyAndFixTextContrast(bg, colors.text);
+    if (result.fixed) {
+      fixedColors.text = result.text;
+    }
+  }
+
+  // FIX 3: mutedText juga perlu fix
+  if (colors.mutedText) {
+    const result = verifyAndFixTextContrast(bg, colors.mutedText);
+    if (result.fixed) {
+      fixedColors.mutedText = result.text;
+    }
+  }
+
+  // FIX 4: border pada dark theme — jika terlalu gelap, pakai rgba putih
+  if (isDarkTheme && colors.border) {
+    if (isDarkColor(colors.border) && getLuminance(colors.border) < 0.05) {
+      fixedColors.border = 'rgba(255,255,255,0.12)';
+    }
+  }
+
+  if (JSON.stringify(fixedColors) === JSON.stringify(colors)) {
+    return style;
+  }
+
+  return {
+    ...style,
+    tokens: {
+      ...style.tokens,
+      colors: fixedColors,
+    },
+  };
+}
+
 export function aiBlueprintToSimpleProject(blueprint: AiMpiBlueprint): SimpleProject {
   const stylePackId = blueprint.styleIntent?.styleId ?? 'modern-clean';
   const stylePack = resolveStylePackV1(stylePackId);
@@ -233,7 +339,15 @@ export function aiBlueprintToSimpleProject(blueprint: AiMpiBlueprint): SimplePro
   // (font, color, spacing) are not ignored during import.
   style = applyDesignSystemOverrides(style, blueprint.designSystem?.overrides);
 
-  const pages: SimplePage[] = blueprint.scenes.map(mapSceneToPage);
+  // CONTRAST-GUARD: Structural fix untuk "dark bg + dark text" dan "dark bg + light surface".
+  // AI buta warna — mesin yang hitung matematis (WCAG 2.1). Dua masalah sekaligus:
+  //   1. Jika bg gelap tapi text gelap → auto-fix text ke putih (contrast < 4.5:1)
+  //   2. Jika bg gelap tapi surface terang → derive dark surface dari bg (bukan patch di renderer)
+  // Ini fix di SOURCE (tokens), bukan tambal sulam di renderer. Semua downstream
+  // (CSS vars, contract palette, renderer) otomatis dapat warna yang konsisten.
+  style = applyContrastGuard(style);
+
+  const pages: SimplePage[] = blueprint.scenes.map((scene) => mapSceneToPage(scene, style?.tokens?.colors));
 
   const curriculum: Curriculum | undefined = blueprint.curriculum
     ? {
