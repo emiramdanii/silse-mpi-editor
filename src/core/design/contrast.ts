@@ -89,20 +89,20 @@ export function getReadableMutedTextColor(backgroundColor: string): string {
 // is dark (#1f2937). This helper returns white text when the scene role is known
 // to have a dark background (cover, closing), ensuring readability.
 //
-// Fase 3b Commit 1: Extracted from SceneRendererView.tsx to this shared pure
-// module so that export-html.ts can use the same logic (via an inline JS
-// equivalent in generateJS()). The returned value uses --silse-color-surface
-// indirection with --color-panel fallback, allowing style packs to override
-// the surface color and have cover/closing text adapt.
-//
-// Pure function — no React, no DOM, no window. Safe to import from any layer.
+// FIX: Sebelumnya return 'var(--silse-color-surface)' — tapi surface adalah
+// background panel, BUKAN text color. Konflik dengan contrast-guard yang
+// darken surface untuk dark theme → teks jadi gelap di atas bg gelap.
+// Sekarang return '#ffffff' langsung untuk dark background roles.
+// Pure function — no React, no DOM, no window.
 // ---------------------------------------------------------------------------
 
 export const DARK_BACKGROUND_ROLES = new Set(['cover', 'closing']);
 
 export function getContrastAwareTextColor(role: string | undefined, defaultColor: string): string {
   if (role && DARK_BACKGROUND_ROLES.has(role)) {
-    return 'var(--silse-color-surface, var(--color-panel))';
+    // Cover/closing punya dark gradient background → teks harus putih.
+    // Jangan pakai var(--silse-color-surface) — itu untuk panel bg, bukan text.
+    return '#ffffff';
   }
   return defaultColor;
 }

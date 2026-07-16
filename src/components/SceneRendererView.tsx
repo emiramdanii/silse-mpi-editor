@@ -426,7 +426,7 @@ function ContentRenderer({
         width: '100%', height: '100%',
         borderRadius: btn?.radius ?? 8,
         background: btn?.background ?? contract.palette.primary,
-        color: btn?.color ?? 'var(--silse-color-surface, var(--color-panel))',
+        color: btn?.color ?? '#ffffff',
         border: 0,
         fontWeight: btn?.fontWeight ?? 600,
         cursor: interactive ? 'pointer' : 'default',
@@ -544,7 +544,7 @@ function ContentRenderer({
     return (
       <div className={slot.contentClass} style={{ display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center', height: '100%' }}>
         {c.buttons.map((btn, i) => (
-          <button key={i} style={{ padding: '8px 16px', borderRadius: 8, background: contract.palette.primary, color: 'var(--silse-color-surface, var(--color-panel))', border: 0, fontWeight: 600, cursor: interactive ? 'pointer' : 'default' }}>
+          <button key={i} style={{ padding: '8px 16px', borderRadius: 8, background: contract.palette.primary, color: '#ffffff', border: 0, fontWeight: 600, cursor: interactive ? 'pointer' : 'default' }}>
             {btn.label}
           </button>
         ))}
@@ -868,7 +868,7 @@ function GameMissionContent({
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ display: 'inline-grid', placeItems: 'center', minWidth: 28, height: 28, borderRadius: 8, background: contract.palette.primary, color: 'var(--silse-color-surface, var(--color-panel))', fontSize: 13, fontWeight: 900 }}>
+              <span style={{ display: 'inline-grid', placeItems: 'center', minWidth: 28, height: 28, borderRadius: 8, background: contract.palette.primary, color: '#ffffff', fontSize: 13, fontWeight: 900 }}>
                 {String.fromCharCode(65 + idx)}
               </span>
               <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--silse-color-muted-text, var(--color-muted))', textTransform: 'uppercase' }}>Aksi</span>
@@ -992,7 +992,7 @@ function QuizQuestionContent({
               minWidth: 32, height: 32,
               borderRadius: badge?.radius ?? 8,
               background: badge?.background ?? contract.palette.primary,
-              color: badge?.color ?? 'var(--silse-color-surface, var(--color-panel))',
+              color: badge?.color ?? '#ffffff',
               fontSize: 14, fontWeight: 900, flexShrink: 0,
             }}>
               {String.fromCharCode(65 + idx)}
@@ -1223,7 +1223,7 @@ function CoverHeroContent({
         <button className="silse-cover-primary-action" style={{
           padding: `${btn?.padding?.top ?? 10}px ${btn?.padding?.right ?? 20}px`,
           borderRadius: btn?.radius ?? 8, background: btn?.background ?? contract.palette.primary,
-          color: btn?.color ?? 'var(--silse-color-surface, var(--color-panel))', border: 0, fontWeight: btn?.fontWeight ?? 600,
+          color: btn?.color ?? '#ffffff', border: 0, fontWeight: btn?.fontWeight ?? 600,
           fontSize: 16, cursor: 'pointer', marginTop: 8,
         }}>
           {content.primaryAction.label}
@@ -1308,7 +1308,7 @@ function ClosingAwardContent({
         <button className="silse-closing-final-action" style={{
           padding: `${btn?.padding?.top ?? 10}px ${btn?.padding?.right ?? 20}px`,
           borderRadius: btn?.radius ?? 8, background: btn?.background ?? contract.palette.primary,
-          color: btn?.color ?? 'var(--silse-color-surface, var(--color-panel))', border: 0, fontWeight: btn?.fontWeight ?? 600,
+          color: btn?.color ?? '#ffffff', border: 0, fontWeight: btn?.fontWeight ?? 600,
           fontSize: 16, cursor: 'pointer', marginTop: 8,
         }}>
           {content.finalAction.label}

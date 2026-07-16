@@ -987,7 +987,9 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
   var _DARK_BACKGROUND_ROLES = new Set(['cover', 'closing']);
   function getContrastAwareTextColor(role, defaultColor) {
     if (role && _DARK_BACKGROUND_ROLES.has(role)) {
-      return 'var(--silse-color-surface, var(--color-panel))';
+      // Cover/closing punya dark gradient background → teks putih.
+      // Jangan pakai var(--silse-color-surface) — itu panel bg, bukan text.
+      return '#ffffff';
     }
     return defaultColor;
   }
