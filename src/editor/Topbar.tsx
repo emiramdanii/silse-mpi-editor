@@ -32,7 +32,6 @@ import { GuidedFlowDialog } from './GuidedFlowDialog';
 import { isProjectEmpty } from '../core/project-factory';
 import {
   ACCEPTED_SLIDE_MIME,
-  SLIDE_FILE_LABEL,
   validateSlideFileCount,
   readImageFiles,
   batchExtractDominantColors,
@@ -75,6 +74,12 @@ export function Topbar() {
   const [showQuizSheet, setShowQuizSheet] = useState(false);
   // MEGA FIX: state for Berkas dropdown
   const [showBerkasMenu, setShowBerkasMenu] = useState(false);
+  // MEGA FIX #2: state for Export dropdown (4 export buttons → 1 dropdown)
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  // MEGA FIX #2: state for Buat dropdown (4 create/import buttons → 1 dropdown)
+  const [showBuatMenu, setShowBuatMenu] = useState(false);
+  // MEGA FIX #2: state for Pengaturan dropdown (Slide Settings + Quiz Sheet → 1 dropdown)
+  const [showPengaturanMenu, setShowPengaturanMenu] = useState(false);
 
   // EXPORT-READY-SUMMARY-01: compute export ready summary (memoized).
   const exportReadySummary = useMemo(
@@ -357,143 +362,194 @@ export function Topbar() {
             ✨ AI Style
           </span>
         )}
-        <button
-          onClick={handleExport}
-          className="editor-topbar__action editor-topbar__action--primary"
-          title="Unduh HTML — bisa dibuka tanpa internet"
-          data-action="export-html"
-          data-milestone="M6"
-          data-testid="topbar-export"
-        >
-          ⬇ Export HTML
-        </button>
-        {/* E-03: Export Edited JSON — save project as JSON for backup/template */}
-        <button
-          onClick={() => {
-            const json = JSON.stringify(useEditorStore.getState().project, null, 2);
-            const blob = new Blob([json], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${project.title.replace(/[^a-zA-Z0-9]/g, '-')}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-          }}
-          className="editor-topbar__action editor-topbar__action--ghost"
-          title="Simpan sebagai JSON — untuk backup atau template"
-          data-action="export-json"
-          data-testid="topbar-export-json"
-        >
-          📋 Export JSON
-        </button>
-        {/* E-04: Copy HTML to Clipboard */}
-        <button
-          onClick={async () => {
-            const current = useEditorStore.getState().project;
-            const { exportProjectToHtml } = await import('../export/export-html');
-            const html = exportProjectToHtml(current);
-            try {
-              await navigator.clipboard.writeText(html);
-              alert('Kode HTML berhasil disalin ke clipboard!');
-            } catch {
-              // Fallback: download as HTML file
-              downloadHtmlFile(current.title, html);
-              alert('Clipboard tidak tersedia. File HTML diunduh sebagai gantinya.');
-            }
-          }}
-          className="editor-topbar__action editor-topbar__action--ghost"
-          title="Salin kode HTML ke clipboard"
-          data-action="copy-html"
-          data-testid="topbar-copy-html"
-        >
-          📎 Salin HTML
-        </button>
-        {/* E-01: Export PNG — screenshot current canvas */}
-        <button
-          onClick={async () => {
-            const current = useEditorStore.getState().project;
-            const { exportProjectToHtml } = await import('../export/export-html');
-            const html = exportProjectToHtml(current);
-            // Open export HTML in new window, then trigger browser print-to-PNG
-            const w = window.open('', '_blank');
-            if (!w) {
-              alert('Popup diblokir. Izinkan popup untuk export PNG.');
-              return;
-            }
-            w.document.write(html);
-            w.document.close();
-            // Wait for render, then trigger print dialog
-            setTimeout(() => {
-              w.focus();
-              w.print();
-            }, 1000);
-          }}
-          className="editor-topbar__action editor-topbar__action--ghost"
-          title="Cetak / Simpan sebagai PNG (via dialog print browser)"
-          data-action="export-png"
-          data-testid="topbar-export-png"
-        >
-          🖼️ Export PNG
-        </button>
-        <button
-          onClick={() => setShowGuidedFlow(true)}
-          className="editor-topbar__action editor-topbar__action--guided"
-          title="Buat MPI lengkap dari topik pembelajaran"
-          data-action="guided-flow"
-          data-testid="topbar-guided-flow"
-        >
-          🎯 Buat MPI dari Topik
-        </button>
-        <button
-          onClick={() => setShowTemplatePicker(true)}
-          className="editor-topbar__action editor-topbar__action--template"
-          title="Pilih template pedagogis siap pakai (12 scene lengkap)"
-          data-action="template-picker"
-          data-testid="topbar-template-picker"
-        >
-          📋 Template Pedagogis
-        </button>
-        <button
-          onClick={() => setShowAiImport(true)}
-          className="editor-topbar__action editor-topbar__action--ai-import"
-          title="Import desain dari AI (blueprint JSON)"
-          data-action="ai-import"
-          data-testid="topbar-ai-import"
-        >
-          🤖 Import dari AI
-        </button>
-        {/* V2-PILAR-1: Import slide PNG/JPEG/WebP as new pages */}
-        <button
-          onClick={handleImportSlides}
-          disabled={slideImportInProgress}
-          className="editor-topbar__action editor-topbar__action--slide-import"
-          title={`Impor ${SLIDE_FILE_LABEL} sekaligus sebagai halaman baru. Maks 50 file.`}
-          data-action="import-slides"
-          data-testid="topbar-import-slides"
-          style={{ opacity: slideImportInProgress ? 0.6 : 1, cursor: slideImportInProgress ? 'wait' : 'pointer' }}
-        >
-          {slideImportInProgress ? '⏳ Mengimpor…' : `🖼️ Impor Slide`}
-        </button>
-        {/* V2-PILAR-1: Pengaturan Slide (global nav settings) */}
-        <button
-          onClick={() => setShowSlideSettings(true)}
-          className="editor-topbar__action editor-topbar__action--ghost"
-          title="Atur posisi, gaya, dan tampilan toolbar navigasi global"
-          data-action="slide-settings"
-          data-testid="topbar-slide-settings"
-        >
-          ⚙️ Pengaturan Slide
-        </button>
-        {/* V2-PILAR-2.5: Centralized Quiz Sheet */}
-        <button
-          onClick={() => setShowQuizSheet(true)}
-          className="editor-topbar__action editor-topbar__action--ghost"
-          title="Kelola semua kunci jawaban dan skor dari seluruh slide dalam satu tabel"
-          data-action="quiz-sheet"
-          data-testid="topbar-quiz-sheet"
-        >
-          📊 Kelola Kuis
-        </button>
+        {/* MEGA FIX #2: Export dropdown — 4 tombol export → 1 dropdown */}
+        <div style={{ position: 'relative' }}>
+          <button
+            onClick={() => setShowExportMenu(!showExportMenu)}
+            className="editor-topbar__action editor-topbar__action--primary"
+            title="Export: HTML, JSON, Salin HTML, PNG"
+            data-action="export-menu"
+            data-testid="topbar-export-menu"
+          >
+            ⬇ Export ▾
+          </button>
+          {showExportMenu && (
+            <div
+              data-testid="export-dropdown"
+              style={{
+                position: 'absolute', right: 0, top: '100%', marginTop: 4,
+                minWidth: 200, background: 'var(--color-panel, #fff)',
+                border: '1px solid var(--color-border, #e3ddcd)', borderRadius: 8,
+                boxShadow: '0 8px 24px rgba(0,0,0,0.15)', zIndex: 1000, padding: 4,
+              }}
+            >
+              <button
+                onClick={() => { setShowExportMenu(false); handleExport(); }}
+                data-testid="topbar-export"
+                data-action="export-html"
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, borderRadius: 4, color: 'var(--color-text, #1f2533)' }}
+              >
+                📄 Export HTML
+              </button>
+              <button
+                onClick={() => {
+                  setShowExportMenu(false);
+                  const json = JSON.stringify(useEditorStore.getState().project, null, 2);
+                  const blob = new Blob([json], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `${project.title.replace(/[^a-zA-Z0-9]/g, '-')}.json`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                data-testid="topbar-export-json"
+                data-action="export-json"
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, borderRadius: 4, color: 'var(--color-text, #1f2533)' }}
+              >
+                📋 Export JSON
+              </button>
+              <button
+                onClick={async () => {
+                  setShowExportMenu(false);
+                  const current = useEditorStore.getState().project;
+                  const { exportProjectToHtml } = await import('../export/export-html');
+                  const html = exportProjectToHtml(current);
+                  try {
+                    await navigator.clipboard.writeText(html);
+                    alert('Kode HTML berhasil disalin ke clipboard!');
+                  } catch {
+                    downloadHtmlFile(current.title, html);
+                    alert('Clipboard tidak tersedia. File HTML diunduh sebagai gantinya.');
+                  }
+                }}
+                data-testid="topbar-copy-html"
+                data-action="copy-html"
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, borderRadius: 4, color: 'var(--color-text, #1f2533)' }}
+              >
+                📎 Salin HTML
+              </button>
+              <button
+                onClick={async () => {
+                  setShowExportMenu(false);
+                  const current = useEditorStore.getState().project;
+                  const { exportProjectToHtml } = await import('../export/export-html');
+                  const html = exportProjectToHtml(current);
+                  const w = window.open('', '_blank');
+                  if (!w) {
+                    alert('Popup diblokir. Izinkan popup untuk export PNG.');
+                    return;
+                  }
+                  w.document.write(html);
+                  w.document.close();
+                  setTimeout(() => { w.focus(); w.print(); }, 1000);
+                }}
+                data-testid="topbar-export-png"
+                data-action="export-png"
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, borderRadius: 4, color: 'var(--color-text, #1f2533)' }}
+              >
+                🖼️ Export PNG
+              </button>
+            </div>
+          )}
+        </div>
+        {/* MEGA FIX #2: Buat dropdown — 4 tombol create/import → 1 dropdown */}
+        <div style={{ position: 'relative' }}>
+          <button
+            onClick={() => setShowBuatMenu(!showBuatMenu)}
+            className="editor-topbar__action editor-topbar__action--ghost"
+            title="Buat: MPI dari Topik, Template, Import AI, Impor Slide"
+            data-action="buat-menu"
+            data-testid="topbar-buat-menu"
+          >
+            ✨ Buat ▾
+          </button>
+          {showBuatMenu && (
+            <div
+              data-testid="buat-dropdown"
+              style={{
+                position: 'absolute', right: 0, top: '100%', marginTop: 4,
+                minWidth: 220, background: 'var(--color-panel, #fff)',
+                border: '1px solid var(--color-border, #e3ddcd)', borderRadius: 8,
+                boxShadow: '0 8px 24px rgba(0,0,0,0.15)', zIndex: 1000, padding: 4,
+              }}
+            >
+              <button
+                onClick={() => { setShowBuatMenu(false); setShowGuidedFlow(true); }}
+                data-testid="topbar-guided-flow"
+                data-action="guided-flow"
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, borderRadius: 4, color: 'var(--color-text, #1f2533)' }}
+              >
+                🎯 Buat MPI dari Topik
+              </button>
+              <button
+                onClick={() => { setShowBuatMenu(false); setShowTemplatePicker(true); }}
+                data-testid="topbar-template-picker"
+                data-action="template-picker"
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, borderRadius: 4, color: 'var(--color-text, #1f2533)' }}
+              >
+                📋 Template Pedagogis
+              </button>
+              <button
+                onClick={() => { setShowBuatMenu(false); setShowAiImport(true); }}
+                data-testid="topbar-ai-import"
+                data-action="ai-import"
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, borderRadius: 4, color: 'var(--color-text, #1f2533)' }}
+              >
+                🤖 Import dari AI
+              </button>
+              <button
+                onClick={() => { setShowBuatMenu(false); handleImportSlides(); }}
+                disabled={slideImportInProgress}
+                data-testid="topbar-import-slides"
+                data-action="import-slides"
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: 'transparent', cursor: slideImportInProgress ? 'wait' : 'pointer', fontSize: 13, borderRadius: 4, color: 'var(--color-text, #1f2533)', opacity: slideImportInProgress ? 0.6 : 1 }}
+              >
+                {slideImportInProgress ? '⏳ Mengimpor…' : '🖼️ Impor Slide'}
+              </button>
+            </div>
+          )}
+        </div>
+        {/* MEGA FIX #2: Pengaturan dropdown — Slide Settings + Quiz Sheet → 1 dropdown */}
+        <div style={{ position: 'relative' }}>
+          <button
+            onClick={() => setShowPengaturanMenu(!showPengaturanMenu)}
+            className="editor-topbar__action editor-topbar__action--ghost"
+            title="Pengaturan: Slide, Kuis"
+            data-action="pengaturan-menu"
+            data-testid="topbar-pengaturan-menu"
+          >
+            ⚙️ Pengaturan ▾
+          </button>
+          {showPengaturanMenu && (
+            <div
+              data-testid="pengaturan-dropdown"
+              style={{
+                position: 'absolute', right: 0, top: '100%', marginTop: 4,
+                minWidth: 220, background: 'var(--color-panel, #fff)',
+                border: '1px solid var(--color-border, #e3ddcd)', borderRadius: 8,
+                boxShadow: '0 8px 24px rgba(0,0,0,0.15)', zIndex: 1000, padding: 4,
+              }}
+            >
+              <button
+                onClick={() => { setShowPengaturanMenu(false); setShowSlideSettings(true); }}
+                data-testid="topbar-slide-settings"
+                data-action="slide-settings"
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, borderRadius: 4, color: 'var(--color-text, #1f2533)' }}
+              >
+                ⚙️ Pengaturan Slide
+              </button>
+              <button
+                onClick={() => { setShowPengaturanMenu(false); setShowQuizSheet(true); }}
+                data-testid="topbar-quiz-sheet"
+                data-action="quiz-sheet"
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, borderRadius: 4, color: 'var(--color-text, #1f2533)' }}
+              >
+                📊 Kelola Kuis
+              </button>
+            </div>
+          )}
+        </div>
         {/* MEGA FIX: Berkas dropdown — konsolidasi 4 tombol yang overflow */}
         <div style={{ position: 'relative' }}>
           <button

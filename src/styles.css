@@ -335,30 +335,41 @@ textarea {
 }
 
 .editor-topbar__progress {
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
   display: flex;
   justify-content: center;
+  max-width: 200px;
+  overflow: hidden;
 }
 
 .editor-topbar__spacer {
-  flex: 0 0 0;
+  flex: 1 1 auto;
+  min-width: 8px;
 }
 
 .editor-topbar__actions {
   display: flex;
   gap: 6px;
   align-items: center;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
 }
 
 .editor-topbar__action {
   font-size: 13px;
-  padding: 7px 14px;
+  padding: 0 12px;
   border-radius: var(--radius-md);
   font-weight: 500;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
+  height: 36px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1;
+  box-sizing: border-box;
 }
 
 .editor-topbar__action--ghost {
