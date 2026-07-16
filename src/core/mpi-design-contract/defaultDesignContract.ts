@@ -506,14 +506,21 @@ export function getDesignContractWithProjectStyle(
       letterSpacing: (typography.letterSpacing as number) ?? base.typography.letterSpacing,
       uppercase: (typography.uppercase as boolean) ?? base.typography.uppercase,
     } : base.typography,
+    // SCENE-BG-FIX: override contract.background.color supaya scene renderer
+    // pakai palette.background (yang sudah di-fix oleh contrast guard), BUKAN
+    // hardcoded #ffffff dari DEFAULT_DESIGN_CONTRACT.
+    // Sebelumnya: renderScenePlan.ts pakai `contract.background.color ?? palette.background`
+    // Tapi contract.background.color = '#ffffff' (hardcoded) → scene bg selalu putih
+    // bahkan untuk dark theme → white text on white bg = invisible.
+    background: fixedColors ? {
+      ...base.background,
+      color: fixedColors.background ?? base.palette.background,
+    } : base.background,
     card: {
       ...base.card,
       radius: radius?.medium ?? base.card.radius,
       padding: spacing?.cardPadding ?? base.card.padding,
       // EXPORT-CONTRAST-02: override card.background + border agar konsisten dengan palette override.
-      // Sebelumnya, jika AI override palette.background ke putih, card.background tetap gelap
-      // (dari base contract seperti golden-reference). Hasilnya: text gelap di card gelap = unreadable.
-      // Sekarang card.background mengikuti palette.surface, card.border mengikuti palette.border.
       background: fixedColors?.surface ?? base.palette.surface,
       border: `1px solid ${fixedColors?.border ?? base.palette.border}`,
     },

@@ -270,7 +270,7 @@ export function getSceneContentRendererJs(): string {
           cardCss += 'transition:all 0.18s ease;';
           card.style.cssText = cardCss;
           var cardTitle = document.createElement('strong');
-          cardTitle.style.cssText = 'display:block;font-size:15px;margin-bottom:4px;color:' + palette.primary + ';';
+          cardTitle.style.cssText = 'display:block;font-size:15px;margin-bottom:4px;color:' + palette.text + ';';
           cardTitle.textContent = ex.title;
           card.appendChild(cardTitle);
           var cardBody = document.createElement('div');
@@ -314,7 +314,7 @@ export function getSceneContentRendererJs(): string {
       action.className = 'silse-learning-student-action silse-premium-learning-student-action';
       action.style.cssText = 'padding:' + sa.padding + 'px;border-radius:' + sa.radius + 'px;background:' + sa.background + ';border:' + sa.border + ';display:flex;align-items:center;gap:10px;box-shadow:' + premiumShadow + ';';
       var actionIcon = document.createElement('span');
-      actionIcon.style.fontSize = '20px';
+      actionIcon.style.cssText = 'font-size:20px;color:' + (sa.iconColor || palette.text) + ';';
       actionIcon.textContent = sa.icon;
       action.appendChild(actionIcon);
       var actionText = document.createElement('div');

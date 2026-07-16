@@ -1095,7 +1095,7 @@ function LearningMaterialContent({
               boxShadow: premiumShadow,
               transition: 'all 0.18s ease',
             }}>
-              <strong style={{ display: 'block', fontSize: 15, marginBottom: 4, color: contract.palette.primary }}>{ex.title}</strong>
+              <strong style={{ display: 'block', fontSize: 15, marginBottom: 4, color: contract.palette.text }}>{ex.title}</strong>
               <div style={{ fontSize: 13, lineHeight: 1.5, color: contract.palette.text }}>{ex.body}</div>
             </div>
           ))}
@@ -1135,7 +1135,7 @@ function LearningMaterialContent({
           gap: 10,
           boxShadow: premiumShadow,
         }}>
-          <span style={{ fontSize: 20 }}>{contract.learning.studentActionPanel?.icon ?? '✏️'}</span>
+          <span style={{ fontSize: 20, color: contract.learning.studentActionPanel?.iconColor ?? contract.palette.text }}>{contract.learning.studentActionPanel?.icon ?? '✏️'}</span>
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, color: contract.learning.studentActionPanel?.labelColor ?? contract.palette.mutedText, textTransform: 'uppercase' }}>Student Action</div>
             <div style={{ fontSize: 14, fontWeight: 600, color: contract.palette.text }}>{content.studentAction}</div>
@@ -1213,7 +1213,7 @@ function CoverHeroContent({
           {content.badges.map((b, i) => (
             <span key={i} className="silse-cover-badge" style={{
               display: 'inline-flex', padding: '4px 12px', borderRadius: 999,
-              background: contract.palette.surface, color: contract.palette.primary,
+              background: contract.palette.gold, color: contract.palette.primary,
               fontSize: 12, fontWeight: 700, border: `1px solid ${contract.palette.border}`,
             }}>{b}</span>
           ))}
