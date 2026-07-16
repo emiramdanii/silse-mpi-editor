@@ -162,7 +162,12 @@ type ExportRenderComponent = {
  * This is where resolveComponentStyle is called for export.
  */
 function buildExportRenderModel(project: SimpleProject): ExportRenderModel {
-  const cssVariables = generateCssVariablesMap(project.style);
+  // CONTRAST-GUARD-DEFENSE-IN-DEPTH: Use contract palette (yang sudah di-fix
+  // oleh getDesignContractWithProjectStyle) untuk CSS variables, BUKAN
+  // project.style.tokens langsung. Project di localStorage mungkin punya
+  // warna incompatible (dark text on dark bg) yang belum di-fix.
+  const contract = getDesignContractWithProjectStyle(project.stylePackId, project.style);
+  const cssVariables = generateCssVariablesMap(project.style, contract);
 
   const allPages: ExportRenderPage[] = project.pages.map((page) => ({
     id: page.id,
@@ -331,21 +336,27 @@ function serializeRenderModel(model: ExportRenderModel): string {
 // CSS variables from StylePack tokens
 // ---------------------------------------------------------------------------
 
-function generateCssVariablesMap(style: ProjectStyle | undefined): Record<string, string> {
+function generateCssVariablesMap(
+  style: ProjectStyle | undefined,
+  contract?: { palette?: { background?: string; surface?: string; primary?: string; secondary?: string; text?: string; mutedText?: string; border?: string; success?: string; warning?: string; danger?: string; accent?: string; gold?: string } },
+): Record<string, string> {
   if (!style) return {};
 
   const { colors, typography, spacing, radius, shadow } = style.tokens;
+  // CONTRAST-GUARD: prefer contract palette (sudah di-fix) atas style.tokens.
+  // Contract di-fix oleh getDesignContractWithProjectStyle (defense-in-depth).
+  const p = contract?.palette;
   return {
-    '--silse-color-background': colors.background,
-    '--silse-color-surface': colors.surface,
-    '--silse-color-primary': colors.primary,
-    '--silse-color-secondary': colors.secondary,
-    '--silse-color-text': colors.text,
-    '--silse-color-muted-text': colors.mutedText,
-    '--silse-color-border': colors.border,
-    '--silse-color-success': colors.success,
-    '--silse-color-warning': colors.warning,
-    '--silse-color-danger': colors.danger,
+    '--silse-color-background': p?.background ?? colors.background,
+    '--silse-color-surface': p?.surface ?? colors.surface,
+    '--silse-color-primary': p?.primary ?? colors.primary,
+    '--silse-color-secondary': p?.secondary ?? colors.secondary,
+    '--silse-color-text': p?.text ?? colors.text,
+    '--silse-color-muted-text': p?.mutedText ?? colors.mutedText,
+    '--silse-color-border': p?.border ?? colors.border,
+    '--silse-color-success': p?.success ?? colors.success,
+    '--silse-color-warning': p?.warning ?? colors.warning,
+    '--silse-color-danger': p?.danger ?? colors.danger,
     '--silse-font-family': typography.fontFamily,
     '--silse-title-size': `${typography.titleSize}px`,
     '--silse-subtitle-size': `${typography.subtitleSize}px`,

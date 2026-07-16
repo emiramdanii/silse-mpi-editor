@@ -423,23 +423,72 @@ export function getDesignContractWithProjectStyle(
   const { colors, typography, spacing, radius } = projectStyle.tokens;
   const panelOverrides = projectStyle.panelOverrides;
 
+  // CONTRAST-GUARD-DEFENSE-IN-DEPTH:
+  // applyContrastGuard di aiBlueprintToSimpleProject hanya jalan saat AI import.
+  // Project yang sudah di localStorage (autoload) TIDAK di-fix — pakai warna apa adanya.
+  // Fix di sini (contract level) supaya SEMUA consumer (editor React + export HTML)
+  // dapat warna yang sudah di-fix, regardless dari mana project berasal.
+  //
+  // Logic sama dengan applyContrastGuard:
+  // 1. Dark bg + light surface → darken surface sampai dark
+  // 2. Dark bg + dark text → auto-fix text ke putih (contrast < 4.5:1)
+  // 3. mutedText juga di-fix
+  // 4. border terlalu gelap di dark theme → rgba putih
+  let fixedColors = colors;
+  if (colors) {
+    fixedColors = { ...colors };
+    const bg = colors.background;
+    const surface = colors.surface;
+    if (bg && surface) {
+      const bgDark = isColorDark(bg);
+      const surfaceDark = isColorDark(surface);
+      // FIX 1: Dark bg + light surface → derive dark surface dari bg (lighten sedikit)
+      // Sebelumnya: darken surface original → hasilnya abu kekuningan aneh (#696761)
+      // Sekarang: lighten bg sedikit (12 unit) supaya surface dark navy konsisten dengan bg
+      if (bgDark && !surfaceDark) {
+        fixedColors.surface = lightenDarkColor(bg, 18);
+      }
+      // FIX 2: Dark bg + dark text → text putih
+      if (bgDark && colors.text) {
+        const textDark = isColorDark(colors.text);
+        if (textDark) {
+          fixedColors.text = '#ffffff';
+        }
+      }
+      // FIX 3: mutedText
+      if (bgDark && colors.mutedText) {
+        const mutedDark = isColorDark(colors.mutedText);
+        if (mutedDark) {
+          fixedColors.mutedText = '#ffffff';
+        }
+      }
+      // FIX 4: border terlalu gelap di dark theme
+      if (bgDark && colors.border) {
+        const borderLum = getLuminanceLocal(colors.border);
+        if (isColorDark(colors.border) && borderLum < 0.05) {
+          fixedColors.border = 'rgba(255,255,255,0.12)';
+        }
+      }
+    }
+  }
+
   return {
     ...base,
-    palette: colors ? {
+    palette: fixedColors ? {
       ...base.palette,
-      primary: colors.primary ?? base.palette.primary,
-      secondary: colors.secondary ?? base.palette.secondary,
-      background: colors.background ?? base.palette.background,
-      surface: colors.surface ?? base.palette.surface,
-      text: colors.text ?? base.palette.text,
-      mutedText: colors.mutedText ?? base.palette.mutedText,
-      border: colors.border ?? base.palette.border,
-      success: colors.success ?? base.palette.success,
-      warning: colors.warning ?? base.palette.warning,
-      danger: colors.danger ?? base.palette.danger,
+      primary: fixedColors.primary ?? base.palette.primary,
+      secondary: fixedColors.secondary ?? base.palette.secondary,
+      background: fixedColors.background ?? base.palette.background,
+      surface: fixedColors.surface ?? base.palette.surface,
+      text: fixedColors.text ?? base.palette.text,
+      mutedText: fixedColors.mutedText ?? base.palette.mutedText,
+      border: fixedColors.border ?? base.palette.border,
+      success: fixedColors.success ?? base.palette.success,
+      warning: fixedColors.warning ?? base.palette.warning,
+      danger: fixedColors.danger ?? base.palette.danger,
       // ENGINE-GAP-FILL: accent + gold sekarang bisa di-override AI
-      accent: colors.accent ?? base.palette.accent,
-      gold: colors.gold ?? base.palette.gold,
+      accent: fixedColors.accent ?? base.palette.accent,
+      gold: fixedColors.gold ?? base.palette.gold,
     } : base.palette,
     typography: typography ? {
       ...base.typography,
@@ -465,8 +514,8 @@ export function getDesignContractWithProjectStyle(
       // Sebelumnya, jika AI override palette.background ke putih, card.background tetap gelap
       // (dari base contract seperti golden-reference). Hasilnya: text gelap di card gelap = unreadable.
       // Sekarang card.background mengikuti palette.surface, card.border mengikuti palette.border.
-      background: colors?.surface ?? base.palette.surface,
-      border: `1px solid ${colors?.border ?? base.palette.border}`,
+      background: fixedColors?.surface ?? base.palette.surface,
+      border: `1px solid ${fixedColors?.border ?? base.palette.border}`,
     },
     // EXPORT-CONTRAST-03 + AI-PANEL-OVERRIDE: panel backgrounds konsisten dengan palette
     // + AI panelOverrides menang di atas palette-derived default.
@@ -474,15 +523,15 @@ export function getDesignContractWithProjectStyle(
       ...base.learning,
       explanationPanel: base.learning.explanationPanel ? {
         ...base.learning.explanationPanel,
-        background: colors?.surface ?? base.palette.surface,
-        border: `1px solid ${colors?.border ?? base.palette.border}`,
+        background: fixedColors?.surface ?? base.palette.surface,
+        border: `1px solid ${fixedColors?.border ?? base.palette.border}`,
         ...((panelOverrides?.learning?.explanationPanel as Record<string, unknown>) ?? {}),
       } : base.learning.explanationPanel,
       studentActionPanel: base.learning.studentActionPanel ? {
         ...base.learning.studentActionPanel,
-        background: colors?.surface ?? base.palette.surface,
-        border: `1px solid ${colors?.border ?? base.palette.border}`,
-        labelColor: colors?.mutedText ?? base.palette.mutedText,
+        background: fixedColors?.surface ?? base.palette.surface,
+        border: `1px solid ${fixedColors?.border ?? base.palette.border}`,
+        labelColor: fixedColors?.mutedText ?? base.palette.mutedText,
         ...((panelOverrides?.learning?.studentActionPanel as Record<string, unknown>) ?? {}),
       } : base.learning.studentActionPanel,
       keyPointPanel: base.learning.keyPointPanel ? {
@@ -491,13 +540,13 @@ export function getDesignContractWithProjectStyle(
       } : base.learning.keyPointPanel,
       exampleCardStyle: base.learning.exampleCardStyle ? {
         ...base.learning.exampleCardStyle,
-        background: colors?.surface ?? base.learning.exampleCardStyle.background,
-        border: `1px solid ${colors?.border ?? base.palette.border}`,
+        background: fixedColors?.surface ?? base.learning.exampleCardStyle.background,
+        border: `1px solid ${fixedColors?.border ?? base.palette.border}`,
         ...((panelOverrides?.learning?.exampleCardStyle as Record<string, unknown>) ?? {}),
       } : base.learning.exampleCardStyle,
       visualHintPanel: base.learning.visualHintPanel ? {
         ...base.learning.visualHintPanel,
-        color: colors?.mutedText ?? base.learning.visualHintPanel.color,
+        color: fixedColors?.mutedText ?? base.learning.visualHintPanel.color,
         ...((panelOverrides?.learning?.visualHintPanel as Record<string, unknown>) ?? {}),
       } : base.learning.visualHintPanel,
     } : base.learning,
@@ -513,8 +562,8 @@ export function getDesignContractWithProjectStyle(
       } : base.game.targetPanel,
       actionCardStyle: base.game.actionCardStyle ? {
         ...base.game.actionCardStyle,
-        background: colors?.surface ?? base.game.actionCardStyle.background,
-        border: `2px solid ${colors?.border ?? base.palette.border}`,
+        background: fixedColors?.surface ?? base.game.actionCardStyle.background,
+        border: `2px solid ${fixedColors?.border ?? base.palette.border}`,
         ...((panelOverrides?.game?.actionCardStyle as Record<string, unknown>) ?? {}),
       } : base.game.actionCardStyle,
     } : base.game,
@@ -522,16 +571,49 @@ export function getDesignContractWithProjectStyle(
       ...base.quiz,
       questionPanel: base.quiz.questionPanel ? {
         ...base.quiz.questionPanel,
-        background: colors?.surface ?? base.palette.surface,
-        border: `1px solid ${colors?.border ?? base.palette.border}`,
+        background: fixedColors?.surface ?? base.palette.surface,
+        border: `1px solid ${fixedColors?.border ?? base.palette.border}`,
         ...((panelOverrides?.quiz?.questionPanel as Record<string, unknown>) ?? {}),
       } : base.quiz.questionPanel,
       answerCard: base.quiz.answerCard ? {
         ...base.quiz.answerCard,
-        background: colors?.surface ?? base.palette.surface,
-        border: `1px solid ${colors?.border ?? base.palette.border}`,
+        background: fixedColors?.surface ?? base.palette.surface,
+        border: `1px solid ${fixedColors?.border ?? base.palette.border}`,
         ...((panelOverrides?.quiz?.answerCard as Record<string, unknown>) ?? {}),
       } : base.quiz.answerCard,
     } : base.quiz,
   };
+}
+
+// ---------------------------------------------------------------------------
+// CONTRAST-GUARD helpers (defense-in-depth di contract level)
+// ---------------------------------------------------------------------------
+
+function isColorDark(hex: string): boolean {
+  const m = hex.match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  if (!m) return false;
+  const r = parseInt(m[1], 16);
+  const g = parseInt(m[2], 16);
+  const b = parseInt(m[3], 16);
+  // WCAG 2.1 relative luminance (simplified)
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return lum < 0.5;
+}
+
+function getLuminanceLocal(hex: string): number {
+  const m = hex.match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  if (!m) return 0;
+  const r = parseInt(m[1], 16);
+  const g = parseInt(m[2], 16);
+  const b = parseInt(m[3], 16);
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+}
+
+function lightenDarkColor(hex: string, amount: number): string {
+  const m = hex.match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  if (!m) return hex;
+  const r = Math.min(255, parseInt(m[1], 16) + amount);
+  const g = Math.min(255, parseInt(m[2], 16) + amount);
+  const b = Math.min(255, parseInt(m[3], 16) + amount);
+  return '#' + [r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('');
 }

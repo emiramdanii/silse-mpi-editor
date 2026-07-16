@@ -1,0 +1,258 @@
+{
+  "schemaVersion": 1,
+  "savedAt": "2026-07-16T22:56:18.442428",
+  "project": {
+    "id": "proj_extracted_1784242578",
+    "title": "Misi 2 — Rantai Kepedulian",
+    "version": 1,
+    "currentPageId": "scene-cover",
+    "stylePackId": "mission-dark",
+    "style": {
+      "stylePackId": "mission-dark",
+      "tokens": {
+        "colors": {
+          "background": "#0b1728",
+          "surface": "#fffdf7",
+          "primary": "#1d3557",
+          "secondary": "#ffd166",
+          "text": "#17324d",
+          "mutedText": "#61758a",
+          "border": "#334155",
+          "success": "#2a9d8f",
+          "warning": "#ffb703",
+          "danger": "#e63946"
+        },
+        "typography": {
+          "fontFamily": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+          "titleSize": 48,
+          "subtitleSize": 28,
+          "bodySize": 18,
+          "smallSize": 14,
+          "lineHeight": 1.5
+        },
+        "spacing": {
+          "pagePadding": 64,
+          "componentGap": 16,
+          "cardPadding": 16
+        },
+        "radius": {
+          "small": 4,
+          "medium": 8,
+          "large": 16
+        },
+        "shadow": {
+          "none": "none",
+          "soft": "0 1px 2px rgba(0,0,0,0.05)",
+          "medium": "0 4px 12px rgba(0,0,0,0.10)"
+        }
+      }
+    },
+    "pages": [
+      {
+        "id": "scene-cover",
+        "title": "Menyambung Rantai Kepedulian",
+        "role": "cover",
+        "layoutId": "blank",
+        "background": {
+          "type": "color",
+          "color": "#1e3a5f"
+        },
+        "components": [],
+        "sceneType": "cover-hero",
+        "sceneContent": {
+          "kind": "cover-hero",
+          "heroTitle": "Menyambung Rantai Kepedulian",
+          "kicker": "⛓️ Misi 2 • Sila Kedua",
+          "heroSubtitle": "Kamu telah mendapatkan Bintang Kerukunan pada Misi 1. Sekarang perjalanan berlanjut ke lambang rantai, simbol Sila Kedua: Kemanusiaan yang Adil dan Beradab. Untuk menyelesaikan misi ini, kamu harus menunjukkan sikap yang menghargai martabat manusia.",
+          "badges": [
+            "Misi 2 dari 5"
+          ],
+          "primaryAction": {
+            "label": "Masuki Misi 2",
+            "action": "next"
+          },
+          "visualAnchor": "⛓️"
+        },
+        "scenePlacement": {
+          "x": 80,
+          "y": 100,
+          "width": 1120,
+          "height": 540
+        },
+        "sceneSlotRole": "heroTitle"
+      },
+      {
+        "id": "scene-materi",
+        "title": "Nilai dan Makna Sila Kedua",
+        "role": "material",
+        "layoutId": "blank",
+        "background": {
+          "type": "color",
+          "color": "#ffffff"
+        },
+        "components": [],
+        "sceneType": "learning-scene",
+        "sceneContent": {
+          "kind": "learning-material",
+          "conceptTitle": "Nilai dan Makna Sila Kedua",
+          "explanation": "Sebelum masuk ke tantangan, pahami dulu bekal utama dari Sila Kedua: setiap manusia memiliki martabat yang sama dan harus diperlakukan secara adil serta beradab.",
+          "examples": [
+            {
+              "title": "Makna Sila",
+              "body": "Setiap manusia memiliki martabat yang sama dan harus diperlakukan secara adil serta beradab."
+            },
+            {
+              "title": "Nilai Utama",
+              "body": "Kemanusiaan, keadilan, kepedulian, kesopanan, dan saling menghargai."
+            },
+            {
+              "title": "Arah Sikap",
+              "body": "Kita tidak merendahkan orang lain, berani membela yang diperlakukan tidak adil, dan menjaga perasaan sesama."
+            }
+          ],
+          "keyPoints": [
+            "Martabat manusia berarti harga diri setiap orang yang harus dihormati."
+          ],
+          "studentAction": "Lanjut ke Situasi",
+          "visualHint": "⛓️"
+        },
+        "scenePlacement": {
+          "x": 80,
+          "y": 100,
+          "width": 1120,
+          "height": 540
+        },
+        "sceneSlotRole": "explanationPanel"
+      },
+      {
+        "id": "scene-kasus",
+        "title": "Teman yang Direndahkan",
+        "role": "material",
+        "layoutId": "blank",
+        "background": {
+          "type": "color",
+          "color": "#ffffff"
+        },
+        "components": [],
+        "sceneType": "case-analysis",
+        "sceneContent": {
+          "kind": "case-analysis",
+          "caseText": "Saat kerja kelompok, seorang teman menyampaikan pendapat. Namun, pendapatnya langsung ditertawakan oleh beberapa siswa. Ada yang berkata, 'Jawabanmu salah terus.' Teman itu menjadi malu dan tidak berani berbicara lagi.",
+          "analysisPrompt": "Sebagai Penjelajah Pancasila, sikap apa yang sebaiknya kamu lakukan?"
+        },
+        "scenePlacement": {
+          "x": 80,
+          "y": 100,
+          "width": 1120,
+          "height": 540
+        },
+        "sceneSlotRole": "caseText"
+      },
+      {
+        "id": "scene-pilihan",
+        "title": "Pilih Jalan Sikap",
+        "role": "material",
+        "layoutId": "blank",
+        "background": {
+          "type": "color",
+          "color": "#ffffff"
+        },
+        "components": [],
+        "sceneType": "branching-scenario",
+        "sceneContent": {
+          "kind": "branching-scenario",
+          "scenarioPrompt": "Pilih jalan yang paling sesuai dengan nilai Sila Kedua.",
+          "choices": [
+            {
+              "id": "A",
+              "label": "Jalan A — Ikut Menertawakan",
+              "consequence": "Ikut menertawakan membuat teman semakin malu. Sikap ini tidak menghargai martabat manusia.",
+              "isCorrect": false
+            },
+            {
+              "id": "B",
+              "label": "Jalan B — Membela dengan Sopan",
+              "consequence": "Kamu menunjukkan sikap adil dan beradab. Setiap teman berhak menyampaikan pendapat tanpa direndahkan.",
+              "isCorrect": true
+            },
+            {
+              "id": "C",
+              "label": "Jalan C — Menghibur Diam-Diam",
+              "consequence": "Menghibur teman adalah sikap peduli. Namun, kita juga perlu berani menghentikan ejekan dengan cara yang sopan.",
+              "isCorrect": false
+            }
+          ],
+          "resetLabel": "↺ Coba Lagi"
+        },
+        "scenePlacement": {
+          "x": 80,
+          "y": 100,
+          "width": 1120,
+          "height": 540
+        },
+        "sceneSlotRole": "scenario"
+      },
+      {
+        "id": "scene-kunci",
+        "title": "Kunci Nilai Sila Kedua",
+        "role": "material",
+        "layoutId": "blank",
+        "background": {
+          "type": "color",
+          "color": "#ffffff"
+        },
+        "components": [],
+        "sceneType": "learning-scene",
+        "sceneContent": {
+          "kind": "learning-material",
+          "conceptTitle": "Mengapa Jalan B paling tepat?",
+          "explanation": "Sikap terbaik adalah membela teman dengan sopan dan memberi kesempatan teman untuk menyampaikan pendapat. Sikap ini sesuai dengan Sila Kedua karena menunjukkan bahwa setiap manusia memiliki martabat, perasaan, dan hak untuk diperlakukan dengan adil.",
+          "examples": [],
+          "keyPoints": [
+            "Menghargai manusia berarti tidak merendahkan, tidak menghina, dan tidak membiarkan orang lain diperlakukan tidak adil."
+          ],
+          "studentAction": "Ambil Rantai Kepedulian",
+          "visualHint": "🔑"
+        },
+        "scenePlacement": {
+          "x": 80,
+          "y": 100,
+          "width": 1120,
+          "height": 540
+        },
+        "sceneSlotRole": "explanationPanel"
+      },
+      {
+        "id": "scene-closing",
+        "title": "Misi 2 Berhasil!",
+        "role": "closing",
+        "layoutId": "blank",
+        "background": {
+          "type": "color",
+          "color": "#1e3a5f"
+        },
+        "components": [],
+        "sceneType": "closing-award",
+        "sceneContent": {
+          "kind": "closing-award",
+          "achievement": "Kamu berhasil menyambung Rantai Kepedulian.",
+          "summary": "Sila Kedua mengajarkan kita untuk memperlakukan setiap orang secara adil, sopan, dan penuh kepedulian: tidak mengejek kekurangan orang lain, menghargai pendapat teman, menolong teman yang membutuhkan bantuan, dan membela teman yang diperlakukan tidak adil.",
+          "reflectionPrompt": "Ceritakan satu momen kamu pernah membela atau menghargai pendapat temanmu.",
+          "rewardLabel": "Rantai Kepedulian",
+          "rewardIcon": "⛓️",
+          "nextLearning": "Misi 3",
+          "finalAction": {
+            "label": "Lanjut Misi 3"
+          }
+        },
+        "scenePlacement": {
+          "x": 80,
+          "y": 100,
+          "width": 1120,
+          "height": 540
+        },
+        "sceneSlotRole": "achievement"
+      }
+    ]
+  }
+}
