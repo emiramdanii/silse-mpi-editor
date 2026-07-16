@@ -155,6 +155,9 @@ function applyDesignSystemOverrides(
     shadow: { ...baseStyle.tokens.shadow },
   };
 
+  // AI-PANEL-OVERRIDE: kategori panel yang akan di-extract ke panelOverrides
+  const panelOverrides: Record<string, Record<string, Record<string, unknown>>> = {};
+
   // Detect format: if any value is an object, it's structured; otherwise flat string keys
   const isStructured = Object.values(overrides).some(
     (v) => typeof v === 'object' && v !== null && !Array.isArray(v),
@@ -168,14 +171,16 @@ function applyDesignSystemOverrides(
       spacing?: Record<string, unknown>;
       radius?: Record<string, unknown>;
       shadow?: Record<string, unknown>;
+      learning?: Record<string, unknown>;
+      game?: Record<string, unknown>;
+      feedback?: Record<string, unknown>;
+      reward?: Record<string, unknown>;
+      quiz?: Record<string, unknown>;
     };
 
     if (o.typography) {
       const t = o.typography;
       if (typeof t.fontFamily === 'string') tokens.typography.fontFamily = t.fontFamily;
-      // headingFontFamily: DO NOT override fontFamily (bug fix from Qwen PR #3)
-      // Previously headingFontFamily would replace the main fontFamily, breaking body text.
-      // If schema later supports separate heading font, this can be re-enabled.
       if (typeof t.fontSizeBase === 'number') {
         const scale = t.fontSizeBase / 16;
         tokens.typography.titleSize = Math.round(tokens.typography.titleSize * scale);
@@ -184,13 +189,29 @@ function applyDesignSystemOverrides(
         tokens.typography.smallSize = Math.round(tokens.typography.smallSize * scale);
       }
       if (typeof t.lineHeightBase === 'number') tokens.typography.lineHeight = t.lineHeightBase;
+      // ENGINE-GAP-FILL: apply extended typography tokens
+      if (typeof t.titleSize === 'number') tokens.typography.titleSize = t.titleSize;
+      if (typeof t.subtitleSize === 'number') tokens.typography.subtitleSize = t.subtitleSize;
+      if (typeof t.bodySize === 'number') tokens.typography.bodySize = t.bodySize;
+      if (typeof t.smallSize === 'number') tokens.typography.smallSize = t.smallSize;
+      if (typeof t.lineHeight === 'number') tokens.typography.lineHeight = t.lineHeight;
+      if (typeof t.titleWeight === 'number') tokens.typography.titleWeight = t.titleWeight;
+      if (typeof t.bodyWeight === 'number') tokens.typography.bodyWeight = t.bodyWeight;
+      if (typeof t.letterSpacing === 'number') tokens.typography.letterSpacing = t.letterSpacing;
+      if (typeof t.uppercase === 'boolean') tokens.typography.uppercase = t.uppercase;
+      if (typeof t.heroFont === 'string') tokens.typography.heroFont = t.heroFont;
+      if (typeof t.bodyFont === 'string') tokens.typography.bodyFont = t.bodyFont;
     }
 
     if (o.colors) {
       const c = o.colors;
       if (typeof c.primary === 'string') tokens.colors.primary = c.primary;
       if (typeof c.secondary === 'string') tokens.colors.secondary = c.secondary;
-      if (typeof c.accent === 'string') tokens.colors.secondary = c.accent;
+      // ENGINE-GAP-FILL: accent — field terpisah + backward compat ke secondary
+      if (typeof c.accent === 'string') {
+        tokens.colors.accent = c.accent;
+        tokens.colors.secondary = c.accent;
+      }
       if (typeof c.background === 'string') tokens.colors.background = c.background;
       if (typeof c.surface === 'string') tokens.colors.surface = c.surface;
       if (typeof c.text === 'string') tokens.colors.text = c.text;
@@ -200,6 +221,8 @@ function applyDesignSystemOverrides(
       if (typeof c.warning === 'string') tokens.colors.warning = c.warning;
       if (typeof c.error === 'string') tokens.colors.danger = c.error;
       if (typeof c.danger === 'string') tokens.colors.danger = c.danger;
+      // ENGINE-GAP-FILL: gold
+      if (typeof c.gold === 'string') tokens.colors.gold = c.gold;
     }
 
     if (o.spacing) {
@@ -215,17 +238,38 @@ function applyDesignSystemOverrides(
 
     if (o.radius) {
       const r = o.radius;
+      // ENGINE-GAP-FILL: support r.small/medium/large langsung
       if (typeof r.default === 'number') {
         tokens.radius.small = r.default;
         tokens.radius.medium = Math.round(r.default * 1.5);
         tokens.radius.large = Math.round(r.default * 2);
       }
+      if (typeof r.small === 'number') tokens.radius.small = r.small;
+      if (typeof r.medium === 'number') tokens.radius.medium = r.medium;
+      if (typeof r.large === 'number') tokens.radius.large = r.large;
     }
 
     if (o.shadow) {
       const sh = o.shadow;
       if (typeof sh.default === 'string') tokens.shadow.soft = sh.default;
       if (typeof sh.large === 'string') tokens.shadow.medium = sh.large;
+    }
+
+    // AI-PANEL-OVERRIDE: extract structured panel categories ke panelOverrides
+    const PANEL_CATEGORIES = ['learning', 'game', 'feedback', 'reward', 'quiz'];
+    for (const cat of PANEL_CATEGORIES) {
+      const catValue = (o as Record<string, unknown>)[cat];
+      if (isObjectRecord(catValue)) {
+        const catResult: Record<string, Record<string, unknown>> = {};
+        for (const [panelName, panelValue] of Object.entries(catValue)) {
+          if (isObjectRecord(panelValue)) {
+            catResult[panelName] = panelValue;
+          }
+        }
+        if (Object.keys(catResult).length > 0) {
+          panelOverrides[cat] = catResult;
+        }
+      }
     }
   } else {
     // Flat key string format: { "colors.primary": "#hex" }
@@ -248,10 +292,18 @@ function applyDesignSystemOverrides(
     }
   }
 
-  return {
+  const result: ProjectStyle = {
     ...baseStyle,
     tokens,
   };
+  if (Object.keys(panelOverrides).length > 0) {
+    result.panelOverrides = panelOverrides;
+  }
+  return result;
+}
+
+function isObjectRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
 /**

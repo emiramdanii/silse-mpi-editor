@@ -12,7 +12,7 @@ import {
   aiBlueprintToSimpleProject,
 } from '../core/ai-mpi-json/aiBlueprintToSimpleProject';
 import { exportProjectToHtml } from '../export/export-html';
-import { getLuminance, getContrastRatio, isDarkColor } from '../core/style/contrast-guard';
+import { getContrastRatio, isDarkColor } from '../core/style/contrast-guard';
 
 function loadSampleBlueprint(): unknown {
   const path = resolve(__dirname, '../../samples/ai-mpi-json/foundation-blueprint.sample.json');

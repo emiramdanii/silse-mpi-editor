@@ -37,6 +37,9 @@ export type StyleColors = {
   success: string;
   warning: string;
   danger: string;
+  /** ENGINE-GAP-FILL: optional accent + gold color tokens. */
+  accent?: string;
+  gold?: string;
 };
 
 // ---------------------------------------------------------------------------
@@ -50,6 +53,13 @@ export type StyleTypography = {
   bodySize: number;
   smallSize: number;
   lineHeight: number;
+  /** ENGINE-GAP-FILL: optional typography tokens untuk match DesignTypography. */
+  titleWeight?: number;
+  bodyWeight?: number;
+  letterSpacing?: number;
+  uppercase?: boolean;
+  heroFont?: string;
+  bodyFont?: string;
 };
 
 // ---------------------------------------------------------------------------
@@ -205,6 +215,17 @@ export type ProjectStyle = {
    * referent (snapshot). M7 akan memperkenalkan mekanisme override terpisah.
    */
   tokens: StyleTokens;
+  /**
+   * AI-PANEL-OVERRIDE: panel-level token overrides dari AI designSystem.overrides
+   * yang tidak muat di StyleTokens (karena StyleTokens hanya punya colors/
+   * typography/spacing/radius/shadow). Field ini dibaca oleh
+   * getDesignContractWithProjectStyle() untuk di-merge ke contract.learning.*
+   * dan contract.game.*.
+   *
+   * Shape: { [category]: { [panelName]: { [cssProp]: value } } }
+   * Contoh: { learning: { keyPointPanel: { background: '#1e293b', accentColor: '#fbbf24' } } }
+   */
+  panelOverrides?: Record<string, Record<string, Record<string, unknown>>>;
 };
 
 /**

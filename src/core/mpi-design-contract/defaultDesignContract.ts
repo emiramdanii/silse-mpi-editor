@@ -279,6 +279,29 @@ export const DESIGN_CONTRACTS: Record<DesignContractId, MpiDesignContract> = {
       mutedText: '#94a3b8',
       gold: '#fbbf24',
     },
+    // MISSION-DARK-PANEL-TOKENS: dark-theme panel tokens konsisten dengan bg gelap.
+    // Sebelumnya hanya override palette → keyPointPanel tetap pakai DEFAULT (#fffbeb light cream)
+    // yang kontras dengan bg gelap = belang.
+    learning: {
+      ...DEFAULT_DESIGN_CONTRACT.learning,
+      explanationPanel: { background: '#1e293b', radius: 16, padding: 20, border: '1px solid rgba(255,255,255,0.09)', shadow: 'none', glassEffect: false },
+      exampleCardStyle: { background: '#1e293b', radius: 16, padding: 20, border: '1px solid rgba(255,255,255,0.09)', shadow: 'none', glassEffect: false },
+      keyPointPanel: { background: 'rgba(251, 191, 36, 0.08)', radius: 13, padding: 16, border: '1px solid rgba(251, 191, 36, 0.25)', accentColor: '#fbbf24', iconColor: '#fbbf24', icon: '🔑', glassEffect: false, shadow: 'none' },
+      studentActionPanel: { background: '#1e293b', radius: 13, padding: 16, border: '1px solid rgba(255,255,255,0.09)', icon: '✏️', iconColor: '#fbbf24', labelColor: '#94a3b8', glassEffect: false, shadow: 'none' },
+      visualHintPanel: { color: '#94a3b8', fontStyle: 'italic', icon: '💡' },
+    },
+    game: {
+      ...DEFAULT_DESIGN_CONTRACT.game,
+      briefingPanel: { background: 'rgba(230, 57, 70, 0.08)', radius: 13, padding: 16, border: '1px solid rgba(230, 57, 70, 0.25)', glassEffect: false, shadow: 'none' },
+      targetPanel: { background: 'rgba(251, 191, 36, 0.08)', radius: 13, padding: 16, border: '1px solid rgba(251, 191, 36, 0.25)', glassEffect: false, shadow: 'none' },
+    },
+    feedback: {
+      ...DEFAULT_DESIGN_CONTRACT.feedback,
+      correct: { variant: 'correct', icon: '✓', color: '#34d399', background: 'rgba(52, 211, 153, 0.08)', borderColor: '#34d399', motionPreset: 'none' },
+      wrong: { variant: 'wrong', icon: '✗', color: '#ff6b6b', background: 'rgba(255, 107, 107, 0.08)', borderColor: '#ff6b6b', motionPreset: 'none' },
+      neutral: { variant: 'neutral', icon: '•', color: '#94a3b8', background: 'rgba(255, 255, 255, 0.04)', borderColor: '#94a3b8', motionPreset: 'none' },
+      warning: { variant: 'warning', icon: '!', color: '#fbbf24', background: 'rgba(251, 191, 36, 0.08)', borderColor: '#fbbf24', motionPreset: 'none' },
+    },
   },
   // GOLDEN-REFERENCE-RENDER-P1: Contract yang mengekstrak rasa visual dari reference HTML
   'golden-reference': {
@@ -392,12 +415,13 @@ export function getDesignContractWithProjectStyle(
     spacing?: Record<string, number>;
     radius?: Record<string, number>;
     shadow?: Record<string, string>;
-  } } | null,
+  }; panelOverrides?: Record<string, Record<string, Record<string, unknown>>> } | null,
 ): MpiDesignContract {
   const base = getDesignContract(stylePackId as DesignContractId);
   if (!projectStyle?.tokens) return base;
 
   const { colors, typography, spacing, radius } = projectStyle.tokens;
+  const panelOverrides = projectStyle.panelOverrides;
 
   return {
     ...base,
@@ -413,6 +437,9 @@ export function getDesignContractWithProjectStyle(
       success: colors.success ?? base.palette.success,
       warning: colors.warning ?? base.palette.warning,
       danger: colors.danger ?? base.palette.danger,
+      // ENGINE-GAP-FILL: accent + gold sekarang bisa di-override AI
+      accent: colors.accent ?? base.palette.accent,
+      gold: colors.gold ?? base.palette.gold,
     } : base.palette,
     typography: typography ? {
       ...base.typography,
@@ -441,36 +468,69 @@ export function getDesignContractWithProjectStyle(
       background: colors?.surface ?? base.palette.surface,
       border: `1px solid ${colors?.border ?? base.palette.border}`,
     },
-    // EXPORT-CONTRAST-03: override panel backgrounds agar konsisten dengan palette override.
-    // Bug: learning.explanationPanel, learning.studentActionPanel, quiz.questionPanel, quiz.answerCard
-    // punya hardcoded dark background dari base contract (golden-reference). Saat palette di-override
-    // ke light theme, panel backgrounds tetap dark → text gelap di panel gelap = unreadable.
-    // Fix: panel backgrounds mengikuti palette.surface, borders mengikuti palette.border.
+    // EXPORT-CONTRAST-03 + AI-PANEL-OVERRIDE: panel backgrounds konsisten dengan palette
+    // + AI panelOverrides menang di atas palette-derived default.
     learning: base.learning ? {
       ...base.learning,
       explanationPanel: base.learning.explanationPanel ? {
         ...base.learning.explanationPanel,
         background: colors?.surface ?? base.palette.surface,
         border: `1px solid ${colors?.border ?? base.palette.border}`,
+        ...((panelOverrides?.learning?.explanationPanel as Record<string, unknown>) ?? {}),
       } : base.learning.explanationPanel,
       studentActionPanel: base.learning.studentActionPanel ? {
         ...base.learning.studentActionPanel,
         background: colors?.surface ?? base.palette.surface,
         border: `1px solid ${colors?.border ?? base.palette.border}`,
         labelColor: colors?.mutedText ?? base.palette.mutedText,
+        ...((panelOverrides?.learning?.studentActionPanel as Record<string, unknown>) ?? {}),
       } : base.learning.studentActionPanel,
+      keyPointPanel: base.learning.keyPointPanel ? {
+        ...base.learning.keyPointPanel,
+        ...((panelOverrides?.learning?.keyPointPanel as Record<string, unknown>) ?? {}),
+      } : base.learning.keyPointPanel,
+      exampleCardStyle: base.learning.exampleCardStyle ? {
+        ...base.learning.exampleCardStyle,
+        background: colors?.surface ?? base.learning.exampleCardStyle.background,
+        border: `1px solid ${colors?.border ?? base.palette.border}`,
+        ...((panelOverrides?.learning?.exampleCardStyle as Record<string, unknown>) ?? {}),
+      } : base.learning.exampleCardStyle,
+      visualHintPanel: base.learning.visualHintPanel ? {
+        ...base.learning.visualHintPanel,
+        color: colors?.mutedText ?? base.learning.visualHintPanel.color,
+        ...((panelOverrides?.learning?.visualHintPanel as Record<string, unknown>) ?? {}),
+      } : base.learning.visualHintPanel,
     } : base.learning,
+    game: base.game ? {
+      ...base.game,
+      briefingPanel: base.game.briefingPanel ? {
+        ...base.game.briefingPanel,
+        ...((panelOverrides?.game?.briefingPanel as Record<string, unknown>) ?? {}),
+      } : base.game.briefingPanel,
+      targetPanel: base.game.targetPanel ? {
+        ...base.game.targetPanel,
+        ...((panelOverrides?.game?.targetPanel as Record<string, unknown>) ?? {}),
+      } : base.game.targetPanel,
+      actionCardStyle: base.game.actionCardStyle ? {
+        ...base.game.actionCardStyle,
+        background: colors?.surface ?? base.game.actionCardStyle.background,
+        border: `2px solid ${colors?.border ?? base.palette.border}`,
+        ...((panelOverrides?.game?.actionCardStyle as Record<string, unknown>) ?? {}),
+      } : base.game.actionCardStyle,
+    } : base.game,
     quiz: base.quiz ? {
       ...base.quiz,
       questionPanel: base.quiz.questionPanel ? {
         ...base.quiz.questionPanel,
         background: colors?.surface ?? base.palette.surface,
         border: `1px solid ${colors?.border ?? base.palette.border}`,
+        ...((panelOverrides?.quiz?.questionPanel as Record<string, unknown>) ?? {}),
       } : base.quiz.questionPanel,
       answerCard: base.quiz.answerCard ? {
         ...base.quiz.answerCard,
         background: colors?.surface ?? base.palette.surface,
         border: `1px solid ${colors?.border ?? base.palette.border}`,
+        ...((panelOverrides?.quiz?.answerCard as Record<string, unknown>) ?? {}),
       } : base.quiz.answerCard,
     } : base.quiz,
   };
