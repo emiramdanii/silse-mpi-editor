@@ -6,15 +6,30 @@ import { Inspector } from './Inspector';
 import { PreviewApp } from '../preview/PreviewApp';
 import { useAutosave } from '../storage/autosave';
 import { initHistory, useUndoRedoKeyboard } from '../store/undo-redo';
+import { useEditorStore } from '../store/editor-store';
+import { loadCurrentProject } from '../storage/project-storage';
+
+let hasAttemptedInitialLoad = false;
 
 export function EditorApp() {
   const { status, error } = useAutosave();
 
-  // F-01: Init undo/redo history + keyboard shortcuts
   useEffect(() => {
     initHistory();
   }, []);
   useUndoRedoKeyboard();
+
+  // AUTO-LOAD-ON-MOUNT: Load saved project from localStorage on first mount.
+  // Sebelumnya: editor mulai dengan project kosong → autosave overwrite saved project.
+  // Fix: auto-load saved project. Jika tidak ada, tetap pakai default.
+  useEffect(() => {
+    if (hasAttemptedInitialLoad) return;
+    hasAttemptedInitialLoad = true;
+    const result = loadCurrentProject();
+    if (result.ok && result.data) {
+      useEditorStore.getState().loadCurrent();
+    }
+  }, []);
 
   return (
     <div className="editor-app">
