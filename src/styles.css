@@ -3790,3 +3790,76 @@ textarea {
   pointer-events: none;
   z-index: 0;
 }
+
+/* =========================================================================
+   RESPONSIVE LAYOUT (FASE 2)
+   ========================================================================= */
+
+/* Medium screens (1024-1279px): reduce panel widths + compact buttons */
+@media (max-width: 1279px) {
+  .editor-body {
+    grid-template-columns: 220px 1fr 280px;
+  }
+  .editor-topbar__action {
+    padding: 0 8px;
+    font-size: 12px;
+    gap: 3px;
+  }
+  .editor-topbar__brand-sub {
+    display: none;
+  }
+  .editor-topbar__curriculum {
+    max-width: 120px;
+  }
+  /* Show scrollbar so user knows there's more */
+  .editor-topbar {
+    scrollbar-width: thin;
+  }
+  .editor-topbar::-webkit-scrollbar {
+    display: block;
+    height: 3px;
+  }
+  .editor-topbar::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 2px;
+  }
+}
+
+/* Small screens (768-1023px): collapse panels + icon-only buttons */
+@media (max-width: 1023px) {
+  .editor-body {
+    grid-template-columns: 180px 1fr 240px;
+  }
+  .editor-topbar {
+    gap: 8px;
+    padding: 0 8px;
+  }
+  .editor-topbar__action {
+    padding: 0 6px;
+    font-size: 11px;
+  }
+  .editor-topbar__brand-sub {
+    display: none;
+  }
+  .editor-topbar__curriculum {
+    display: none;
+  }
+}
+
+/* Very small screens (<768px): hide side panels, topbar scroll */
+@media (max-width: 767px) {
+  .editor-body {
+    grid-template-columns: 1fr;
+  }
+  .page-panel,
+  .inspector {
+    display: none;
+  }
+  .editor-topbar {
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+  .editor-topbar__brand-text {
+    font-size: 14px;
+  }
+}
