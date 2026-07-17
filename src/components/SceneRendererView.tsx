@@ -249,6 +249,148 @@ type SlotViewProps = {
   onSlotInteractionEnd?: () => void;
 };
 
+// ---------------------------------------------------------------------------
+// DYNAMIC-LAYOUT: LayoutGrid + LayoutRegion — generic, data-driven, no hardcode
+//
+// Konsep: Content component wrap elemen dengan <LayoutRegion name="explanation">
+// LayoutGrid baca slot.layout (dari AI JSON) → place setiap region sesuai mapping.
+//
+// AI bisa kirim:
+//   layout: { columns: 3, regions: { explanation: "full", examples: "right" } }
+//
+// LayoutGrid build grid template dari columns, map setiap region ke gridColumn.
+// TIDAK ADA hardcode element key — region name generic (string).
+//
+// Jika layout tidak di-set → fallback ke flex column (default lama).
+// ---------------------------------------------------------------------------
+
+type LayoutRegionProps = {
+  name: string;
+  children: ReactNode;
+  style?: CSSProperties;
+  className?: string;
+};
+
+/**
+ * LayoutRegion — wrap elemen dengan region name.
+ * LayoutGrid akan place region ini sesuai slot.layout.regions[name].
+ */
+function LayoutRegion({ children, style, className }: LayoutRegionProps) {
+  // LayoutRegion hanya wrap — LayoutGrid (parent) yang set gridColumn via context.
+  // Kita pakai simple approach: LayoutGrid iterate children + match LayoutRegion.name
+  return <div className={className} style={style} data-layout-region>{children}</div>;
+}
+
+type LayoutGridProps = {
+  layout?: { columns?: number; arrangement?: string; orientation?: 'horizontal' | 'vertical'; regions?: Record<string, string> };
+  children: ReactNode;
+  className?: string;
+  style?: CSSProperties;
+};
+
+/**
+ * LayoutGrid — generic grid renderer yang baca layout metadata.
+ * Iterate children, untuk setiap LayoutRegion baca name → lookup region di layout.regions.
+ *
+ * Grid template:
+ *   - arrangement: 'stack-vertical' → 1 column
+ *   - arrangement: 'grid-3' → 3 columns
+ *   - arrangement: 'grid-4' → 4 columns
+ *   - arrangement: 'sidebar-left' → '280px 1fr'
+ *   - arrangement: 'sidebar-right' → '1fr 280px'
+ *   - columns: N → N equal columns
+ *   - default → 1 column (flex column fallback)
+ *
+ * Region placement (via layout.regions[name]):
+ *   - "full" → span all columns
+ *   - "left" → column 1
+ *   - "right" → last column
+ *   - "top" / "bottom" → span all columns (auto row)
+ *   - numeric string "2", "3" → specific column
+ *   - default → auto (grid auto-placement)
+ */
+function LayoutGrid({ layout, children, className, style }: LayoutGridProps) {
+  const cols = layout?.columns ?? 1;
+  const arrangement = layout?.arrangement;
+  const regions = layout?.regions ?? {};
+
+  // Build grid template columns
+  const gridCols = arrangement === 'stack-vertical' ? '1fr'
+    : arrangement === 'grid-3' ? '1fr 1fr 1fr'
+    : arrangement === 'grid-4' ? '1fr 1fr 1fr 1fr'
+    : arrangement === 'sidebar-left' ? '280px 1fr'
+    : arrangement === 'sidebar-right' ? '1fr 280px'
+    : cols === 2 ? '1fr 1fr'
+    : cols === 3 ? '1fr 1fr 1fr'
+    : cols === 4 ? '1fr 1fr 1fr 1fr'
+    : cols === 5 ? '1fr 1fr 1fr 1fr 1fr'
+    : cols === 6 ? '1fr 1fr 1fr 1fr 1fr 1fr'
+    : '1fr';
+
+  const totalCols = gridCols.split(' ').length;
+
+  // Map region name ke gridColumn
+  const regionToGridCol = (region: string | undefined): string => {
+    if (!region) return 'auto';
+    if (region === 'full') return `1 / ${totalCols + 1}`;
+    if (region === 'left') return '1';
+    if (region === 'right') return totalCols === 1 ? '1' : totalCols.toString();
+    if (region === 'top' || region === 'bottom') return `1 / ${totalCols + 1}`;
+    // numeric column
+    const n = parseInt(region, 10);
+    if (!isNaN(n) && n >= 1 && n <= totalCols) return n.toString();
+    return 'auto';
+  };
+
+  // If no layout → fallback to flex column (backward compat)
+  if (!layout) {
+    return (
+      <div className={className} style={{ display: 'flex', flexDirection: 'column', gap: 12, ...style }}>
+        {children}
+      </div>
+    );
+  }
+
+  // Wrap each child dengan gridColumn style
+  // Children bisa berupa LayoutRegion (with name) atau plain element
+  const childArray = Array.isArray(children) ? children : [children];
+
+  return (
+    <div className={className} style={{
+      display: 'grid',
+      gridTemplateColumns: gridCols,
+      gridAutoRows: 'auto',
+      gap: 12,
+      ...style,
+    }}>
+      {childArray.map((child, i) => {
+        // Check if child is LayoutRegion (has data-layout-region)
+        const childProps = (child as React.ReactElement)?.props;
+        const regionName = childProps?.name;
+        const region = regions[regionName];
+        const gridColumn = regionToGridCol(region);
+
+        // Clone element with gridColumn style
+        if (child && typeof child === 'object' && 'props' in child) {
+          const ReactEl = child as React.ReactElement;
+          const existingStyle = ReactEl.props.style ?? {};
+          const existingClassName = ReactEl.props.className ?? '';
+          return {
+            ...ReactEl,
+            props: {
+              ...ReactEl.props,
+              style: { ...existingStyle, gridColumn },
+              className: existingClassName,
+              key: i,
+            },
+          };
+        }
+        return child;
+      })}
+    </div>
+  );
+}
+
 function SlotView({
   slot, contract, interactive, onSlotClick, onGameAction, onQuizAnswer, onInputFieldSubmit, selected,
   editorInteractive = false, onSlotDrag, onSlotResize, onSlotInteractionStart, onSlotInteractionEnd,
@@ -1048,51 +1190,28 @@ function LearningMaterialContent({
   const surfPadding = surf?.padding ?? contract.card.padding;
   const surfRadius = surf?.radius ?? contract.card.radius;
 
-  // DYNAMIC-LAYOUT: baca layout metadata dari AI untuk tentukan grid columns.
-  // AI bisa kirim: { columns: 3, arrangement: 'grid-3' } → 3 kolom horizontal
-  // Default: 2 kolom (split left-right)
+  // DYNAMIC-LAYOUT: baca layout metadata dari AI.
+  // Default regions: header=full, explanation=left, examples=right, keyPoints=left, studentAction=right, visualHint=full
+  // AI bisa override via layout.regions
   const layout = slot.layout;
-  const cols = layout?.columns ?? 2;
-  const arrangement = layout?.arrangement;
-  const regions = layout?.regions;
-
-  // Build grid template based on layout
-  const gridCols = arrangement === 'stack-vertical' ? '1fr'
-    : arrangement === 'grid-3' ? '1fr 1fr 1fr'
-    : arrangement === 'grid-4' ? '1fr 1fr 1fr 1fr'
-    : arrangement === 'sidebar-left' ? '280px 1fr'
-    : arrangement === 'sidebar-right' ? '1fr 280px'
-    : cols === 1 ? '1fr'
-    : cols === 3 ? '1fr 1fr 1fr'
-    : cols === 4 ? '1fr 1fr 1fr 1fr'
-    : '1fr 1fr'; // default 2 columns
-
-  // Determine region placement dari regions mapping
-  const explanationRegion = regions?.explanation ?? 'left';
-  const examplesRegion = regions?.examples ?? 'right';
-  const keyPointsRegion = regions?.keyPoints ?? 'left';
-  const studentActionRegion = regions?.studentAction ?? 'right';
-
-  // Map region ke gridColumn
-  const regionToCol = (region: string, totalCols: number) => {
-    if (region === 'full') return `1 / ${totalCols + 1}`;
-    if (region === 'left') return '1';
-    if (region === 'right') return totalCols === 2 ? '2' : totalCols.toString();
-    if (region === 'top' || region === 'bottom') return `1 / ${totalCols + 1}`;
-    return '1';
+  const defaultRegions = {
+    header: 'full',
+    explanation: 'left',
+    examples: 'right',
+    keyPoints: 'left',
+    studentAction: 'right',
+    visualHint: 'full',
   };
-
-  const totalCols = gridCols.split(' ').length;
-  const exampleGridCols = layout?.columns === 3 ? '1fr 1fr 1fr'
-    : layout?.columns === 4 ? '1fr 1fr 1fr 1fr'
-    : layout?.columns === 1 ? '1fr'
-    : '1fr';
+  const regions = { ...defaultRegions, ...(layout?.regions ?? {}) };
 
   return (
-    <div className="silse-learning-scene silse-premium-learning-scene" style={{ width: '100%', height: '100%', display: 'grid', gridTemplateColumns: gridCols, gridTemplateRows: 'auto 1fr auto auto', gap: 12, padding: 16, boxSizing: 'border-box', overflow: 'hidden' }}>
-      {/* Concept header — full width */}
-      <div className="silse-learning-header silse-premium-learning-header" style={{
-        gridColumn: `1 / ${totalCols + 1}`,
+    <LayoutGrid
+      layout={{ ...layout, regions }}
+      className="silse-learning-scene silse-premium-learning-scene"
+      style={{ width: '100%', height: '100%', padding: 16, boxSizing: 'border-box', overflow: 'hidden' }}
+    >
+      {/* Concept header */}
+      <LayoutRegion name="header" className="silse-learning-header silse-premium-learning-header" style={{
         fontSize: contract.typography.titleSize,
         fontWeight: contract.typography.titleWeight,
         fontFamily: contract.typography.heroFont,
@@ -1102,17 +1221,15 @@ function LearningMaterialContent({
         paddingLeft: 12,
       }}>
         {content.conceptTitle}
-      </div>
-      {content.conceptSubtitle && (
-        <div style={{ gridColumn: `1 / ${totalCols + 1}`, fontSize: contract.typography.subtitleSize, color: contract.palette.mutedText, marginTop: -8 }}>
-          {content.conceptSubtitle}
-        </div>
-      )}
+        {content.conceptSubtitle && (
+          <div style={{ fontSize: contract.typography.subtitleSize, color: contract.palette.mutedText, marginTop: 4 }}>
+            {content.conceptSubtitle}
+          </div>
+        )}
+      </LayoutRegion>
 
-      {/* Explanation panel — region: left (default) */}
-      <div className="silse-learning-explanation silse-premium-learning-explanation" style={{
-        gridColumn: regionToCol(explanationRegion, totalCols),
-        gridRow: '2',
+      {/* Explanation panel */}
+      <LayoutRegion name="explanation" className="silse-learning-explanation silse-premium-learning-explanation" style={{
         padding: surfPadding,
         borderRadius: surfRadius,
         background: surfBg,
@@ -1124,34 +1241,32 @@ function LearningMaterialContent({
         overflow: 'auto',
       }}>
         {content.explanation}
-      </div>
+      </LayoutRegion>
 
-      {/* Example cards — region: right (default) */}
+      {/* Example cards */}
       {content.examples && content.examples.length > 0 && (
-        <div style={{ gridColumn: regionToCol(examplesRegion, totalCols), gridRow: '2', overflow: 'auto' }}>
-        <SceneGrid contract={contract} className="silse-learning-example-grid silse-premium-learning-example-grid" columns={exampleGridCols} gap={10}>
-          {content.examples.map((ex) => (
-            <div key={ex.id} className="silse-learning-example-card silse-premium-learning-example-card" style={{
-              padding: surfPadding,
-              borderRadius: surfRadius,
-              background: contract.palette.surface,
-              border: surfBorder,
-              boxShadow: premiumShadow,
-              transition: 'all 0.18s ease',
-            }}>
-              <strong style={{ display: 'block', fontSize: 15, marginBottom: 4, color: contract.palette.text }}>{ex.title}</strong>
-              <div style={{ fontSize: 13, lineHeight: 1.5, color: contract.palette.text }}>{ex.body}</div>
-            </div>
-          ))}
-        </SceneGrid>
-        </div>
+        <LayoutRegion name="examples" style={{ overflow: 'auto' }}>
+          <SceneGrid contract={contract} className="silse-learning-example-grid silse-premium-learning-example-grid" columns="1fr" gap={10}>
+            {content.examples.map((ex) => (
+              <div key={ex.id} className="silse-learning-example-card silse-premium-learning-example-card" style={{
+                padding: surfPadding,
+                borderRadius: surfRadius,
+                background: contract.palette.surface,
+                border: surfBorder,
+                boxShadow: premiumShadow,
+                transition: 'all 0.18s ease',
+              }}>
+                <strong style={{ display: 'block', fontSize: 15, marginBottom: 4, color: contract.palette.text }}>{ex.title}</strong>
+                <div style={{ fontSize: 13, lineHeight: 1.5, color: contract.palette.text }}>{ex.body}</div>
+              </div>
+            ))}
+          </SceneGrid>
+        </LayoutRegion>
       )}
 
-      {/* Key point — region: left (default) */}
+      {/* Key point */}
       {content.keyPoints && content.keyPoints.length > 0 && (
-        <div className="silse-learning-key-point silse-premium-learning-key-point" style={{
-          gridColumn: regionToCol(keyPointsRegion, totalCols),
-          gridRow: '3',
+        <LayoutRegion name="keyPoints" className="silse-learning-key-point silse-premium-learning-key-point" style={{
           padding: contract.learning.keyPointPanel?.padding ?? 12,
           borderRadius: contract.learning.keyPointPanel?.radius ?? 10,
           background: contract.learning.keyPointPanel?.background ?? 'var(--silse-color-warning-soft, var(--color-warning-soft))',
@@ -1167,14 +1282,12 @@ function LearningMaterialContent({
               <li key={i} style={{ color: contract.palette.text }}>{kp}</li>
             ))}
           </ul>
-        </div>
+        </LayoutRegion>
       )}
 
-      {/* Student action — region: right (default) */}
+      {/* Student action */}
       {content.studentAction && (
-        <div className="silse-learning-student-action silse-premium-learning-student-action" style={{
-          gridColumn: regionToCol(studentActionRegion, totalCols),
-          gridRow: '3',
+        <LayoutRegion name="studentAction" className="silse-learning-student-action silse-premium-learning-student-action" style={{
           padding: contract.learning.studentActionPanel?.padding ?? 12,
           borderRadius: contract.learning.studentActionPanel?.radius ?? 10,
           background: contract.learning.studentActionPanel?.background ?? contract.palette.surface,
@@ -1189,14 +1302,12 @@ function LearningMaterialContent({
             <div style={{ fontSize: 11, fontWeight: 700, color: contract.learning.studentActionPanel?.labelColor ?? contract.palette.mutedText, textTransform: 'uppercase' }}>Student Action</div>
             <div style={{ fontSize: 14, fontWeight: 600, color: contract.palette.text }}>{content.studentAction}</div>
           </div>
-        </div>
+        </LayoutRegion>
       )}
 
-      {/* Visual hint — full width bottom */}
+      {/* Visual hint */}
       {content.visualHint && (
-        <div className="silse-learning-visual-hint silse-premium-learning-visual-hint" style={{
-          gridColumn: `1 / ${totalCols + 1}`,
-          gridRow: '4',
+        <LayoutRegion name="visualHint" className="silse-learning-visual-hint silse-premium-learning-visual-hint" style={{
           padding: 8,
           borderRadius: 8,
           background: 'transparent',
@@ -1206,9 +1317,9 @@ function LearningMaterialContent({
           textAlign: 'center',
         }}>
           {contract.learning.visualHintPanel?.icon ?? '💡'} {content.visualHint}
-        </div>
+        </LayoutRegion>
       )}
-    </div>
+    </LayoutGrid>
   );
 }
 
