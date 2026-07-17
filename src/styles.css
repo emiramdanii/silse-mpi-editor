@@ -202,7 +202,7 @@ textarea {
 
 .editor-body {
   display: grid;
-  grid-template-columns: 260px 1fr 320px;
+  grid-template-columns: 220px 1fr 280px;
   overflow: hidden;
   min-height: 0;
   width: 100%;

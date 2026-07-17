@@ -166,21 +166,34 @@ export function CanvasStage() {
   const gridSnapActive = gridConfig.enabled && gridConfig.snapToGrid;
 
   // MEGA FIX #3: Auto-fit scale calculation
+  // CRITICAL: Read dimensions from canvas-area (the flex:1 container that
+  // sits BELOW toolbar + nav). NOT from canvas-stage (which includes toolbar+nav).
+  // canvas-area is NOT transformed (inner wrapper is), so offsetWidth/Height
+  // are reliable layout dimensions.
   const [fitScale, setFitScale] = useState(1);
   const canvasAreaRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const handleResize = () => {
-      if (!canvasAreaRef.current) return;
-      const availW = canvasAreaRef.current.clientWidth - 48;
-      const availH = canvasAreaRef.current.clientHeight - 48;
+      // Read from canvas-area itself (NOT transformed, sits below toolbar+nav)
+      const area = canvasAreaRef.current;
+      if (!area) return;
+      // offsetWidth/offsetHeight = layout size (NOT affected by transform)
+      const availW = area.offsetWidth - 16;  // 8px padding each side
+      const availH = area.offsetHeight - 16;
       if (availW <= 0 || availH <= 0) return;
       const sX = availW / CANVAS_WIDTH;
       const sY = availH / CANVAS_HEIGHT;
       setFitScale(Math.min(sX, sY, 1));
     };
     handleResize();
+    // ResizeObserver for reliable tracking — observe canvas-area
+    const ro = new ResizeObserver(handleResize);
+    if (canvasAreaRef.current) ro.observe(canvasAreaRef.current);
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      ro.disconnect();
+    };
   }, []);
 
   // Combined scale: user zoom * fit scale
@@ -252,18 +265,25 @@ export function CanvasStage() {
         onPointerUp={handlePanEnd}
         onPointerLeave={handlePanEnd}
         style={{
-          transform: `translate(${pan.x}px, ${pan.y}px) scale(${effectiveScale})`,
-          transformOrigin: 'center center',
           cursor: isPanning ? 'grabbing' : 'default',
-          transition: isPanning ? 'none' : 'transform 0.15s ease-out',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           width: '100%',
           height: '100%',
           overflow: 'hidden',
+          padding: 8,
+          boxSizing: 'border-box',
         }}
       >
+        {/* Inner wrapper: transform applied HERE (not on canvas-area)
+            so canvas-area layout size is NOT affected by scale. */}
+        <div style={{
+          transform: `translate(${pan.x}px, ${pan.y}px) scale(${effectiveScale})`,
+          transformOrigin: 'center center',
+          transition: isPanning ? 'none' : 'transform 0.15s ease-out',
+          flexShrink: 0,
+        }}>
         <div
           ref={canvasRef}
           className={`canvas-frame silse-premium-stage ${bgPattern.pageClass} ${bgPattern.patternClass} ${coverClass} ${animProfile.pageEnterClass}`.trim()}
@@ -436,6 +456,7 @@ export function CanvasStage() {
           })()}
 
         </div>
+        </div>{/* close inner wrapper */}
       </div>
       {/* MEGA FIX #3: Zoom percentage indicator */}
       <div
