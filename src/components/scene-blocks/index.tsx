@@ -38,6 +38,8 @@ export type BlockProps = {
   style?: CSSProperties;
   /** CUSTOM-STYLE-01: AI custom CSS overlay per element */
   customStyle?: Record<string, Record<string, string>>;
+  /** DYNAMIC-LAYOUT: layout metadata dari AI untuk control grid */
+  layout?: { columns?: number; arrangement?: string; orientation?: 'horizontal' | 'vertical'; regions?: Record<string, string> };
 };
 
 // ---------------------------------------------------------------------------
@@ -81,22 +83,62 @@ const MOTION: MotionPresetProfile = resolveMotionProfile();
 // 1. SceneShell
 // ---------------------------------------------------------------------------
 
-export function SceneShell({ contract, children, className = '', style, customStyle }: BlockProps) {
+export function SceneShell({ contract, children, className = '', style, customStyle, layout }: BlockProps) {
   // PREMIUM-STYLE-AFTER-FOUNDATION-01: subtle radial gradient + depth via contract palette
   // 16:9 FIT POLICY: overflow hidden — content MUST fit within 1280x720 canvas.
   // The canvas-frame already clips, but per-scene hidden prevents inner scrollbars
   // from appearing inside quiz / game / learning scenes.
   // DEEP-STYLE-INJECTION-01: customStyle.shell from prop or context (prop wins)
+  //
+  // DYNAMIC-LAYOUT: jika layout prop ada, pakai grid (dynamic columns).
+  // Jika tidak, fallback ke flex column (backward compat).
   const ctxStyle = useCustomStyleFromContext();
   const merged = customStyle ?? ctxStyle;
   const safeStyle = sanitizeCustomStyle(merged);
   const shellStyle = safeStyle?.shell as CSSProperties | undefined;
   const bgColor = contract.palette.background;
   const surfaceColor = contract.palette.surface;
+
+  // Build grid template if layout provided
+  const cols = layout?.columns ?? 1;
+  const arrangement = layout?.arrangement;
+  const gridCols = arrangement === 'stack-vertical' ? '1fr'
+    : arrangement === 'grid-3' ? '1fr 1fr 1fr'
+    : arrangement === 'grid-4' ? '1fr 1fr 1fr 1fr'
+    : arrangement === 'sidebar-left' ? '280px 1fr'
+    : arrangement === 'sidebar-right' ? '1fr 280px'
+    : cols === 2 ? '1fr 1fr'
+    : cols === 3 ? '1fr 1fr 1fr'
+    : cols === 4 ? '1fr 1fr 1fr 1fr'
+    : cols === 5 ? '1fr 1fr 1fr 1fr 1fr'
+    : cols === 6 ? '1fr 1fr 1fr 1fr 1fr 1fr'
+    : '1fr';
+
+  const useGrid = !!layout;
+  const totalCols = gridCols.split(' ').length;
+  const regions = layout?.regions ?? {};
+  const regionToGridCol = (region: string | undefined): string => {
+    if (!region) return 'auto';
+    if (region === 'full') return `1 / ${totalCols + 1}`;
+    if (region === 'left') return '1';
+    if (region === 'right') return totalCols === 1 ? '1' : totalCols.toString();
+    if (region === 'top' || region === 'bottom') return `1 / ${totalCols + 1}`;
+    const n = parseInt(region, 10);
+    if (!isNaN(n) && n >= 1 && n <= totalCols) return n.toString();
+    return 'auto';
+  };
+
+  // If grid mode: wrap each child with gridColumn based on regions
+  const childArray = children ? (Array.isArray(children) ? children : [children]) : [];
+
   return (
     <div className={`silse-block-shell ${className}`.trim()} style={{
-      width: '100%', height: '100%', display: 'flex', flexDirection: 'column',
-      gap: 16, padding: 28, boxSizing: 'border-box',
+      width: '100%', height: '100%',
+      ...(useGrid
+        ? { display: 'grid', gridTemplateColumns: gridCols, gridAutoRows: 'auto', gap: 16 }
+        : { display: 'flex', flexDirection: 'column', gap: 16 }
+      ),
+      padding: 28, boxSizing: 'border-box',
       overflow: 'hidden',
       background: `radial-gradient(ellipse at top, ${surfaceColor} 0%, ${bgColor} 70%)`,
       color: contract.palette.text,
@@ -104,7 +146,25 @@ export function SceneShell({ contract, children, className = '', style, customSt
       ...style,
       ...shellStyle,
     }}>
-      {children}
+      {useGrid
+        ? childArray.map((child, i) => {
+            // Check if child has data-region-name (for layout region mapping)
+            const childProps = (child as React.ReactElement)?.props;
+            const regionName = childProps?.['data-region-name'];
+            const region = regions[regionName];
+            const gridColumn = regionToGridCol(region);
+            if (child && typeof child === 'object' && 'props' in child) {
+              const ReactEl = child as React.ReactElement;
+              const existingStyle = ReactEl.props.style ?? {};
+              return {
+                ...ReactEl,
+                props: { ...ReactEl.props, style: { ...existingStyle, gridColumn }, key: i },
+              };
+            }
+            return child;
+          })
+        : children
+      }
     </div>
   );
 }

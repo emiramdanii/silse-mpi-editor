@@ -64,7 +64,7 @@ function getSceneComposer(sceneType: string): ((props: SceneComposerProps) => Re
     'objectives-path': ({ contract, slot }) => <ObjectivesPathComposer contract={contract} content={slot.content as any} />,
     'starter-review': ({ contract, slot }) => <StarterReviewComposer contract={contract} content={slot.content as any} />,
     'discussion-scene': ({ contract, slot }) => <DiscussionSceneComposer contract={contract} content={slot.content as any} />,
-    'case-analysis': ({ contract, slot }) => <CaseAnalysisComposer contract={contract} content={slot.content as any} />,
+    'case-analysis': ({ contract, slot }) => <CaseAnalysisComposer contract={contract} content={slot.content as any} layout={slot.layout} />,
     'result-summary': ({ contract, slot }) => <ResultSummaryComposer contract={contract} content={slot.content as any} />,
     'reflection-journal': ({ contract, slot }) => <ReflectionJournalComposer contract={contract} content={slot.content as any} />,
     'classification-game': ({ contract, slot, sceneId, onScoreSet, onSceneComplete, onSceneReset }) => <ClassificationGameComposer contract={contract} content={slot.content as any} sceneId={sceneId} onScoreSet={onScoreSet} onSceneComplete={onSceneComplete} onSceneReset={onSceneReset} />,
@@ -78,7 +78,7 @@ function getSceneComposer(sceneType: string): ((props: SceneComposerProps) => Re
     'worksheet-activity': ({ contract, slot }) => <WorksheetActivityComposer contract={contract} content={slot.content as any} />,
     'rubric-panel': ({ contract, slot }) => <RubricPanelComposer contract={contract} content={slot.content as any} />,
     'timeline-story': ({ contract, slot }) => <TimelineStoryComposer contract={contract} content={slot.content as any} />,
-    'branching-scenario': ({ contract, slot }) => <BranchingScenarioComposer contract={contract} content={slot.content as any} />,
+    'branching-scenario': ({ contract, slot }) => <BranchingScenarioComposer contract={contract} content={slot.content as any} layout={slot.layout} />,
     'glossary-cards': ({ contract, slot }) => <GlossaryCardsComposer contract={contract} content={slot.content as any} />,
     'teacher-guide': ({ contract, slot }) => <TeacherGuideComposer contract={contract} content={slot.content as any} />,
     'accessibility-help': ({ contract, slot }) => <AccessibilityHelpComposer contract={contract} content={slot.content as any} />,
@@ -275,10 +275,10 @@ type LayoutRegionProps = {
  * LayoutRegion — wrap elemen dengan region name.
  * LayoutGrid akan place region ini sesuai slot.layout.regions[name].
  */
-function LayoutRegion({ children, style, className }: LayoutRegionProps) {
-  // LayoutRegion hanya wrap — LayoutGrid (parent) yang set gridColumn via context.
-  // Kita pakai simple approach: LayoutGrid iterate children + match LayoutRegion.name
-  return <div className={className} style={style} data-layout-region>{children}</div>;
+function LayoutRegion({ children, style, className, name }: LayoutRegionProps) {
+  // LayoutRegion hanya wrap — LayoutGrid (parent) yang set gridColumn via data-region-name.
+  // Kita pakai data-region-name attribute supaya React typecheck happy (bukan `name` prop).
+  return <div className={className} style={style} data-region-name={name}>{children}</div>;
 }
 
 type LayoutGridProps = {
@@ -364,9 +364,9 @@ function LayoutGrid({ layout, children, className, style }: LayoutGridProps) {
       ...style,
     }}>
       {childArray.map((child, i) => {
-        // Check if child is LayoutRegion (has data-layout-region)
+        // Check if child is LayoutRegion (has data-region-name)
         const childProps = (child as React.ReactElement)?.props;
-        const regionName = childProps?.name;
+        const regionName = childProps?.['data-region-name'];
         const region = regions[regionName];
         const gridColumn = regionToGridCol(region);
 

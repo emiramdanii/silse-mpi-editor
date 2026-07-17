@@ -163,32 +163,58 @@ export function DiscussionSceneComposer({
 // ---------------------------------------------------------------------------
 
 export function CaseAnalysisComposer({
-  contract, content,
+  contract, content, layout,
 }: {
   contract: MpiDesignContract;
   content: { caseText?: string; analysisPrompt?: string; revealExplanation?: string; discussionPrompt?: string };
+  layout?: { columns?: number; arrangement?: string; orientation?: 'horizontal' | 'vertical'; regions?: Record<string, string> };
 }) {
   const [revealed, setRevealed] = useState(false);
+  // DYNAMIC-LAYOUT: default regions untuk case analysis
+  const defaultRegions = {
+    header: 'full',
+    caseText: 'left',
+    analysisPrompt: 'right',
+    reveal: 'full',
+    discussion: 'full',
+    response: 'full',
+    action: 'full',
+  };
+  const mergedLayout = layout
+    ? { ...layout, regions: { ...defaultRegions, ...(layout.regions ?? {}) } }
+    : undefined;
   return (
-    <SceneShell contract={contract} className="silse-scene-case-analysis">
+    <SceneShell contract={contract} className="silse-scene-case-analysis" layout={mergedLayout}>
       <SceneHeader contract={contract} chipIcon="🔗" chipLabel="Materi · ±15 Menit" chipColor={contract.palette.secondary} title="Analisis Kasus" />
-      <ScenePanel contract={contract} className="silse-case-card" title="Kasus">
-        <div style={{ fontSize: 14, lineHeight: 1.7, color: contract.palette.text }}>{content.caseText || 'Kasus'}</div>
-      </ScenePanel>
-      {content.analysisPrompt && (
-        <ScenePanel contract={contract} title="Pertanyaan Analisis">
-          <div style={{ fontSize: 15, fontWeight: 700, color: contract.palette.gold }}>{content.analysisPrompt}</div>
+      <div data-region-name="caseText">
+        <ScenePanel contract={contract} className="silse-case-card" title="Kasus">
+          <div style={{ fontSize: 14, lineHeight: 1.7, color: contract.palette.text }}>{content.caseText || 'Kasus'}</div>
         </ScenePanel>
+      </div>
+      {content.analysisPrompt && (
+        <div data-region-name="analysisPrompt">
+          <ScenePanel contract={contract} title="Pertanyaan Analisis">
+            <div style={{ fontSize: 15, fontWeight: 700, color: contract.palette.gold }}>{content.analysisPrompt}</div>
+          </ScenePanel>
+        </div>
       )}
       {content.revealExplanation && (
-        <RevealBlock contract={contract} className="silse-case-reveal" label="Pembahasan" text={content.revealExplanation} revealed={revealed} />
+        <div data-region-name="reveal">
+          <RevealBlock contract={contract} className="silse-case-reveal" label="Pembahasan" text={content.revealExplanation} revealed={revealed} />
+        </div>
       )}
       {content.discussionPrompt && (
-        <DiscussionBanner contract={contract} className="silse-case-discussion" label="Diskusi" title="Diskusikan!" body={content.discussionPrompt} icon="💬" accentColor={contract.palette.gold} />
+        <div data-region-name="discussion">
+          <DiscussionBanner contract={contract} className="silse-case-discussion" label="Diskusi" title="Diskusikan!" body={content.discussionPrompt} icon="💬" accentColor={contract.palette.gold} />
+        </div>
       )}
-      <ResponseInputBlock contract={contract} placeholder="Tulis analisismu..." />
+      <div data-region-name="response">
+        <ResponseInputBlock contract={contract} placeholder="Tulis analisismu..." />
+      </div>
       {content.revealExplanation && (
-        <ActionButtonBlock contract={contract} label={revealed ? 'Sembunyikan' : 'Lihat Pembahasan'} onClick={() => setRevealed(!revealed)} />
+        <div data-region-name="action">
+          <ActionButtonBlock contract={contract} label={revealed ? 'Sembunyikan' : 'Lihat Pembahasan'} onClick={() => setRevealed(!revealed)} />
+        </div>
       )}
     </SceneShell>
   );
@@ -1329,7 +1355,7 @@ export function TimelineStoryComposer({
 // ---------------------------------------------------------------------------
 
 export function BranchingScenarioComposer({
-  contract, content,
+  contract, content, layout,
 }: {
   contract: MpiDesignContract;
   content: {
@@ -1337,21 +1363,34 @@ export function BranchingScenarioComposer({
     choices?: { id: string; label: string; consequence: string; isCorrect?: boolean }[];
     resetLabel?: string;
   };
+  layout?: { columns?: number; arrangement?: string; orientation?: 'horizontal' | 'vertical'; regions?: Record<string, string> };
 }) {
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   const choices = content.choices || [];
   const selected = choices.find((c) => c.id === selectedChoice);
 
+  // DYNAMIC-LAYOUT: default regions untuk branching scenario
+  const defaultRegions = {
+    header: 'full',
+    prompt: 'full',
+    choices: 'left',
+    consequence: 'right',
+    reset: 'full',
+  };
+  const mergedLayout = layout
+    ? { ...layout, regions: { ...defaultRegions, ...(layout.regions ?? {}) } }
+    : undefined;
+
   return (
-    <SceneShell contract={contract} className="silse-scene-branching-scenario">
+    <SceneShell contract={contract} className="silse-scene-branching-scenario" layout={mergedLayout}>
       <SceneHeader contract={contract} chipIcon="🌿" chipLabel="Skenario" chipColor={contract.palette.accent} title="Branching Scenario" />
       {content.scenarioPrompt && (
-        <div className="silse-branching-prompt" data-testid="branching-prompt" style={{ padding: 16, borderRadius: contract.card.radius, background: `${contract.palette.accent}11`, border: `1px solid ${contract.palette.accent}33`, fontSize: 15, lineHeight: 1.6, color: contract.palette.text, fontWeight: 600 }}>
+        <div data-region-name="prompt" className="silse-branching-prompt" data-testid="branching-prompt" style={{ padding: 16, borderRadius: contract.card.radius, background: `${contract.palette.accent}11`, border: `1px solid ${contract.palette.accent}33`, fontSize: 15, lineHeight: 1.6, color: contract.palette.text, fontWeight: 600 }}>
           {content.scenarioPrompt}
         </div>
       )}
       {!selectedChoice && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div data-region-name="choices" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {choices.map((c) => (
             <button
               key={c.id}
@@ -1368,7 +1407,7 @@ export function BranchingScenarioComposer({
         </div>
       )}
       {selected && (
-        <div className="silse-branching-consequence" data-testid="branching-consequence" style={{
+        <div data-region-name="consequence" className="silse-branching-consequence" data-testid="branching-consequence" style={{
           padding: 16, borderRadius: contract.card.radius,
           background: selected.isCorrect ? `${contract.palette.success}11` : `${contract.palette.warning}11`,
           border: `1px solid ${selected.isCorrect ? contract.palette.success : contract.palette.warning}40`,
@@ -1380,7 +1419,9 @@ export function BranchingScenarioComposer({
         </div>
       )}
       {selectedChoice && (
-        <ActionButtonBlock contract={contract} label={content.resetLabel || '↺ Coba Lagi'} onClick={() => setSelectedChoice(null)} variant="secondary" />
+        <div data-region-name="reset">
+          <ActionButtonBlock contract={contract} label={content.resetLabel || '↺ Coba Lagi'} onClick={() => setSelectedChoice(null)} variant="secondary" />
+        </div>
       )}
     </SceneShell>
   );
