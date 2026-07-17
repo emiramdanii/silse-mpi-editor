@@ -66,71 +66,79 @@ export const DEFAULT_TEXT_VARIANT_BY_ROLE: Record<
 export const PAGE_ROLE_CAPABILITIES: Record<PageRole, PageRoleCapability> = {
   cover: {
     role: 'cover',
-    allowedComponents: ['text'],
-    allowAddComponent: false,
+    // V2-PILAR-2: cover juga bisa tambah overlay (hotspot/input-field) di atas slide PNG
+    allowedComponents: ['text', 'hotspot-overlay', 'input-field'],
+    allowAddComponent: true,
     fixedSlots: ['title', 'subtitle', 'meta'],
     description: 'Halaman pembuka MPI',
   },
   guide: {
     role: 'guide',
     // LXC-02: add 'layered-info' for panduan berlapis (langkah-langkah dll).
-    allowedComponents: ['text', 'card', 'navigation', 'layered-info'],
+    // V2-PILAR-2: add overlay components
+    allowedComponents: ['text', 'card', 'navigation', 'layered-info', 'hotspot-overlay', 'input-field'],
     allowAddComponent: true,
     description: 'Panduan / petunjuk penggunaan MPI',
   },
   menu: {
     role: 'menu',
     // LXC-02: add 'layered-info' for menu berlapis (kategori materi dll).
-    allowedComponents: ['text', 'card', 'navigation', 'layered-info'],
+    // V2-PILAR-2: add overlay components
+    allowedComponents: ['text', 'card', 'navigation', 'layered-info', 'hotspot-overlay', 'input-field'],
     allowAddComponent: true,
     description: 'Menu / peta materi MPI',
   },
   learningObjectives: {
     role: 'learningObjectives',
     // UX-03 Patch-1: add 'navigation' so patterns can add "Lanjut →" button.
-    // Aligns with "bebas jalan bantu" principle — every scene needs a way out.
     // LXC-02: add 'layered-info' for Tujuan Pembelajaran berlapis
-    // (sebelumnya/hari ini/berikutnya, CP/ATP/TP, dll).
-    allowedComponents: ['text', 'navigation', 'layered-info', 'learning-bridge'],
+    // V2-PILAR-2: add overlay components
+    allowedComponents: ['text', 'navigation', 'layered-info', 'learning-bridge', 'hotspot-overlay', 'input-field'],
     allowAddComponent: true,
     description: 'Tujuan pembelajaran',
   },
   starter: {
     role: 'starter',
-    allowedComponents: ['text', 'image', 'card', 'navigation', 'learning-bridge'],
+    // V2-PILAR-2: add overlay components
+    allowedComponents: ['text', 'image', 'card', 'navigation', 'learning-bridge', 'hotspot-overlay', 'input-field'],
     allowAddComponent: true,
     description: 'Pemantik / apersepsi',
   },
   material: {
     role: 'material',
     // LXC-02: add 'layered-info' for materi berlapis (progressive disclosure).
-    allowedComponents: ['text', 'image', 'card', 'navigation', 'layered-info', 'learning-bridge'],
+    // V2-PILAR-2: add overlay components
+    allowedComponents: ['text', 'image', 'card', 'navigation', 'layered-info', 'learning-bridge', 'hotspot-overlay', 'input-field'],
     allowAddComponent: true,
     description: 'Materi utama',
   },
   activity: {
     role: 'activity',
-    allowedComponents: ['text', 'image', 'card', 'navigation', 'game', 'learning-bridge'],
+    // V2-PILAR-2: add overlay components
+    allowedComponents: ['text', 'image', 'card', 'navigation', 'game', 'learning-bridge', 'hotspot-overlay', 'input-field'],
     allowAddComponent: true,
     description: 'Aktivitas siswa',
   },
   quiz: {
     role: 'quiz',
     // UX-03 Patch-1: add 'navigation' so patterns can add "Berikutnya →" button.
-    allowedComponents: ['text', 'question', 'game', 'navigation', 'learning-bridge'],
+    // V2-PILAR-2: add overlay components
+    allowedComponents: ['text', 'question', 'game', 'navigation', 'learning-bridge', 'hotspot-overlay', 'input-field'],
     allowAddComponent: true,
     description: 'Evaluasi / kuis',
   },
   reflection: {
     role: 'reflection',
-    allowedComponents: ['text', 'card', 'navigation', 'learning-bridge'],
+    // V2-PILAR-2: add overlay components
+    allowedComponents: ['text', 'card', 'navigation', 'learning-bridge', 'hotspot-overlay', 'input-field'],
     allowAddComponent: true,
     description: 'Refleksi pembelajaran',
   },
   closing: {
     role: 'closing',
     // UX-03 Patch-1: add 'card' so patterns can add badge/rangkuman cards.
-    allowedComponents: ['text', 'card', 'navigation', 'learning-bridge'],
+    // V2-PILAR-2: add overlay components
+    allowedComponents: ['text', 'card', 'navigation', 'learning-bridge', 'hotspot-overlay', 'input-field'],
     allowAddComponent: true,
     description: 'Penutup',
   },

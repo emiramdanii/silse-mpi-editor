@@ -87,8 +87,12 @@ export function PreviewApp() {
   const isLast = currentIdx === project.pages.length - 1;
 
   // V2-PILAR-3: Count total scoring components in project for dashboard progress
+  // Count dari 2 sumber:
+  //   1. page.components (legacy component-based pages)
+  //   2. page.sceneContent (scene-based pages — quiz-question, game-mission, branching-scenario)
   const totalScoringComponents = project.pages.reduce((count, page) => {
-    return count + page.components.filter((c) => {
+    // Source 1: page.components
+    let pageScore = page.components.filter((c) => {
       if (c.type === 'question' || c.type === 'game') return true;
       if (c.type === 'input-field') {
         const ic = c as InputFieldComponent;
@@ -96,9 +100,24 @@ export function PreviewApp() {
       }
       return false;
     }).length;
+
+    // Source 2: sceneContent — check if sceneType is scoring-capable
+    const sceneContent = page.sceneContent as Record<string, unknown> | undefined;
+    if (sceneContent && typeof sceneContent.kind === 'string') {
+      const kind = sceneContent.kind;
+      // Scoring-capable scene content kinds
+      if (kind === 'quiz-question' || kind === 'game-mission' || kind === 'classification-game' ||
+          kind === 'matching-game' || kind === 'sequencing-game' || kind === 'branching-scenario' ||
+          kind === 'diagnostic-check' || kind === 'remedial-practice') {
+        pageScore += 1;
+      }
+    }
+
+    return count + pageScore;
   }, 0);
 
-  // V2-PILAR-3: Show dashboard on closing page (SessionDashboard handles its own store subscription)
+  // V2-PILAR-3: Show dashboard on closing page
+  // Also show if user has answered any questions (even if not on closing page)
   const showDashboard = isClosing;
 
   return (
