@@ -18,6 +18,7 @@ const KEYS = {
   savedProjects: 'silse.savedProjects',
   savedStylePacks: 'silse.savedStylePacks',
   customTemplates: 'silse.customTemplates',
+  masterTemplates: 'silse.masterTemplates',
 } as const;
 
 export type StorageKey = keyof typeof KEYS;
