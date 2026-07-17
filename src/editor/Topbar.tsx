@@ -507,6 +507,41 @@ export function Topbar() {
               >
                 {slideImportInProgress ? '⏳ Mengimpor…' : '🖼️ Impor Slide'}
               </button>
+              <button
+                onClick={() => {
+                  setShowBuatMenu(false);
+                  import('../storage/master-template-storage').then(({ listMasterTemplates }) => {
+                    import('../core/master-template').then(({ cloneMasterToProject }) => {
+                      const masters = listMasterTemplates();
+                      if (masters.length === 0) {
+                        alert('Belum ada Master Template. Simpan project sebagai Master dulu (Berkas → Save as Master Template).');
+                        return;
+                      }
+                      const masterList = masters.map((m, i) => `${i + 1}. ${m.name} (${m.pageStructure.length} halaman, ${m.stylePackId})`).join('\n');
+                      const choice = window.prompt(`Pilih Master Template (1-${masters.length}):\n\n${masterList}\n\nMasukkan nomor:`);
+                      const idx = parseInt(choice || '0', 10) - 1;
+                      if (idx < 0 || idx >= masters.length) {
+                        alert('Pilihan tidak valid.');
+                        return;
+                      }
+                      const topic = window.prompt('Topik MPI baru:', '');
+                      if (!topic || !topic.trim()) return;
+                      const result = cloneMasterToProject(masters[idx], topic.trim());
+                      if (result.ok) {
+                        useEditorStore.getState().setProject(result.project);
+                        alert(`MPI "${topic}" berhasil dibuat dari Master "${masters[idx].name}". Style + layout diwarisi, konten kosong — isi sendiri.`);
+                      } else {
+                        alert(`Gagal: ${result.error}`);
+                      }
+                    });
+                  });
+                }}
+                data-testid="topbar-clone-master"
+                data-action="clone-master"
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, borderRadius: 4, color: 'var(--color-ai-style, #7c3aed)', fontWeight: 700 }}
+              >
+                🏛️ Clone dari Master Template
+              </button>
             </div>
           )}
         </div>
@@ -594,6 +629,26 @@ export function Topbar() {
                 style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, borderRadius: 4, color: 'var(--color-text, #1f2533)' }}
               >
                 📝 Simpan Template
+              </button>
+              <button
+                onClick={() => {
+                  setShowBerkasMenu(false);
+                  const name = window.prompt('Nama Master Template:', project.title);
+                  if (name && name.trim()) {
+                    import('../core/master-template').then(({ createMasterFromProject }) => {
+                      import('../storage/master-template-storage').then(({ saveMasterTemplate }) => {
+                        const master = createMasterFromProject(project, name.trim(), '');
+                        const result = saveMasterTemplate(master);
+                        alert(result.ok ? `Master Template "${name}" tersimpan! Clone dari Master ini untuk membuat MPI baru dengan style + layout yang sama.` : `Gagal: ${result.error}`);
+                      });
+                    });
+                  }
+                }}
+                data-testid="topbar-save-as-master"
+                data-action="save-as-master"
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, borderRadius: 4, color: 'var(--color-ai-style, #7c3aed)', fontWeight: 700 }}
+              >
+                🏛️ Save as Master Template
               </button>
               <button
                 onClick={() => { setShowBerkasMenu(false); setShowProjectLibrary(true); }}
