@@ -155,6 +155,8 @@ export type SimplePage = {
   sceneSlotRole?: string;
   /** CUSTOM-STYLE-01: Custom CSS from AI for visual enhancement */
   sceneCustomStyle?: Record<string, Record<string, string>>;
+  /** DYNAMIC-LAYOUT: Layout metadata dari AI untuk control renderer grid */
+  sceneLayout?: { columns?: number; arrangement?: string; orientation?: 'horizontal' | 'vertical'; regions?: Record<string, string> };
   /**
    * V2-PILAR-2.5: Warna dominan hasil ekstraksi dari slide PNG.
    * Format: HEX string (#RRGGBB). Disimpan saat impor PNG.

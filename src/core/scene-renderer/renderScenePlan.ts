@@ -112,6 +112,8 @@ export type SceneRenderSlot = {
   designTokenKey?: string;
   /** DESIGN-CONTRACT-RENDER-PARITY-01: resolved visual instruction from contract. */
   resolvedStyle?: SlotResolvedStyle;
+  /** DYNAMIC-LAYOUT: layout metadata dari AI untuk control renderer grid */
+  layout?: { columns?: number; arrangement?: string; orientation?: 'horizontal' | 'vertical'; regions?: Record<string, string> };
 };
 
 export type SceneRenderPlan = {
@@ -239,6 +241,7 @@ function mapSlotToRenderSlot(slot: MpiSceneSlot, contract: MpiDesignContract): S
     content: slot.content,
     designTokenKey: slot.designTokenKey,
     resolvedStyle: resolveSlotStyle(slot, contract),
+    layout: slot.layout,
   };
 }
 

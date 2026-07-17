@@ -157,7 +157,51 @@ function normalizeSlot(slot: unknown): AiBlueprintSlot {
   if (customStyle) {
     normalized.customStyle = customStyle;
   }
+  // DYNAMIC-LAYOUT: pertahankan layout metadata dari AI.
+  // Renderer baca field ini untuk tentukan grid columns, arrangement, dst.
+  const layout = normalizeLayout(slot.layout);
+  if (layout) {
+    normalized.layout = layout;
+  }
   return normalized;
+}
+
+/**
+ * DYNAMIC-LAYOUT: Normalize layout metadata dari AI.
+ * Validate struktur + clamp values ke range aman.
+ */
+function normalizeLayout(raw: unknown): import('./schema').SceneLayout | undefined {
+  if (!isObject(raw)) return undefined;
+  const result: import('./schema').SceneLayout = {};
+  // columns: clamp 1-6
+  if (typeof raw.columns === 'number' && raw.columns >= 1 && raw.columns <= 6) {
+    result.columns = Math.floor(raw.columns);
+  }
+  // arrangement: validate enum
+  if (typeof raw.arrangement === 'string') {
+    const valid = ['split-left-right', 'stack-vertical', 'grid-3', 'grid-4', 'sidebar-left', 'sidebar-right'];
+    if (valid.includes(raw.arrangement)) {
+      result.arrangement = raw.arrangement as import('./schema').SceneLayout['arrangement'];
+    }
+  }
+  // orientation
+  if (raw.orientation === 'horizontal' || raw.orientation === 'vertical') {
+    result.orientation = raw.orientation;
+  }
+  // regions: validate keys + values
+  if (isObject(raw.regions)) {
+    const regions: Record<string, 'left' | 'right' | 'top' | 'bottom' | 'full'> = {};
+    const validRegions = ['left', 'right', 'top', 'bottom', 'full'];
+    for (const [key, val] of Object.entries(raw.regions)) {
+      if (typeof val === 'string' && validRegions.includes(val)) {
+        regions[key] = val as 'left' | 'right' | 'top' | 'bottom' | 'full';
+      }
+    }
+    if (Object.keys(regions).length > 0) {
+      result.regions = regions;
+    }
+  }
+  return Object.keys(result).length > 0 ? result : undefined;
 }
 
 function normalizeScene(scene: unknown): AiBlueprintScene {

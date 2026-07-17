@@ -220,6 +220,35 @@ export type AiBlueprintSlot = {
   content: AiBlueprintSlotContent;
   /** CUSTOM-STYLE-01: Custom CSS from AI for visual enhancement */
   customStyle?: CustomStyleMap;
+  /**
+   * DYNAMIC-LAYOUT: AI bisa specify layout metadata untuk control renderer.
+   * Renderer baca field ini untuk tentukan grid columns, orientation, dst.
+   *
+   * Contoh: { columns: 3, arrangement: 'grid-3', orientation: 'horizontal' }
+   *   → renderer pakai 3 kolom horizontal untuk example cards
+   *
+   * Jika tidak di-set, renderer pakai default (2-column untuk learning scene).
+   */
+  layout?: SceneLayout;
+};
+
+/**
+ * DYNAMIC-LAYOUT: Layout metadata yang AI bisa kirim via JSON.
+ * Renderer baca field ini untuk tentukan bagaimana konten di-arrange.
+ */
+export type SceneLayout = {
+  /** Jumlah kolom horizontal (1, 2, 3, 4). Default: 2 untuk learning scene. */
+  columns?: number;
+  /** Arrangement style. */
+  arrangement?: 'split-left-right' | 'stack-vertical' | 'grid-3' | 'grid-4' | 'sidebar-left' | 'sidebar-right';
+  /** Orientation utama. */
+  orientation?: 'horizontal' | 'vertical';
+  /**
+   * Region mapping: specify elemen mana di region mana.
+   * Contoh: { "explanation": "left", "examples": "right", "keyPoints": "left", "studentAction": "right" }
+   * Renderer akan place elemen sesuai region mapping.
+   */
+  regions?: Record<string, 'left' | 'right' | 'top' | 'bottom' | 'full'>;
 };
 
 // ---------------------------------------------------------------------------

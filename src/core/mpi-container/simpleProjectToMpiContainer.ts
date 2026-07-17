@@ -281,6 +281,10 @@ function mapPageToScene(page: SimplePage): MpiScene {
         }
       : { x: 72, y: 120, width: 1136, height: 480 };
     slots = [createMpiSlot(page.sceneSlotRole ?? 'primary', placement, page.sceneContent as MpiSceneSlotContent)];
+    // DYNAMIC-LAYOUT: pass page.sceneLayout ke slot[0] supaya renderer bisa baca
+    if (page.sceneLayout) {
+      slots[0].layout = page.sceneLayout;
+    }
   } else {
     slots = page.components.map(mapComponentToSlot);
   }

@@ -116,6 +116,8 @@ function mapSceneToPage(
     sceneSlotRole: primarySlot?.role,
     // CUSTOM-STYLE-01: pass customStyle from AI to page
     sceneCustomStyle: primarySlot?.customStyle,
+    // DYNAMIC-LAYOUT: pass layout metadata from AI to page
+    sceneLayout: primarySlot?.layout,
   };
 }
 

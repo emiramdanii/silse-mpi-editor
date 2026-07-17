@@ -1048,10 +1048,51 @@ function LearningMaterialContent({
   const surfPadding = surf?.padding ?? contract.card.padding;
   const surfRadius = surf?.radius ?? contract.card.radius;
 
+  // DYNAMIC-LAYOUT: baca layout metadata dari AI untuk tentukan grid columns.
+  // AI bisa kirim: { columns: 3, arrangement: 'grid-3' } → 3 kolom horizontal
+  // Default: 2 kolom (split left-right)
+  const layout = slot.layout;
+  const cols = layout?.columns ?? 2;
+  const arrangement = layout?.arrangement;
+  const regions = layout?.regions;
+
+  // Build grid template based on layout
+  const gridCols = arrangement === 'stack-vertical' ? '1fr'
+    : arrangement === 'grid-3' ? '1fr 1fr 1fr'
+    : arrangement === 'grid-4' ? '1fr 1fr 1fr 1fr'
+    : arrangement === 'sidebar-left' ? '280px 1fr'
+    : arrangement === 'sidebar-right' ? '1fr 280px'
+    : cols === 1 ? '1fr'
+    : cols === 3 ? '1fr 1fr 1fr'
+    : cols === 4 ? '1fr 1fr 1fr 1fr'
+    : '1fr 1fr'; // default 2 columns
+
+  // Determine region placement dari regions mapping
+  const explanationRegion = regions?.explanation ?? 'left';
+  const examplesRegion = regions?.examples ?? 'right';
+  const keyPointsRegion = regions?.keyPoints ?? 'left';
+  const studentActionRegion = regions?.studentAction ?? 'right';
+
+  // Map region ke gridColumn
+  const regionToCol = (region: string, totalCols: number) => {
+    if (region === 'full') return `1 / ${totalCols + 1}`;
+    if (region === 'left') return '1';
+    if (region === 'right') return totalCols === 2 ? '2' : totalCols.toString();
+    if (region === 'top' || region === 'bottom') return `1 / ${totalCols + 1}`;
+    return '1';
+  };
+
+  const totalCols = gridCols.split(' ').length;
+  const exampleGridCols = layout?.columns === 3 ? '1fr 1fr 1fr'
+    : layout?.columns === 4 ? '1fr 1fr 1fr 1fr'
+    : layout?.columns === 1 ? '1fr'
+    : '1fr';
+
   return (
-    <div className="silse-learning-scene silse-premium-learning-scene" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: 12, padding: 16, boxSizing: 'border-box', overflow: 'hidden' }}>
-      {/* Concept header */}
+    <div className="silse-learning-scene silse-premium-learning-scene" style={{ width: '100%', height: '100%', display: 'grid', gridTemplateColumns: gridCols, gridTemplateRows: 'auto 1fr auto auto', gap: 12, padding: 16, boxSizing: 'border-box', overflow: 'hidden' }}>
+      {/* Concept header — full width */}
       <div className="silse-learning-header silse-premium-learning-header" style={{
+        gridColumn: `1 / ${totalCols + 1}`,
         fontSize: contract.typography.titleSize,
         fontWeight: contract.typography.titleWeight,
         fontFamily: contract.typography.heroFont,
@@ -1063,13 +1104,15 @@ function LearningMaterialContent({
         {content.conceptTitle}
       </div>
       {content.conceptSubtitle && (
-        <div style={{ fontSize: contract.typography.subtitleSize, color: contract.palette.mutedText, marginTop: -8 }}>
+        <div style={{ gridColumn: `1 / ${totalCols + 1}`, fontSize: contract.typography.subtitleSize, color: contract.palette.mutedText, marginTop: -8 }}>
           {content.conceptSubtitle}
         </div>
       )}
 
-      {/* Explanation panel */}
+      {/* Explanation panel — region: left (default) */}
       <div className="silse-learning-explanation silse-premium-learning-explanation" style={{
+        gridColumn: regionToCol(explanationRegion, totalCols),
+        gridRow: '2',
         padding: surfPadding,
         borderRadius: surfRadius,
         background: surfBg,
@@ -1078,14 +1121,15 @@ function LearningMaterialContent({
         fontSize: contract.typography.bodySize,
         lineHeight: contract.typography.lineHeight,
         color: contract.palette.text,
+        overflow: 'auto',
       }}>
         {content.explanation}
       </div>
 
-      {/* Example cards — LAYOUT-STYLE-01: SceneGrid for customStyle.grid support.
-          L2-3: columns default wired to contract.learning.exampleGridColumns. */}
+      {/* Example cards — region: right (default) */}
       {content.examples && content.examples.length > 0 && (
-        <SceneGrid contract={contract} className="silse-learning-example-grid silse-premium-learning-example-grid" columns={contract.learning?.exampleGridColumns ?? 'repeat(auto-fill, minmax(280px, 1fr))'} gap={10}>
+        <div style={{ gridColumn: regionToCol(examplesRegion, totalCols), gridRow: '2', overflow: 'auto' }}>
+        <SceneGrid contract={contract} className="silse-learning-example-grid silse-premium-learning-example-grid" columns={exampleGridCols} gap={10}>
           {content.examples.map((ex) => (
             <div key={ex.id} className="silse-learning-example-card silse-premium-learning-example-card" style={{
               padding: surfPadding,
@@ -1100,11 +1144,14 @@ function LearningMaterialContent({
             </div>
           ))}
         </SceneGrid>
+        </div>
       )}
 
-      {/* Key point — FOUNDATION-HARDENING-01: visual dari contract.learning.keyPointPanel */}
+      {/* Key point — region: left (default) */}
       {content.keyPoints && content.keyPoints.length > 0 && (
         <div className="silse-learning-key-point silse-premium-learning-key-point" style={{
+          gridColumn: regionToCol(keyPointsRegion, totalCols),
+          gridRow: '3',
           padding: contract.learning.keyPointPanel?.padding ?? 12,
           borderRadius: contract.learning.keyPointPanel?.radius ?? 10,
           background: contract.learning.keyPointPanel?.background ?? 'var(--silse-color-warning-soft, var(--color-warning-soft))',
@@ -1123,9 +1170,11 @@ function LearningMaterialContent({
         </div>
       )}
 
-      {/* Student action — FOUNDATION-HARDENING-01: visual dari contract.learning.studentActionPanel */}
+      {/* Student action — region: right (default) */}
       {content.studentAction && (
         <div className="silse-learning-student-action silse-premium-learning-student-action" style={{
+          gridColumn: regionToCol(studentActionRegion, totalCols),
+          gridRow: '3',
           padding: contract.learning.studentActionPanel?.padding ?? 12,
           borderRadius: contract.learning.studentActionPanel?.radius ?? 10,
           background: contract.learning.studentActionPanel?.background ?? contract.palette.surface,
@@ -1143,9 +1192,11 @@ function LearningMaterialContent({
         </div>
       )}
 
-      {/* Visual hint — FOUNDATION-HARDENING-01: visual dari contract.learning.visualHintPanel */}
+      {/* Visual hint — full width bottom */}
       {content.visualHint && (
         <div className="silse-learning-visual-hint silse-premium-learning-visual-hint" style={{
+          gridColumn: `1 / ${totalCols + 1}`,
+          gridRow: '4',
           padding: 8,
           borderRadius: 8,
           background: 'transparent',

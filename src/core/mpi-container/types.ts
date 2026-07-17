@@ -269,6 +269,8 @@ export type MpiSceneSlot = {
   /** Design token key (reference ke design contract). */
   designTokenKey?: string;
   content: MpiSceneSlotContent;
+  /** DYNAMIC-LAYOUT: layout metadata dari AI untuk control renderer grid */
+  layout?: { columns?: number; arrangement?: string; orientation?: 'horizontal' | 'vertical'; regions?: Record<string, string> };
 };
 
 export type MpiSceneNavigation = {
