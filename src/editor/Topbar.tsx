@@ -80,6 +80,8 @@ export function Topbar() {
   const [showBuatMenu, setShowBuatMenu] = useState(false);
   // MEGA FIX #2: state for Pengaturan dropdown (Slide Settings + Quiz Sheet → 1 dropdown)
   const [showPengaturanMenu, setShowPengaturanMenu] = useState(false);
+  // FASE 3: state for Impor dropdown (AI Import + Slide Import → separate from Buat)
+  const [showImporMenu, setShowImporMenu] = useState(false);
 
   // EXPORT-READY-SUMMARY-01: compute export ready summary (memoized).
   const exportReadySummary = useMemo(
@@ -491,23 +493,6 @@ export function Topbar() {
                 📋 Template Pedagogis
               </button>
               <button
-                onClick={() => { setShowBuatMenu(false); setShowAiImport(true); }}
-                data-testid="topbar-ai-import"
-                data-action="ai-import"
-                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, borderRadius: 4, color: 'var(--color-text, #1f2533)' }}
-              >
-                🤖 Import dari AI
-              </button>
-              <button
-                onClick={() => { setShowBuatMenu(false); handleImportSlides(); }}
-                disabled={slideImportInProgress}
-                data-testid="topbar-import-slides"
-                data-action="import-slides"
-                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: 'transparent', cursor: slideImportInProgress ? 'wait' : 'pointer', fontSize: 13, borderRadius: 4, color: 'var(--color-text, #1f2533)', opacity: slideImportInProgress ? 0.6 : 1 }}
-              >
-                {slideImportInProgress ? '⏳ Mengimpor…' : '🖼️ Impor Slide'}
-              </button>
-              <button
                 onClick={() => {
                   setShowBuatMenu(false);
                   import('../storage/master-template-storage').then(({ listMasterTemplates }) => {
@@ -541,6 +526,47 @@ export function Topbar() {
                 style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, borderRadius: 4, color: 'var(--color-ai-style, #7c3aed)', fontWeight: 700 }}
               >
                 🏛️ Clone dari Master Template
+              </button>
+            </div>
+          )}
+        </div>
+        {/* FASE 3: Impor dropdown — AI Import + Slide Import (terpisah dari Buat) */}
+        <div style={{ position: 'relative' }}>
+          <button
+            onClick={() => setShowImporMenu(!showImporMenu)}
+            className="editor-topbar__action editor-topbar__action--ghost"
+            title="Impor: dari AI, dari gambar slide"
+            data-action="impor-menu"
+            data-testid="topbar-impor-menu"
+          >
+            📥 Impor ▾
+          </button>
+          {showImporMenu && (
+            <div
+              data-testid="impor-dropdown"
+              style={{
+                position: 'absolute', right: 0, top: '100%', marginTop: 4,
+                minWidth: 220, background: 'var(--color-panel, #fff)',
+                border: '1px solid var(--color-border, #e3ddcd)', borderRadius: 8,
+                boxShadow: '0 8px 24px rgba(0,0,0,0.15)', zIndex: 1000, padding: 4,
+              }}
+            >
+              <button
+                onClick={() => { setShowImporMenu(false); setShowAiImport(true); }}
+                data-testid="topbar-ai-import"
+                data-action="ai-import"
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, borderRadius: 4, color: 'var(--color-ai-style, #7c3aed)', fontWeight: 700 }}
+              >
+                🤖 Import dari AI (JSON)
+              </button>
+              <button
+                onClick={() => { setShowImporMenu(false); handleImportSlides(); }}
+                disabled={slideImportInProgress}
+                data-testid="topbar-import-slides"
+                data-action="import-slides"
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: 'transparent', cursor: slideImportInProgress ? 'wait' : 'pointer', fontSize: 13, borderRadius: 4, color: 'var(--color-text, #1f2533)', opacity: slideImportInProgress ? 0.6 : 1 }}
+              >
+                {slideImportInProgress ? '⏳ Mengimpor…' : '🖼️ Impor Slide (PNG/JPG)'}
               </button>
             </div>
           )}
