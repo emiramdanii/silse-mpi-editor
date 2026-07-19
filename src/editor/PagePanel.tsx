@@ -195,12 +195,16 @@ export function PagePanel() {
   const renamePage = useEditorStore((s) => s.renamePage);
   const deletePage = useEditorStore((s) => s.deletePage);
   const duplicatePage = useEditorStore((s) => s.duplicatePage);
+  const movePage = useEditorStore((s) => s.movePage);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState('');
   // PAGE-THUMBNAIL-SIDEBAR-V1: default thumbnail view
   // CONTENT-VISUAL-CONTRACT-AUDIT-01 Scope 7: default thumbnail for quick overview
   const [viewMode, setViewMode] = useState<'list' | 'thumbnail'>('thumbnail');
+  // V2-PILAR-1: Drag reorder state
+  const [draggedPageId, setDraggedPageId] = useState<string | null>(null);
+  const [dragTargetId, setDragTargetId] = useState<string | null>(null);
   // UX-02 Patch (UX-01 Patch-2 polish): track explicit issue expansion per page.
   // - undefined → default (active page expanded, inactive collapsed)
   // - true      → force expanded (user clicked toggle on inactive page)
@@ -221,6 +225,22 @@ export function PagePanel() {
   const cancelRename = () => {
     setEditingId(null);
     setEditingValue('');
+  };
+
+  // V2-PILAR-1: Drag reorder handlers
+  const handleDragStart = (_e: React.DragEvent, pageId: string) => {
+    setDraggedPageId(pageId);
+  };
+  const handleDragOver = (_e: React.DragEvent, pageId: string) => {
+    setDragTargetId(pageId);
+  };
+  const handleDrop = (_e: React.DragEvent, targetPageId: string) => {
+    if (draggedPageId && draggedPageId !== targetPageId) {
+      const toIndex = project.pages.findIndex((p) => p.id === targetPageId);
+      if (toIndex >= 0) movePage(draggedPageId, toIndex);
+    }
+    setDraggedPageId(null);
+    setDragTargetId(null);
   };
 
   const sections = buildSections(project.pages);
@@ -429,13 +449,18 @@ export function PagePanel() {
       )}
       {viewMode === 'thumbnail' ? (
         <div className="page-panel__thumbnails" data-testid="page-panel-thumbnails">
-          {project.pages.map((page) => (
+          {project.pages.map((page, idx) => (
             <PageThumbnail
               key={page.id}
               page={page}
+              index={idx}
               isActive={page.id === project.currentPageId}
               onClick={() => selectPage(page.id)}
               project={project}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              isDragTarget={dragTargetId === page.id}
             />
           ))}
         </div>

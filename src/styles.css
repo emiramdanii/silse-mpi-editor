@@ -3869,3 +3869,16 @@ textarea {
   transform: translate(-50%, -50%) scale(1.3) !important;
   z-index: 10;
 }
+
+/* V2-PILAR-1: Drag reorder visual feedback */
+.page-thumbnail.is-drag-target {
+  opacity: 0.5;
+  outline: 2px dashed var(--color-accent, #1e5b8f);
+  outline-offset: 2px;
+}
+.page-thumbnail[draggable="true"] {
+  cursor: grab;
+}
+.page-thumbnail[draggable="true"]:active {
+  cursor: grabbing;
+}

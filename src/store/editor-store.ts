@@ -136,6 +136,8 @@ export type EditorState = {
   renamePage: (pageId: string, title: string) => void;
   deletePage: (pageId: string) => void;
   duplicatePage: (pageId: string) => string | null;
+  /** V2-PILAR-1: Move page to new index (drag reorder). */
+  movePage: (pageId: string, toIndex: number) => void;
   getCurrentPage: () => SimplePage | null;
 
   // Component operations (M2 — text, M4 — image/card)
@@ -764,6 +766,23 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       };
     });
     return copy.id;
+  },
+
+  // V2-PILAR-1: Move page to new index (drag reorder)
+  movePage: (pageId, toIndex) => {
+    set((s) => {
+      const pages = [...s.project.pages];
+      const fromIdx = pages.findIndex((p) => p.id === pageId);
+      if (fromIdx === -1) return s;
+      const clampedTo = Math.max(0, Math.min(toIndex, pages.length - 1));
+      if (fromIdx === clampedTo) return s;
+      const [moved] = pages.splice(fromIdx, 1);
+      pages.splice(clampedTo, 0, moved);
+      return {
+        project: { ...s.project, pages },
+        selectedComponentId: null, selectedComponentIds: [],
+      };
+    });
   },
 
   getCurrentPage: () => {

@@ -49,20 +49,37 @@ export function PageThumbnail({
   isActive,
   onClick,
   project,
+  index: _index,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  isDragTarget,
 }: {
   page: SimplePage;
   isActive: boolean;
   onClick: () => void;
   project?: SimpleProject;
+  index?: number;
+  onDragStart?: (e: React.DragEvent, pageId: string) => void;
+  onDragOver?: (e: React.DragEvent, pageId: string) => void;
+  onDrop?: (e: React.DragEvent, pageId: string) => void;
+  isDragTarget?: boolean;
 }) {
   const info = getRoleInfo(page.role);
   const status = computePageStatus(page, project);
-  const bgColor = page.background.type === 'color' ? page.background.color : 'var(--color-panel)';
+  // V2-PILAR-1: handle image background (imported slide PNG)
+  const bgStyle = page.background.type === 'color'
+    ? page.background.color
+    : page.background.type === 'gradient'
+      ? page.background.gradient
+      : page.background.type === 'image'
+        ? `url(${page.background.imageSrc}) center/cover no-repeat`
+        : 'var(--color-panel)';
 
   return (
     <button
       type="button"
-      className={`page-thumbnail${isActive ? ' is-active' : ''}`}
+      className={`page-thumbnail${isActive ? ' is-active' : ''}${isDragTarget ? ' is-drag-target' : ''}`}
       onClick={onClick}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -76,12 +93,25 @@ export function PageThumbnail({
       title={`${page.title} — ${info.label}`}
       aria-label={`${page.title}, ${info.label}, status ${status.level}`}
       aria-pressed={isActive}
+      // V2-PILAR-1: Drag reorder
+      draggable={!!onDragStart}
+      onDragStart={(e) => onDragStart?.(e, page.id)}
+      onDragOver={(e) => {
+        if (onDragOver) {
+          e.preventDefault();
+          onDragOver(e, page.id);
+        }
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        onDrop?.(e, page.id);
+      }}
     >
       {/* Mini canvas */}
       <div
         className="page-thumbnail__canvas"
         style={{
-          background: bgColor,
+          background: bgStyle,
           width: THUMB_W,
           height: THUMB_H,
         }}
