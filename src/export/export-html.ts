@@ -1120,6 +1120,39 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       if (sceneEl) canvas.appendChild(sceneEl);
     }
 
+    // V2-PILAR-1: Overlay stacking in export HTML
+    // If current page is 'overlay': find base slide (overlayFor) and render below
+    // If current page is 'slide': find overlay pages and render above (semi-transparent)
+    if (page.role === 'overlay' && page.overlayFor) {
+      var baseSlide = pages.find(function(p) { return p.id === page.overlayFor; });
+      if (baseSlide && baseSlide.scenePlan) {
+        var baseBg = baseSlide.background.type === 'image'
+          ? 'url(' + baseSlide.background.imageSrc + ') center/cover no-repeat'
+          : baseSlide.background.type === 'color' ? baseSlide.background.color : '';
+        var baseEl = document.createElement('div');
+        baseEl.setAttribute('data-testid', 'export-base-slide');
+        baseEl.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;z-index:1;background:' + baseBg + ';pointer-events:none;';
+        var baseScene = renderSceneFromPlan(baseSlide.scenePlan, baseSlide);
+        if (baseScene) baseEl.appendChild(baseScene);
+        canvas.insertBefore(baseEl, canvas.firstChild.nextSibling); // after toolbar
+      }
+    }
+    if (page.role === 'slide') {
+      var overlays = pages.filter(function(p) {
+        return p.role === 'overlay' && p.overlayFor === page.id;
+      });
+      for (var oi = 0; oi < overlays.length; oi++) {
+        if (overlays[oi].scenePlan) {
+          var overlayEl = document.createElement('div');
+          overlayEl.setAttribute('data-testid', 'export-overlay-' + overlays[oi].id);
+          overlayEl.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;z-index:' + (3 + oi) + ';pointer-events:none;opacity:0.5;';
+          var overlayScene = renderSceneFromPlan(overlays[oi].scenePlan, overlays[oi]);
+          if (overlayScene) overlayEl.appendChild(overlayScene);
+          canvas.appendChild(overlayEl);
+        }
+      }
+    }
+
     prevBtn.disabled = (currentPageIdx === 0);
     nextBtn.disabled = (currentPageIdx === pages.length - 1);
     pageInfo.textContent = (currentPageIdx + 1) + ' / ' + pages.length + ' - ' + page.title;
