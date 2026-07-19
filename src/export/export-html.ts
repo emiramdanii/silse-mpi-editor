@@ -70,7 +70,9 @@ type ExportRenderPage = {
   /** DEEP-STYLE-INJECTION-01: Pre-computed CSS strings per element key.
    *  Browser JS appends these directly to el.style.cssText — no runtime
    *  conversion needed. Pre-computed at build time via styleMapToCssString.
-   *  LAYOUT-STYLE-01: added 'grid' key for SceneGrid layout overrides. */
+   *  LAYOUT-STYLE-01: added 'grid' key for SceneGrid layout overrides.
+   *  COMPONENT-STYLE-01: added 'tabs' + 'accordion' keys for interactive components.
+   *  HOVER-STYLE-01: added 'buttonHover' + 'tabHover' + 'answerHover' for hover states. */
   customStyleCss?: {
     shell?: string;
     header?: string;
@@ -78,6 +80,11 @@ type ExportRenderPage = {
     chip?: string;
     button?: string;
     grid?: string;
+    tabs?: string;
+    accordion?: string;
+    buttonHover?: string;
+    tabHover?: string;
+    answerHover?: string;
   };
 };
 
@@ -175,6 +182,12 @@ function buildExportRenderModel(project: SimpleProject): ExportRenderModel {
       if (sanitized.chip) result.chip = styleMapToCssString(sanitized.chip);
       if (sanitized.button) result.button = styleMapToCssString(sanitized.button);
       if (sanitized.grid) result.grid = styleMapToCssString(sanitized.grid);
+      if (sanitized.tabs) result.tabs = styleMapToCssString(sanitized.tabs);
+      if (sanitized.accordion) result.accordion = styleMapToCssString(sanitized.accordion);
+      // HOVER-STYLE-01: pre-compute hover CSS strings
+      if (sanitized.buttonHover) result.buttonHover = styleMapToCssString(sanitized.buttonHover);
+      if (sanitized.tabHover) result.tabHover = styleMapToCssString(sanitized.tabHover);
+      if (sanitized.answerHover) result.answerHover = styleMapToCssString(sanitized.answerHover);
       return Object.keys(result).length > 0 ? result : undefined;
     })(),
   }));
@@ -1776,8 +1789,15 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.primaryAction) {
       var pa = document.createElement('button');
       pa.className = 'silse-cover-primary-action';
+      pa.type = 'button';
       pa.style.cssText = 'padding:' + (btn.padding ? (btn.padding.top || 10) : 10) + 'px ' + (btn.padding ? (btn.padding.right || 20) : 20) + 'px;border-radius:' + (btn.radius || 8) + 'px;background:' + (btn.background || palette.primary) + ';color:' + (btn.color || '#fff') + ';border:0;font-weight:' + (btn.fontWeight || 600) + ';font-size:16px;cursor:pointer;margin-top:8px;';
       pa.textContent = content.primaryAction.label;
+      pa.setAttribute('aria-label', content.primaryAction.label + ', pergi ke halaman berikutnya');
+      // BUG-NAV-01 FIX: wire primaryAction ke navigate('next') — sebelumnya tombol
+      // di-create tapi tidak di-wire ke event handler, sehingga "Mulai Pembelajaran"
+      // tidak berfungsi saat di-klik.
+      var paAction = content.primaryAction.action || 'next';
+      pa.addEventListener('click', function() { navigate(paAction); });
       wrapper.appendChild(pa);
     }
     if (content.visualAnchor) {
@@ -1861,8 +1881,13 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     if (content.finalAction) {
       var fa = document.createElement('button');
       fa.className = 'silse-closing-final-action';
+      fa.type = 'button';
       fa.style.cssText = 'padding:' + (btn.padding ? (btn.padding.top || 10) : 10) + 'px ' + (btn.padding ? (btn.padding.right || 20) : 20) + 'px;border-radius:' + (btn.radius || 8) + 'px;background:' + (btn.background || palette.primary) + ';color:' + (btn.color || '#fff') + ';border:0;font-weight:' + (btn.fontWeight || 600) + ';font-size:16px;cursor:pointer;margin-top:8px;';
       fa.textContent = content.finalAction.label;
+      fa.setAttribute('aria-label', content.finalAction.label);
+      // BUG-NAV-01 FIX: wire finalAction. Default action 'prev' (kembali ke awal)
+      var faAction = content.finalAction.action || 'prev';
+      fa.addEventListener('click', function() { navigate(faAction); });
       wrapper.appendChild(fa);
     }
     return wrapper;
@@ -2155,6 +2180,10 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
     var el = document.createElement('div');
     el.className = 'silse-block-tabs';
     el.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;';
+    // COMPONENT-STYLE-01: apply customStyle.tabs (pre-computed CSS string)
+    if (_sceneCustomStyleCss && _sceneCustomStyleCss.tabs) {
+      el.style.cssText += _sceneCustomStyleCss.tabs;
+    }
     for (var i = 0; i < tabs.length; i++) {
       var tab = document.createElement('button');
       tab.setAttribute('data-tab-id', tabs[i].id);
@@ -3595,6 +3624,10 @@ function generateJS(renderModelJson: string, coverClassForProject: string, allCo
       if (variant === 'accordion') {
         var accContainer = document.createElement('div');
         accContainer.style.cssText = 'display:flex;flex-direction:column;gap:6px;';
+        // COMPONENT-STYLE-01: apply customStyle.accordion (pre-computed CSS string)
+        if (_sceneCustomStyleCss && _sceneCustomStyleCss.accordion) {
+          accContainer.style.cssText += _sceneCustomStyleCss.accordion;
+        }
         layers.forEach(function(layer, idx) {
           var isOpen = openIdx === idx;
           var accItem = document.createElement('div');
@@ -4623,6 +4656,32 @@ function resolveProfileForContract(
 }
 
 // ---------------------------------------------------------------------------
+// HOVER-STYLE-01: Generate <style> tag with :hover pseudo-class rules from customStyleCss.
+// AI can send buttonHover, tabHover, answerHover keys. We generate CSS rules like:
+//   .silse-block-action:hover { background:...; transform:...; }
+//   .silse-quiz-answer-card:hover { ... }
+//   .silse-block-tabs button:hover { ... }
+// Injected into <head> so hover works in export HTML without JS.
+// ---------------------------------------------------------------------------
+
+function generateHoverCssFromCustomStyle(pages: ExportRenderPage[]): string {
+  const rules: string[] = [];
+  for (const page of pages) {
+    if (!page.customStyleCss) continue;
+    if (page.customStyleCss.buttonHover) {
+      rules.push(`.silse-block-action:hover { ${page.customStyleCss.buttonHover} }`);
+    }
+    if (page.customStyleCss.tabHover) {
+      rules.push(`.silse-block-tabs button:hover { ${page.customStyleCss.tabHover} }`);
+    }
+    if (page.customStyleCss.answerHover) {
+      rules.push(`.silse-quiz-answer-card:hover { ${page.customStyleCss.answerHover} }`);
+    }
+  }
+  return rules.length > 0 ? rules.join('\n  ') : '';
+}
+
+// ---------------------------------------------------------------------------
 
 export function exportProjectToHtml(project: SimpleProject): string {
   const renderModel = buildExportRenderModel(project);
@@ -4631,6 +4690,8 @@ export function exportProjectToHtml(project: SimpleProject): string {
   // EXPORT-CONTRAST-02: override gradients if contract has dark background
   const profile = resolveProfileForContract(baseProfile, project.stylePackId, project.style);
   const css = generateCSS(renderModel.cssVariables, profile);
+  // HOVER-STYLE-01: generate :hover CSS rules from customStyleCss (buttonHover, tabHover, answerHover)
+  const hoverCss = generateHoverCssFromCustomStyle(renderModel.pages);
   const animProfile = getMicroAnimationForStylePack(project.stylePackId);
   const celebrationProfile = getCelebrationEffectForStylePack(project.stylePackId);
   const js = generateJS(renderModelJson, getCoverClassForStylePack(project.stylePackId), getAllCoverClassNames(), animProfile.pageEnterClass, celebrationProfile.successClass, celebrationProfile.burstClass, celebrationProfile.particleClass);
@@ -4644,6 +4705,7 @@ export function exportProjectToHtml(project: SimpleProject): string {
   <title>${escapeHTML(project.title)}</title>
   <style>
 ${css}
+${hoverCss ? '/* HOVER-STYLE-01: AI custom hover states */\n  ' + hoverCss : ''}
   </style>
 </head>
 <body>

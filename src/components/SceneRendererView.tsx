@@ -24,7 +24,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import type { SceneRenderPlan, SceneRenderSlot } from '../core/scene-renderer';
 import type { MpiDesignContract } from '../core/mpi-design-contract';
 import { sanitizeCustomStyle } from '../core/style/sanitize';
-import { CustomStyleProvider } from './scene-blocks';
+import { CustomStyleProvider, useCustomStyleFromContext } from './scene-blocks';
 import {
   CurriculumGuideComposer, ObjectivesPathComposer, StarterReviewComposer,
   DiscussionSceneComposer, CaseAnalysisComposer, ResultSummaryComposer,
@@ -554,6 +554,10 @@ function QuizQuestionContent({
   const premiumShadow = contract.card.shadow || '0 2px 8px rgba(0,0,0,0.08)';
   const quizPanelBg = panel?.background ?? contract.palette.surface;
   const quizPanelBorder = ansCard?.border ?? contract.palette.border;
+  // HOVER-STYLE-01: customStyle.answerHover dari context — AI bisa override hover state
+  const ctxStyle = useCustomStyleFromContext();
+  const safeHoverStyle = sanitizeCustomStyle(ctxStyle);
+  const answerHoverStyle = safeHoverStyle?.answerHover as CSSProperties | undefined;
 
   return (
     <div className="silse-quiz-scene silse-premium-quiz-scene" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', gap: 10, padding: 16, boxSizing: 'border-box', overflow: 'auto' }}>
@@ -590,15 +594,24 @@ function QuizQuestionContent({
             }}
             onMouseEnter={(e) => {
               if (!interactive) return;
-              e.currentTarget.style.transform = 'translateY(-1px)';
-              e.currentTarget.style.borderColor = `${contract.palette.primary}aa`;
-              e.currentTarget.style.boxShadow = premiumShadow;
+              if (answerHoverStyle) {
+                Object.assign(e.currentTarget.style, answerHoverStyle);
+              } else {
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.borderColor = `${contract.palette.primary}aa`;
+                e.currentTarget.style.boxShadow = premiumShadow;
+              }
             }}
             onMouseLeave={(e) => {
               if (!interactive) return;
+              // Restore original styles
               e.currentTarget.style.transform = 'translateY(0)';
               e.currentTarget.style.borderColor = quizPanelBorder;
               e.currentTarget.style.boxShadow = 'none';
+              if (answerHoverStyle) {
+                // Also restore any properties that hover might have overridden
+                e.currentTarget.style.background = ansCard?.background ?? '#fff';
+              }
             }}
             style={{
               padding: ansCard?.padding ?? 14,
